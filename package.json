@@ -11,6 +11,8 @@
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:export-local": "node scripts/export-local-to-supabase.mjs",
     "db:studio": "prisma studio"
   },
   "dependencies": {

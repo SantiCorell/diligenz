@@ -36,12 +36,12 @@ export const metadata: Metadata = {
     "inversores privados",
     "due diligence",
   ],
-  metadataBase: new URL("https://diligenz.com"),
+  metadataBase: new URL("https://www.diligenz.es"),
   openGraph: {
     title: "DILIGENZ | Compra, vende y valora empresas",
     description:
       "Compra y vende empresas de forma privada. Valora tu empresa en minutos y conecta con inversores verificados.",
-    url: "https://diligenz.com",
+    url: "https://www.diligenz.es",
     siteName: "DILIGENZ",
     locale: "es_ES",
     type: "website",
@@ -81,12 +81,12 @@ export default function RootLayout({
               name: "DILIGENZ",
               description:
                 "Marketplace para comprar, vender y valorar empresas de forma privada y segura.",
-              url: "https://diligenz.com",
+              url: "https://www.diligenz.es",
               areaServed: "ES",
               potentialAction: [
                 {
                   "@type": "SearchAction",
-                  target: "https://diligenz.com/deals",
+                  target: "https://www.diligenz.es/companies",
                   "query-input": "required name=search_term_string",
                 },
               ],

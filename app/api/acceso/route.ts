@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
+// Código por defecto: lolipop123.dili!.
 const BETA_PASSWORD_HASH =
   process.env.BETA_ACCESS_HASH ||
-  "$2b$10$WnpOV.vP5EadSJarVoVXwOuFzWlzAriG8EdP2NKys/VxGgCg1sKda";
+  "$2b$10$pyTNh3tLhyIy5qRKqW1bw.9rLVUcm3ZhgkFJk4zQ1rCnRBtX5J27C";
 
 const COOKIE_NAME = "beta_access";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 días

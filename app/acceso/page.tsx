@@ -49,7 +49,7 @@ export default function AccesoPage() {
         />
         <div className="bg-white/90 backdrop-blur rounded-2xl shadow-xl border border-[var(--brand-primary)]/10 p-8 md:p-10">
           <p className="text-lg md:text-xl text-[var(--foreground)] mb-6 leading-relaxed">
-            Todavía es una web de pruebas. Si eres Jose, ponme la password. Si no te la sabes, me llamas.
+            Introduce el código de acceso para desbloquear la web.
           </p>
           <form onSubmit={submit} className="space-y-4">
             <div className="relative">
@@ -57,7 +57,7 @@ export default function AccesoPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Contraseña"
+                placeholder="Código de acceso"
                 className="w-full px-4 py-3 rounded-xl border border-[var(--brand-primary)]/20 bg-white text-[var(--foreground)] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/50 focus:border-[var(--brand-primary)]"
                 required
                 autoFocus

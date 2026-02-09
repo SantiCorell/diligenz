@@ -7,11 +7,11 @@ import { getClientIP, isValidEmail } from "@/lib/security";
 
 export async function POST(req: Request) {
   try {
-    // Rate limiting: máximo 5 intentos de login por 15 minutos por IP
+    // Rate limiting: máximo 10 intentos de login por 15 minutos por IP
     const ip = getClientIP(req.headers);
     const rateLimitResult = checkRateLimit(
       getRateLimitIdentifier(ip, null),
-      { maxRequests: 5, windowMs: 15 * 60 * 1000 } // 5 por 15 minutos
+      { maxRequests: 10, windowMs: 15 * 60 * 1000 } // 10 por 15 minutos
     );
     
     if (!rateLimitResult.allowed) {
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
           status: 429,
           headers: {
             "Retry-After": Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000).toString(),
-            "X-RateLimit-Limit": "5",
+            "X-RateLimit-Limit": "10",
             "X-RateLimit-Remaining": "0",
             "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
           },
@@ -122,16 +122,23 @@ export async function POST(req: Request) {
       { success: true },
       {
         headers: {
-          "X-RateLimit-Limit": "5",
+          "X-RateLimit-Limit": "10",
           "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
           "X-RateLimit-Reset": rateLimitResult.resetTime.toString(),
         },
       }
     );
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const isPrisma = message.includes("Prisma") || message.includes("connect");
     console.error("Login error:", error);
     return NextResponse.json(
-      { error: "Error al iniciar sesión" },
+      {
+        error: "Error al iniciar sesión",
+        ...(process.env.NODE_ENV === "development" && {
+          detail: isPrisma ? "Comprueba DATABASE_URL y que las migraciones estén aplicadas." : message,
+        }),
+      },
       { status: 500 }
     );
   }
