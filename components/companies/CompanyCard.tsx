@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, TrendingUp, BarChart3, Globe, ChevronRight } from "lucide-react";
+import { MapPin, TrendingUp, BarChart3, Globe, Users, ChevronRight } from "lucide-react";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { getDefaultCompanyImageUrl } from "@/lib/default-company-images";
 
@@ -38,7 +38,10 @@ export default function CompanyCard({
     : { label: "Facturación", value: company.revenue, icon: BarChart3, title: "Ingresos anuales" };
   const metrics = [
     revenueOrGmv,
-    { label: "EBITDA", value: company.ebitda, icon: TrendingUp, title: "Beneficio antes de intereses, impuestos y amortización" },
+    { label: "EBITDA", value: company.ebitda, icon: TrendingUp, title: "EBITDA" },
+    ...(company.employees != null
+      ? [{ label: "Nº Empleados", value: String(company.employees), icon: Users, title: "Número de empleados" }]
+      : []),
   ];
 
   const defaultImageUrl = getDefaultCompanyImageUrl(company, positionInGroup);
@@ -81,7 +84,7 @@ export default function CompanyCard({
             aria-hidden
           >
             <p className="text-sm font-medium text-[var(--brand-primary)] px-4 text-center">
-              Facturación, EBITDA, GMV y datos completos
+              Facturación, EBITDA, Nº empleados y datos completos
             </p>
             <button
               type="button"
@@ -95,7 +98,7 @@ export default function CompanyCard({
             </button>
           </div>
         )}
-        <div className={`grid gap-2 grid-cols-2 ${showBlur ? "blur-sm pointer-events-none" : ""}`}>
+        <div className={`grid gap-2 ${metrics.length === 3 ? "grid-cols-3" : "grid-cols-2"} ${showBlur ? "blur-sm pointer-events-none" : ""}`}>
           {metrics.map(({ label, value, icon: Icon, title }) => (
             <div
               key={label}

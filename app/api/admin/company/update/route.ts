@@ -43,9 +43,18 @@ export async function POST(req: Request) {
   const sellerDescription = formData.get("sellerDescription")?.toString();
   const documentLinksRaw = formData.get("documentLinks")?.toString();
   const gmv = formData.get("gmv")?.toString();
+  const employeesRaw = formData.get("employees")?.toString();
   const attachmentsApproved = formData.get("attachmentsApproved") === "on";
 
   const documentLinks = parseDocumentLinks(documentLinksRaw ?? null);
+  const employees =
+    employeesRaw != null && employeesRaw.trim() !== ""
+      ? parseInt(employeesRaw.trim(), 10)
+      : null;
+  const employeesValue =
+    employees != null && !Number.isNaN(employees) && employees >= 0
+      ? employees
+      : null;
 
   await prisma.company.update({
     where: { id: companyId },
@@ -55,6 +64,7 @@ export async function POST(req: Request) {
       sellerDescription: (sellerDescription ?? "").trim() || null,
       documentLinks: documentLinks ?? Prisma.JsonNull,
       gmv: (gmv ?? "").trim() || null,
+      employees: employeesValue,
       attachmentsApproved,
     },
   });

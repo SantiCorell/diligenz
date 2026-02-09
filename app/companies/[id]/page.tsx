@@ -35,6 +35,7 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     revenue: revenueStr,
     ebitda: company.ebitda ?? "—",
     gmv: company.gmv ?? null,
+    employees: company.employees ?? null,
     description: company.description ?? "Sin descripción.",
     sellerDescription: company.sellerDescription ?? null,
     documentLinks: Array.isArray(docLinks) ? docLinks : null,

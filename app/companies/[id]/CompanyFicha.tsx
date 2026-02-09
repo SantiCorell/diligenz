@@ -8,6 +8,7 @@ import {
   ExternalLink,
   MapPin,
   BarChart3,
+  Users,
   Upload,
   Download,
   File,
@@ -166,7 +167,7 @@ export default function CompanyFicha({
             </p>
           </div>
           <div className="bg-[var(--foreground)]/5 border-t md:border-t-0 md:border-l border-[var(--brand-primary)]/10 p-6 flex flex-col justify-between gap-4">
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <p className="text-xs text-[var(--foreground)] opacity-70">
                   {company.gmv ? "GMV" : "Facturación anual"}
@@ -183,6 +184,16 @@ export default function CompanyFicha({
                   {company.ebitda}
                 </p>
               </div>
+              {company.employees != null && (
+                <div>
+                  <p className="text-xs text-[var(--foreground)] opacity-70">
+                    Nº Empleados
+                  </p>
+                  <p className="text-lg font-bold text-[var(--brand-primary)]">
+                    {company.employees}
+                  </p>
+                </div>
+              )}
             </div>
             {isLoggedIn ? (
               <div className="flex flex-col gap-2">
@@ -271,6 +282,17 @@ export default function CompanyFicha({
                     {company.ebitda}
                   </p>
                 </div>
+                {company.employees != null && (
+                  <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-[var(--brand-primary)]/70" />
+                      <span className="text-xs font-medium opacity-75">Nº Empleados</span>
+                    </div>
+                    <p className="mt-1 font-bold text-[var(--brand-primary)]">
+                      {company.employees}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </section>

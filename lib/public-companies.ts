@@ -46,6 +46,7 @@ export async function getPublicCompanies(): Promise<{
       revenue: revenueStr,
       ebitda: ebitdaStr,
       gmv: c.gmv ?? null,
+      employees: c.employees ?? null,
       description: c.description ?? "Sin descripción.",
       sellerDescription: c.sellerDescription ?? null,
       documentLinks: Array.isArray(docLinks) ? docLinks : null,

@@ -17,7 +17,7 @@ Marketplace privado y seguro para comprar, vender y valorar empresas en España.
 ## 🛠️ Stack Tecnológico
 
 - **Framework**: Next.js 16 (App Router)
-- **Base de datos**: Prisma + SQLite (desarrollo) / PostgreSQL (producción)
+- **Base de datos**: Prisma + PostgreSQL (Supabase recomendado)
 - **Autenticación**: NextAuth.js v5 + OAuth (Google)
 - **Estilos**: Tailwind CSS 4
 - **Lenguaje**: TypeScript
@@ -47,21 +47,11 @@ Marketplace privado y seguro para comprar, vender y valorar empresas en España.
    cp .env.example .env
    ```
    
-   Edita `.env` y configura:
-   ```env
-   DATABASE_URL="file:./dev.db"
-   NODE_ENV="development"
-   NEXTAUTH_SECRET="genera-con-openssl-rand-base64-32"
-   NEXTAUTH_URL="http://localhost:3000"
-   GOOGLE_CLIENT_ID="tu-client-id"
-   GOOGLE_CLIENT_SECRET="tu-client-secret"
-   ```
+   Edita `.env` con `DATABASE_URL`, `DIRECT_URL` (Supabase), `AUTH_SECRET`, `NEXTAUTH_URL` y opcionalmente Google OAuth. Ver `.env.example`.
 
-4. **Ejecutar migraciones**
-   ```bash
-   npx prisma migrate dev
-   npx prisma generate
-   ```
+4. **Base de datos**
+   - Si usas Supabase: ejecuta en SQL Editor el script **`prisma/SUPABASE-EJECUTAR-TODO.sql`** (instrucciones en [SUPABASE-EJECUTAR.md](./SUPABASE-EJECUTAR.md)).
+   - Si usas migraciones locales: `npx prisma migrate dev` y `npx prisma generate`.
 
 5. **Iniciar servidor de desarrollo**
    ```bash
@@ -75,133 +65,29 @@ Marketplace privado y seguro para comprar, vender y valorar empresas en España.
 
 ## 🚀 Deploy en Vercel
 
-### Paso 1: Preparar el repositorio
-
-1. Asegúrate de que todos los cambios estén commiteados:
-   ```bash
-   git add .
-   git commit -m "Preparado para producción"
-   git push origin main
-   ```
-
-### Paso 2: Conectar con Vercel
-
-1. Ve a [Vercel](https://vercel.com) e inicia sesión
-2. Haz clic en "Add New Project"
-3. Conecta tu repositorio de GitHub/GitLab
-4. Selecciona el proyecto `diligenz`
-
-### Paso 3: Configurar Variables de Entorno
-
-En el panel de Vercel, ve a **Settings > Environment Variables** y agrega:
-
-```env
-# Base de datos (OBLIGATORIO - usa PostgreSQL)
-DATABASE_URL=postgresql://user:password@host:5432/dbname?schema=public
-
-# NextAuth.js (OBLIGATORIO)
-NEXTAUTH_SECRET=genera-con-openssl-rand-base64-32
-NEXTAUTH_URL=https://tu-dominio.vercel.app
-
-# Google OAuth (OPCIONAL pero recomendado)
-GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=tu-client-secret
-
-# Node Environment (Vercel lo configura automáticamente)
-NODE_ENV=production
-```
-
-**⚠️ IMPORTANTE**: 
-- `DATABASE_URL` debe ser PostgreSQL (no SQLite)
-- `NEXTAUTH_URL` debe coincidir exactamente con tu dominio de Vercel
-- Genera `NEXTAUTH_SECRET` con: `openssl rand -base64 32`
-
-### Paso 4: Configurar Build Settings
-
-Vercel detecta Next.js automáticamente, pero verifica:
-
-- **Framework Preset**: Next.js
-- **Build Command**: `npm run build` (automático)
-- **Output Directory**: `.next` (automático)
-- **Install Command**: `npm install` (automático)
-
-### Paso 5: Configurar Base de Datos PostgreSQL
-
-**Opciones recomendadas:**
-- **Vercel Postgres**: Integración nativa con Vercel
-- **Supabase**: Gratis y fácil de configurar
-- **Neon**: PostgreSQL serverless
-- **Railway**: PostgreSQL con buen plan gratuito
-
-**Después de crear la base de datos:**
-1. Copia la connection string
-2. Agrégala como `DATABASE_URL` en Vercel
-3. Ejecuta las migraciones (ver abajo)
-
-### Paso 6: Ejecutar Migraciones
-
-Después del primer deploy, ejecuta las migraciones:
-
-**Opción 1: Desde Vercel CLI**
-```bash
-npm i -g vercel
-vercel login
-vercel link
-npx prisma migrate deploy
-```
-
-**Opción 2: Desde tu máquina local**
-```bash
-# Configura DATABASE_URL temporalmente
-export DATABASE_URL="tu-postgres-url"
-npx prisma migrate deploy
-npx prisma generate
-```
-
-**Opción 3: Script de build (recomendado)**
-Agrega esto a `package.json`:
-```json
-"scripts": {
-  "postinstall": "prisma generate",
-  "build": "prisma migrate deploy && next build"
-}
-```
-
-### Paso 7: Verificar Deploy
-
-1. Revisa los logs del build en Vercel
-2. Verifica que no haya errores
-3. Prueba todas las funcionalidades:
-   - Login/Registro
-   - Login con Google (si está configurado)
-   - Panel de administración
-   - Panel de usuario
-   - Formularios de contacto
+Guía paso a paso: **[DEPLOY.md](./DEPLOY.md)** (Git, Vercel, Supabase, variables de entorno y checklist).
 
 ## 📁 Estructura del Proyecto
 
 ```
 diligenz/
 ├── app/                    # Next.js App Router
-│   ├── api/                # API Routes
+│   ├── api/                # API Routes (auth, admin, companies, contact, etc.)
 │   ├── admin/              # Panel de administración
-│   ├── dashboard/          # Paneles de usuario
+│   ├── dashboard/          # Paneles comprador / vendedor
 │   ├── companies/          # Listado y fichas de empresas
-│   ├── login/              # Página de login
-│   └── register/           # Página de registro
-├── components/             # Componentes React
-│   ├── layout/             # Componentes de layout
-│   ├── home/               # Componentes de la homepage
-│   └── companies/          # Componentes de empresas
-├── lib/                    # Utilidades y helpers
-│   ├── prisma.ts           # Cliente de Prisma
-│   ├── rate-limit.ts       # Sistema de rate limiting
-│   └── security.ts          # Utilidades de seguridad
-├── prisma/                 # Schema y migraciones
+│   ├── login/              # Login
+│   └── register/           # Registro
+├── components/             # Componentes React (layout, home, companies, auth)
+├── lib/                    # Prisma, rate-limit, security, public-companies, etc.
+├── prisma/
 │   ├── schema.prisma       # Schema de base de datos
-│   └── migrations/          # Migraciones SQL
-└── public/                 # Archivos estáticos
+│   ├── migrations/         # Historial de migraciones
+│   └── SUPABASE-EJECUTAR-TODO.sql   # Script SQL único para Supabase (estructura actual)
+└── public/                 # Logos e iconos
 ```
+
+**Base de datos:** La estructura actual para Supabase está en **`prisma/SUPABASE-EJECUTAR-TODO.sql`**. Cómo ejecutarla: [SUPABASE-EJECUTAR.md](./SUPABASE-EJECUTAR.md).
 
 ## 🔐 Seguridad
 
@@ -214,14 +100,16 @@ El proyecto incluye múltiples capas de seguridad:
 - **Sistema de bloqueo**: Los admins pueden bloquear usuarios abusivos
 - **Autenticación robusta**: NextAuth.js con OAuth
 
-Ver `README-SEGURIDAD.md` para más detalles.
+Ver [README-SEGURIDAD.md](./README-SEGURIDAD.md) para más detalles.
 
-## 📚 Documentación Adicional
+## 📚 Documentación
 
-- **`README-SEGURIDAD.md`**: Guía completa de seguridad
-- **`README-GOOGLE-OAUTH.md`**: Configuración de Google OAuth
-- **`CHECKLIST-PRODUCCION.md`**: Checklist antes de hacer deploy
-- **`INSTRUCCIONES-DESPUES-INSTALACION.md`**: Pasos post-instalación
+| Archivo | Contenido |
+|---------|-----------|
+| [DEPLOY.md](./DEPLOY.md) | Despliegue en Vercel (Git, variables, checklist) |
+| [SUPABASE-EJECUTAR.md](./SUPABASE-EJECUTAR.md) | Cómo ejecutar el SQL en Supabase y conectar la app |
+| [GOOGLE-LOGIN.md](./GOOGLE-LOGIN.md) | Inicio de sesión con Google (variables y Google Console) |
+| [README-SEGURIDAD.md](./README-SEGURIDAD.md) | Seguridad (rate limiting, validación, cookies, bloqueo) |
 
 ## 🧪 Scripts Disponibles
 
@@ -238,12 +126,11 @@ npm run lint         # Ejecutar linter
 - **SELLER**: Vendedores de empresas
 - **ADMIN**: Administradores del sistema
 
-## 📝 Notas Importantes
+## 📝 Notas
 
-- **SQLite NO funciona en Vercel**: Debes usar PostgreSQL en producción
-- **Migraciones**: Se ejecutan automáticamente si configuras el script de build
-- **Variables de entorno**: Nunca commitees el archivo `.env`
-- **Google OAuth**: Requiere configuración en Google Cloud Console
+- **Producción**: Usa PostgreSQL (p. ej. Supabase). Ejecuta `prisma/SUPABASE-EJECUTAR-TODO.sql` una vez.
+- **Variables de entorno**: Ver `.env.example`. No subas `.env` a Git.
+- **Google OAuth**: Ver [GOOGLE-LOGIN.md](./GOOGLE-LOGIN.md).
 
 ## 🐛 Troubleshooting
 

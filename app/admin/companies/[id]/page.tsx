@@ -167,6 +167,18 @@ export default async function AdminCompanyDetail({
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Nº Empleados</label>
+            <input
+              type="number"
+              name="employees"
+              min={0}
+              defaultValue={company.employees ?? ""}
+              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              placeholder="Ej. 25"
+            />
+          </div>
+
           <div className="flex items-center gap-3 rounded-xl bg-[var(--brand-bg-lavender)]/50 border border-[var(--brand-primary)]/10 p-4">
             <input
               type="checkbox"
