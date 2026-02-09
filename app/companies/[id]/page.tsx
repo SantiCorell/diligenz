@@ -38,6 +38,7 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     description: company.description ?? "Sin descripción.",
     sellerDescription: company.sellerDescription ?? null,
     documentLinks: Array.isArray(docLinks) ? docLinks : null,
+    attachmentsApproved: company.attachmentsApproved ?? false,
   };
 }
 

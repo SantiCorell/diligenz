@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, TrendingUp, BarChart3, Globe, ChevronRight } from "lucide-react";
 import type { CompanyMock } from "@/lib/mock-companies";
+import { getDefaultCompanyImageUrl } from "@/lib/default-company-images";
 
 type Props = {
   company: CompanyMock;
@@ -29,8 +31,20 @@ export default function CompanyCard({
     ...(company.gmv ? [{ label: "GMV", value: company.gmv, icon: Globe }] : []),
   ];
 
+  const defaultImageUrl = getDefaultCompanyImageUrl(company);
+
   const cardContent = (
     <>
+      <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-[var(--brand-bg-lavender)] border border-[var(--brand-primary)]/10 -mx-6 -mt-6 mb-4">
+        <Image
+          src={defaultImageUrl}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="(max-width: 480px) 100vw, 400px"
+          unoptimized
+        />
+      </div>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h3 className="text-xl font-bold text-[var(--foreground)] truncate">
@@ -106,7 +120,7 @@ export default function CompanyCard({
   );
 
   const wrapperClass =
-    "w-full rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] p-6 shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/25 transition block text-left";
+    "w-full rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] p-6 shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/25 transition block text-left overflow-hidden";
 
   return <div className={wrapperClass}>{cardContent}</div>;
 }

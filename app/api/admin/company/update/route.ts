@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
   const sellerDescription = formData.get("sellerDescription")?.toString();
   const documentLinksRaw = formData.get("documentLinks")?.toString();
   const gmv = formData.get("gmv")?.toString();
+  const attachmentsApproved = formData.get("attachmentsApproved") === "on";
 
   const documentLinks = parseDocumentLinks(documentLinksRaw ?? null);
 
@@ -51,8 +53,9 @@ export async function POST(req: Request) {
       ...(name != null && name !== "" && { name }),
       description: (description ?? "").trim() || null,
       sellerDescription: (sellerDescription ?? "").trim() || null,
-      documentLinks,
+      documentLinks: documentLinks ?? Prisma.JsonNull,
       gmv: (gmv ?? "").trim() || null,
+      attachmentsApproved,
     },
   });
 

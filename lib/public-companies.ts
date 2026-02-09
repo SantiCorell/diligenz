@@ -45,6 +45,7 @@ export async function getPublicCompanies(): Promise<{
       description: c.description ?? "Sin descripción.",
       sellerDescription: c.sellerDescription ?? null,
       documentLinks: Array.isArray(docLinks) ? docLinks : null,
+      attachmentsApproved: c.attachmentsApproved ?? false,
     };
   });
 

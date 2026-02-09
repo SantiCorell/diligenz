@@ -10,7 +10,7 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
   const [company, user] = await Promise.all([
     prisma.company.findUnique({
       where: { id: companyId },
-      select: { ownerId: true },
+      select: { ownerId: true, attachmentsApproved: true },
     }),
     prisma.user.findUnique({
       where: { id: userId },
@@ -18,7 +18,8 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
     }),
   ]);
   if (!company || !user) return false;
-  return company.ownerId === userId || user.role === "ADMIN";
+  if (company.ownerId === userId || user.role === "ADMIN") return true;
+  return company.attachmentsApproved === true;
 }
 
 /** Descargar archivo (solo admin o dueño) */
@@ -55,7 +56,7 @@ export async function GET(_req: Request, { params }: Params) {
   }
 
   const disposition = `attachment; filename="${fileRecord.name.replace(/"/g, "%22")}"`;
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": fileRecord.mimeType ?? "application/octet-stream",
       "Content-Disposition": disposition,

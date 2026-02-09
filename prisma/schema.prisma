@@ -128,7 +128,8 @@ model Company {
   employees   Int?
   description String?       // Resumen breve para listados y tarjetas
   sellerDescription String?  @db.Text  // Descripción amplia del vendedor (solo usuarios registrados)
-  documentLinks    Json?    // [{ label: string, url: string }] enlaces a Drive, etc.
+  documentLinks       Json?    // [{ label: string, url: string }] enlaces a Drive, etc.
+  attachmentsApproved Boolean  @default(false) // Si true, usuarios registrados pueden ver docs/enlaces/fotos
   status      CompanyStatus @default(DRAFT)
   createdAt   DateTime      @default(now())
 
@@ -152,6 +153,7 @@ model CompanyFile {
   storagePath   String   // ruta relativa en disco o URL en blob
   mimeType      String?  @default("application/octet-stream")
   size          Int?     // bytes
+  kind          String   @default("document") // "document" | "image"
   createdAt     DateTime @default(now())
 }
 

@@ -11,8 +11,10 @@ export type CompanyMock = {
   description: string;
   /** Descripción amplia del vendedor; solo visible para usuarios registrados */
   sellerDescription?: string | null;
-  /** Enlaces a documentación (Drive, etc.); solo visible para usuarios registrados */
+  /** Enlaces a documentación (Drive, etc.); solo visible si registrado y admin ha permitido */
   documentLinks?: DocumentLink[] | null;
+  /** Si true, usuarios registrados pueden ver documentación, enlaces y fotos subidas */
+  attachmentsApproved?: boolean;
 };
 
 export const MOCK_COMPANIES: CompanyMock[] = [

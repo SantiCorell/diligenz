@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   FileText,
   ExternalLink,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import RegisterModal from "@/components/auth/RegisterModal";
 import type { CompanyMock } from "@/lib/mock-companies";
+import { getDefaultCompanyImageUrl } from "@/lib/default-company-images";
 
 type TabId = "informacion" | "descripcion" | "documentos";
 
@@ -22,6 +24,7 @@ type CompanyFileItem = {
   name: string;
   size: number | null;
   mimeType: string | null;
+  kind: string;
   createdAt: string;
 };
 
@@ -45,7 +48,8 @@ export default function CompanyFicha({
   const [loading, setLoading] = useState<"request" | "favorite" | null>(null);
   const [files, setFiles] = useState<CompanyFileItem[]>([]);
   const [uploading, setUploading] = useState(false);
-  const canSeeDocuments = isOwner || isAdmin;
+  const attachmentsApproved = Boolean(company.attachmentsApproved);
+  const canSeeDocuments = isOwner || isAdmin || (isLoggedIn && attachmentsApproved);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -59,12 +63,12 @@ export default function CompanyFicha({
   }, [company.id, isLoggedIn]);
 
   useEffect(() => {
-    if (!canSeeDocuments) return;
+    if (!isLoggedIn || !canSeeDocuments) return;
     fetch(`/api/companies/${company.id}/files`)
       .then((r) => r.json())
       .then((d) => (d.files ? setFiles(d.files) : []))
       .catch(() => {});
-  }, [company.id, canSeeDocuments]);
+  }, [company.id, isLoggedIn, canSeeDocuments]);
 
   const handleRequestInfo = async () => {
     setLoading("request");
@@ -131,8 +135,18 @@ export default function CompanyFicha({
 
   return (
     <>
-      {/* Hero tipo Urbanitae: título + ubicación + panel lateral */}
+      {/* Hero tipo Urbanitae: imagen + título + ubicación + panel lateral */}
       <div className="mt-6 rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] overflow-hidden shadow-sm">
+        <div className="relative w-full aspect-[21/9] min-h-[180px] bg-[var(--brand-bg-lavender)]">
+          <Image
+            src={getDefaultCompanyImageUrl(company)}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 900px"
+            unoptimized
+          />
+        </div>
         <div className="grid md:grid-cols-[1fr,280px] gap-0">
           <div className="p-6 md:p-8">
             <div className="flex flex-wrap items-center gap-2">
@@ -319,6 +333,7 @@ export default function CompanyFicha({
               </p>
             )}
             {isLoggedIn &&
+              canSeeDocuments &&
               company.documentLinks &&
               company.documentLinks.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-[var(--brand-primary)]/10">
@@ -368,7 +383,7 @@ export default function CompanyFicha({
               </div>
             ) : !canSeeDocuments ? (
               <p className="mt-4 text-[var(--foreground)] opacity-80">
-                Solo el vendedor y el equipo de Diligenz pueden ver y gestionar los documentos de esta empresa.
+                Los documentos, enlaces y fotos solo son visibles cuando el administrador lo permita para esta empresa.
               </p>
             ) : (
               <div className="mt-6 space-y-4">

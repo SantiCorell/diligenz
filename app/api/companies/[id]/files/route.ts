@@ -10,7 +10,7 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
   const [company, user] = await Promise.all([
     prisma.company.findUnique({
       where: { id: companyId },
-      select: { ownerId: true },
+      select: { ownerId: true, attachmentsApproved: true },
     }),
     prisma.user.findUnique({
       where: { id: userId },
@@ -18,10 +18,11 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
     }),
   ]);
   if (!company || !user) return false;
-  return company.ownerId === userId || user.role === "ADMIN";
+  if (company.ownerId === userId || user.role === "ADMIN") return true;
+  return company.attachmentsApproved === true;
 }
 
-/** Lista de archivos (solo admin o dueño de la empresa) */
+/** Lista de archivos (admin, dueño o cualquier usuario registrado si attachmentsApproved) */
 export async function GET(_req: Request, { params }: Params) {
   const cookieStore = await cookies();
   const session = cookieStore.get("session");
@@ -36,13 +37,13 @@ export async function GET(_req: Request, { params }: Params) {
 
   const allowed = await canAccessCompanyFiles(companyId, session.value);
   if (!allowed) {
-    return NextResponse.json({ error: "Solo el dueño de la empresa o un administrador pueden ver los documentos" }, { status: 403 });
+    return NextResponse.json({ error: "No tienes permiso para ver los documentos de esta empresa" }, { status: 403 });
   }
 
   const files = await prisma.companyFile.findMany({
     where: { companyId },
     orderBy: { createdAt: "desc" },
-    select: { id: true, name: true, size: true, mimeType: true, createdAt: true },
+    select: { id: true, name: true, size: true, mimeType: true, kind: true, createdAt: true },
   });
 
   return NextResponse.json({ files });
@@ -90,6 +91,7 @@ export async function POST(req: Request, { params }: Params) {
   const bytes = await file.arrayBuffer();
   await writeFile(absolutePath, Buffer.from(bytes));
 
+  const isImage = (file.type || "").startsWith("image/");
   await prisma.companyFile.create({
     data: {
       companyId,
@@ -98,6 +100,7 @@ export async function POST(req: Request, { params }: Params) {
       storagePath,
       mimeType: file.type || "application/octet-stream",
       size: file.size,
+      kind: isImage ? "image" : "document",
     },
   });
 

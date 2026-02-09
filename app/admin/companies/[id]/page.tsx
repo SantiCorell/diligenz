@@ -160,6 +160,19 @@ export default async function AdminCompanyDetail({
             />
           </div>
 
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              name="attachmentsApproved"
+              id="attachmentsApproved"
+              defaultChecked={company.attachmentsApproved}
+              className="h-4 w-4 rounded border-gray-300 text-[var(--brand-primary)]"
+            />
+            <label htmlFor="attachmentsApproved" className="text-sm font-medium text-gray-700">
+              Permitir que usuarios registrados vean documentación, enlaces y fotos subidas
+            </label>
+          </div>
+
           <button
             type="submit"
             className="rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
@@ -177,7 +190,7 @@ export default async function AdminCompanyDetail({
           Documentos subidos por el vendedor
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          Solo visibles para ti (admin) y el dueño de la empresa. El cliente los sube desde la ficha pública.
+          El vendedor los sube desde la ficha. Si activas &quot;Permitir que usuarios registrados vean documentación, enlaces y fotos&quot;, cualquier usuario logueado podrá ver y descargar estos archivos.
         </p>
         {company.companyFiles.length === 0 ? (
           <p className="mt-4 text-sm text-gray-500">
