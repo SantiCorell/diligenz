@@ -12,7 +12,7 @@ export default function SobreNosotrosPage() {
   return (
     <ShellLayout>
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 md:py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 md:py-16">
           <h1 className="text-3xl md:text-4xl font-bold text-[var(--brand-primary)]">
             Sobre nosotros
           </h1>
@@ -20,7 +20,7 @@ export default function SobreNosotrosPage() {
             Conectamos compradores y vendedores de empresas. Unifica compra, venta y valoración en una sola plataforma que aporta claridad a tus operaciones de M&A.
           </p>
 
-          <div className="mt-12 space-y-8 text-[var(--foreground)] opacity-90 leading-relaxed">
+          <div className="mt-10 md:mt-12 space-y-8 text-[var(--foreground)] opacity-90 leading-relaxed">
             <section>
               <h2 className="text-xl font-semibold text-[var(--brand-primary)] mb-3">
                 Qué hacemos

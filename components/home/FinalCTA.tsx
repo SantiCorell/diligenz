@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export default function FinalCTA() {
   return (
-    <section className="bg-[var(--brand-bg)] py-24 border-t border-[var(--brand-primary)]/10">
-      <div className="mx-auto max-w-6xl px-6 py-24 text-center">
+    <section className="bg-[var(--brand-bg)] py-12 md:py-16 border-t border-[var(--brand-primary)]/10">
+      <div className="mx-auto max-w-6xl px-6 text-center">
         <h2 className="text-4xl font-semibold text-[var(--brand-primary)]">
           Empieza hoy a comprar o vender empresas
         </h2>

@@ -33,7 +33,7 @@ function computeValuation(body: {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { sector, location, revenue, ebitda, employees } = body;
+    const { sector, location, revenue, ebitda, employees, companyName, description } = body;
 
     if (!sector || !location || revenue == null || revenue <= 0) {
       return NextResponse.json(
@@ -41,6 +41,9 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    const name = (companyName && String(companyName).trim()) || "Empresa sin nombre";
+    const descriptionStr = (description && String(description).trim()) || null;
 
     const numRevenue = Number(revenue);
     const numEbitda = ebitda != null && ebitda !== "" ? Number(ebitda) : null;
@@ -60,12 +63,13 @@ export async function POST(req: Request) {
       const userId = sessionCookie.value;
       const company = await prisma.company.create({
         data: {
-          name: "Empresa sin nombre",
+          name,
           sector,
           location: String(location),
           revenue: String(numRevenue),
           ebitda: numEbitda != null ? String(numEbitda) : null,
           employees: numEmployees ?? null,
+          description: descriptionStr,
           ownerId: userId,
         },
       });

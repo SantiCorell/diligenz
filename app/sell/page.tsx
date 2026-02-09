@@ -20,11 +20,13 @@ const SECTORS = [
 ];
 
 export default function SellPage() {
+  const [companyName, setCompanyName] = useState("");
   const [sector, setSector] = useState("");
   const [location, setLocation] = useState("");
   const [revenue, setRevenue] = useState<number | "">("");
   const [ebitda, setEbitda] = useState<number | "">("");
   const [employees, setEmployees] = useState<number | "">("");
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ValuationResult | null>(null);
@@ -43,6 +45,8 @@ export default function SellPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          companyName: companyName.trim() || undefined,
+          description: description.trim() || undefined,
           sector,
           location,
           revenue: Number(revenue),
@@ -65,7 +69,7 @@ export default function SellPage() {
 
   return (
     <ShellLayout>
-    <div className="min-h-screen bg-[var(--brand-bg)] px-6 py-12">
+    <div className="min-h-screen bg-[var(--brand-bg)] px-6 py-12 md:py-16">
       <div className="mx-auto max-w-3xl">
         <h1 className="text-3xl font-semibold tracking-tight text-[var(--brand-primary)]">
           Valora tu empresa en minutos
@@ -80,6 +84,16 @@ export default function SellPage() {
         >
           {/* DATOS EMPRESA */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium">Nombre de la empresa</label>
+              <input
+                type="text"
+                className="mt-1 w-full rounded-lg border px-4 py-3"
+                placeholder="Ej. Mi Empresa S.L."
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+              />
+            </div>
             <div>
               <label className="text-sm font-medium">Sector</label>
               <select
@@ -159,6 +173,19 @@ export default function SellPage() {
                     e.target.value === "" ? "" : Number(e.target.value)
                   )
                 }
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium">
+                Descripción de la actividad{" "}
+                <span className="text-gray-400">(opcional, recomendado)</span>
+              </label>
+              <textarea
+                rows={4}
+                className="mt-1 w-full rounded-lg border px-4 py-3"
+                placeholder="Describe brevemente la actividad, sector, puntos fuertes y motivo de venta. Así la ficha será más atractiva para compradores."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               />
             </div>
           </div>

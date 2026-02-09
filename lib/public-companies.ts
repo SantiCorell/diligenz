@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { CompanyMock } from "@/lib/mock-companies";
+import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
 
 const THRESHOLD_REAL_ONLY = 10;
 
@@ -23,12 +23,17 @@ export async function getPublicCompanies(): Promise<{
   });
 
   const realCompanies: CompanyMock[] = publishedDeals.map((deal) => {
-    const c = deal.company;
+    const c = deal.company as typeof deal.company & {
+      gmv?: string | null;
+      sellerDescription?: string | null;
+      documentLinks?: DocumentLink[] | null;
+    };
     const val = c.valuations[0];
     const revenueStr = val
       ? `${(val.minValue / 1_000_000).toFixed(1)}–${(val.maxValue / 1_000_000).toFixed(1)}M €`
       : "—";
     const ebitdaStr = c.ebitda ?? "—";
+    const docLinks = c.documentLinks;
     return {
       id: c.id,
       name: c.name,
@@ -36,7 +41,10 @@ export async function getPublicCompanies(): Promise<{
       location: c.location,
       revenue: revenueStr,
       ebitda: ebitdaStr,
+      gmv: c.gmv ?? null,
       description: c.description ?? "Sin descripción.",
+      sellerDescription: c.sellerDescription ?? null,
+      documentLinks: Array.isArray(docLinks) ? docLinks : null,
     };
   });
 

@@ -5,7 +5,7 @@ import ShellLayout from "@/components/layout/ShellLayout";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
 import { prisma } from "@/lib/prisma";
 import CompanyFicha from "./CompanyFicha";
-import type { CompanyMock } from "@/lib/mock-companies";
+import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -26,6 +26,7 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
   const revenueStr = val
     ? `${(val.minValue / 1_000_000).toFixed(1)}–${(val.maxValue / 1_000_000).toFixed(1)}M €`
     : "—";
+  const docLinks = company.documentLinks as DocumentLink[] | null | undefined;
   return {
     id: company.id,
     name: company.name,
@@ -33,7 +34,10 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     location: company.location,
     revenue: revenueStr,
     ebitda: company.ebitda ?? "—",
+    gmv: company.gmv ?? null,
     description: company.description ?? "Sin descripción.",
+    sellerDescription: company.sellerDescription ?? null,
+    documentLinks: Array.isArray(docLinks) ? docLinks : null,
   };
 }
 
@@ -46,17 +50,33 @@ export default async function CompanyDetailPage({ params }: Props) {
   const session = cookieStore.get("session");
   const isLoggedIn = Boolean(session?.value);
 
+  let isOwner = false;
+  let isAdmin = false;
+  if (session?.value && !MOCK_COMPANIES.some((c) => c.id === id)) {
+    const [companyRow, user] = await Promise.all([
+      prisma.company.findUnique({ where: { id }, select: { ownerId: true } }),
+      prisma.user.findUnique({ where: { id: session.value }, select: { role: true } }),
+    ]);
+    isOwner = companyRow?.ownerId === session.value;
+    isAdmin = user?.role === "ADMIN";
+  }
+
   return (
     <ShellLayout>
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <div className="max-w-3xl mx-auto px-6 py-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-16">
           <Link
             href="/companies"
             className="text-sm text-[var(--brand-primary)] hover:underline"
           >
             ← Volver a empresas
           </Link>
-          <CompanyFicha company={company} isLoggedIn={isLoggedIn} />
+          <CompanyFicha
+            company={company}
+            isLoggedIn={isLoggedIn}
+            isOwner={isOwner}
+            isAdmin={isAdmin}
+          />
         </div>
       </div>
     </ShellLayout>

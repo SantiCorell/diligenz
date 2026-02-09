@@ -38,7 +38,7 @@ const sectors = [
 
 export default function SpecializedSectors() {
   return (
-    <section className="bg-[var(--brand-bg)] py-12 md:py-20">
+    <section className="bg-[var(--brand-bg)] py-12 md:py-16 border-t border-[var(--brand-primary)]/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <h2 className="text-3xl font-bold text-[var(--brand-primary)]">
           Sectores en los que estamos especializados

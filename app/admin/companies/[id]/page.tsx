@@ -18,6 +18,7 @@ export default async function AdminCompanyDetail({
     include: {
       documents: true,
       deals: true,
+      companyFiles: { orderBy: { createdAt: "desc" } },
       valuations: {
         orderBy: { createdAt: "desc" },
         take: 1,
@@ -64,6 +65,7 @@ export default async function AdminCompanyDetail({
         <div className="mt-5 grid grid-cols-2 gap-4 text-sm text-gray-700">
           <p><strong>Ingresos:</strong> {company.revenue}</p>
           <p><strong>EBITDA:</strong> {company.ebitda || "-"}</p>
+          <p><strong>GMV:</strong> {company.gmv || "-"}</p>
           <p><strong>Empleados:</strong> {company.employees || "-"}</p>
           <p><strong>Propietario:</strong> {company.owner.email}</p>
 
@@ -85,11 +87,130 @@ export default async function AdminCompanyDetail({
       </section>
 
       {/* ===================== */}
-      {/* DOCUMENTACIÓN */}
+      {/* EDITAR FICHA PÚBLICA */}
       {/* ===================== */}
       <section className="mt-8 rounded-xl bg-white p-6 shadow">
         <h2 className="text-lg font-semibold text-gray-900">
-          Documentación
+          Editar ficha pública (listado y detalle)
+        </h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Descripción breve en listados. Descripción del vendedor y enlaces a Drive solo visibles para usuarios registrados.
+        </p>
+        <form action="/api/admin/company/update" method="POST" className="mt-4 space-y-4">
+          <input type="hidden" name="companyId" value={company.id} />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Nombre empresa</label>
+            <input
+              type="text"
+              name="name"
+              defaultValue={company.name}
+              className="mt-1 w-full max-w-md rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Descripción breve (tarjetas y listado)</label>
+            <textarea
+              name="description"
+              rows={4}
+              defaultValue={company.description ?? ""}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+              placeholder="Resumen atractivo para las tarjetas del listado. Cuanto más completa, mejor."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Descripción del vendedor (solo usuarios registrados)</label>
+            <textarea
+              name="sellerDescription"
+              rows={8}
+              defaultValue={company.sellerDescription ?? ""}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+              placeholder="Descripción amplia: historia, fortalezas, motivo de venta, oportunidades. Solo visible en la ficha para usuarios registrados."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Enlaces a documentación (Drive, etc.)</label>
+            <p className="mt-0.5 text-xs text-gray-500">Una línea por enlace: Etiqueta|URL</p>
+            <textarea
+              name="documentLinks"
+              rows={4}
+              defaultValue={
+                Array.isArray(company.documentLinks)
+                  ? (company.documentLinks as { label: string; url: string }[])
+                      .map((l) => `${l.label}|${l.url}`)
+                      .join("\n")
+                  : ""
+              }
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm text-gray-900"
+              placeholder="Memoria comercial|https://drive.google.com/...&#10;Cuentas anuales|https://drive.google.com/..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">GMV (volumen de negocio)</label>
+            <input
+              type="text"
+              name="gmv"
+              defaultValue={company.gmv ?? ""}
+              className="mt-1 w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+              placeholder="ej. 2,5M €"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            Guardar cambios en la ficha
+          </button>
+        </form>
+      </section>
+
+      {/* ===================== */}
+      {/* DOCUMENTOS SUBIDOS POR EL VENDEDOR */}
+      {/* ===================== */}
+      <section className="mt-8 rounded-xl bg-white p-6 shadow">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Documentos subidos por el vendedor
+        </h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Solo visibles para ti (admin) y el dueño de la empresa. El cliente los sube desde la ficha pública.
+        </p>
+        {company.companyFiles.length === 0 ? (
+          <p className="mt-4 text-sm text-gray-500">
+            Aún no hay documentos subidos.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {company.companyFiles.map((f) => (
+              <li
+                key={f.id}
+                className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3 text-sm"
+              >
+                <span className="text-gray-700">{f.name}</span>
+                <a
+                  href={`/api/companies/${company.id}/files/${f.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--brand-primary)] font-medium hover:underline"
+                >
+                  Descargar
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* ===================== */}
+      {/* DOCUMENTACIÓN (NDA, MANDATO, etc.) */}
+      {/* ===================== */}
+      <section className="mt-8 rounded-xl bg-white p-6 shadow">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Documentación legal
         </h2>
 
         <ul className="mt-4 space-y-3">

@@ -13,7 +13,7 @@ export default function BlogPage() {
   return (
     <ShellLayout>
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-12">
+        <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-12 md:py-14">
           <div className="max-w-4xl mx-auto px-6 text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-[var(--brand-primary)]">
               Blog

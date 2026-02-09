@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { LayoutDashboard, Star, Globe, LogOut } from "lucide-react";
 
 export default function Navbar() {
   const [inicioOpen, setInicioOpen] = useState(false);
@@ -32,11 +33,11 @@ export default function Navbar() {
         <div className="flex h-14 sm:h-16 items-center justify-between">
           <Link
               href="/"
-              className="flex items-center shrink-0 rounded-lg bg-white/95 px-3 py-1.5 hover:bg-white transition shadow-sm"
+              className="flex items-center shrink-0 hover:opacity-90 transition"
               onClick={() => setMobileMenuOpen(false)}
             >
               <Image
-                src="/logo-diligenz-completo.png"
+                src="/logo-diligenz-claro.png"
                 alt="Diligenz"
                 width={140}
                 height={40}
@@ -48,7 +49,7 @@ export default function Navbar() {
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-[var(--brand-bg)]">
             <div
-              className="relative pb-24 -mb-24"
+              className="relative group"
               onMouseEnter={() => setInicioOpen(true)}
               onMouseLeave={() => setInicioOpen(false)}
             >
@@ -60,12 +61,12 @@ export default function Navbar() {
                 <span className="text-xs">▼</span>
               </button>
               {inicioOpen && (
-                <div className="absolute top-full left-0 w-52 mt-2">
-                  <div className="rounded-lg border border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
-                    <Link href="/" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10">
+                <div className="absolute top-full left-0 pt-2">
+                  <div className="w-52 rounded-lg border border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
+                    <Link href="/" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10 rounded-t-lg">
                       Inicio
                     </Link>
-                    <Link href="/sobre-nosotros" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10">
+                    <Link href="/sobre-nosotros" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10 rounded-b-lg">
                       Sobre nosotros
                     </Link>
                   </div>
@@ -76,7 +77,7 @@ export default function Navbar() {
               Empresas
             </Link>
             <div
-              className="relative pb-24 -mb-24"
+              className="relative group"
               onMouseEnter={() => setServiciosOpen(true)}
               onMouseLeave={() => setServiciosOpen(false)}
             >
@@ -88,12 +89,12 @@ export default function Navbar() {
                 <span className="text-xs">▼</span>
               </button>
               {serviciosOpen && (
-                <div className="absolute top-full left-0 w-52 mt-2">
-                  <div className="rounded-lg border border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
-                    <Link href="/servicios" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10">
+                <div className="absolute top-full left-0 pt-2">
+                  <div className="w-52 rounded-lg border border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
+                    <Link href="/servicios" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10 rounded-t-lg">
                       Ver servicios
                     </Link>
-                    <Link href="/servicios#pricing" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10">
+                    <Link href="/servicios#pricing" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10 rounded-b-lg">
                       Precios
                     </Link>
                   </div>
@@ -114,7 +115,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             {loggedIn ? (
               <div
-                className="relative pb-24 -mb-24"
+                className="relative group"
                 onMouseEnter={() => setUserMenuOpen(true)}
                 onMouseLeave={() => setUserMenuOpen(false)}
               >
@@ -126,23 +127,23 @@ export default function Navbar() {
                   <span className="text-xs">▼</span>
                 </button>
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full w-56 mt-2">
-                    <div className="rounded-lg border border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
-                      <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition">
-                        <span>📊</span>
+                  <div className="absolute right-0 top-full pt-2">
+                    <div className="w-56 rounded-xl border border-white/15 bg-[var(--brand-primary)] py-1.5 shadow-xl shadow-black/10">
+                      <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5">
+                        <LayoutDashboard className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Mi Panel</span>
                       </Link>
-                      <Link href="/companies/mi-interes" className="flex items-center gap-2 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition">
-                        <span>⭐</span>
+                      <Link href="/companies/mi-interes" className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5">
+                        <Star className="w-4 h-4 shrink-0 opacity-90" />
                         <span>De mi interés</span>
                       </Link>
-                      <div className="border-t border-white/10 my-1"></div>
-                      <Link href="/" className="flex items-center gap-2 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition">
-                        <span>🌐</span>
+                      <div className="my-1.5 border-t border-white/15" role="separator" aria-hidden />
+                      <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5">
+                        <Globe className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Volver a la web</span>
                       </Link>
-                      <Link href="/api/auth/logout" className="flex items-center gap-2 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition">
-                        <span>🚪</span>
+                      <Link href="/api/auth/logout" className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5">
+                        <LogOut className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Cerrar sesión</span>
                       </Link>
                     </div>
@@ -248,7 +249,7 @@ export default function Navbar() {
           >
             Contacto
           </Link>
-          <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/20">
+          <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/15">
             {loggedIn ? (
               <>
                 <span className="py-2 text-xs font-semibold uppercase tracking-wider opacity-80">
@@ -256,30 +257,34 @@ export default function Navbar() {
                 </span>
                 <Link
                   href="/dashboard"
-                  className="py-2.5 pl-4 border-b border-white/10 font-medium"
+                  className="flex items-center gap-3 py-2.5 pl-4 border-b border-white/10 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  📊 Mi Panel
+                  <LayoutDashboard className="w-4 h-4 shrink-0 opacity-90" />
+                  Mi Panel
                 </Link>
                 <Link
                   href="/companies/mi-interes"
-                  className="py-2.5 pl-4 border-b border-white/10"
+                  className="flex items-center gap-3 py-2.5 pl-4 border-b border-white/10"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  ⭐ De mi interés
+                  <Star className="w-4 h-4 shrink-0 opacity-90" />
+                  De mi interés
                 </Link>
                 <Link
                   href="/"
-                  className="py-2.5 pl-4 border-b border-white/10"
+                  className="flex items-center gap-3 py-2.5 pl-4 border-b border-white/10"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  🌐 Volver a la web
+                  <Globe className="w-4 h-4 shrink-0 opacity-90" />
+                  Volver a la web
                 </Link>
                 <Link
                   href="/api/auth/logout"
-                  className="py-3 text-center rounded-xl border-2 border-white/30 font-medium mt-2"
+                  className="flex items-center gap-3 py-3 pl-4 text-center rounded-xl border border-white/20 font-medium mt-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
+                  <LogOut className="w-4 h-4 shrink-0 opacity-90" />
                   Cerrar sesión
                 </Link>
               </>

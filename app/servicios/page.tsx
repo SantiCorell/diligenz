@@ -1,6 +1,7 @@
 import ShellLayout from "@/components/layout/ShellLayout";
 import Link from "next/link";
 import Image from "next/image";
+import { FileSearch, Store, TrendingUp, Briefcase, Check } from "lucide-react";
 import ContactFormServicios from "@/components/contact/ContactFormServicios";
 
 const SERVICES = [
@@ -39,20 +40,23 @@ const SERVICES = [
 const PRICING_TABLE = [
   {
     service: "Due Diligence",
+    icon: FileSearch,
     options: [{ label: "Proyecto a medida", price: "Según consulta" }],
   },
   {
     service: "Vender empresa",
+    icon: Store,
     options: [
       { label: "Poner empresa en venta en la plataforma", price: "Gratis" },
       { label: "1 a 3 empresas", price: "100 €/mes + acuerdo de venta" },
       { label: "De 3 a 10 empresas", price: "300 €/mes + precio a consultar" },
       { label: "Más de 10 empresas", price: "Precio a consultar" },
-      { label: "Comisión sobre venta", price: "Porcentaje a negociar en todas las opciones" },
+      { label: "Comisión sobre venta", price: "Porcentaje a negociar" },
     ],
   },
   {
     service: "Valorar tu empresa",
+    icon: TrendingUp,
     options: [
       { label: "Valoración profesional por nuestros expertos", price: "Desde 1.500 €" },
       { label: "Informe detallado y defensa ante comprador", price: "A consulta" },
@@ -60,6 +64,7 @@ const PRICING_TABLE = [
   },
   {
     service: "Comprar empresa",
+    icon: Briefcase,
     options: [
       { label: "Asesoramiento en búsqueda y análisis", price: "Según consulta" },
       { label: "Due diligence y apoyo en negociación", price: "Según consulta" },
@@ -72,7 +77,7 @@ export default function ServiciosPage() {
     <ShellLayout>
       <div className="min-h-screen bg-[var(--brand-bg)]">
         {/* Hero */}
-        <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-10 sm:py-16">
+        <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-12 md:py-16">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--brand-primary)]">
               Servicios profesionales
@@ -90,8 +95,8 @@ export default function ServiciosPage() {
         </section>
 
         {/* Servicios: en móvil se apilan en columna (imagen arriba, texto abajo) */}
-        <section className="py-12 md:py-24">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-16 md:space-y-24">
+        <section className="py-12 md:py-16">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-14 md:space-y-16">
             {SERVICES.map((srv) => (
               <article
                 key={srv.id}
@@ -129,81 +134,82 @@ export default function ServiciosPage() {
           </div>
         </section>
 
-        {/* Pricing - tarjetas con personalidad Diligenz */}
-        <section id="pricing" className="py-16 md:py-24 border-t border-[var(--brand-primary)]/10 bg-gradient-to-b from-[var(--brand-bg)] to-[var(--brand-bg-lavender)]/50">
+        {/* Pricing - en sintonía con el resto del proyecto */}
+        <section id="pricing" className="py-12 md:py-16 border-t border-[var(--brand-primary)]/10 bg-[var(--brand-bg)]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-14">
-              <span className="inline-block text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-90 mb-2">
+            <div className="text-center mb-10">
+              <span className="text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80">
                 Tarifas
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-[var(--brand-primary)]">
+              <h2 className="mt-2 text-3xl md:text-4xl font-bold text-[var(--brand-primary)]">
                 Precios
               </h2>
-              <p className="mt-3 text-[var(--foreground)] opacity-85 max-w-2xl mx-auto">
+              <p className="mt-3 text-lg text-[var(--foreground)] opacity-85 max-w-2xl mx-auto">
                 Tarifas orientativas. Consulte sin compromiso para un presupuesto adaptado a su caso.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-              {PRICING_TABLE.map((row) => (
-                <div
-                  key={row.service}
-                  className="group relative rounded-2xl bg-white p-0 overflow-hidden flex flex-col shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-[var(--brand-primary)]/10"
-                >
-                  {/* Barra superior de marca */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+              {PRICING_TABLE.map((row) => {
+                const Icon = row.icon;
+                return (
                   <div
-                    className="h-1.5 w-full bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary)]/70"
-                    aria-hidden
-                  />
-                  <div className="p-6 flex flex-col flex-1">
-                    <h3 className="text-lg font-bold text-[var(--brand-primary)] tracking-tight">
-                      {row.service}
-                    </h3>
-                    <ul className="mt-5 space-y-4 flex-1">
+                    key={row.service}
+                    className="rounded-2xl border-2 border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] p-6 shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/25 transition-all duration-300 flex flex-col"
+                  >
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-11 h-11 rounded-xl bg-[var(--brand-primary)]/15 flex items-center justify-center text-[var(--brand-primary)] shrink-0">
+                        <Icon className="w-5 h-5" strokeWidth={2} />
+                      </div>
+                      <h3 className="text-lg font-bold text-[var(--brand-primary)]">
+                        {row.service}
+                      </h3>
+                    </div>
+                    <ul className="space-y-4 flex-1">
                       {row.options.map((opt, i) => (
-                        <li
-                          key={i}
-                          className="flex flex-col gap-1 text-sm border-b border-[var(--brand-bg)] last:border-0 last:pb-0 pb-3 last:pb-0"
-                        >
-                          <span className="text-[var(--foreground)] opacity-90 leading-snug">
-                            {opt.label}
-                          </span>
-                          <span className="font-bold text-[var(--brand-primary)] text-base">
+                        <li key={i} className="flex flex-col gap-1">
+                          <div className="flex items-start gap-2">
+                            <Check className="w-4 h-4 text-[var(--brand-primary)]/70 shrink-0 mt-0.5" strokeWidth={2.5} />
+                            <span className="text-sm text-[var(--foreground)] opacity-90 leading-snug">
+                              {opt.label}
+                            </span>
+                          </div>
+                          <p className="pl-6 text-sm font-bold text-[var(--brand-primary)]">
                             {opt.price}
-                          </span>
+                          </p>
                         </li>
                       ))}
                     </ul>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            <p className="mt-10 text-center text-sm text-[var(--foreground)] opacity-80 max-w-xl mx-auto">
-              En todas las opciones de venta se aplica un porcentaje sobre la operación cerrada, a negociar.
+            <p className="mt-8 text-center text-sm text-[var(--foreground)] opacity-75 max-w-xl mx-auto">
+              En las opciones de venta se aplica un porcentaje sobre la operación cerrada, a negociar.
             </p>
 
-            <div className="mt-12 text-center flex flex-col items-center gap-4">
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/sell"
-                className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-primary)] px-8 py-4 text-white font-semibold hover:opacity-90 shadow-lg hover:shadow-xl transition-all"
+                className="inline-flex items-center justify-center rounded-xl bg-[var(--brand-primary)] px-8 py-3.5 text-white font-semibold hover:opacity-90 shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
               >
                 Valorar mi empresa
               </Link>
               <a
                 href="#contacto"
-                className="text-sm font-medium text-[var(--brand-primary)] hover:underline"
+                className="inline-flex items-center justify-center text-sm font-medium text-[var(--brand-primary)] hover:underline w-full sm:w-auto"
               >
-                ¿Tienes dudas? Ponte en contacto con nosotros
+                ¿Dudas? Contacta con nosotros
               </a>
             </div>
           </div>
         </section>
 
         {/* Ponte en contacto - formulario tipo Deale */}
-        <section id="contacto" className="py-16 md:py-24 bg-gradient-to-b from-[var(--brand-bg-lavender)]/40 to-[var(--brand-bg)] border-t border-[var(--brand-primary)]/10">
+        <section id="contacto" className="py-12 md:py-16 bg-gradient-to-b from-[var(--brand-bg-lavender)]/40 to-[var(--brand-bg)] border-t border-[var(--brand-primary)]/10">
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-12">
+            <div className="text-center mb-10">
               <span className="inline-block text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-90 mb-2">
                 Consúltanos
               </span>

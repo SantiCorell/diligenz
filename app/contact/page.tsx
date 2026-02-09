@@ -56,7 +56,7 @@ export default function ContactPage() {
   return (
     <ShellLayout>
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-primary)]/10 py-12 md:py-16">
+        <section className="border-b border-[var(--brand-primary)]/10 py-12 md:py-14">
           <div className="max-w-2xl mx-auto px-4 sm:px-6">
             <span className="inline-block text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-90 mb-2">
               Hablemos
@@ -70,7 +70,7 @@ export default function ContactPage() {
           </div>
         </section>
 
-        <section className="py-12 md:py-16">
+        <section className="py-10 md:py-14">
           <div className="max-w-2xl mx-auto px-4 sm:px-6">
             <div className="rounded-2xl border-2 border-[var(--brand-primary)]/20 bg-white p-8 shadow-lg">
               {sent ? (

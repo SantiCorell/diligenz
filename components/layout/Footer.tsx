@@ -3,12 +3,12 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="bg-[var(--brand-primary)] text-[var(--brand-bg)] py-12 md:py-16">
+    <footer className="bg-[var(--brand-primary)] text-[var(--brand-bg)] py-12 md:py-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         <div>
-          <Link href="/" className="inline-block rounded-lg bg-white/95 px-3 py-2 hover:bg-white transition shadow-sm">
+          <Link href="/" className="inline-block hover:opacity-90 transition">
             <Image
-              src="/logo-diligenz-completo.png"
+              src="/logo-diligenz-claro.png"
               alt="Diligenz"
               width={140}
               height={40}

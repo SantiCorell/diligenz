@@ -30,8 +30,8 @@ export default async function CompaniesPage({ searchParams }: Props) {
   return (
     <ShellLayout>
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-16">
-          <div className="mb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
+          <div className="mb-8">
             <h1 className="text-3xl font-bold text-[var(--brand-primary)]">
               Empresas en venta
               {sectorLabel && (

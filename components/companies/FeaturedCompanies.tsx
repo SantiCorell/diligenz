@@ -22,7 +22,7 @@ export default function FeaturedCompanies() {
   }, []);
 
   return (
-    <section className="bg-[var(--brand-bg)] py-24 border-t border-[var(--brand-primary)]/10">
+    <section className="bg-[var(--brand-bg)] py-12 md:py-16 border-t border-[var(--brand-primary)]/10">
       <div className="mx-auto max-w-7xl px-6">
         <h2 className="text-center text-3xl font-semibold text-[var(--brand-primary)]">
           Empresas destacadas
@@ -31,7 +31,7 @@ export default function FeaturedCompanies() {
           Oportunidades reales, verificadas y confidenciales
         </p>
 
-        <div className="mt-16 grid items-center gap-12 md:grid-cols-2">
+        <div className="mt-10 md:mt-12 grid items-center gap-10 md:gap-12 md:grid-cols-2">
           <div>
             <span className="inline-block rounded-full bg-[var(--brand-primary)]/10 px-3 py-1 text-sm text-[var(--brand-primary)]">
               {company.sector} · {company.location}

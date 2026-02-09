@@ -2,11 +2,13 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Vercel + Supabase integration crea POSTGRES_PRISMA_URL y POSTGRES_URL_NON_POOLING
+// Usa DATABASE_URL (pooler) y DIRECT_URL (conexión directa).
+// En Vercel + Supabase a veces se llaman POSTGRES_PRISMA_URL y POSTGRES_URL_NON_POOLING:
+// pon en .env DATABASE_URL=<pooler> y DIRECT_URL=<direct>.
 datasource db {
   provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 /**
@@ -42,6 +44,7 @@ model User {
   companyInterests   UserCompanyInterest[]
   accounts           Account[]
   sessions           Session[]
+  companyFilesUploaded CompanyFile[]
 }
 
 // NextAuth.js models
@@ -121,8 +124,11 @@ model Company {
   location    String
   revenue     String
   ebitda      String?
+  gmv         String?       // Gross Merchandise Value (volumen de negocio)
   employees   Int?
-  description String?
+  description String?       // Resumen breve para listados y tarjetas
+  sellerDescription String?  @db.Text  // Descripción amplia del vendedor (solo usuarios registrados)
+  documentLinks    Json?    // [{ label: string, url: string }] enlaces a Drive, etc.
   status      CompanyStatus @default(DRAFT)
   createdAt   DateTime      @default(now())
 
@@ -132,6 +138,21 @@ model Company {
   documents  Document[]
   deals      Deal[]
   valuations Valuation[]
+  companyFiles CompanyFile[]
+}
+
+/// Documentos subidos por el dueño de la empresa. Solo visibles para admin y dueño.
+model CompanyFile {
+  id            String   @id @default(cuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  uploadedById  String
+  uploadedBy    User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  name          String   // nombre original del archivo
+  storagePath   String   // ruta relativa en disco o URL en blob
+  mimeType      String?  @default("application/octet-stream")
+  size          Int?     // bytes
+  createdAt     DateTime @default(now())
 }
 
 /**

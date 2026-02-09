@@ -1,7 +1,7 @@
 export default function ValuationCTA() {
   return (
-    <section className="bg-[var(--brand-bg)] py-28 border-t border-[var(--brand-primary)]/10">
-      <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+    <section className="bg-[var(--brand-bg)] py-12 md:py-16 border-t border-[var(--brand-primary)]/10">
+      <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-10 md:gap-12 items-center">
         <div>
           <span className="inline-block mb-3 rounded-full bg-[var(--brand-bg-mint)] px-4 py-1 text-sm text-[var(--brand-primary)]">
             Valoración gratuita

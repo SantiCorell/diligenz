@@ -46,6 +46,10 @@ next-env.d.ts
 
 /app/generated/prisma
 
+# Documentos subidos por usuarios (solo admin y dueño pueden ver)
+/uploads
+data/
+
 # Base de datos local (solo desarrollo)
 prisma/dev.db
 prisma/dev.db-journal

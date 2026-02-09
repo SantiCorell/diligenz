@@ -49,7 +49,7 @@ export default function Hero() {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-[var(--brand-primary)] rounded-full blur-3xl" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-14 md:py-16">
         <div className="text-center mb-12">
           {/* Logo grande */}
           <div className="flex justify-center mb-8">
