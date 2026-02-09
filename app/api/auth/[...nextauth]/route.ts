@@ -3,8 +3,9 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 
-const handler = NextAuth({
+const authOptions = {
   adapter: PrismaAdapter(prisma) as any,
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
@@ -14,7 +15,7 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile }: any) {
       if (account?.provider === "google") {
         // Verificar si el usuario está bloqueado
         const existingUser = await prisma.user.findUnique({
@@ -49,7 +50,7 @@ const handler = NextAuth({
       }
       return true;
     },
-    async session({ session, user }) {
+    async session({ session, user }: any) {
       // Sincronizar con nuestro sistema de cookies
       if (session.user?.email) {
         try {
@@ -98,7 +99,7 @@ const handler = NextAuth({
     },
   },
   events: {
-    async createUser({ user }) {
+    async createUser({ user }: any) {
       // Cuando se crea un usuario nuevo con Google, establecer rol por defecto
       if (user.email) {
         try {
@@ -121,8 +122,16 @@ const handler = NextAuth({
     error: "/login",
   },
   session: {
-    strategy: "database",
+    strategy: "database" as const,
   },
-});
+};
 
-export { handler as GET, handler as POST };
+interface RouteHandlerContext {
+  params: Promise<{ nextauth: string[] }>;
+}
+
+async function auth(req: NextRequest, context: RouteHandlerContext) {
+  return await NextAuth(req, context, authOptions);
+}
+
+export { auth as GET, auth as POST };
