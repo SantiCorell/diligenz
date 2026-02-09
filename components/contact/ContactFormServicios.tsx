@@ -109,32 +109,32 @@ export default function ContactFormServicios() {
         )}
 
         <div>
-          <label className="block text-sm font-semibold text-[var(--brand-primary)] mb-2">
+          <p className="block text-sm font-semibold text-[var(--brand-primary)] mb-3">
             ¿Eres particular o empresa?
-          </label>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="type-serv"
-                value="PARTICULAR"
-                checked={type === "PARTICULAR"}
-                onChange={() => setType("PARTICULAR")}
-                className="text-[var(--brand-primary)]"
-              />
-              <span className="text-[var(--foreground)]">Particular</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="type-serv"
-                value="EMPRESA"
-                checked={type === "EMPRESA"}
-                onChange={() => setType("EMPRESA")}
-                className="text-[var(--brand-primary)]"
-              />
-              <span className="text-[var(--foreground)]">Empresa</span>
-            </label>
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setType("PARTICULAR")}
+              className={`flex-1 rounded-xl px-5 py-3 text-sm font-semibold transition-all ${
+                type === "PARTICULAR"
+                  ? "bg-[var(--brand-primary)] text-white shadow-md"
+                  : "border-2 border-[var(--brand-primary)]/20 bg-[var(--brand-bg-lavender)] text-[var(--brand-primary)] hover:border-[var(--brand-primary)]/40"
+              }`}
+            >
+              Particular
+            </button>
+            <button
+              type="button"
+              onClick={() => setType("EMPRESA")}
+              className={`flex-1 rounded-xl px-5 py-3 text-sm font-semibold transition-all ${
+                type === "EMPRESA"
+                  ? "bg-[var(--brand-primary)] text-white shadow-md"
+                  : "border-2 border-[var(--brand-primary)]/20 bg-[var(--brand-bg-lavender)] text-[var(--brand-primary)] hover:border-[var(--brand-primary)]/40"
+              }`}
+            >
+              Empresa
+            </button>
           </div>
         </div>
 
