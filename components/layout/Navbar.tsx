@@ -60,8 +60,8 @@ export default function Navbar() {
                 <span className="text-xs">▼</span>
               </button>
               {inicioOpen && (
-                <div className="absolute top-full left-0 w-52 -mt-px">
-                  <div className="rounded-b-lg border border-t-0 border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
+                <div className="absolute top-full left-0 w-52 mt-2">
+                  <div className="rounded-lg border border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
                     <Link href="/" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10">
                       Inicio
                     </Link>
@@ -88,8 +88,8 @@ export default function Navbar() {
                 <span className="text-xs">▼</span>
               </button>
               {serviciosOpen && (
-                <div className="absolute top-full left-0 w-52 -mt-px">
-                  <div className="rounded-b-lg border border-t-0 border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
+                <div className="absolute top-full left-0 w-52 mt-2">
+                  <div className="rounded-lg border border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
                     <Link href="/servicios" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10">
                       Ver servicios
                     </Link>
@@ -126,8 +126,8 @@ export default function Navbar() {
                   <span className="text-xs">▼</span>
                 </button>
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full w-56 -mt-px">
-                    <div className="rounded-b-lg border border-t-0 border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
+                  <div className="absolute right-0 top-full w-56 mt-2">
+                    <div className="rounded-lg border border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
                       <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition">
                         <span>📊</span>
                         <span>Mi Panel</span>

@@ -153,7 +153,7 @@ export async function POST(req: Request) {
       {
         error: "Error al iniciar sesión",
         ...(process.env.NODE_ENV === "development" && {
-          detail: isPrisma ? "Comprueba DATABASE_URL y que las migraciones estén aplicadas." : message,
+          detail: isPrisma ? "Comprueba POSTGRES_PRISMA_URL / POSTGRES_URL_NON_POOLING y que las migraciones estén aplicadas." : message,
         }),
       },
       { status: 500 }
