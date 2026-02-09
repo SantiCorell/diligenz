@@ -39,11 +39,11 @@ body {
   0%,
   100% {
     transform: translate(0, 0);
-    opacity: 0.06;
+    opacity: 0.12;
   }
   50% {
     transform: translate(2px, -3px);
-    opacity: 0.08;
+    opacity: 0.16;
   }
 }
 

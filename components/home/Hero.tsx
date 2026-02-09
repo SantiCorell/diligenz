@@ -3,12 +3,13 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="relative bg-gradient-to-br from-[var(--brand-bg)] via-white to-[var(--brand-primary)]/5 overflow-hidden">
+    <section className="relative min-h-[calc(100vh-8rem)] flex flex-col justify-center bg-gradient-to-br from-[var(--brand-bg)] via-white to-[var(--brand-primary)]/10 overflow-hidden">
       {/* Ilustración de fondo: red de conexiones (compradores ↔ vendedores) */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden>
         <svg
-          className="absolute inset-0 w-full h-full opacity-[0.06] hero-bg-float"
+          className="absolute inset-0 w-full h-full hero-bg-float"
           viewBox="0 0 1200 800"
+          preserveAspectRatio="xMidYMid slice"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -41,13 +42,14 @@ export default function Hero() {
           <circle cx="600" cy="400" r="6" fill="url(#hero-dot)" className="hero-dot hero-dot-main" />
         </svg>
       </div>
-      {/* Blur suave adicional */}
-      <div className="absolute inset-0 opacity-[0.04]">
+      {/* Blur suave adicional para llenar el espacio */}
+      <div className="absolute inset-0 opacity-[0.08]">
         <div className="absolute top-20 left-10 w-72 h-72 bg-[var(--brand-primary)] rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[var(--brand-primary)] rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-[var(--brand-primary)] rounded-full blur-3xl" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28 md:py-32">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20">
         <div className="text-center mb-12">
           {/* Logo grande */}
           <div className="flex justify-center mb-8">
