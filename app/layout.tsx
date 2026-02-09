@@ -67,7 +67,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
         {/* ===================== */}
         {/* STRUCTURED DATA (JSON-LD) */}
@@ -97,6 +97,7 @@ export default function RootLayout({
 
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--brand-bg)] text-[var(--foreground)]`}
+        suppressHydrationWarning
       >
         {children}
         <SpeedInsights />

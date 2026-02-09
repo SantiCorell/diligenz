@@ -47,16 +47,25 @@ export async function POST(req: Request) {
     }
 
     const normalizedEmail = String(email).toLowerCase().trim();
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-      select: {
-        id: true,
-        passwordHash: true,
-        blocked: true,
-        blockedUntil: true,
-        provider: true,
-      },
-    });
+    let user: { id: string; passwordHash: string | null; blocked: boolean; blockedUntil: Date | null; provider: string | null } | null = null;
+    try {
+      user = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+        select: {
+          id: true,
+          passwordHash: true,
+          blocked: true,
+          blockedUntil: true,
+          provider: true,
+        },
+      });
+    } catch (dbError) {
+      console.error("Login DB error:", process.env.NODE_ENV === "production" ? "connection failed" : dbError);
+      return NextResponse.json(
+        { error: "Error al iniciar sesión. Inténtalo de nuevo en unos segundos." },
+        { status: 500 }
+      );
+    }
 
     if (!user) {
       // No revelar si el usuario existe o no por seguridad
@@ -109,14 +118,22 @@ export async function POST(req: Request) {
     }
 
     // Crear cookie de sesión con configuración segura
-    const cookieStore = await cookies();
-    cookieStore.set("session", user.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 días
-    });
+    try {
+      const cookieStore = await cookies();
+      cookieStore.set("session", user.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 días
+      });
+    } catch (cookieError) {
+      console.error("Login cookie error:", process.env.NODE_ENV === "production" ? "set failed" : cookieError);
+      return NextResponse.json(
+        { error: "Error al iniciar sesión. Inténtalo de nuevo." },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       { success: true },
