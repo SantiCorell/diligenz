@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
@@ -77,10 +78,19 @@ export async function POST(req: Request) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check existing user
-    const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-      select: { provider: true },
-    });
+    let existingUser: { provider: string | null } | null = null;
+    try {
+      existingUser = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+        select: { provider: true },
+      });
+    } catch (dbError) {
+      console.error("Register DB findUnique:", process.env.NODE_ENV === "production" ? "connection failed" : dbError);
+      return NextResponse.json(
+        { error: "Error de conexión. Inténtalo de nuevo en unos segundos." },
+        { status: 500 }
+      );
+    }
 
     if (existingUser) {
       // Si el usuario existe con OAuth, sugerir usar Google
@@ -97,24 +107,60 @@ export async function POST(req: Request) {
     }
 
     // Hash password
-    const passwordHash = await bcrypt.hash(password, 12); // Aumentar rounds para más seguridad
+    const passwordHash = await bcrypt.hash(password, 12);
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        passwordHash,
-        phone: phone.trim(),
-        role,
-      },
-    });
+    let user: { id: string; role: string };
+    try {
+      user = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          passwordHash,
+          phone: phone.trim(),
+          role,
+        },
+        select: { id: true, role: true },
+      });
+    } catch (createError) {
+      const msg = createError instanceof Error ? createError.message : "";
+      const isUnique = msg.includes("Unique constraint") || msg.includes("duplicate key");
+      console.error("Register create:", process.env.NODE_ENV === "production" ? (isUnique ? "duplicate" : "failed") : createError);
+      if (isUnique) {
+        return NextResponse.json(
+          { error: "Este email ya está registrado" },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json(
+        { error: "Error al crear la cuenta. Inténtalo de nuevo." },
+        { status: 500 }
+      );
+    }
 
-    const response = NextResponse.json(
+    // Cookie de sesión (Next 15: await cookies())
+    try {
+      const cookieStore = await cookies();
+      cookieStore.set("session", user.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 días
+      });
+    } catch (cookieError) {
+      console.error("Register cookie:", process.env.NODE_ENV === "production" ? "set failed" : cookieError);
+      return NextResponse.json(
+        { error: "Cuenta creada pero no se pudo iniciar sesión. Inicia sesión manualmente." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
       {
         message: "Usuario creado exitosamente",
         role: user.role,
       },
-      { 
+      {
         status: 201,
         headers: {
           "X-RateLimit-Limit": "3",
@@ -123,17 +169,6 @@ export async function POST(req: Request) {
         },
       }
     );
-
-    // Cookie de sesión segura
-    response.cookies.set("session", user.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 días
-    });
-
-    return response;
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json(

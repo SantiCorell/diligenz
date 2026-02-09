@@ -8,6 +8,7 @@ import type { NextRequest } from "next/server";
 const authOptions = {
   adapter: PrismaAdapter(prisma) as any,
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true, // Necesario en Vercel/proxy para que Google OAuth y callbacks funcionen
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,

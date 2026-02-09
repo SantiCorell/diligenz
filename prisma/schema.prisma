@@ -2,9 +2,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Vercel + Supabase integration crea POSTGRES_PRISMA_URL y POSTGRES_URL_NON_POOLING
 datasource db {
   provider  = "postgresql"
-  # Vercel + Supabase integration crea POSTGRES_PRISMA_URL y POSTGRES_URL_NON_POOLING
   url       = env("POSTGRES_PRISMA_URL")
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
