@@ -1,0 +1,255 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * =====================
+ * USER
+ * =====================
+ */
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String?  // Opcional para usuarios OAuth
+  phone         String?
+  role          UserRole
+  emailVerified Boolean  @default(false)
+
+  ndaSigned     Boolean  @default(false)
+  dniVerified   Boolean  @default(false)
+  
+  blocked       Boolean  @default(false)
+  blockedUntil  DateTime?
+
+  // OAuth fields
+  provider        String?  // "google" | null
+  providerId      String?  // ID del proveedor OAuth
+  name            String?  // Nombre completo del usuario
+  image           String?  // URL de la imagen de perfil
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companies          Company[]
+  interests          Interest[]
+  companyInterests   UserCompanyInterest[]
+  accounts           Account[]
+  sessions           Session[]
+}
+
+// NextAuth.js models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+/**
+ * Interés del usuario en una empresa (solicitar info, favoritos/seguimiento).
+ * companyId puede ser id mock (mock-1) o id real de Deal/Company.
+ * status solo aplica a REQUEST_INFO: control admin (pendiente, gestionada, rechazada).
+ */
+model UserCompanyInterest {
+  id        String   @id @default(cuid())
+  companyId String
+  type      CompanyInterestType
+  status    RequestStatus? @default(PENDING) // solo para REQUEST_INFO
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, companyId, type])
+}
+
+enum CompanyInterestType {
+  REQUEST_INFO
+  FAVORITE
+}
+
+enum RequestStatus {
+  PENDING
+  MANAGED
+  REJECTED
+}
+
+/**
+ * =====================
+ * COMPANY
+ * =====================
+ */
+model Company {
+  id          String        @id @default(cuid())
+  name        String
+  sector      String
+  location    String
+  revenue     String
+  ebitda      String?
+  employees   Int?
+  description String?
+  status      CompanyStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  ownerId    String
+  owner      User        @relation(fields: [ownerId], references: [id])
+  documents  Document[]
+  deals      Deal[]
+  valuations Valuation[]
+}
+
+/**
+ * =====================
+ * DEAL
+ * =====================
+ */
+model Deal {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  companyId String
+  company   Company   @relation(fields: [companyId], references: [id])
+  interests Interest[]
+}
+
+/**
+ * =====================
+ * DOCUMENT
+ * =====================
+ */
+model Document {
+  id        String       @id @default(cuid())
+  type      DocumentType
+  signed    Boolean      @default(false)
+  signedAt  DateTime?
+  createdAt DateTime     @default(now())
+
+  // Relations
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+}
+
+/**
+ * =====================
+ * VALUATION
+ * =====================
+ */
+model Valuation {
+  id        String   @id @default(cuid())
+  minValue  Int
+  maxValue  Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+}
+
+/**
+ * =====================
+ * INTEREST
+ * =====================
+ */
+model Interest {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId String
+  dealId String
+
+  user User @relation(fields: [userId], references: [id])
+  deal Deal @relation(fields: [dealId], references: [id])
+}
+
+/**
+ * =====================
+ * ENUMS
+ * =====================
+ */
+enum UserRole {
+  SELLER
+  BUYER
+  ADMIN
+}
+
+enum CompanyStatus {
+  DRAFT
+  IN_PROCESS
+  PUBLISHED
+  SOLD
+}
+
+enum DocumentType {
+  SALES_MANDATE
+  NDA
+  AUTHORIZATION
+}
+
+/**
+ * =====================
+ * WAITLIST (landing)
+ * =====================
+ */
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+/**
+ * =====================
+ * CONTACTO (formularios)
+ * =====================
+ */
+model ContactRequest {
+  id            String   @id @default(cuid())
+  source        String   // "contact" | "servicios"
+  type          String   // "PARTICULAR" | "EMPRESA"
+  name          String
+  email         String
+  phone         String?
+  companyName   String?
+  contactPerson String?  // persona a la que dirigirse (si empresa)
+  subject       String?  // motivo de consulta (Valoración, Due diligence, etc.)
+  message       String?  // texto libre
+  createdAt     DateTime @default(now())
+}

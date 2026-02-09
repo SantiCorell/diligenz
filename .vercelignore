@@ -1,0 +1,6 @@
+# Archivos que no deben subirse a Vercel
+prisma/dev.db
+prisma/dev.db-journal
+*.log
+.DS_Store
+node_modules

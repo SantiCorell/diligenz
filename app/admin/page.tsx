@@ -1,0 +1,223 @@
+import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ synced?: string }>;
+}) {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("session");
+  if (!session) redirect("/register");
+  const params = await searchParams;
+  const syncedCount = params.synced;
+
+  const totalCompanies = await prisma.company.count();
+  const publishedOnWeb = await prisma.deal.count({
+    where: { published: true },
+  });
+  const inProcess = await prisma.company.count({
+    where: { status: "IN_PROCESS" },
+  });
+  const draft = await prisma.company.count({
+    where: { status: "DRAFT" },
+  });
+
+  const totalUsers = await prisma.user.count();
+  const usersByRole = await prisma.user.groupBy({
+    by: ["role"],
+    _count: true,
+  });
+  const buyers = usersByRole.find((r) => r.role === "BUYER")?._count ?? 0;
+  const sellers = usersByRole.find((r) => r.role === "SELLER")?._count ?? 0;
+  const admins = usersByRole.find((r) => r.role === "ADMIN")?._count ?? 0;
+
+  const bySector = await prisma.company.groupBy({
+    by: ["sector"],
+    _count: true,
+    orderBy: { _count: { sector: "desc" } },
+    take: 6,
+  });
+
+  const byLocation = await prisma.company.groupBy({
+    by: ["location"],
+    _count: true,
+    orderBy: { _count: { location: "desc" } },
+    take: 6,
+  });
+
+  return (
+    <main className="max-w-6xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
+          Panel de administración
+        </h1>
+        <p className="mt-2 text-[var(--foreground)] opacity-80">
+          Visión global del marketplace y control editorial. Las empresas solo son visibles en la web cuando las publicas desde su ficha.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          title="Usuarios"
+          value={totalUsers}
+          subtitle={`${buyers} compradores · ${sellers} vendedores · ${admins} admin`}
+          accent="primary"
+        />
+        <KpiCard
+          title="Empresas totales"
+          value={totalCompanies}
+          href="/admin/companies"
+          accent="primary"
+        />
+        <KpiCard
+          title="Visibles en la web"
+          value={publishedOnWeb}
+          subtitle="Publicadas en marketplace"
+          href="/admin/companies"
+          accent="green"
+        />
+        <KpiCard title="En revisión" value={inProcess} accent="blue" />
+        <KpiCard title="Borrador" value={draft} accent="gray" />
+      </div>
+
+      <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <section className="rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+            Empresas por sector
+          </h2>
+          <ul className="mt-4 space-y-3">
+            {bySector.map((item) => (
+              <li
+                key={item.sector}
+                className="flex justify-between items-center text-sm text-[var(--foreground)]"
+              >
+                <span>{item.sector}</span>
+                <span className="font-semibold text-[var(--brand-primary)]">
+                  {item._count}
+                </span>
+              </li>
+            ))}
+            {bySector.length === 0 && (
+              <li className="text-sm text-[var(--foreground)] opacity-70">
+                Sin datos aún
+              </li>
+            )}
+          </ul>
+        </section>
+        <section className="rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+            Empresas por ubicación
+          </h2>
+          <ul className="mt-4 space-y-3">
+            {byLocation.map((item) => (
+              <li
+                key={item.location}
+                className="flex justify-between items-center text-sm text-[var(--foreground)]"
+              >
+                <span>{item.location}</span>
+                <span className="font-semibold text-[var(--brand-primary)]">
+                  {item._count}
+                </span>
+              </li>
+            ))}
+            {byLocation.length === 0 && (
+              <li className="text-sm text-[var(--foreground)] opacity-70">
+                Sin datos aún
+              </li>
+            )}
+          </ul>
+        </section>
+      </div>
+
+      <div className="mt-10 rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+        <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+          Acciones rápidas
+        </h2>
+        {syncedCount !== undefined && (
+          <p className="mt-2 text-sm text-green-600">
+            {syncedCount === "0"
+              ? "No había empresas con estado Publicado para sincronizar."
+              : `${syncedCount} empresa(s) sincronizada(s): ya visible(s) en la web.`}
+          </p>
+        )}
+        <div className="mt-4 flex flex-wrap gap-4">
+          <form
+            action="/api/admin/company/sync-published?redirect=1"
+            method="POST"
+            className="contents"
+          >
+            <button
+              type="submit"
+              className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700 transition"
+            >
+              Sincronizar publicadas con la web
+            </button>
+          </form>
+          <Link
+            href="/admin/companies"
+            className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+          >
+            Gestionar empresas
+          </Link>
+          <Link
+            href="/admin/actions"
+            className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+          >
+            Ver solicitudes de información
+          </Link>
+          <Link
+            href="/admin/users"
+            className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+          >
+            Crear usuarios / Admins
+          </Link>
+          <Link
+            href="/companies"
+            className="rounded-xl border-2 border-[var(--brand-primary)]/30 px-5 py-2.5 text-sm font-medium text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5 transition"
+          >
+            Ver listado público
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function KpiCard({
+  title,
+  value,
+  subtitle,
+  href,
+  accent,
+}: {
+  title: string;
+  value: number;
+  subtitle?: string;
+  href?: string;
+  accent: "primary" | "green" | "blue" | "gray";
+}) {
+  const styles = {
+    primary: "border-[var(--brand-primary)]/20 text-[var(--brand-primary)]",
+    green: "border-green-200 text-green-700",
+    blue: "border-blue-200 text-blue-700",
+    gray: "border-gray-200 text-gray-700",
+  };
+  const content = (
+    <div
+      className={`rounded-2xl border-2 bg-white p-6 shadow-lg transition hover:shadow-xl ${href ? "cursor-pointer" : ""} ${styles[accent]}`}
+    >
+      <p className="text-sm font-medium opacity-90">{title}</p>
+      <p className="mt-2 text-3xl font-bold">{value}</p>
+      {subtitle && (
+        <p className="mt-1 text-xs opacity-75">{subtitle}</p>
+      )}
+    </div>
+  );
+  if (href) {
+    return <Link href={href}>{content}</Link>;
+  }
+  return content;
+}

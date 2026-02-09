@@ -1,0 +1,15 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contacto",
+  description:
+    "Ponte en contacto con Diligenz. Consultas sobre valoración, compraventa de empresas y due diligence.",
+};
+
+export default function ContactLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return children;
+}

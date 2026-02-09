@@ -1,0 +1,3 @@
+-- AlterTable (SQLite: boolean as INTEGER 0/1)
+ALTER TABLE "User" ADD COLUMN "ndaSigned" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "User" ADD COLUMN "dniVerified" INTEGER NOT NULL DEFAULT 0;
