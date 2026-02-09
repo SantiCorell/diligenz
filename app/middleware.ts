@@ -1,13 +1,30 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const BETA_COOKIE = "beta_access";
+
 export function middleware(req: NextRequest) {
   const session = req.cookies.get("session");
+  const betaAccess = req.cookies.get(BETA_COOKIE);
   const { pathname } = req.nextUrl;
 
-  // Rutas que requieren autenticación
-  const protectedRoutes = ["/sell", "/dashboard", "/admin"];
+  // Página de acceso beta y su API: siempre permitir
+  if (pathname === "/acceso" || pathname.startsWith("/api/acceso")) {
+    const res = NextResponse.next();
+    // Añadir headers de seguridad también a esta respuesta
+    res.headers.set("X-Frame-Options", "DENY");
+    res.headers.set("X-Content-Type-Options", "nosniff");
+    return res;
+  }
 
+  // Si no tiene cookie de acceso beta → redirigir a /acceso
+  if (!betaAccess?.value) {
+    const accesoUrl = new URL("/acceso", req.url);
+    return NextResponse.redirect(accesoUrl);
+  }
+
+  // Rutas que requieren autenticación (login)
+  const protectedRoutes = ["/sell", "/dashboard", "/admin"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );

@@ -33,3 +33,65 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+/* Hero: animación sutil del fondo (red de conexiones) */
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.06;
+  }
+  50% {
+    transform: translate(2px, -3px);
+    opacity: 0.08;
+  }
+}
+
+@keyframes hero-dot-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.hero-bg-float {
+  animation: hero-float 12s ease-in-out infinite;
+}
+
+.hero-line {
+  animation: hero-float 14s ease-in-out infinite;
+}
+
+.hero-line-2 {
+  animation-delay: -2s;
+}
+
+.hero-line-3 {
+  animation-delay: -5s;
+}
+
+.hero-line-4 {
+  animation-delay: -8s;
+}
+
+.hero-dot {
+  animation: hero-dot-pulse 8s ease-in-out infinite;
+}
+
+.hero-dot-2 {
+  animation-delay: -1.5s;
+}
+
+.hero-dot-3 {
+  animation-delay: -3s;
+}
+
+.hero-dot-main {
+  animation: hero-dot-pulse 6s ease-in-out infinite;
+  animation-delay: -2s;
+}

@@ -4,10 +4,47 @@ import Link from "next/link";
 export default function Hero() {
   return (
     <section className="relative bg-gradient-to-br from-[var(--brand-bg)] via-white to-[var(--brand-primary)]/5 overflow-hidden">
-      {/* Elementos decorativos de fondo */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-[var(--brand-primary)] rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[var(--brand-primary)] rounded-full blur-3xl"></div>
+      {/* Ilustración de fondo: red de conexiones (compradores ↔ vendedores) */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden>
+        <svg
+          className="absolute inset-0 w-full h-full opacity-[0.06] hero-bg-float"
+          viewBox="0 0 1200 800"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Nodos y líneas suaves: sensación de red profesional */}
+          <defs>
+            <linearGradient id="hero-line" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="var(--brand-primary)" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="var(--brand-primary)" stopOpacity="0.1" />
+            </linearGradient>
+            <linearGradient id="hero-dot" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="var(--brand-primary)" />
+              <stop offset="100%" stopColor="var(--brand-primary)" stopOpacity="0.6" />
+            </linearGradient>
+          </defs>
+          {/* Líneas de conexión suaves */}
+          <path d="M100 200 Q400 100 700 250 T1100 180" stroke="url(#hero-line)" strokeWidth="1.5" fill="none" className="hero-line" />
+          <path d="M80 400 Q350 350 600 450 T1100 380" stroke="url(#hero-line)" strokeWidth="1.2" fill="none" className="hero-line hero-line-2" />
+          <path d="M150 600 Q500 500 850 550 T1150 620" stroke="url(#hero-line)" strokeWidth="1" fill="none" className="hero-line hero-line-3" />
+          <path d="M200 350 L500 320 L800 360 L1050 340" stroke="url(#hero-line)" strokeWidth="0.8" fill="none" strokeDasharray="8 12" className="hero-line hero-line-4" />
+          {/* Nodos (puntos de la red) */}
+          <circle cx="120" cy="200" r="4" fill="url(#hero-dot)" className="hero-dot" />
+          <circle cx="400" cy="120" r="5" fill="url(#hero-dot)" className="hero-dot hero-dot-2" />
+          <circle cx="700" cy="260" r="3" fill="url(#hero-dot)" className="hero-dot hero-dot-3" />
+          <circle cx="1080" cy="190" r="4" fill="url(#hero-dot)" className="hero-dot" />
+          <circle cx="100" cy="400" r="3" fill="url(#hero-dot)" className="hero-dot hero-dot-2" />
+          <circle cx="600" cy="450" r="5" fill="url(#hero-dot)" className="hero-dot hero-dot-3" />
+          <circle cx="1100" cy="380" r="3" fill="url(#hero-dot)" className="hero-dot" />
+          <circle cx="200" cy="600" r="4" fill="url(#hero-dot)" className="hero-dot hero-dot-2" />
+          <circle cx="850" cy="560" r="3" fill="url(#hero-dot)" className="hero-dot hero-dot-3" />
+          <circle cx="600" cy="400" r="6" fill="url(#hero-dot)" className="hero-dot hero-dot-main" />
+        </svg>
+      </div>
+      {/* Blur suave adicional */}
+      <div className="absolute inset-0 opacity-[0.04]">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-[var(--brand-primary)] rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[var(--brand-primary)] rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28 md:py-32">
