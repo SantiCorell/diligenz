@@ -126,12 +126,20 @@ const authOptions = {
   },
 };
 
-interface RouteHandlerContext {
-  params: Promise<{ nextauth: string[] }>;
-}
+const { handlers } = NextAuth(authOptions);
 
-async function auth(req: NextRequest, context: RouteHandlerContext) {
-  return await NextAuth(req, context, authOptions);
-}
+// Wrapper para compatibilidad con Next.js 16 (context con params)
+type Context = { params: Promise<{ nextauth: string[] }> };
+const wrap =
+  (fn: (req: NextRequest) => Promise<Response>) =>
+  (req: NextRequest, context: Context) =>
+    fn(req);
 
-export { auth as GET, auth as POST };
+export const GET = wrap(handlers.GET) as (
+  req: NextRequest,
+  context: Context
+) => Promise<Response | void>;
+export const POST = wrap(handlers.POST) as (
+  req: NextRequest,
+  context: Context
+) => Promise<Response | void>;
