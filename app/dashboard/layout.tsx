@@ -15,9 +15,14 @@ export default async function DashboardLayout({
 
   if (!session) redirect("/login");
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.value },
-  });
+  let user;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: session.value },
+    });
+  } catch {
+    redirect("/error");
+  }
 
   if (!user) redirect("/login");
 

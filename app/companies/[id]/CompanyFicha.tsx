@@ -169,10 +169,10 @@ export default function CompanyFicha({
             <div className="space-y-4">
               <div>
                 <p className="text-xs text-[var(--foreground)] opacity-70">
-                  Facturación anual
+                  {company.gmv ? "GMV" : "Facturación anual"}
                 </p>
                 <p className="text-lg font-bold text-[var(--brand-primary)]">
-                  {company.revenue}
+                  {company.gmv ?? company.revenue}
                 </p>
               </div>
               <div>
@@ -183,16 +183,6 @@ export default function CompanyFicha({
                   {company.ebitda}
                 </p>
               </div>
-              {company.gmv && (
-                <div>
-                  <p className="text-xs text-[var(--foreground)] opacity-70">
-                    GMV
-                  </p>
-                  <p className="text-lg font-bold text-[var(--brand-primary)]">
-                    {company.gmv}
-                  </p>
-                </div>
-              )}
             </div>
             {isLoggedIn ? (
               <div className="flex flex-col gap-2">
@@ -268,11 +258,11 @@ export default function CompanyFicha({
                   <div className="flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-[var(--brand-primary)]/70" />
                     <span className="text-xs font-medium opacity-75">
-                      Facturación
+                      {company.gmv ? "GMV" : "Facturación"}
                     </span>
                   </div>
                   <p className="mt-1 font-bold text-[var(--brand-primary)]">
-                    {company.revenue}
+                    {company.gmv ?? company.revenue}
                   </p>
                 </div>
                 <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
@@ -281,14 +271,6 @@ export default function CompanyFicha({
                     {company.ebitda}
                   </p>
                 </div>
-                {company.gmv && (
-                  <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
-                    <span className="text-xs font-medium opacity-75">GMV</span>
-                    <p className="mt-1 font-bold text-[var(--brand-primary)]">
-                      {company.gmv}
-                    </p>
-                  </div>
-                )}
               </div>
             )}
           </section>

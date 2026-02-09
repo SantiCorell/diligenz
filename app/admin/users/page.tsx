@@ -36,6 +36,7 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount
     fetchUsers();
   }, []);
 
@@ -90,11 +91,17 @@ export default function AdminUsersPage() {
   return (
     <main className="max-w-5xl mx-auto">
       <div className="mb-8">
+        <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80 mb-2">
+          Administración
+        </span>
         <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
           Usuarios
         </h1>
-        <p className="mt-2 text-[var(--foreground)] opacity-80">
-          Solo los administradores pueden crear nuevos usuarios. Aquí puedes dar de alta nuevos admins o usuarios comprador/vendedor.
+        <p className="mt-3 text-[var(--foreground)] opacity-85 leading-relaxed max-w-2xl">
+          Crea y gestiona usuarios del panel: administradores, compradores y vendedores. Solo un administrador puede acceder a esta sección. Desde aquí das de alta nuevos usuarios con email, contraseña y rol, y puedes bloquear o desbloquear cuentas si es necesario.
+        </p>
+        <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
+          Los usuarios comprador y vendedor acceden al dashboard según su rol.
         </p>
       </div>
 

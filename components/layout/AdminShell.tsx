@@ -77,6 +77,12 @@ export default function AdminShell({ userDisplayName, children }: Props) {
             active={pathname.startsWith("/admin/actions")}
           />
           <AdminNavLink
+            href="/admin/leads"
+            label="Leads"
+            collapsed={collapsed}
+            active={pathname.startsWith("/admin/leads")}
+          />
+          <AdminNavLink
             href="/admin/users"
             label="Usuarios"
             collapsed={collapsed}

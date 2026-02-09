@@ -3,12 +3,6 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-type SearchParams = {
-  q?: string;
-  status?: string;
-  docs?: string;
-};
-
 export default async function AdminCompaniesPage({
   searchParams,
 }: {
@@ -51,11 +45,17 @@ export default async function AdminCompaniesPage({
   return (
     <main className="max-w-5xl mx-auto">
       <div className="mb-8">
+        <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80 mb-2">
+          Catálogo
+        </span>
         <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
           Empresas
         </h1>
-        <p className="mt-2 text-[var(--foreground)] opacity-80">
-          Control editorial y validación. Edita cada tarjeta para cambiar estado o publicar en la web.
+        <p className="mt-3 text-[var(--foreground)] opacity-85 leading-relaxed max-w-2xl">
+          Todas las empresas dadas de alta por vendedores. Entra en cada ficha para editar la información pública, cambiar el estado (borrador, en revisión, publicado) y publicar o despublicar en el marketplace.
+        </p>
+        <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
+          Usa los filtros para buscar por nombre, estado o documentación firmada.
         </p>
       </div>
 

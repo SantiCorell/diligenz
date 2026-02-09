@@ -33,6 +33,7 @@ export default function AdminActionsPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount/filter change
     fetchActions();
   }, [filter]);
 
@@ -48,11 +49,17 @@ export default function AdminActionsPage() {
   return (
     <main className="max-w-5xl mx-auto">
       <div className="mb-8">
+        <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80 mb-2">
+          CRM
+        </span>
         <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
-          Acciones y solicitudes
+          Solicitudes de información
         </h1>
-        <p className="mt-2 text-[var(--foreground)] opacity-80">
-          Solicitudes de información: quién ha pedido info de qué empresa. Marca como pendiente, gestionada o rechazada.
+        <p className="mt-3 text-[var(--foreground)] opacity-85 leading-relaxed max-w-2xl">
+          Cuando un usuario registrado hace clic en &quot;Solicitar información&quot; en una empresa, aparece aquí. Revisa quién ha pedido info de qué empresa y actualiza el estado: pendiente, gestionada o rechazada para llevar el seguimiento.
+        </p>
+        <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
+          Filtra por estado para ver solo pendientes o ya gestionadas.
         </p>
       </div>
 

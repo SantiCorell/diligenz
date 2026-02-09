@@ -57,13 +57,14 @@ export default function CompaniesGrid({
         locations={locations}
       />
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((company) => (
+        {filtered.map((company, i) => (
           <CompanyCard
             key={company.id}
             company={company}
             isLoggedIn={isLoggedIn}
             onRequestAuth={() => setRegisterModalOpen(true)}
             linkToFicha
+            positionInGroup={i}
           />
         ))}
       </div>

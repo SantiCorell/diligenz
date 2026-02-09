@@ -3,6 +3,23 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { generateDealTitle } from "@/lib/dealCode";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isValidEmail(email: string): boolean {
+  return EMAIL_REGEX.test(String(email).trim());
+}
+
+function isValidPhone(phone: string): boolean {
+  const digits = String(phone).replace(/\D/g, "");
+  return digits.length >= 9;
+}
+
+/**
+ * Valoración orientativa por múltiplos de sector.
+ * - Con EBITDA: múltiplo sobre EBITDA (más fiable).
+ * - Sin EBITDA: múltiplo sobre facturación (más conservador).
+ * Sectores con rangos típicos de múltiplos (EBITDA o revenue según caso).
+ */
 function computeValuation(body: {
   sector: string;
   revenue: number;
@@ -10,30 +27,96 @@ function computeValuation(body: {
   employees?: number | null;
 }) {
   const { sector, revenue, ebitda, employees } = body;
-  let multipleMin = 0.6;
-  let multipleMax = 1.2;
-
   const s = String(sector).toLowerCase();
-  if (s.includes("tech") || s.includes("tecnologia") || s.includes("software")) {
-    multipleMin = 1.5;
-    multipleMax = 3.0;
-  }
-  if (s.includes("hostel") || s.includes("resta")) {
-    multipleMin = 0.5;
-    multipleMax = 1.0;
+
+  // Múltiplos típicos por sector (sobre EBITDA cuando hay; si no, sobre revenue)
+  type SectorMultipliers = { ebitdaMin: number; ebitdaMax: number; revenueMin: number; revenueMax: number };
+  const sectors: Record<string, SectorMultipliers> = {
+    tecnologia: { ebitdaMin: 5, ebitdaMax: 12, revenueMin: 1, revenueMax: 3 },
+    tech: { ebitdaMin: 5, ebitdaMax: 12, revenueMin: 1, revenueMax: 3 },
+    software: { ebitdaMin: 5, ebitdaMax: 12, revenueMin: 1, revenueMax: 3 },
+    salud: { ebitdaMin: 4, ebitdaMax: 8, revenueMin: 0.8, revenueMax: 1.8 },
+    industria: { ebitdaMin: 4, ebitdaMax: 7, revenueMin: 0.5, revenueMax: 1.2 },
+    consumo: { ebitdaMin: 3.5, ebitdaMax: 6, revenueMin: 0.4, revenueMax: 1 },
+    retail: { ebitdaMin: 3.5, ebitdaMax: 6, revenueMin: 0.4, revenueMax: 1 },
+    hosteleria: { ebitdaMin: 2.5, ebitdaMax: 5, revenueMin: 0.3, revenueMax: 0.8 },
+    restauracion: { ebitdaMin: 2.5, ebitdaMax: 5, revenueMin: 0.3, revenueMax: 0.8 },
+    servicios: { ebitdaMin: 3.5, ebitdaMax: 7, revenueMin: 0.5, revenueMax: 1.2 },
+    energia: { ebitdaMin: 5, ebitdaMax: 10, revenueMin: 0.8, revenueMax: 1.8 },
+    logistica: { ebitdaMin: 4, ebitdaMax: 7, revenueMin: 0.5, revenueMax: 1.2 },
+  };
+
+  let mult = sectors["servicios"]!;
+  for (const [key, m] of Object.entries(sectors)) {
+    if (s.includes(key)) {
+      mult = m;
+      break;
+    }
   }
 
-  const base = ebitda && ebitda > 0 ? ebitda * 4 : revenue * 0.2;
-  const teamFactor = typeof employees === "number" && employees > 20 ? 1.1 : 1.0;
+  const useEbitda = ebitda != null && ebitda > 0;
+  const base = useEbitda ? ebitda : revenue;
+  const [multipleMin, multipleMax] = useEbitda
+    ? [mult.ebitdaMin, mult.ebitdaMax]
+    : [mult.revenueMin, mult.revenueMax];
+
+  const teamFactor =
+    typeof employees === "number" && employees > 15
+      ? 1.05
+      : typeof employees === "number" && employees > 5
+        ? 1.02
+        : 1.0;
+
   const minValue = Math.round(base * multipleMin * teamFactor);
   const maxValue = Math.round(base * multipleMax * teamFactor);
-  return { minValue, maxValue };
+  return {
+    minValue: Math.max(0, minValue),
+    maxValue: Math.max(minValue, maxValue),
+  };
 }
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { sector, location, revenue, ebitda, employees, companyName, description } = body;
+    const {
+      sector,
+      location,
+      revenue,
+      ebitda,
+      employees,
+      companyName,
+      description,
+      email,
+      phone,
+    } = body;
+
+    const emailStr = email != null ? String(email).trim() : "";
+    const phoneStr = phone != null ? String(phone).trim() : "";
+
+    if (!emailStr) {
+      return NextResponse.json(
+        { error: "El correo electrónico es obligatorio para enviar la valoración." },
+        { status: 400 }
+      );
+    }
+    if (!isValidEmail(emailStr)) {
+      return NextResponse.json(
+        { error: "Indica un correo electrónico válido." },
+        { status: 400 }
+      );
+    }
+    if (!phoneStr) {
+      return NextResponse.json(
+        { error: "El teléfono es obligatorio para enviar la valoración." },
+        { status: 400 }
+      );
+    }
+    if (!isValidPhone(phoneStr)) {
+      return NextResponse.json(
+        { error: "Indica un teléfono válido (mínimo 9 dígitos)." },
+        { status: 400 }
+      );
+    }
 
     if (!sector || !location || revenue == null || revenue <= 0) {
       return NextResponse.json(
@@ -54,6 +137,22 @@ export async function POST(req: Request) {
       revenue: numRevenue,
       ebitda: numEbitda,
       employees: numEmployees,
+    });
+
+    await prisma.valuationLead.create({
+      data: {
+        email: emailStr,
+        phone: phoneStr,
+        companyName: name !== "Empresa sin nombre" ? name : null,
+        sector,
+        location: String(location),
+        revenue: numRevenue,
+        ebitda: numEbitda ?? null,
+        employees: numEmployees ?? null,
+        description: descriptionStr,
+        minValue,
+        maxValue,
+      },
     });
 
     const cookieStore = await cookies();

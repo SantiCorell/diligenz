@@ -48,14 +48,22 @@ export default async function AdminDashboard({
     take: 6,
   });
 
+  const leadsCount = await prisma.valuationLead.count();
+
   return (
     <main className="max-w-6xl mx-auto">
       <div className="mb-8">
+        <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80 mb-2">
+          Panel
+        </span>
         <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
           Panel de administración
         </h1>
-        <p className="mt-2 text-[var(--foreground)] opacity-80">
-          Visión global del marketplace y control editorial. Las empresas solo son visibles en la web cuando las publicas desde su ficha.
+        <p className="mt-3 text-[var(--foreground)] opacity-85 leading-relaxed max-w-2xl">
+          Visión global del marketplace: usuarios, empresas, leads y solicitudes de información. Desde aquí puedes publicar empresas en la web, sincronizar el listado y acceder a cada sección del panel.
+        </p>
+        <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
+          Las empresas solo son visibles en el marketplace cuando las publicas desde su ficha en Empresas.
         </p>
       </div>
 
@@ -81,6 +89,13 @@ export default async function AdminDashboard({
         />
         <KpiCard title="En revisión" value={inProcess} accent="blue" />
         <KpiCard title="Borrador" value={draft} accent="gray" />
+        <KpiCard
+          title="Leads valoración"
+          value={leadsCount}
+          subtitle="Formulario Valora tu empresa"
+          href="/admin/leads"
+          accent="primary"
+        />
       </div>
 
       <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -167,6 +182,12 @@ export default async function AdminDashboard({
             className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
           >
             Ver solicitudes de información
+          </Link>
+          <Link
+            href="/admin/leads"
+            className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+          >
+            Ver leads (valoraciones)
           </Link>
           <Link
             href="/admin/users"

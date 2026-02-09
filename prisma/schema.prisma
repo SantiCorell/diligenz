@@ -278,3 +278,20 @@ model ContactRequest {
   message       String?  // texto libre
   createdAt     DateTime @default(now())
 }
+
+/// Leads del formulario "Valora tu empresa": datos de contacto + datos empresa + valoración orientativa (CRM).
+model ValuationLead {
+  id          String   @id @default(cuid())
+  email       String
+  phone       String
+  companyName String?
+  sector      String
+  location    String
+  revenue     Int      // facturación anual €
+  ebitda      Int?     // EBITDA €
+  employees   Int?
+  description String?  @db.Text
+  minValue    Int      // valoración mínima €
+  maxValue    Int      // valoración máxima €
+  createdAt   DateTime @default(now())
+}

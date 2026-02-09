@@ -8,7 +8,6 @@ import {
   Heart,
   FileText,
   Handshake,
-  Store,
   TrendingUp,
   Users,
   Eye,
@@ -150,6 +149,7 @@ export default function HowItWorks() {
 
   // Avance automático: un paso cada STEP_DURATION_MS; al cambiar de rol, reiniciar
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset step when role changes
     setActiveStep(0);
   }, [role]);
 

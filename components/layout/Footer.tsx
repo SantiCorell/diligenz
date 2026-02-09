@@ -44,10 +44,25 @@ export default function Footer() {
         <div>
           <h5 className="font-semibold opacity-95">Legal</h5>
           <ul className="mt-3 space-y-2 text-sm opacity-90">
-            <li>Términos</li>
-            <li>Privacidad</li>
+            <li><Link href="/aviso-legal" className="hover:underline">Aviso legal</Link></li>
+            <li><Link href="/politica-privacidad" className="hover:underline">Política de privacidad</Link></li>
+            <li><Link href="/politica-cookies" className="hover:underline">Política de cookies</Link></li>
           </ul>
         </div>
+      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10 pt-6 border-t border-[var(--brand-bg)]/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p className="text-xs opacity-75">
+          © {new Date().getFullYear()} Diligenz. Todos los derechos reservados.
+        </p>
+        <a
+          href="https://metrio.es"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs opacity-70 hover:opacity-100 transition-opacity"
+          title="Web creada por Metrio"
+        >
+          Web creada por metrio.es
+        </a>
       </div>
     </footer>
   );

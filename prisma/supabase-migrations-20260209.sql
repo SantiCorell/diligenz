@@ -55,3 +55,26 @@ ALTER TABLE "CompanyFile" ADD COLUMN IF NOT EXISTS "kind" TEXT NOT NULL DEFAULT 
 
 COMMENT ON COLUMN "Company"."attachmentsApproved" IS 'Si true, usuarios registrados pueden ver documentación, enlaces y fotos';
 COMMENT ON TABLE "CompanyFile" IS 'Documentos/imágenes subidos por el dueño; visibles según attachmentsApproved';
+
+-- -----------------------------------------------------------------------------
+-- 5. VALUATIONLEAD: leads del formulario "Valora tu empresa" (CRM)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS "ValuationLead" (
+  "id" TEXT NOT NULL,
+  "email" TEXT NOT NULL,
+  "phone" TEXT NOT NULL,
+  "companyName" TEXT,
+  "sector" TEXT NOT NULL,
+  "location" TEXT NOT NULL,
+  "revenue" INTEGER NOT NULL,
+  "ebitda" INTEGER,
+  "employees" INTEGER,
+  "description" TEXT,
+  "minValue" INTEGER NOT NULL,
+  "maxValue" INTEGER NOT NULL,
+  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY ("id")
+);
+CREATE INDEX IF NOT EXISTS "ValuationLead_createdAt_idx" ON "ValuationLead"("createdAt" DESC);
+CREATE INDEX IF NOT EXISTS "ValuationLead_email_idx" ON "ValuationLead"("email");
+COMMENT ON TABLE "ValuationLead" IS 'Leads del formulario Valora tu empresa: contacto + datos empresa + valoración orientativa';
