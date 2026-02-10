@@ -4,7 +4,6 @@ import NextAuth from "next-auth";
 // import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 
 /**
  * Auth.js v5: configuración central.
@@ -56,7 +55,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     //   return true;
     // },
     async session({ session }: any) {
-      // Sincroniza sesión OAuth (Google) con cookie "session" de la app; solo aplica si hay Google
+      // Enriquece la sesión con userId y role desde la DB (para OAuth/Google cuando se reactive).
+      // NO escribir en la cookie "session": la app usa esa cookie para el token de sesión (UUID)
+      // en lib/session.ts; si aquí ponemos dbUser.id, se sobrescribe el token y al volver
+      // (p. ej. Panel → Ver web → Panel) getSessionFromToken() falla y pide login de nuevo.
       if (session?.user?.email) {
         try {
           const dbUser = await prisma.user.findUnique({
@@ -69,18 +71,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 ? new Date(dbUser.blockedUntil) > new Date()
                 : true;
               if (isStillBlocked) return session;
-            }
-            try {
-              const cookieStore = await cookies();
-              cookieStore.set("session", dbUser.id, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-                path: "/",
-                maxAge: 60 * 30,
-              });
-            } catch (cookieError) {
-              console.error("Error setting session cookie:", cookieError);
             }
             (session as any).userId = dbUser.id;
             (session as any).role = dbUser.role;
