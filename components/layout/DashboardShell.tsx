@@ -34,13 +34,13 @@ export default function DashboardShell({
 
   return (
     <div className="flex min-h-screen bg-[var(--brand-bg)]">
-      {/* Sidebar */}
+      {/* Sidebar: fondo marca Diligenz para que el logo blanco se vea */}
       <aside
         className={`${
           collapsed ? "w-20" : "w-64"
-        } bg-white text-[var(--foreground)] transition-all duration-200 flex flex-col border-r border-[var(--brand-primary)]/10`}
+        } bg-[var(--brand-primary)] text-white transition-all duration-200 flex flex-col border-r border-white/10`}
       >
-        <div className={`flex ${collapsed ? "flex-col items-center gap-4 py-5 px-2" : "items-center justify-between gap-2 px-4 py-5"} border-b border-[var(--brand-primary)]/10`}>
+        <div className={`flex ${collapsed ? "flex-col items-center gap-4 py-5 px-2" : "items-center justify-between gap-2 px-4 py-5"} border-b border-white/10`}>
           {!collapsed ? (
             <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
               <Image
@@ -50,7 +50,7 @@ export default function DashboardShell({
                 height={48}
                 className="h-12 w-12 object-contain shrink-0"
               />
-              <span className="text-lg font-semibold truncate text-[var(--brand-primary)]">Panel</span>
+              <span className="text-lg font-semibold truncate text-white">Panel</span>
             </Link>
           ) : (
             <Link href="/dashboard" className="flex items-center justify-center w-full group">
@@ -65,7 +65,7 @@ export default function DashboardShell({
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`rounded-lg p-2.5 hover:bg-[var(--brand-primary)]/10 shrink-0 text-[var(--brand-primary)] transition-all ${collapsed ? "border-2 border-[var(--brand-primary)]/30 hover:border-[var(--brand-primary)]/50" : ""}`}
+            className={`rounded-lg p-2.5 hover:bg-white/10 shrink-0 text-white transition-all ${collapsed ? "border-2 border-white/30 hover:border-white/50" : ""}`}
             aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
           >
             ☰
@@ -136,10 +136,10 @@ export default function DashboardShell({
           )}
         </nav>
 
-        <div className={`${collapsed ? "p-2" : "p-3"} border-t border-[var(--brand-primary)]/10`}>
+        <div className={`${collapsed ? "p-2" : "p-3"} border-t border-white/10`}>
           <Link
             href="/"
-            className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-lg ${collapsed ? "px-2 py-2" : "px-3 py-2"} text-[var(--foreground)]/80 hover:bg-[var(--brand-primary)]/10 transition`}
+            className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-lg ${collapsed ? "px-2 py-2" : "px-3 py-2"} text-white/80 hover:bg-white/10 transition`}
             title={collapsed ? "Volver al sitio" : undefined}
           >
             <span className={collapsed ? "text-lg" : ""}>←</span>
@@ -150,21 +150,21 @@ export default function DashboardShell({
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-between gap-4 bg-white/90 backdrop-blur border-b border-[var(--brand-primary)]/10 px-6 lg:px-8 py-4 shadow-sm">
+        <header className="flex items-center justify-between gap-4 bg-[var(--brand-primary)] text-white border-b border-white/10 px-6 lg:px-8 py-4 shadow-sm">
           <div className="flex items-center gap-3">
             {collapsed && (
               <button
                 onClick={() => setCollapsed(false)}
-                className="rounded-lg p-2 hover:bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] transition-all border-2 border-[var(--brand-primary)]/30 hover:border-[var(--brand-primary)]/50"
+                className="rounded-lg p-2 hover:bg-white/10 text-white transition-all border-2 border-white/30 hover:border-white/50"
                 aria-label="Expandir menú"
                 title="Expandir menú lateral"
               >
                 ☰
               </button>
             )}
-            <span className="text-sm font-medium text-[var(--foreground)]">
+            <span className="text-sm font-medium text-white">
               {userDisplayName ? (
-                <>Hola, <span className="text-[var(--brand-primary)] font-semibold">{userDisplayName}</span></>
+                <>Hola, <span className="font-semibold">{userDisplayName}</span></>
               ) : (
                 <span className="opacity-80">Panel de usuario</span>
               )}
@@ -172,7 +172,7 @@ export default function DashboardShell({
             {role === "ADMIN" && effectiveRole !== "ADMIN" && (
               <Link
                 href="/admin"
-                className="text-xs font-medium text-[var(--brand-primary)] bg-[var(--brand-primary)]/10 px-2.5 py-1 rounded-lg hover:bg-[var(--brand-primary)]/20"
+                className="text-xs font-medium text-white bg-white/10 px-2.5 py-1 rounded-lg hover:bg-white/20"
               >
                 Vista como {effectiveRole === "BUYER" ? "comprador" : "vendedor"} · Volver a Admin
               </Link>
@@ -182,21 +182,21 @@ export default function DashboardShell({
             {collapsed && (
               <Link
                 href={effectiveRole === "ADMIN" ? "/admin" : `/dashboard/${effectiveRole.toLowerCase()}`}
-                className="text-sm font-medium text-[var(--brand-primary)] hover:underline"
+                className="text-sm font-medium text-white/90 hover:text-white hover:underline"
               >
                 Volver al panel
               </Link>
             )}
             <button
               onClick={logout}
-              className="text-sm font-medium text-[var(--brand-primary)] hover:underline"
+              className="text-sm font-medium text-white/90 hover:text-white hover:underline"
             >
               Cerrar sesión
             </button>
           </div>
         </header>
 
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">{children}</main>
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 bg-[var(--brand-bg)]">{children}</main>
       </div>
     </div>
   );
@@ -218,8 +218,8 @@ function NavItem({
       href={href}
       className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-xl ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"} transition ${
         active
-          ? "bg-[var(--brand-primary)]/15 text-[var(--brand-primary)] font-medium"
-          : "text-[var(--foreground)]/80 hover:bg-[var(--brand-primary)]/10"
+          ? "bg-white/15 text-white font-medium"
+          : "text-white/80 hover:bg-white/10"
       }`}
       title={collapsed ? label : undefined}
     >
