@@ -14,7 +14,7 @@ export const TAGLINE = "Compra, vende y valora empresas en España";
 export const DEFAULT_DESCRIPTION =
   "Diligenz es el marketplace líder en España para comprar y vender empresas. Valora tu empresa en minutos, conecta con inversores verificados y cierra operaciones con asesoramiento M&A profesional. Due diligence y compraventa de pymes. Alternativa española de confianza.";
 
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/icon.png`;
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/logo-dili.png`;
 
 /**
  * Keywords para posicionar en Google España y ganar a deale.es / deale.com.
@@ -65,7 +65,7 @@ export function getOrganizationSchema() {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}/icon.png`,
+    logo: `${SITE_URL}/logo-dili.png`,
     description: DEFAULT_DESCRIPTION,
     areaServed: [
       { "@type": "Country", name: "España" },

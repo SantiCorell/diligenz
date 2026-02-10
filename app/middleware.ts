@@ -38,10 +38,10 @@ export function middleware(req: NextRequest) {
   // Headers de seguridad
   const response = NextResponse.next();
 
-  // Renovar cookie de sesión en rutas protegidas para que no se pierda al navegar
-  // (evita que redirect() en páginas descarte el Set-Cookie del layout)
+  // Sesión deslizante: renovar cookie en CUALQUIER petición con sesión (incl. "/", "/companies", etc.).
+  // Así, Panel → Web → "Mi Panel" mantiene la sesión y no redirige a login.
   const SESSION_MAX_AGE = 60 * 30; // 30 min
-  if (isProtectedRoute && session?.value) {
+  if (session?.value) {
     response.cookies.set("session", session.value, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -86,6 +86,6 @@ export function middleware(req: NextRequest) {
  */
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|icon.png|.*\\.svg).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|icon\\.png|icon\\.svg|.*\\.svg).*)",
   ],
 };

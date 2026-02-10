@@ -60,7 +60,7 @@ function getArticleSchema(post: { title: string; excerpt: string; date: string; 
     publisher: {
       "@type": "Organization",
       name: SITE_NAME,
-      logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.png` },
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/logo-dili.png` },
     },
     mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE_URL}/blog/${post.slug}` },
   };

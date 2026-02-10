@@ -5,19 +5,24 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { LayoutDashboard, Star, Globe, LogOut } from "lucide-react";
 
+type SessionRole = "ADMIN" | "BUYER" | "SELLER" | null;
+
 export default function Navbar() {
   const [inicioOpen, setInicioOpen] = useState(false);
   const [serviciosOpen, setServiciosOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [session, setSession] = useState<{ loggedIn: boolean; role: SessionRole }>({ loggedIn: false, role: null });
 
   useEffect(() => {
-    fetch("/api/auth/session")
+    fetch("/api/auth/session", { credentials: "include" })
       .then((r) => r.json())
-      .then((d) => setLoggedIn(d.loggedIn === true))
+      .then((d) => setSession({ loggedIn: d.loggedIn === true, role: d.role ?? null }))
       .catch(() => {});
   }, []);
+
+  const panelHref = session.role === "ADMIN" ? "/admin" : "/dashboard";
+  const loggedIn = session.loggedIn;
 
   useEffect(() => {
     if (mobileMenuOpen) document.body.style.overflow = "hidden";
@@ -122,14 +127,18 @@ export default function Navbar() {
                 <button
                   type="button"
                   className="flex items-center gap-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 text-sm font-semibold text-[var(--brand-bg)] transition"
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="true"
+                  aria-controls="user-menu-desktop"
+                  id="user-menu-button"
                 >
                   <span>Mi Panel</span>
-                  <span className="text-xs">▼</span>
+                  <span className="text-xs" aria-hidden>▼</span>
                 </button>
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full pt-2">
-                    <div className="w-56 rounded-xl border border-white/15 bg-[var(--brand-primary)] py-1.5 shadow-xl shadow-black/10">
-                      <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5">
+                  <div id="user-menu-desktop" role="menu" aria-labelledby="user-menu-button" className="absolute right-0 top-full pt-2 min-w-[14rem]">
+                    <div className="w-56 rounded-xl border border-white/20 bg-[var(--brand-primary)]/95 backdrop-blur py-1.5 shadow-xl shadow-black/20">
+                      <Link href={panelHref} prefetch={false} className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5 font-medium">
                         <LayoutDashboard className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Mi Panel</span>
                       </Link>
@@ -256,7 +265,8 @@ export default function Navbar() {
                   Mi Panel
                 </span>
                 <Link
-                  href="/dashboard"
+                  href={panelHref}
+                  prefetch={false}
                   className="flex items-center gap-3 py-2.5 pl-4 border-b border-white/10 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >

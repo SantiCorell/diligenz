@@ -40,35 +40,31 @@ export default function DashboardShell({
           collapsed ? "w-20" : "w-64"
         } bg-[var(--brand-primary)] text-white transition-all duration-200 flex flex-col border-r border-white/10`}
       >
-        <div className={`flex ${collapsed ? "flex-col items-center gap-4 py-5 px-2" : "items-center justify-between gap-2 px-4 py-5"} border-b border-white/10`}>
-          {!collapsed ? (
-            <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
-              <Image
-                src="/icon-diligenz-claro.png"
-                alt="Diligenz"
-                width={48}
-                height={48}
-                className="h-12 w-12 object-contain shrink-0"
-              />
-              <span className="text-lg font-semibold truncate text-white">Panel</span>
-            </Link>
-          ) : (
-            <Link href="/dashboard" className="flex items-center justify-center w-full group">
-              <Image
-                src="/icon-diligenz-claro.png"
-                alt="Diligenz"
-                width={48}
-                height={48}
-                className="h-12 w-12 object-contain"
-              />
-            </Link>
-          )}
+        <div className={`flex ${collapsed ? "flex-col items-center gap-3 py-4 px-2" : "items-center justify-between gap-3 px-4 py-4"} border-b border-white/10`}>
+          <Link
+            href="/dashboard"
+            className={`flex min-w-0 items-center ${collapsed ? "justify-center" : "gap-2"}`}
+          >
+            <Image
+              src="/logo-dili.png"
+              alt="Diligenz"
+              width={140}
+              height={44}
+              className={collapsed ? "h-9 w-auto object-contain" : "h-10 w-auto object-contain"}
+            />
+            {!collapsed && (
+              <span className="text-sm font-semibold truncate text-white/90">Panel</span>
+            )}
+          </Link>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`rounded-lg p-2.5 hover:bg-white/10 shrink-0 text-white transition-all ${collapsed ? "border-2 border-white/30 hover:border-white/50" : ""}`}
+            className="rounded-lg p-2.5 text-white/90 hover:bg-white/10 hover:text-white shrink-0 transition-colors"
             aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
+            type="button"
           >
-            ☰
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
           </button>
         </div>
 
@@ -155,11 +151,14 @@ export default function DashboardShell({
             {collapsed && (
               <button
                 onClick={() => setCollapsed(false)}
-                className="rounded-lg p-2 hover:bg-white/10 text-white transition-all border-2 border-white/30 hover:border-white/50"
+                className="rounded-lg p-2 text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                 aria-label="Expandir menú"
                 title="Expandir menú lateral"
+                type="button"
               >
-                ☰
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
               </button>
             )}
             <span className="text-sm font-medium text-white">
