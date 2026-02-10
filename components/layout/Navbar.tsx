@@ -14,11 +14,25 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [session, setSession] = useState<{ loggedIn: boolean; role: SessionRole }>({ loggedIn: false, role: null });
 
-  useEffect(() => {
+  const fetchSession = () => {
     fetch("/api/auth/session", { credentials: "include" })
       .then((r) => r.json())
       .then((d) => setSession({ loggedIn: d.loggedIn === true, role: d.role ?? null }))
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchSession();
+  }, []);
+
+  // Al volver a la pestaña, refrescar sesión para renovar la cookie (sliding session).
+  // Así Panel → Web → volver al Panel no pide login de nuevo.
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") fetchSession();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
   }, []);
 
   const panelHref = session.role === "ADMIN" ? "/admin" : "/dashboard";

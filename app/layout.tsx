@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { auth } from "@/auth";
 import {
   SITE_URL,
   SITE_NAME,
@@ -98,13 +97,14 @@ export const metadata: Metadata = {
 /* ===================== */
 /* ROOT LAYOUT */
 /* ===================== */
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Sincroniza sesión de Auth.js (OAuth; actualmente Google está deshabilitado) con la cookie "session"
-  await auth();
+  // No llamamos auth() aquí para no bloquear cada carga (login/register e inicio van más rápidos).
+  // La app usa la cookie "session" (login email/contraseña). Si reactivas OAuth (Google), valora
+  // llamar auth() solo en un layout que lo necesite (p. ej. rutas protegidas).
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
