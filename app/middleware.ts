@@ -24,15 +24,15 @@ export function middleware(req: NextRequest) {
   }
 
   // Rutas que requieren autenticación (login)
-  const protectedRoutes = ["/sell", "/dashboard", "/admin"];
+  const protectedRoutes = ["/sell", "/dashboard", "/admin", "/documents", "/companies/mi-interes"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
 
-  // Si intenta acceder a una ruta protegida sin sesión → redirect a /register
+  // Si intenta acceder a una ruta protegida sin sesión → redirect a /login
   if (isProtectedRoute && !session) {
-    const registerUrl = new URL("/register", req.url);
-    return NextResponse.redirect(registerUrl);
+    const loginUrl = new URL("/login", req.url);
+    return NextResponse.redirect(loginUrl);
   }
 
   // Headers de seguridad

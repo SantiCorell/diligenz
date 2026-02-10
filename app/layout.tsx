@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { auth } from "@/auth";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -61,11 +62,13 @@ export const metadata: Metadata = {
 /* ===================== */
 /* ROOT LAYOUT */
 /* ===================== */
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Sincroniza sesión de Auth.js (Google) con la cookie "session" usada por el resto de la app
+  await auth();
   return (
     <html lang="es" suppressHydrationWarning>
       <head>

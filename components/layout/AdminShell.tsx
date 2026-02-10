@@ -21,36 +21,34 @@ export default function AdminShell({ userDisplayName, children }: Props) {
       <aside
         className={`${
           collapsed ? "w-20" : "w-64"
-        } bg-[var(--brand-primary)] text-white transition-all duration-200 flex flex-col`}
+        } bg-white text-[var(--foreground)] transition-all duration-200 flex flex-col border-r border-[var(--brand-primary)]/10`}
       >
-        <div className={`flex ${collapsed ? "flex-col items-center gap-4 py-5 px-2" : "items-center justify-between gap-2 px-4 py-5"} border-b border-white/10`}>
+        <div className={`flex ${collapsed ? "flex-col items-center gap-4 py-5 px-2" : "items-center justify-between gap-2 px-4 py-5"} border-b border-[var(--brand-primary)]/10`}>
           {!collapsed ? (
             <Link href="/admin" className="flex items-center gap-3 min-w-0">
               <Image
-                src="/logo-dili-panel.png"
+                src="/icon-diligenz-claro.png"
                 alt="Diligenz"
                 width={48}
                 height={48}
                 className="h-12 w-12 object-contain shrink-0"
               />
-              <span className="text-lg font-semibold truncate">Admin</span>
+              <span className="text-lg font-semibold truncate text-[var(--brand-primary)]">Admin</span>
             </Link>
           ) : (
             <Link href="/admin" className="flex items-center justify-center w-full group">
-              <div className="rounded-xl bg-white/95 p-3.5 shadow-lg group-hover:bg-white group-hover:shadow-xl transition-all">
-                <Image
-                  src="/logo-dili-panel.png"
-                  alt="Diligenz"
-                  width={56}
-                  height={56}
-                  className="h-14 w-14 object-contain"
-                />
-              </div>
+              <Image
+                src="/icon-diligenz-claro.png"
+                alt="Diligenz"
+                width={48}
+                height={48}
+                className="h-12 w-12 object-contain"
+              />
             </Link>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`rounded-lg p-2.5 hover:bg-white/10 shrink-0 text-white transition-all ${collapsed ? "border-2 border-white/30 hover:border-white/50" : ""}`}
+            className={`rounded-lg p-2.5 hover:bg-[var(--brand-primary)]/10 shrink-0 text-[var(--brand-primary)] transition-all ${collapsed ? "border-2 border-[var(--brand-primary)]/30 hover:border-[var(--brand-primary)]/50" : ""}`}
             title={collapsed ? "Expandir menú" : "Contraer menú"}
           >
             ☰
@@ -96,10 +94,10 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           />
         </nav>
 
-        <div className={`${collapsed ? "p-2" : "p-3"} border-t border-white/10`}>
+        <div className={`${collapsed ? "p-2" : "p-3"} border-t border-[var(--brand-primary)]/10`}>
           <Link
             href="/dashboard"
-            className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-xl ${collapsed ? "px-2 py-2" : "px-3 py-2"} text-white/90 hover:bg-white/10 transition`}
+            className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-xl ${collapsed ? "px-2 py-2" : "px-3 py-2"} text-[var(--foreground)]/80 hover:bg-[var(--brand-primary)]/10 transition`}
             title={collapsed ? "Panel usuario" : undefined}
           >
             <span className={collapsed ? "text-lg" : ""}>←</span>
@@ -193,7 +191,7 @@ function AdminNavLink({
     <Link
       href={href}
       className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-xl ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"} transition ${
-        active ? "bg-white/20 text-white font-medium" : "text-white/90 hover:bg-white/10"
+        active ? "bg-[var(--brand-primary)]/15 text-[var(--brand-primary)] font-medium" : "text-[var(--foreground)]/80 hover:bg-[var(--brand-primary)]/10"
       }`}
       title={collapsed ? label : undefined}
     >

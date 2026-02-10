@@ -145,7 +145,7 @@ export async function POST(req: Request) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        maxAge: 60 * 60 * 24 * 7, // 7 días
+        maxAge: 60 * 30, // 30 min; se renueva al usar el panel (sesión deslizante)
       });
     } catch (cookieError) {
       console.error("Register cookie:", process.env.NODE_ENV === "production" ? "set failed" : cookieError);

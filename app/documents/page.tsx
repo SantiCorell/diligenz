@@ -6,9 +6,7 @@ export default async function DocumentsPage() {
   const cookieStore = await cookies();
   const session = cookieStore.get("session");
 
-  if (!session) {
-    redirect("/register");
-  }
+  if (!session) redirect("/login");
 
   const userId = session.value;
 
