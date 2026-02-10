@@ -15,7 +15,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icon.png",
         sizes: "any",
         type: "image/png",
-        purpose: "any maskable",
+        purpose: "maskable",
       },
     ],
     categories: ["business", "finance"],
