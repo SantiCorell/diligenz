@@ -2,66 +2,76 @@
 
 import { FAQ_ITEMS } from "@/lib/seo";
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 /**
  * Bloque de preguntas frecuentes en la home.
- * El contenido coincide con el JSON-LD FAQPage para reforzar rich snippets en Google España.
+ * Diseño compacto; el contenido coincide con el JSON-LD FAQPage para rich snippets.
  */
 export default function HomeFAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <section
-      className="border-t border-[var(--brand-primary)]/10 bg-white/50 py-16 md:py-20"
+      className="border-t border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-10 md:py-12"
       aria-labelledby="faq-heading"
     >
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <h2
           id="faq-heading"
-          className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)] text-center mb-10"
+          className="text-xl md:text-2xl font-bold text-[var(--brand-primary)] text-center mb-6"
         >
-          Preguntas frecuentes sobre comprar y vender empresas en España
+          Preguntas frecuentes
         </h2>
-        <ul className="space-y-3">
-          {FAQ_ITEMS.map((item, index) => (
-            <li
-              key={index}
-              className="rounded-xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] overflow-hidden"
-              itemScope
-              itemProp="mainEntity"
-              itemType="https://schema.org/Question"
-            >
-              <button
-                type="button"
-                className="w-full flex items-center justify-between gap-4 text-left px-5 py-4 font-semibold text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5 transition"
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                aria-expanded={openIndex === index}
-                aria-controls={`faq-answer-${index}`}
-                id={`faq-question-${index}`}
-                itemProp="name"
-              >
-                <span>{item.question}</span>
-                <span className="text-xl shrink-0" aria-hidden>
-                  {openIndex === index ? "−" : "+"}
-                </span>
-              </button>
-              <div
-                id={`faq-answer-${index}`}
-                role="region"
-                aria-labelledby={`faq-question-${index}`}
-                hidden={openIndex !== index}
-                className="px-5 pb-4"
+
+        <div className="rounded-2xl border border-[var(--brand-primary)]/15 bg-white shadow-sm overflow-hidden">
+          <ul className="divide-y divide-[var(--brand-primary)]/10">
+            {FAQ_ITEMS.map((item, index) => (
+              <li
+                key={index}
+                className="transition-colors hover:bg-[var(--brand-bg)]/50"
                 itemScope
-                itemProp="acceptedAnswer"
-                itemType="https://schema.org/Answer"
+                itemProp="mainEntity"
+                itemType="https://schema.org/Question"
               >
-                <p className="text-[var(--foreground)] opacity-90 leading-relaxed" itemProp="text">
-                  {item.answer}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-between gap-3 text-left px-4 py-3 md:px-5 md:py-3.5 font-medium text-[var(--brand-primary)] text-sm md:text-base"
+                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                  aria-expanded={openIndex === index}
+                  aria-controls={`faq-answer-${index}`}
+                  id={`faq-question-${index}`}
+                  itemProp="name"
+                >
+                  <span className="pr-2">{item.question}</span>
+                  <ChevronDown
+                    className={`w-5 h-5 shrink-0 text-[var(--brand-primary)] transition-transform duration-200 ${
+                      openIndex === index ? "rotate-180" : ""
+                    }`}
+                    aria-hidden
+                  />
+                </button>
+                <div
+                  id={`faq-answer-${index}`}
+                  role="region"
+                  aria-labelledby={`faq-question-${index}`}
+                  hidden={openIndex !== index}
+                  className="px-4 pb-3 md:px-5 md:pb-4 pt-0"
+                  itemScope
+                  itemProp="acceptedAnswer"
+                  itemType="https://schema.org/Answer"
+                >
+                  <p
+                    className="text-[var(--foreground)] text-sm md:text-base opacity-90 leading-relaxed pl-0"
+                    itemProp="text"
+                  >
+                    {item.answer}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

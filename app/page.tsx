@@ -42,8 +42,8 @@ export default function HomePage() {
         <FeaturedCompanies />
         <ValuationCTA />
         <HowItWorks />
-        <HomeFAQ />
         <FinalCTA />
+        <HomeFAQ />
       </main>
       <Footer />
     </>

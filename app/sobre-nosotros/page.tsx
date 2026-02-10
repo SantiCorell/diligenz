@@ -4,9 +4,13 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
-/** Imagen representativa de Valencia — Ciudad de las Artes y las Ciencias */
+/** Imagen HD de Valencia — Ciudad de las Artes y las Ciencias (Unsplash, 1920px, calidad 90) */
 const VALENCIA_IMAGE =
-  "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=1200&q=85";
+  "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=1920&q=90";
+
+/** Imagen "desde la montaña" / vista elevada — sección Más sobre nosotros con tono morado */
+const MOUNTAIN_IMAGE =
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=90";
 
 export const metadata: Metadata = {
   title: `Sobre nosotros | Equipo y sede en Valencia | ${SITE_NAME}`,
@@ -26,7 +30,7 @@ export const metadata: Metadata = {
       "Diligenz en Valencia: marketplace líder para comprar y vender empresas. Aliados con Cañizares Valle, más de 50 años de experiencia en M&A y asesoramiento empresarial.",
     url: `${SITE_URL}/sobre-nosotros`,
     type: "website",
-    images: [{ url: VALENCIA_IMAGE, width: 1200, height: 630, alt: "Valencia, sede de Diligenz" }],
+    images: [{ url: VALENCIA_IMAGE, width: 1920, height: 1080, alt: "Panorámica de la Ciudad de las Artes y las Ciencias, Valencia, al atardecer — Sede de Diligenz" }],
   },
   alternates: { canonical: `${SITE_URL}/sobre-nosotros` },
 };
@@ -66,7 +70,7 @@ export default function SobreNosotrosPage() {
           <div className="relative h-[42vh] min-h-[280px] md:h-[50vh] md:min-h-[360px] w-full overflow-hidden">
             <Image
               src={VALENCIA_IMAGE}
-              alt="Valencia, Ciudad de las Artes y las Ciencias — Sede de Diligenz"
+              alt="Valencia, Ciudad de las Artes y las Ciencias al atardecer: L'Hemisfèric y Pont de l'Assut de l'Or reflejados en el agua — Sede de Diligenz"
               fill
               className="object-cover object-center"
               priority
@@ -115,7 +119,7 @@ export default function SobreNosotrosPage() {
               <div className="relative h-64 md:h-auto md:min-h-[280px]">
                 <Image
                   src={VALENCIA_IMAGE}
-                  alt="Valencia, Ciudad de las Artes y las Ciencias — donde operamos"
+                  alt="Panorámica Valencia, Ciudad de las Artes y las Ciencias al atardecer — donde operamos"
                   fill
                   className="object-cover object-left"
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -132,6 +136,38 @@ export default function SobreNosotrosPage() {
                   Operamos desde <strong>Valencia</strong>, una ciudad con tradición empresarial y conectada con el resto de España. Desde aquí atendemos a vendedores y compradores de empresas en todo el territorio, con la agilidad de una plataforma digital y el respaldo de los mejores socios.
                 </p>
               </div>
+            </div>
+          </section>
+
+          {/* Más sobre nosotros — imagen de la montaña con tono morado */}
+          <section
+            className="relative rounded-2xl overflow-hidden my-12 md:my-16 min-h-[320px] md:min-h-[380px]"
+            aria-labelledby="mas-sobre-nosotros"
+          >
+            <div className="absolute inset-0">
+              <Image
+                src={MOUNTAIN_IMAGE}
+                alt="Vista desde la montaña — Visión y ambición de Diligenz"
+                fill
+                className="object-cover object-center"
+                sizes="100vw"
+              />
+              <div
+                className="absolute inset-0 bg-[var(--brand-primary)]/75 mix-blend-multiply"
+                aria-hidden
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[var(--brand-primary)]/95 via-[var(--brand-primary)]/60 to-[var(--brand-primary)]/40" />
+            </div>
+            <div className="relative flex flex-col justify-end p-8 md:p-12 min-h-[320px] md:min-h-[380px]">
+              <h2
+                id="mas-sobre-nosotros"
+                className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg mb-3"
+              >
+                Más sobre nosotros
+              </h2>
+              <p className="text-white/95 text-lg max-w-2xl drop-shadow-md">
+                Miramos lejos: nuestra visión es ser el referente en España en compraventa de empresas. Con la solidez de Valencia como base y el respaldo de Cañizares Valle, acompañamos a vendedores e inversores en cada paso del camino.
+              </p>
             </div>
           </section>
 

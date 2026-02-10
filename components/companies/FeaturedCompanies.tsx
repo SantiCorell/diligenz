@@ -16,7 +16,7 @@ export default function FeaturedCompanies() {
         </p>
 
         <div className="mt-10 md:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {MOCK_COMPANIES.map((company, i) => (
+          {MOCK_COMPANIES.slice(0, 3).map((company, i) => (
             <CompanyCard
               key={company.id}
               company={company}
