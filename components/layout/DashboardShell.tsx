@@ -46,11 +46,11 @@ export default function DashboardShell({
             className={`flex min-w-0 items-center ${collapsed ? "justify-center" : "gap-2"}`}
           >
             <Image
-              src="/logo-dili.png"
+              src="/icon-diligenz-claro.png"
               alt="Diligenz"
-              width={140}
+              width={44}
               height={44}
-              className={collapsed ? "h-9 w-auto object-contain" : "h-10 w-auto object-contain"}
+              className={collapsed ? "h-9 w-9 object-contain" : "h-10 w-10 object-contain"}
             />
             {!collapsed && (
               <span className="text-sm font-semibold truncate text-white/90">Panel</span>
