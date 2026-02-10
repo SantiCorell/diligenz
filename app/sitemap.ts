@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 const STATIC_ROUTES: { url: string; priority: number; changeFrequency: "weekly" | "monthly" | "yearly" }[] = [
   { url: "", priority: 1, changeFrequency: "weekly" },
   { url: "companies", priority: 0.95, changeFrequency: "weekly" },
+  { url: "sell", priority: 0.92, changeFrequency: "weekly" },
   { url: "servicios", priority: 0.9, changeFrequency: "monthly" },
   { url: "sobre-nosotros", priority: 0.8, changeFrequency: "monthly" },
   { url: "contact", priority: 0.85, changeFrequency: "monthly" },

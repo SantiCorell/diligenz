@@ -96,9 +96,34 @@ const PRICING_TABLE = [
   },
 ];
 
+function getServicesSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Servicios M&A Diligenz",
+    description: "Due diligence, venta y compra de empresas. Asesoramiento M&A en España.",
+    itemListElement: SERVICES.map((srv, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Service",
+        name: srv.title,
+        description: srv.description,
+        provider: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+        areaServed: { "@type": "Country", name: "España" },
+      },
+    })),
+  };
+}
+
 export default function ServiciosPage() {
+  const servicesSchema = getServicesSchema();
   return (
     <ShellLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(servicesSchema) }}
+      />
       <div className="min-h-screen bg-[var(--brand-bg)]">
         {/* Hero */}
         <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-12 md:py-16">

@@ -54,9 +54,9 @@ export const metadata: Metadata = {
     images: [
       {
         url: DEFAULT_OG_IMAGE,
-        width: 512,
-        height: 512,
-        alt: `${SITE_NAME} - Marketplace de compraventa de empresas`,
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} - Marketplace de compraventa de empresas en España`,
       },
     ],
   },

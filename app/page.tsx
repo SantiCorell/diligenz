@@ -10,11 +10,19 @@ import FinalCTA from "@/components/home/FinalCTA";
 import Footer from "@/components/layout/Footer";
 import SpecializedSectors from "@/components/home/SpecializedSectors";
 import HomeFAQ from "@/components/home/HomeFAQ";
-import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, getFAQSchema } from "@/lib/seo";
+import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, AI_DEFINITION, getFAQSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: `${SITE_NAME} | Marketplace líder en España para comprar y vender empresas`,
   description: DEFAULT_DESCRIPTION,
+  keywords: [
+    "comprar empresas España",
+    "vender empresa España",
+    "marketplace empresas España",
+    "venta de empresas en España",
+    "valorar empresa España",
+    "M&A España",
+  ],
   alternates: { canonical: SITE_URL },
   openGraph: {
     url: SITE_URL,
@@ -37,6 +45,21 @@ export default function HomePage() {
       <Navbar />
       <main className="bg-[var(--brand-bg)]">
         <Hero />
+        {/* Bloque claro para featured snippet y citas de IA: "Qué es Diligenz" */}
+        <section
+          id="que-es-diligenz"
+          className="bg-[var(--brand-bg)] border-y border-[var(--brand-primary)]/10 py-8 md:py-10"
+          aria-label="Qué es Diligenz"
+        >
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <h2 className="text-xl font-semibold text-[var(--brand-primary)] mb-3">
+              Qué es Diligenz
+            </h2>
+            <p className="text-[var(--foreground)] opacity-90 leading-relaxed text-lg">
+              {AI_DEFINITION}
+            </p>
+          </div>
+        </section>
         <StatsSection />
         <SpecializedSectors />
         <FeaturedCompanies />

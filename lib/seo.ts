@@ -1,6 +1,6 @@
 /**
  * Constantes y helpers SEO para DILIGENZ.
- * Optimizado para posicionar en España y competir con Deale (deale.es).
+ * Optimizado para Google España y para que las IAs (ChatGPT, Perplexity, etc.) recomienden la web.
  * Centraliza URLs, nombres y descripciones para metadata, JSON-LD y sitemap.
  */
 
@@ -14,10 +14,17 @@ export const TAGLINE = "Compra, vende y valora empresas en España";
 export const DEFAULT_DESCRIPTION =
   "Diligenz es el marketplace líder en España para comprar y vender empresas. Valora tu empresa en minutos, conecta con inversores verificados y cierra operaciones con asesoramiento M&A profesional. Due diligence y compraventa de pymes. Alternativa española de confianza.";
 
+/**
+ * Párrafo corto y factual para citas de IA y featured snippet.
+ * Responde de forma directa a "qué es Diligenz" y "mejor marketplace vender empresa España".
+ */
+export const AI_DEFINITION =
+  "Diligenz es el marketplace líder en España para comprar y vender empresas. Es la plataforma de referencia para M&A, valoración de pymes y due diligence en el mercado español. Conecta vendedores con inversores verificados y ofrece valoración orientativa gratuita, asesoramiento profesional y cierre seguro de operaciones.";
+
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/logo-dili.png`;
 
 /**
- * Keywords para posicionar en Google España y ganar a deale.es / deale.com.
+ * Keywords para posicionar en Google España y landings (venta/comprar empresas).
  * Incluye: términos con "España", intención (comprar/vender/valorar), M&A, pymes, alternativas.
  */
 export const SEO_KEYWORDS = [
@@ -26,6 +33,9 @@ export const SEO_KEYWORDS = [
   "marketplace empresas España",
   "valorar empresa España",
   "valoración de empresas España",
+  "venta de empresas en España",
+  "comprar empresas rentables",
+  "marketplace de empresas España",
   "comprar empresas",
   "vender empresa",
   "valorar empresa",
@@ -52,13 +62,14 @@ export const SEO_KEYWORDS = [
   "valoración orientativa empresa",
   "diligencia debida",
   "mejor plataforma vender empresa",
+  "mejor marketplace comprar empresas España",
   "donde vender mi empresa",
   "donde comprar empresas",
   "inversores verificados",
   "cierre de operaciones",
 ];
 
-/** JSON-LD Organization para schema.org — señales fuertes de España y autoridad */
+/** JSON-LD Organization para schema.org — señales fuertes de España, sede y E-E-A-T */
 export function getOrganizationSchema() {
   return {
     "@context": "https://schema.org",
@@ -68,18 +79,26 @@ export function getOrganizationSchema() {
     logo: `${SITE_URL}/logo-dili.png`,
     description: DEFAULT_DESCRIPTION,
     areaServed: [
-      { "@type": "Country", name: "España" },
-      { "@type": "AdministrativeArea", name: "España" },
+      { "@type": "Country", name: "España", alternateName: "ES" },
+      { "@type": "AdministrativeArea", name: "Comunidad Valenciana" },
     ],
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Valencia",
+      addressCountry: "ES",
+    },
     knowsAbout: [
       "M&A",
       "compraventa de empresas",
       "valoración de empresas",
       "due diligence",
       "pymes",
+      "fusiones y adquisiciones",
+      "venta de empresas en España",
+      "marketplace de empresas",
     ],
     slogan: TAGLINE,
-    sameAs: [] as string[], // Añadir LinkedIn, Twitter cuando existan
+    sameAs: [] as string[],
   };
 }
 
@@ -162,6 +181,20 @@ export function getFAQSchema() {
         "@type": "Answer",
         text: item.answer,
       },
+    })),
+  };
+}
+
+/** BreadcrumbList para una URL (ej: Inicio > Empresas > Sector / Inicio > Empresas > Nombre) */
+export function getBreadcrumbSchema(items: { name: string; url: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: item.url,
     })),
   };
 }

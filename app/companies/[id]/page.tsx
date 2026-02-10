@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserIdFromSession } from "@/lib/session";
 import CompanyFicha from "./CompanyFicha";
 import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
-import { SITE_URL, SITE_NAME } from "@/lib/seo";
+import { SITE_URL, SITE_NAME, getBreadcrumbSchema } from "@/lib/seo";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -90,8 +90,18 @@ export default async function CompanyDetailPage({ params }: Props) {
     isAdmin = user?.role === "ADMIN";
   }
 
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: "Inicio", url: SITE_URL },
+    { name: "Empresas en venta", url: `${SITE_URL}/companies` },
+    { name: company.name, url: `${SITE_URL}/companies/${id}` },
+  ]);
+
   return (
     <ShellLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div className="min-h-screen bg-[var(--brand-bg)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-16">
           <Link

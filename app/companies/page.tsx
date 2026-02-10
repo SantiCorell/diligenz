@@ -3,7 +3,7 @@ import ShellLayout from "@/components/layout/ShellLayout";
 import { getUserIdFromSession } from "@/lib/session";
 import CompaniesGrid from "@/components/companies/CompaniesGrid";
 import { getPublicCompanies } from "@/lib/public-companies";
-import { SITE_URL, SITE_NAME } from "@/lib/seo";
+import { SITE_URL, SITE_NAME, getBreadcrumbSchema } from "@/lib/seo";
 
 const SECTOR_LABELS: Record<string, string> = {
   salud: "Salud",
@@ -54,8 +54,19 @@ export default async function CompaniesPage({ searchParams }: Props) {
   const userId = await getUserIdFromSession();
   const isLoggedIn = Boolean(userId);
 
+  const breadcrumbItems = [
+    { name: "Inicio", url: SITE_URL },
+    { name: "Empresas en venta", url: `${SITE_URL}/companies` },
+    ...(sectorLabel ? [{ name: sectorLabel, url: `${SITE_URL}/companies?sector=${sector}` }] : []),
+  ];
+  const breadcrumbSchema = getBreadcrumbSchema(breadcrumbItems);
+
   return (
     <ShellLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div className="min-h-screen bg-[var(--brand-bg)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
           <div className="mb-8">
