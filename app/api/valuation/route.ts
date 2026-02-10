@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserIdFromSession } from "@/lib/session";
+import { getUserIdFromRequest } from "@/lib/session";
 import { generateDealTitle } from "@/lib/dealCode";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -155,7 +155,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const userId = await getUserIdFromSession();
+    const userId = await getUserIdFromRequest(req);
 
     if (userId) {
       const company = await prisma.company.create({

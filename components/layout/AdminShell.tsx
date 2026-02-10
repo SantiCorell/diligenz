@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { authFetch, clearStoredToken } from "@/lib/auth-client";
 
 type Props = {
   userDisplayName: string;
@@ -17,7 +18,8 @@ export default function AdminShell({ userDisplayName, children }: Props) {
   const [viewSwitcherOpen, setViewSwitcherOpen] = useState(false);
 
   const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await authFetch("/api/auth/logout", { method: "POST" });
+    clearStoredToken();
     router.push("/login");
     router.refresh();
   };

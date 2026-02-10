@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import ShellLayout from "@/components/layout/ShellLayout";
+import { setStoredToken } from "@/lib/auth-client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -29,7 +30,9 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      // Redirección completa para que el navegador envíe la cookie de sesión en la siguiente petición
+      if (data.token) {
+        setStoredToken(data.token);
+      }
       window.location.href = "/dashboard";
       return;
     } catch {

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
-import { getSessionWithUser } from "@/lib/session";
+import { getSessionWithUserFromRequest } from "@/lib/session";
 
 export async function GET(req: Request) {
-  const session = await getSessionWithUser();
+  const session = await getSessionWithUserFromRequest(req);
   if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }

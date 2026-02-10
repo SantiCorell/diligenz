@@ -17,6 +17,7 @@ import {
 import RegisterModal from "@/components/auth/RegisterModal";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { getDefaultCompanyImageUrl } from "@/lib/default-company-images";
+import { authFetch } from "@/lib/auth-client";
 
 type TabId = "informacion" | "descripcion" | "documentos";
 
@@ -54,7 +55,7 @@ export default function CompanyFicha({
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    fetch(`/api/companies/${company.id}/interest`)
+    authFetch(`/api/companies/${company.id}/interest`)
       .then((r) => r.json())
       .then((d) => {
         setRequestInfo(d.requestInfo ?? false);
@@ -65,7 +66,7 @@ export default function CompanyFicha({
 
   useEffect(() => {
     if (!isLoggedIn || !canSeeDocuments) return;
-    fetch(`/api/companies/${company.id}/files`)
+    authFetch(`/api/companies/${company.id}/files`)
       .then((r) => r.json())
       .then((d) => (d.files ? setFiles(d.files) : []))
       .catch(() => {});
@@ -74,7 +75,7 @@ export default function CompanyFicha({
   const handleRequestInfo = async () => {
     setLoading("request");
     try {
-      const res = await fetch(`/api/companies/${company.id}/interest`, {
+      const res = await authFetch(`/api/companies/${company.id}/interest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "REQUEST_INFO" }),
@@ -89,12 +90,12 @@ export default function CompanyFicha({
     setLoading("favorite");
     try {
       if (favorite) {
-        await fetch(`/api/companies/${company.id}/interest?type=FAVORITE`, {
+        await authFetch(`/api/companies/${company.id}/interest?type=FAVORITE`, {
           method: "DELETE",
         });
         setFavorite(false);
       } else {
-        const res = await fetch(`/api/companies/${company.id}/interest`, {
+        const res = await authFetch(`/api/companies/${company.id}/interest`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type: "FAVORITE" }),
@@ -113,12 +114,12 @@ export default function CompanyFicha({
     try {
       const form = new FormData();
       form.append("file", file);
-      const res = await fetch(`/api/companies/${company.id}/files`, {
+      const res = await authFetch(`/api/companies/${company.id}/files`, {
         method: "POST",
         body: form,
       });
       if (res.ok) {
-        const res2 = await fetch(`/api/companies/${company.id}/files`);
+        const res2 = await authFetch(`/api/companies/${company.id}/files`);
         const data2 = await res2.json();
         if (data2.files) setFiles(data2.files);
       }

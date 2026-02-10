@@ -1,10 +1,10 @@
 // app/api/admin/company/force-publish/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { getSessionWithUser } from "@/lib/session";
+import { getSessionWithUserFromRequest } from "@/lib/session";
 
 export async function POST(req: Request) {
-  const session = await getSessionWithUser();
+  const session = await getSessionWithUserFromRequest(req);
   if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

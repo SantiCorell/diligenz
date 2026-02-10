@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { authFetch, clearStoredToken } from "@/lib/auth-client";
 
 export default function DashboardShell({
   children,
@@ -27,14 +28,14 @@ export default function DashboardShell({
       : role;
 
   const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await authFetch("/api/auth/logout", { method: "POST" });
+    clearStoredToken();
     router.push("/login");
     router.refresh();
   };
 
-  // Renovar cookie en el servidor y luego ir a la web para no perder la sesión al volver al panel
   const goToWeb = async () => {
-    await fetch("/api/auth/session", { credentials: "include" });
+    await authFetch("/api/auth/session");
     window.location.href = "/";
   };
 

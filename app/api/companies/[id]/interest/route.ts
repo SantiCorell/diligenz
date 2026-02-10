@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 import { getClientIP } from "@/lib/security";
-import { getUserIdFromSession } from "@/lib/session";
+import { getUserIdFromRequest } from "@/lib/session";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_req: Request, { params }: Params) {
-  const userId = await getUserIdFromSession();
+export async function GET(req: Request, { params }: Params) {
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ requestInfo: false, favorite: false });
   }
@@ -45,7 +45,7 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 export async function POST(req: Request, { params }: Params) {
-  const userId = await getUserIdFromSession();
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ error: "Inicia sesión para continuar" }, { status: 401 });
   }
@@ -149,7 +149,7 @@ export async function POST(req: Request, { params }: Params) {
 }
 
 export async function DELETE(req: Request, { params }: Params) {
-  const userId = await getUserIdFromSession();
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }

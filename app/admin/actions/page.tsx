@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { authFetch } from "@/lib/auth-client";
 
 type ActionRow = {
   id: string;
@@ -26,7 +27,7 @@ export default function AdminActionsPage() {
   const fetchActions = async () => {
     setLoading(true);
     const url = filter ? `/api/admin/actions?status=${filter}` : "/api/admin/actions";
-    const res = await fetch(url);
+    const res = await authFetch(url);
     const data = await res.json();
     if (res.ok) setActions(data.actions ?? []);
     setLoading(false);
@@ -38,7 +39,7 @@ export default function AdminActionsPage() {
   }, [filter]);
 
   const updateStatus = async (id: string, status: string) => {
-    const res = await fetch(`/api/admin/actions/${id}`, {
+    const res = await authFetch(`/api/admin/actions/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserIdFromSession } from "@/lib/session";
+import { getUserIdFromRequest } from "@/lib/session";
 
-export async function GET() {
-  const userId = await getUserIdFromSession();
+export async function GET(req: Request) {
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ interests: [] });
   }

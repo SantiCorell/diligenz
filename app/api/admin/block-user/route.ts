@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionWithUser } from "@/lib/session";
+import { getSessionWithUserFromRequest } from "@/lib/session";
 
 /**
  * API para que los admins bloqueen/desbloqueen usuarios
@@ -8,7 +8,7 @@ import { getSessionWithUser } from "@/lib/session";
  * Body: { userId: string, blocked: boolean, hours?: number }
  */
 export async function POST(req: Request) {
-  const session = await getSessionWithUser();
+  const session = await getSessionWithUserFromRequest(req);
   if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }

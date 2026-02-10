@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserIdFromSession } from "@/lib/session";
+import { getUserIdFromRequest } from "@/lib/session";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
@@ -23,8 +23,8 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
 }
 
 /** Lista de archivos (admin, dueño o cualquier usuario registrado si attachmentsApproved) */
-export async function GET(_req: Request, { params }: Params) {
-  const userId = await getUserIdFromSession();
+export async function GET(req: Request, { params }: Params) {
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
@@ -50,7 +50,7 @@ export async function GET(_req: Request, { params }: Params) {
 
 /** Subir archivo (solo admin o dueño) */
 export async function POST(req: Request, { params }: Params) {
-  const userId = await getUserIdFromSession();
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }

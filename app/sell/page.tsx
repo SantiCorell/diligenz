@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import ShellLayout from "@/components/layout/ShellLayout";
 import { Mail, Phone, Building2, MapPin, BarChart3, Users, FileText } from "lucide-react";
+import { authFetch } from "@/lib/auth-client";
 
 type ValuationResult = {
   minValue: number;
@@ -67,7 +68,7 @@ export default function SellPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/valuation", {
+      const res = await authFetch("/api/valuation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -68,11 +68,40 @@ export async function destroySessionByToken(sessionToken: string | undefined) {
   await prisma.session.deleteMany({ where: { sessionToken } });
 }
 
-/** Lee el token de sesión desde las cookies de Next (en Server Components / Route Handlers) */
+/** Lee el token de sesión desde las cookies de Next (en Server Components) */
 export async function getSessionTokenFromCookies(): Promise<string | null> {
   const store = await cookies();
   const cookie = store.get(SESSION_COOKIE_NAME);
   return cookie?.value?.trim() ?? null;
+}
+
+/**
+ * Lee el token desde la petición: Authorization Bearer, X-Session-Token o cookie.
+ * Usar en Route Handlers para soportar token en localStorage (header) o cookie (sync desde cliente).
+ */
+export async function getSessionTokenFromRequest(req: Request): Promise<string | null> {
+  const auth = req.headers.get("Authorization");
+  if (auth?.startsWith("Bearer ")) {
+    const t = auth.slice(7).trim();
+    if (t) return t;
+  }
+  const x = req.headers.get("X-Session-Token");
+  if (x?.trim()) return x.trim();
+  const store = await cookies();
+  const c = store.get(SESSION_COOKIE_NAME);
+  return c?.value?.trim() ?? null;
+}
+
+/** Sesión con user desde la petición (Route Handlers). */
+export async function getSessionWithUserFromRequest(req: Request) {
+  const token = await getSessionTokenFromRequest(req);
+  return getSessionFromToken(token ?? undefined);
+}
+
+/** userId desde la petición (Route Handlers). */
+export async function getUserIdFromRequest(req: Request): Promise<string | null> {
+  const session = await getSessionWithUserFromRequest(req);
+  return session?.userId ?? null;
 }
 
 /** Obtiene el userId si la sesión es válida; si no, null */

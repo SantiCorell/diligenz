@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserIdFromSession } from "@/lib/session";
+import { getUserIdFromRequest } from "@/lib/session";
 
 export async function POST(req: Request) {
   try {
-    const userId = await getUserIdFromSession();
+    const userId = await getUserIdFromRequest(req);
     if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { LayoutDashboard, Star, Globe, LogOut } from "lucide-react";
+import { authFetch, clearStoredToken, syncSessionCookie } from "@/lib/auth-client";
 
 type SessionRole = "ADMIN" | "BUYER" | "SELLER" | null;
 
@@ -15,13 +16,17 @@ export default function Navbar() {
   const [session, setSession] = useState<{ loggedIn: boolean; role: SessionRole }>({ loggedIn: false, role: null });
 
   const fetchSession = () => {
-    fetch("/api/auth/session", { credentials: "include" })
+    authFetch("/api/auth/session")
       .then((r) => r.json())
-      .then((d) => setSession({ loggedIn: d.loggedIn === true, role: d.role ?? null }))
+      .then((d) => {
+        setSession({ loggedIn: d.loggedIn === true, role: d.role ?? null });
+        if (d.loggedIn) syncSessionCookie();
+      })
       .catch(() => {});
   };
 
   useEffect(() => {
+    syncSessionCookie();
     fetchSession();
   }, []);
 
@@ -37,6 +42,12 @@ export default function Navbar() {
 
   const panelHref = session.role === "ADMIN" ? "/admin" : "/dashboard";
   const loggedIn = session.loggedIn;
+
+  const handleLogout = async () => {
+    await authFetch("/api/auth/logout", { method: "POST" });
+    clearStoredToken();
+    window.location.href = "/";
+  };
 
   useEffect(() => {
     if (mobileMenuOpen) document.body.style.overflow = "hidden";
@@ -165,10 +176,10 @@ export default function Navbar() {
                         <Globe className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Volver a la web</span>
                       </Link>
-                      <Link href="/api/auth/logout" className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5">
+                      <button type="button" onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5 w-full text-left">
                         <LogOut className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Cerrar sesión</span>
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -303,14 +314,14 @@ export default function Navbar() {
                   <Globe className="w-4 h-4 shrink-0 opacity-90" />
                   Volver a la web
                 </Link>
-                <Link
-                  href="/api/auth/logout"
-                  className="flex items-center gap-3 py-3 pl-4 text-center rounded-xl border border-white/20 font-medium mt-2"
-                  onClick={() => setMobileMenuOpen(false)}
+                <button
+                  type="button"
+                  onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+                  className="flex items-center gap-3 py-3 pl-4 text-center rounded-xl border border-white/20 font-medium mt-2 w-full text-[var(--brand-bg)]"
                 >
                   <LogOut className="w-4 h-4 shrink-0 opacity-90" />
                   Cerrar sesión
-                </Link>
+                </button>
               </>
             ) : (
               <>

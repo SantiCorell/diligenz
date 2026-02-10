@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getSessionWithUser } from "@/lib/session";
+import { getSessionWithUserFromRequest } from "@/lib/session";
 
 function parseDocumentLinks(raw: string | null): { label: string; url: string }[] | null {
   if (!raw || !raw.trim()) return null;
@@ -18,7 +18,7 @@ function parseDocumentLinks(raw: string | null): { label: string; url: string }[
 }
 
 export async function POST(req: Request) {
-  const session = await getSessionWithUser();
+  const session = await getSessionWithUserFromRequest(req);
   if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

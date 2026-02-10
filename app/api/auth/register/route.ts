@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
-import { createSession, setSessionCookieOnResponse } from "@/lib/session";
+import { createSession } from "@/lib/session";
 import { getClientIP, isValidEmail, isValidPhone } from "@/lib/security";
 
 export async function POST(req: Request) {
@@ -138,10 +138,11 @@ export async function POST(req: Request) {
     }
 
     const token = await createSession(user.id);
-    const res = NextResponse.json(
+    return NextResponse.json(
       {
         message: "Usuario creado exitosamente",
         role: user.role,
+        token,
       },
       {
         status: 201,
@@ -152,8 +153,6 @@ export async function POST(req: Request) {
         },
       }
     );
-    setSessionCookieOnResponse(res, token);
-    return res;
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json(

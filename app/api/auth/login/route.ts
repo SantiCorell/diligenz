@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
-import { createSession, setSessionCookieOnResponse } from "@/lib/session";
+import { createSession } from "@/lib/session";
 import { getClientIP, isValidEmail } from "@/lib/security";
 
 export async function POST(req: Request) {
@@ -117,10 +117,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Sesión en DB + cookie con token (lógica en lib/session.ts)
     const token = await createSession(user.id);
-    const res = NextResponse.json(
-      { success: true },
+    return NextResponse.json(
+      { success: true, token },
       {
         headers: {
           "X-RateLimit-Limit": "10",
@@ -129,8 +128,6 @@ export async function POST(req: Request) {
         },
       }
     );
-    setSessionCookieOnResponse(res, token);
-    return res;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     const isPrisma = message.includes("Prisma") || message.includes("connect");

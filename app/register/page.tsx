@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import ShellLayout from "@/components/layout/ShellLayout";
+import { setStoredToken } from "@/lib/auth-client";
 
 type Role = "SELLER" | "BUYER";
 
@@ -49,7 +50,10 @@ export default function RegisterPage() {
         setLoading(false);
         return;
       }
-      router.push("/login");
+      if (data.token) {
+        setStoredToken(data.token);
+      }
+      router.push("/dashboard");
     } catch {
       setError("Error inesperado. Inténtalo de nuevo.");
     } finally {

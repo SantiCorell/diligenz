@@ -1,23 +1,20 @@
 import { NextResponse } from "next/server";
 import {
-  getSessionTokenFromCookies,
+  getSessionTokenFromRequest,
   getSessionFromToken,
   renewSession,
-  setSessionCookieOnResponse,
 } from "@/lib/session";
 
-export async function GET() {
-  const token = await getSessionTokenFromCookies();
+export async function GET(req: Request) {
+  const token = await getSessionTokenFromRequest(req);
   const session = await getSessionFromToken(token ?? undefined);
   if (!session) {
     return NextResponse.json({ loggedIn: false });
   }
 
   await renewSession(session.sessionToken);
-  const res = NextResponse.json({
+  return NextResponse.json({
     loggedIn: true,
     role: session.user.role ?? null,
   });
-  setSessionCookieOnResponse(res, session.sessionToken);
-  return res;
 }

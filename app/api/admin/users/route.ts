@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { getSessionWithUser } from "@/lib/session";
+import { getSessionWithUserFromRequest } from "@/lib/session";
 
 /**
  * Solo el admin puede crear usuarios (incluido otros admins).
  * GET: listar usuarios (solo admin)
  * POST: crear usuario con rol indicado (solo admin)
  */
-export async function GET() {
-  const session = await getSessionWithUser();
+export async function GET(req: Request) {
+  const session = await getSessionWithUserFromRequest(req);
   if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
@@ -30,7 +30,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await getSessionWithUser();
+  const session = await getSessionWithUserFromRequest(req);
   if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Solo un administrador puede crear usuarios." }, { status: 403 });
   }

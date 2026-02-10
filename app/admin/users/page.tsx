@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { authFetch } from "@/lib/auth-client";
 
 type UserRow = {
   id: string;
@@ -29,7 +30,7 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const res = await fetch("/api/admin/users");
+    const res = await authFetch("/api/admin/users");
     const data = await res.json();
     if (res.ok) setUsers(data.users ?? []);
     setLoading(false);
@@ -45,7 +46,7 @@ export default function AdminUsersPage() {
     setMessage(null);
     setSubmitting(true);
     try {
-      const res = await fetch("/api/admin/users", {
+      const res = await authFetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, phone: phone || undefined, role }),
@@ -70,7 +71,7 @@ export default function AdminUsersPage() {
 
   const handleBlockUser = async (userId: string, blocked: boolean, hours?: number) => {
     try {
-      const res = await fetch("/api/admin/block-user", {
+      const res = await authFetch("/api/admin/block-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, blocked, hours }),

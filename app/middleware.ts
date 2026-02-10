@@ -35,22 +35,8 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Headers de seguridad
   const response = NextResponse.next();
 
-  // Sesión deslizante: renovar cookie en CUALQUIER petición con sesión (incl. "/", "/companies", etc.).
-  // Así, Panel → Web → "Mi Panel" mantiene la sesión y no redirige a login.
-  const SESSION_MAX_AGE = 60 * 30; // 30 min
-  if (session?.value) {
-    response.cookies.set("session", session.value, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: SESSION_MAX_AGE,
-    });
-  }
-  
   // Prevenir clickjacking
   response.headers.set("X-Frame-Options", "DENY");
   
