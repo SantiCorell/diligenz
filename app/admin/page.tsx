@@ -1,16 +1,15 @@
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getSessionWithUser } from "@/lib/session";
 
 export default async function AdminDashboard({
   searchParams,
 }: {
   searchParams: Promise<{ synced?: string }>;
 }) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session) redirect("/register");
+  const session = await getSessionWithUser();
+  if (!session || session.user.role !== "ADMIN") redirect("/login");
   const params = await searchParams;
   const syncedCount = params.synced;
 

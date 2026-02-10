@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
+import { createSession, setSessionCookieOnResponse } from "@/lib/session";
 import { getClientIP, isValidEmail, isValidPhone } from "@/lib/security";
 
 export async function POST(req: Request) {
@@ -136,14 +137,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Cookie de sesión en la respuesta (igual que login) para que el navegador la guarde
-    const SESSION_OPTIONS = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax" as const,
-      path: "/",
-      maxAge: 60 * 30,
-    };
+    const token = await createSession(user.id);
     const res = NextResponse.json(
       {
         message: "Usuario creado exitosamente",
@@ -158,7 +152,7 @@ export async function POST(req: Request) {
         },
       }
     );
-    res.cookies.set("session", user.id, SESSION_OPTIONS);
+    setSessionCookieOnResponse(res, token);
     return res;
   } catch (error) {
     console.error("Register error:", error);

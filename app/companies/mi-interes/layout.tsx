@@ -1,7 +1,6 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { getDisplayName } from "@/lib/user-display";
+import { getSessionWithUser } from "@/lib/session";
 import DashboardShell from "@/components/layout/DashboardShell";
 import ProfileStatus from "@/components/dashboard/ProfileStatus";
 
@@ -10,16 +9,10 @@ export default async function MiInteresLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-
+  const session = await getSessionWithUser();
   if (!session) redirect("/login");
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.value },
-  });
-
-  if (!user) redirect("/login");
+  const user = session.user;
 
   const profileComplete = Boolean(user.phone);
   const userDisplayName = getDisplayName(user.email);

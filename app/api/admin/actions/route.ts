@@ -1,20 +1,11 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
+import { getSessionWithUser } from "@/lib/session";
 
 export async function GET(req: Request) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session?.value) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.value },
-    select: { role: true },
-  });
-  if (!user || user.role !== "ADMIN") {
+  const session = await getSessionWithUser();
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 

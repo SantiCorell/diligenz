@@ -1,21 +1,19 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 import { getClientIP } from "@/lib/security";
+import { getUserIdFromSession } from "@/lib/session";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, { params }: Params) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session?.value) {
+  const userId = await getUserIdFromSession();
+  if (!userId) {
     return NextResponse.json({ requestInfo: false, favorite: false });
   }
   
-  // Verificar si el usuario está bloqueado
   const user = await prisma.user.findUnique({
-    where: { id: session.value },
+    where: { id: userId },
     select: { blocked: true, blockedUntil: true },
   });
   
@@ -34,13 +32,12 @@ export async function GET(_req: Request, { params }: Params) {
   
   const { id: companyId } = await params;
   
-  // Validar que companyId sea válido
   if (!companyId || typeof companyId !== "string" || companyId.length > 100) {
     return NextResponse.json({ error: "ID de empresa inválido" }, { status: 400 });
   }
   
   const interests = await prisma.userCompanyInterest.findMany({
-    where: { userId: session.value, companyId },
+    where: { userId, companyId },
   });
   const requestInfo = interests.some((i) => i.type === "REQUEST_INFO");
   const favorite = interests.some((i) => i.type === "FAVORITE");
@@ -48,15 +45,13 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 export async function POST(req: Request, { params }: Params) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session?.value) {
+  const userId = await getUserIdFromSession();
+  if (!userId) {
     return NextResponse.json({ error: "Inicia sesión para continuar" }, { status: 401 });
   }
   
-  // Verificar si el usuario está bloqueado
   const user = await prisma.user.findUnique({
-    where: { id: session.value },
+    where: { id: userId },
     select: { blocked: true, blockedUntil: true },
   });
   
@@ -75,15 +70,13 @@ export async function POST(req: Request, { params }: Params) {
   
   const { id: companyId } = await params;
   
-  // Validar companyId
   if (!companyId || typeof companyId !== "string" || companyId.length > 100) {
     return NextResponse.json({ error: "ID de empresa inválido" }, { status: 400 });
   }
   
-  // Rate limiting: máximo 10 solicitudes por minuto por usuario
   const ip = getClientIP(req.headers);
   const rateLimitResult = checkRateLimit(
-    getRateLimitIdentifier(ip, session.value),
+    getRateLimitIdentifier(ip, userId),
     { maxRequests: 10, windowMs: 60 * 1000 } // 10 por minuto
   );
   
@@ -91,7 +84,7 @@ export async function POST(req: Request, { params }: Params) {
     // Si excede el límite, bloquear temporalmente (1 hora)
     const blockedUntil = new Date(Date.now() + 60 * 60 * 1000);
     await prisma.user.update({
-      where: { id: session.value },
+      where: { id: userId },
       data: { blocked: true, blockedUntil },
     }).catch(() => {}); // Ignorar errores en el bloqueo
     
@@ -121,7 +114,7 @@ export async function POST(req: Request, { params }: Params) {
     
     const todayRequests = await prisma.userCompanyInterest.count({
       where: {
-        userId: session.value,
+        userId,
         type: "REQUEST_INFO",
         createdAt: { gte: today },
       },
@@ -137,9 +130,9 @@ export async function POST(req: Request, { params }: Params) {
   
   await prisma.userCompanyInterest.upsert({
     where: {
-      userId_companyId_type: { userId: session.value, companyId, type },
+      userId_companyId_type: { userId, companyId, type },
     },
-    create: { userId: session.value, companyId, type },
+    create: { userId, companyId, type },
     update: {},
   });
   
@@ -156,16 +149,15 @@ export async function POST(req: Request, { params }: Params) {
 }
 
 export async function DELETE(req: Request, { params }: Params) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session?.value) {
+  const userId = await getUserIdFromSession();
+  if (!userId) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
   const { id: companyId } = await params;
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type") === "FAVORITE" ? "FAVORITE" : "REQUEST_INFO";
   await prisma.userCompanyInterest.deleteMany({
-    where: { userId: session.value, companyId, type },
+    where: { userId, companyId, type },
   });
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import ShellLayout from "@/components/layout/ShellLayout";
+import { getUserIdFromSession } from "@/lib/session";
 import CompaniesGrid from "@/components/companies/CompaniesGrid";
 import { getPublicCompanies } from "@/lib/public-companies";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
@@ -51,9 +51,8 @@ export default async function CompaniesPage({ searchParams }: Props) {
 
   const { companies, useOnlyReal } = await getPublicCompanies();
 
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  const isLoggedIn = Boolean(session?.value);
+  const userId = await getUserIdFromSession();
+  const isLoggedIn = Boolean(userId);
 
   return (
     <ShellLayout>

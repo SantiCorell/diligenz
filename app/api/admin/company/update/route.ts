@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
+import { getSessionWithUser } from "@/lib/session";
 
 function parseDocumentLinks(raw: string | null): { label: string; url: string }[] | null {
   if (!raw || !raw.trim()) return null;
@@ -18,17 +18,8 @@ function parseDocumentLinks(raw: string | null): { label: string; url: string }[
 }
 
 export async function POST(req: Request) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.value },
-    select: { role: true },
-  });
-  if (!user || user.role !== "ADMIN") {
+  const session = await getSessionWithUser();
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

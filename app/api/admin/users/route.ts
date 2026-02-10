@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { getSessionWithUser } from "@/lib/session";
 
 /**
  * Solo el admin puede crear usuarios (incluido otros admins).
@@ -9,17 +9,8 @@ import bcrypt from "bcryptjs";
  * POST: crear usuario con rol indicado (solo admin)
  */
 export async function GET() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session?.value) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
-  const currentUser = await prisma.user.findUnique({
-    where: { id: session.value },
-    select: { role: true },
-  });
-  if (!currentUser || currentUser.role !== "ADMIN") {
+  const session = await getSessionWithUser();
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
@@ -39,17 +30,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session?.value) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
-  const currentUser = await prisma.user.findUnique({
-    where: { id: session.value },
-    select: { role: true },
-  });
-  if (!currentUser || currentUser.role !== "ADMIN") {
+  const session = await getSessionWithUser();
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Solo un administrador puede crear usuarios." }, { status: 403 });
   }
 

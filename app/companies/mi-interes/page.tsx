@@ -1,19 +1,16 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
 import { prisma } from "@/lib/prisma";
+import { getUserIdFromSession } from "@/lib/session";
 import CompanyCard from "@/components/companies/CompanyCard";
 
 export default async function MiInteresPage() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session?.value) {
-    redirect("/login?from=/companies/mi-interes");
-  }
+  const userId = await getUserIdFromSession();
+  if (!userId) redirect("/login?from=/companies/mi-interes");
 
   const interests = await prisma.userCompanyInterest.findMany({
-    where: { userId: session.value },
+    where: { userId },
     orderBy: { createdAt: "desc" },
   });
   const companyIds = [...new Set(interests.map((i) => i.companyId))];

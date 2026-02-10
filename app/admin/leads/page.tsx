@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getSessionWithUser } from "@/lib/session";
 import Link from "next/link";
 import {
   Mail,
@@ -24,15 +24,9 @@ function getLeadDate(lead: LeadRow): Date {
 }
 
 export default async function AdminLeadsPage() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session) redirect("/register");
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.value },
-    select: { role: true },
-  });
-  if (!user || user.role !== "ADMIN") redirect("/login");
+  const session = await getSessionWithUser();
+  if (!session) redirect("/login");
+  if (session.user.role !== "ADMIN") redirect("/login");
 
   const [valuationLeads, contactRequests] = await Promise.all([
     prisma.valuationLead.findMany({ orderBy: { createdAt: "desc" } }),

@@ -109,6 +109,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logo-dili.png" type="image/png" />
+        <meta name="google-site-verification" content="paVL-Zk5dS7LpLeMXgbx5r1rn6bYGD1iWgtg1uJL-ZI" />
         {/* Structured data para buscadores y IA: Organization, WebSite, Marketplace */}
         <script
           type="application/ld+json"

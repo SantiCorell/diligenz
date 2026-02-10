@@ -1,7 +1,6 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { getDisplayName } from "@/lib/user-display";
+import { getSessionWithUser } from "@/lib/session";
 import AdminShell from "@/components/layout/AdminShell";
 
 export default async function AdminLayout({
@@ -9,16 +8,11 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
+  const session = await getSessionWithUser();
   if (!session) redirect("/login");
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.value },
-    select: { email: true, role: true },
-  });
-
-  if (!user || user.role !== "ADMIN") redirect("/login");
+  const user = session.user;
+  if (user.role !== "ADMIN") redirect("/login");
 
   const userDisplayName = getDisplayName(user.email);
 

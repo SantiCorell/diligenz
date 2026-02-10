@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getUserIdFromSession } from "@/lib/session";
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session?.value) {
+  const userId = await getUserIdFromSession();
+  if (!userId) {
     return NextResponse.json({ interests: [] });
   }
   const interests = await prisma.userCompanyInterest.findMany({
-    where: { userId: session.value },
+    where: { userId },
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json({

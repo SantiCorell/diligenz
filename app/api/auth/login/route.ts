@@ -2,14 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
-
-const SESSION_COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-  maxAge: 60 * 30, // 30 min; se renueva en middleware y en /api/auth/session
-};
+import { createSession, setSessionCookieOnResponse } from "@/lib/session";
 import { getClientIP, isValidEmail } from "@/lib/security";
 
 export async function POST(req: Request) {
@@ -124,7 +117,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Cookie de sesión en la respuesta explícita para que el navegador la guarde siempre
+    // Sesión en DB + cookie con token (lógica en lib/session.ts)
+    const token = await createSession(user.id);
     const res = NextResponse.json(
       { success: true },
       {
@@ -135,7 +129,7 @@ export async function POST(req: Request) {
         },
       }
     );
-    res.cookies.set("session", user.id, SESSION_COOKIE_OPTIONS);
+    setSessionCookieOnResponse(res, token);
     return res;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

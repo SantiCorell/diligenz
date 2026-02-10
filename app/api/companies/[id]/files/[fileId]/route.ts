@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getUserIdFromSession } from "@/lib/session";
 import { readFile } from "fs/promises";
 import path from "path";
 
@@ -24,9 +24,8 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
 
 /** Descargar archivo (solo admin o dueño) */
 export async function GET(_req: Request, { params }: Params) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session?.value) {
+  const userId = await getUserIdFromSession();
+  if (!userId) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
@@ -35,7 +34,7 @@ export async function GET(_req: Request, { params }: Params) {
     return NextResponse.json({ error: "Parámetros requeridos" }, { status: 400 });
   }
 
-  const allowed = await canAccessCompanyFiles(companyId, session.value);
+  const allowed = await canAccessCompanyFiles(companyId, userId);
   if (!allowed) {
     return NextResponse.json({ error: "No autorizado para descargar este documento" }, { status: 403 });
   }

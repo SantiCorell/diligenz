@@ -1,18 +1,17 @@
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getSessionWithUser } from "@/lib/session";
 
 export default async function AdminCompanyDetail({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const session = await getSessionWithUser();
+  if (!session || session.user.role !== "ADMIN") redirect("/login");
 
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session) redirect("/register");
+  const { id } = await params;
 
   const company = await prisma.company.findUnique({
     where: { id },

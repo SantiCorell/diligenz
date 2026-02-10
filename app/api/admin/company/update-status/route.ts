@@ -1,34 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 import { CompanyStatus } from "@prisma/client";
+import { getSessionWithUser } from "@/lib/session";
 
 export async function POST(req: Request) {
-  // =====================
-  // 🔐 AUTENTICACIÓN
-  // =====================
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-
-  if (!session) {
-    return NextResponse.redirect(
-      new URL("/register", req.url)
-    );
-  }
-
-  // =====================
-  // 🔐 AUTORIZACIÓN (ADMIN)
-  // =====================
-  const user = await prisma.user.findUnique({
-    where: { id: session.value },
-    select: { role: true },
-  });
-
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+  const session = await getSessionWithUser();
+  if (!session || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // =====================

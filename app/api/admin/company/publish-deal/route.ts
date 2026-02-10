@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
+import { getSessionWithUser } from "@/lib/session";
 
 /**
  * Publicar el deal en el marketplace (visible para usuarios).
@@ -8,15 +8,8 @@ import { cookies } from "next/headers";
  * "Actualizar estado" a PUBLISHED no modifica Deal.published.
  */
 export async function POST(req: Request) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session) return NextResponse.redirect(new URL("/register", req.url));
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.value },
-    select: { role: true },
-  });
-  if (!user || user.role !== "ADMIN") {
+  const session = await getSessionWithUser();
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

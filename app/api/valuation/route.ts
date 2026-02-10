@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
+import { getUserIdFromSession } from "@/lib/session";
 import { generateDealTitle } from "@/lib/dealCode";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -155,11 +155,9 @@ export async function POST(req: Request) {
       },
     });
 
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("session");
+    const userId = await getUserIdFromSession();
 
-    if (sessionCookie?.value) {
-      const userId = sessionCookie.value;
+    if (userId) {
       const company = await prisma.company.create({
         data: {
           name,

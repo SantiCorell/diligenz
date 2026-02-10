@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getSessionWithUser } from "@/lib/session";
 
 /**
  * Sincroniza visibilidad en la web con el estado de la empresa:
@@ -8,17 +8,8 @@ import { prisma } from "@/lib/prisma";
  * Útil para alinear el panel con la web cuando ya tenías empresas en PUBLISHED.
  */
 export async function POST(req: Request) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session?.value) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.value },
-    select: { role: true },
-  });
-  if (!user || user.role !== "ADMIN") {
+  const session = await getSessionWithUser();
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 

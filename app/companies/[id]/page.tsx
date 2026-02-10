@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ShellLayout from "@/components/layout/ShellLayout";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
 import { prisma } from "@/lib/prisma";
+import { getUserIdFromSession } from "@/lib/session";
 import CompanyFicha from "./CompanyFicha";
 import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
@@ -76,18 +76,17 @@ export default async function CompanyDetailPage({ params }: Props) {
   const company = await getCompanyById(id);
   if (!company) notFound();
 
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  const isLoggedIn = Boolean(session?.value);
+  const userId = await getUserIdFromSession();
+  const isLoggedIn = Boolean(userId);
 
   let isOwner = false;
   let isAdmin = false;
-  if (session?.value && !MOCK_COMPANIES.some((c) => c.id === id)) {
+  if (userId && !MOCK_COMPANIES.some((c) => c.id === id)) {
     const [companyRow, user] = await Promise.all([
       prisma.company.findUnique({ where: { id }, select: { ownerId: true } }),
-      prisma.user.findUnique({ where: { id: session.value }, select: { role: true } }),
+      prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
     ]);
-    isOwner = companyRow?.ownerId === session.value;
+    isOwner = companyRow?.ownerId === userId;
     isAdmin = user?.role === "ADMIN";
   }
 

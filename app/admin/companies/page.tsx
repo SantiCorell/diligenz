@@ -1,16 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getSessionWithUser } from "@/lib/session";
 
 export default async function AdminCompaniesPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; status?: string; docs?: string }>;
 }) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session) redirect("/register");
+  const session = await getSessionWithUser();
+  if (!session || session.user.role !== "ADMIN") redirect("/login");
 
   const params = await searchParams;
   const q = params.q;

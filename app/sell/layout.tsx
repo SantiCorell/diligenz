@@ -1,14 +1,12 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getUserIdFromSession } from "@/lib/session";
 
 export default async function SellLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("session");
-  if (!session) redirect("/login");
-
+  const userId = await getUserIdFromSession();
+  if (!userId) redirect("/login");
   return <>{children}</>;
 }
