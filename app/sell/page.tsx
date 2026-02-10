@@ -103,7 +103,7 @@ export default function SellPage() {
   return (
     <ShellLayout>
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-primary)]/10 py-12 md:py-14">
+        <section className="border-b border-[var(--brand-primary)]/10 py-8 md:py-10">
           <div className="max-w-2xl mx-auto px-4 sm:px-6">
             <span className="inline-block text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-90 mb-2">
               Valoración orientativa
@@ -117,7 +117,7 @@ export default function SellPage() {
           </div>
         </section>
 
-        <section className="py-10 md:py-14">
+        <section className="py-6 md:py-8">
           <div className="max-w-2xl mx-auto px-4 sm:px-6">
             <div className="rounded-2xl border-2 border-[var(--brand-primary)]/20 bg-white p-6 md:p-8 shadow-lg">
               <form onSubmit={submit} className="space-y-8">
@@ -293,7 +293,7 @@ export default function SellPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-xl bg-[var(--brand-primary)] py-4 text-base font-semibold text-white hover:opacity-95 disabled:opacity-60 transition shadow-md"
+                  className="w-full rounded-xl py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 disabled:opacity-60 transition"
                 >
                   {loading ? "Calculando valoración…" : "Ver valoración orientativa"}
                 </button>
@@ -330,7 +330,7 @@ export default function SellPage() {
                   </p>
                   <Link
                     href="/servicios#pricing"
-                    className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition"
+                    className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
                   >
                     Ver servicios y precios →
                   </Link>

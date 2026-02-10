@@ -16,7 +16,7 @@ export default async function DocumentsPage() {
   });
 
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-12">
+    <main className="min-h-screen bg-gray-50 px-6 py-6 md:py-8">
       <div className="mx-auto max-w-5xl">
         <h1 className="text-3xl font-semibold tracking-tight">
           Documentación

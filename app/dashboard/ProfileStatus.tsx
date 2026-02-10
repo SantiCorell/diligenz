@@ -24,10 +24,10 @@ export default function ProfileStatus({
   const progress = Math.round((completed / items.length) * 100);
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow">
-      <h2 className="text-lg font-semibold mb-4">👤 Mi perfil</h2>
+    <div className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
+      <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-4">👤 Mi perfil</h2>
 
-      <ul className="space-y-3 text-sm">
+      <ul className="space-y-3 text-sm sm:text-base text-[var(--foreground)] opacity-90">
         {items.map((item) => (
           <li key={item.label} className="flex items-center justify-between">
             <span className="flex items-center gap-2">
@@ -37,7 +37,7 @@ export default function ProfileStatus({
             {!item.ok && item.action && (
               <Link
                 href={item.action}
-                className="text-xs font-medium text-black hover:underline"
+                className="text-xs sm:text-sm font-medium text-[var(--brand-primary)] hover:underline"
               >
                 Completar
               </Link>
@@ -46,11 +46,11 @@ export default function ProfileStatus({
         ))}
       </ul>
 
-      <div className="mt-4 text-xs text-gray-500">
+      <div className="mt-4 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
         Progreso: {progress}%
-        <div className="mt-1 h-2 w-full rounded bg-gray-200">
+        <div className="mt-1 h-2 w-full rounded bg-[var(--brand-primary)]/10">
           <div
-            className="h-2 rounded bg-black"
+            className="h-2 rounded bg-[var(--brand-primary)]"
             style={{ width: `${progress}%` }}
           />
         </div>

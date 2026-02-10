@@ -64,7 +64,7 @@ export default function RegisterPage() {
   return (
     <ShellLayout>
       <div className="min-h-screen bg-gradient-to-br from-[var(--brand-bg)] via-white to-[var(--brand-primary)]/5">
-        <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-6 py-8 md:py-10">
           {/* Logo centrado arriba */}
           <div className="flex justify-center mb-12">
             <Image
@@ -274,7 +274,7 @@ export default function RegisterPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full rounded-xl bg-[var(--brand-primary)] py-3.5 text-white font-semibold hover:opacity-90 disabled:opacity-50 transition shadow-lg hover:shadow-xl"
+                    className="w-full rounded-xl py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 disabled:opacity-50 transition"
                   >
                     {loading ? "Creando cuenta…" : "Crear cuenta"}
                   </button>

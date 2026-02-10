@@ -16,10 +16,10 @@ export default function HomeFAQ() {
       className="border-t border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-10 md:py-12"
       aria-labelledby="faq-heading"
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <h2
           id="faq-heading"
-          className="text-xl md:text-2xl font-bold text-[var(--brand-primary)] text-center mb-6"
+          className="text-lg sm:text-xl font-bold text-[var(--brand-primary)] text-center mb-5"
         >
           Preguntas frecuentes
         </h2>
@@ -36,7 +36,7 @@ export default function HomeFAQ() {
               >
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between gap-3 text-left px-4 py-3 md:px-5 md:py-3.5 font-medium text-[var(--brand-primary)] text-sm md:text-base"
+                  className="w-full flex items-center justify-between gap-3 text-left px-4 py-3 font-medium text-[var(--brand-primary)] text-sm"
                   onClick={() => setOpenIndex(openIndex === index ? null : index)}
                   aria-expanded={openIndex === index}
                   aria-controls={`faq-answer-${index}`}
@@ -62,7 +62,7 @@ export default function HomeFAQ() {
                   itemType="https://schema.org/Answer"
                 >
                   <p
-                    className="text-[var(--foreground)] text-sm md:text-base opacity-90 leading-relaxed pl-0"
+                    className="text-[var(--foreground)] text-sm opacity-90 leading-relaxed pl-0"
                     itemProp="text"
                   >
                     {item.answer}

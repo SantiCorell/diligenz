@@ -2,27 +2,26 @@ import Link from "next/link";
 
 export default function FinalCTA() {
   return (
-    <section className="bg-[var(--brand-bg)] py-12 md:py-16 border-t border-[var(--brand-primary)]/10">
-      <div className="mx-auto max-w-6xl px-6 text-center">
-        <h2 className="text-4xl font-semibold text-[var(--brand-primary)]">
+    <section className="bg-[var(--brand-bg)] py-10 md:py-12 border-t border-[var(--brand-primary)]/10">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center">
+        <h2 className="text-xl sm:text-2xl font-semibold text-[var(--brand-primary)]">
           Empieza hoy a comprar o vender empresas
         </h2>
 
-        <p className="mt-4 text-lg text-[var(--foreground)] opacity-85">
-          Únete a la comunidad de inversores y empresarios que confían en
-          DILIGENZ.
+        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90">
+          Únete a la comunidad de inversores y empresarios que confían en Diligenz.
         </p>
 
-        <div className="mt-8 flex flex-wrap justify-center gap-6">
+        <div className="mt-6 flex flex-wrap justify-center gap-4">
           <Link
             href="/register"
-            className="rounded-xl bg-[var(--brand-primary)] px-8 py-4 text-white font-medium hover:opacity-90 transition"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
           >
             Crear cuenta gratuita
           </Link>
           <Link
             href="/companies"
-            className="rounded-xl border-2 border-[var(--brand-primary)]/40 px-8 py-4 font-medium text-[var(--brand-primary)] hover:bg-[var(--brand-bg)] transition"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] bg-white hover:bg-[var(--brand-primary)]/10 transition"
           >
             Ver empresas disponibles
           </Link>

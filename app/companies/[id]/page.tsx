@@ -103,7 +103,7 @@ export default async function CompanyDetailPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-8">
           <Link
             href="/companies"
             className="text-sm text-[var(--brand-primary)] hover:underline"

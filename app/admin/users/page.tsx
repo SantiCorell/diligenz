@@ -92,23 +92,23 @@ export default function AdminUsersPage() {
   return (
     <main className="max-w-5xl mx-auto">
       <div className="mb-8">
-        <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80 mb-2">
+        <span className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)]/80 mb-2">
           Administración
         </span>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
           Usuarios
         </h1>
-        <p className="mt-3 text-[var(--foreground)] opacity-85 leading-relaxed max-w-2xl">
+        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
           Crea y gestiona usuarios del panel: administradores, compradores y vendedores. Solo un administrador puede acceder a esta sección. Desde aquí das de alta nuevos usuarios con email, contraseña y rol, y puedes bloquear o desbloquear cuentas si es necesario.
         </p>
-        <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
+        <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
           Los usuarios comprador y vendedor acceden al dashboard según su rol.
         </p>
       </div>
 
       {/* Crear usuario */}
-      <div className="rounded-2xl border-2 border-[var(--brand-primary)]/20 bg-white p-6 shadow-lg mb-10">
-        <h2 className="text-lg font-semibold text-[var(--brand-primary)] border-b border-[var(--brand-primary)]/20 pb-3">
+      <div className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 mb-10">
+        <h2 className="text-lg font-semibold text-[var(--brand-primary)] border-b border-[var(--brand-primary)]/10 pb-3">
           Crear nuevo usuario
         </h2>
         <form onSubmit={handleCreate} className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -173,7 +173,7 @@ export default function AdminUsersPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition"
+              className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 disabled:opacity-50 transition"
             >
               {submitting ? "Creando…" : "Crear usuario"}
             </button>
@@ -193,8 +193,8 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Listado de usuarios */}
-      <div className="rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white shadow-lg overflow-hidden">
-        <h2 className="text-lg font-semibold text-[var(--brand-primary)] border-b border-[var(--brand-primary)]/20 px-6 py-4">
+      <div className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md overflow-hidden">
+        <h2 className="text-lg font-semibold text-[var(--brand-primary)] border-b border-[var(--brand-primary)]/10 px-6 py-4">
           Usuarios registrados
         </h2>
         {loading ? (
@@ -209,7 +209,7 @@ export default function AdminUsersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-[var(--brand-primary)]/20 bg-[var(--brand-primary)]/5">
+                <tr className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-primary)]/5">
                   <th className="px-4 py-3 font-semibold text-[var(--brand-primary)]">
                     Email
                   </th>

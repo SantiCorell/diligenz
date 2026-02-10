@@ -18,7 +18,7 @@ export default function CompaniesFilters({
   locations,
 }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)]">
+    <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl border border-[var(--brand-primary)]/10 bg-white shadow-md">
       <span className="text-sm font-medium text-[var(--brand-primary)]">Filtros:</span>
       <select
         value={sector}

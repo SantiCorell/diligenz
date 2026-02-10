@@ -46,27 +46,27 @@ export default async function AdminCompanyDetail({
         >
           ← Volver a Empresas
         </Link>
-        <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80 mt-4 mb-2">
+        <span className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)]/80 mt-4 mb-2">
           Ficha de empresa
         </span>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
           {company.name}
         </h1>
-        <p className="mt-2 text-[var(--foreground)] opacity-80">
+        <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
           {company.sector} · {company.location}
         </p>
-        <p className="mt-3 text-[var(--foreground)] opacity-85 leading-relaxed max-w-2xl">
+        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
           En esta ficha puedes ver la información general, editar los textos y enlaces que verán los usuarios en el listado y en la página de detalle, revisar documentos subidos por el vendedor, la documentación legal y publicar o despublicar la empresa en el marketplace.
         </p>
       </div>
 
       {/* INFORMACIÓN GENERAL */}
-      <section className="rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+      <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
         <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
           Información general
         </h2>
 
-        <p className="mt-3 text-sm text-[var(--foreground)] opacity-85 leading-relaxed">
+        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed">
           {company.description || "Sin descripción"}
         </p>
 
@@ -95,11 +95,11 @@ export default async function AdminCompanyDetail({
       </section>
 
       {/* EDITAR FICHA PÚBLICA */}
-      <section className="mt-8 rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+      <section className="mt-8 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
         <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
           Editar ficha pública (listado y detalle)
         </h2>
-        <p className="mt-2 text-sm text-[var(--foreground)] opacity-80">
+        <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
           Descripción breve en listados. Descripción del vendedor y enlaces a Drive solo visibles para usuarios registrados. Activa la opción inferior para permitir que usuarios registrados vean documentación y fotos.
         </p>
         <form action="/api/admin/company/update" method="POST" className="mt-4 space-y-4">
@@ -193,7 +193,7 @@ export default async function AdminCompanyDetail({
 
           <button
             type="submit"
-            className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
           >
             Guardar cambios en la ficha
           </button>
@@ -201,11 +201,11 @@ export default async function AdminCompanyDetail({
       </section>
 
       {/* DOCUMENTOS SUBIDOS POR EL VENDEDOR */}
-      <section className="mt-8 rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+      <section className="mt-8 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
         <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
           Documentos subidos por el vendedor
         </h2>
-        <p className="mt-2 text-sm text-[var(--foreground)] opacity-80">
+        <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
           El vendedor los sube desde la ficha pública. Si activas &quot;Permitir que usuarios registrados vean documentación, enlaces y fotos&quot; arriba, cualquier usuario logueado podrá ver y descargar estos archivos.
         </p>
         {company.companyFiles.length === 0 ? (
@@ -217,8 +217,8 @@ export default async function AdminCompanyDetail({
             {company.companyFiles.map((f) => (
               <li
                 key={f.id}
-                className="flex items-center justify-between rounded-xl border-2 border-[var(--brand-primary)]/10 px-4 py-3 text-sm"
-              >
+              className="flex items-center justify-between rounded-xl border border-[var(--brand-primary)]/10 px-4 py-3 text-sm"
+            >
                 <span className="text-[var(--foreground)]">{f.name}</span>
                 <a
                   href={`/api/companies/${company.id}/files/${f.id}`}
@@ -235,11 +235,11 @@ export default async function AdminCompanyDetail({
       </section>
 
       {/* DOCUMENTACIÓN LEGAL */}
-      <section className="mt-8 rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+      <section className="mt-8 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
         <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
           Documentación legal
         </h2>
-        <p className="mt-2 text-sm text-[var(--foreground)] opacity-80">
+        <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
           Estado de firma de mandato, NDA y autorizaciones. La empresa no puede publicarse en el marketplace hasta que toda la documentación esté firmada.
         </p>
 
@@ -247,7 +247,7 @@ export default async function AdminCompanyDetail({
           {company.documents.map((doc) => (
             <li
               key={doc.id}
-              className="flex items-center justify-between rounded-xl border-2 border-[var(--brand-primary)]/10 px-4 py-3 text-sm"
+              className="flex items-center justify-between rounded-xl border border-[var(--brand-primary)]/10 px-4 py-3 text-sm"
             >
               <span className="text-[var(--foreground)]">
                 {doc.type === "SALES_MANDATE" && "Mandato de venta"}
@@ -276,12 +276,12 @@ export default async function AdminCompanyDetail({
       </section>
 
       {/* ACCIONES ADMIN */}
-      <section className="mt-8 rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+      <section className="mt-8 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
         <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
           Acciones administrativas
         </h2>
 
-        <p className="mt-2 text-sm text-[var(--foreground)] opacity-85">
+        <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
           <strong>Estado</strong> es interno (borrador, en revisión, publicado, vendido). No determina la visibilidad en la web: para que la empresa aparezca en el listado público debes usar &quot;Publicar en marketplace&quot; más abajo.
         </p>
 
@@ -305,13 +305,13 @@ export default async function AdminCompanyDetail({
 
           <button
             type="submit"
-            className="rounded-xl bg-[var(--foreground)]/90 px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--foreground)]/90 text-white shadow-lg hover:opacity-95 transition"
           >
             Actualizar estado
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-[var(--brand-primary)]/15">
+        <div className="mt-6 pt-6 border-t border-[var(--brand-primary)]/10">
           <h3 className="text-sm font-semibold text-[var(--brand-primary)]">Visible en marketplace</h3>
           {deal ? (
             deal.published ? (
@@ -327,7 +327,7 @@ export default async function AdminCompanyDetail({
                   <input type="hidden" name="companyId" value={company.id} />
                   <button
                     type="submit"
-                    className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 transition"
+                    className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-green-600 text-white shadow-lg hover:opacity-95 transition"
                   >
                     Publicar en marketplace
                   </button>

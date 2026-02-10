@@ -44,23 +44,23 @@ export default async function AdminCompaniesPage({
   return (
     <main className="max-w-5xl mx-auto">
       <div className="mb-8">
-        <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80 mb-2">
+        <span className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)]/80 mb-2">
           Catálogo
         </span>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
           Empresas
         </h1>
-        <p className="mt-3 text-[var(--foreground)] opacity-85 leading-relaxed max-w-2xl">
+        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
           Todas las empresas dadas de alta por vendedores. Entra en cada ficha para editar la información pública, cambiar el estado (borrador, en revisión, publicado) y publicar o despublicar en el marketplace.
         </p>
-        <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
+        <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
           Usa los filtros para buscar por nombre, estado o documentación firmada.
         </p>
       </div>
 
       <form
         method="GET"
-        className="mb-8 grid grid-cols-1 gap-4 rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-5 shadow-lg sm:grid-cols-4"
+        className="mb-8 grid grid-cols-1 gap-4 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-5 sm:grid-cols-4"
       >
         <input
           type="text"
@@ -91,7 +91,7 @@ export default async function AdminCompaniesPage({
         </select>
         <button
           type="submit"
-          className="rounded-xl bg-[var(--brand-primary)] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+          className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
         >
           Filtrar
         </button>
@@ -99,7 +99,7 @@ export default async function AdminCompaniesPage({
 
       <div className="space-y-4">
         {filteredCompanies.length === 0 && (
-          <p className="rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-8 text-center text-[var(--foreground)] opacity-80">
+          <p className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-8 text-center text-sm sm:text-base text-[var(--foreground)] opacity-90">
             No hay empresas que coincidan con los filtros.
           </p>
         )}
@@ -114,7 +114,7 @@ export default async function AdminCompaniesPage({
           return (
             <div
               key={company.id}
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg transition hover:shadow-xl"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 transition hover:shadow-lg"
             >
               <div className="min-w-0">
                 <p className="font-semibold text-[var(--foreground)]">
@@ -149,7 +149,7 @@ export default async function AdminCompaniesPage({
                 )}
                 <Link
                   href={`/admin/companies/${company.id}`}
-                  className="rounded-xl bg-[var(--brand-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition"
+                  className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
                 >
                   Editar / Ver
                 </Link>

@@ -204,7 +204,7 @@ export default function ContactFormServicios() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-[var(--brand-primary)] py-3.5 text-white font-semibold hover:opacity-90 disabled:opacity-50 transition shadow-md"
+          className="w-full rounded-xl py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 disabled:opacity-50 transition"
         >
           {loading ? "Enviando…" : "Enviar consulta"}
         </button>

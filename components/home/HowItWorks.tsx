@@ -163,10 +163,10 @@ export default function HowItWorks() {
   return (
     <section className="bg-[var(--brand-bg)] py-12 md:py-16 border-t border-[var(--brand-primary)]/10 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
-        <h2 className="text-4xl font-semibold text-center text-[var(--brand-primary)]">
+        <h2 className="text-xl sm:text-2xl font-semibold text-center text-[var(--brand-primary)]">
           ¿Cómo funciona?
         </h2>
-        <p className="mt-3 text-center text-lg text-[var(--foreground)] opacity-85">
+        <p className="mt-2 text-center text-sm sm:text-base text-[var(--foreground)] opacity-85">
           Elige tu perfil y sigue el camino paso a paso
         </p>
 
@@ -191,7 +191,7 @@ export default function HowItWorks() {
         </div>
 
         {/* Descripción corta del rol */}
-        <p className="mt-2 text-center text-[var(--foreground)] opacity-80">
+        <p className="mt-1 text-center text-xs sm:text-sm text-[var(--foreground)] opacity-80">
           {flow.short}
         </p>
 
@@ -212,17 +212,17 @@ export default function HowItWorks() {
                   {/* Card: solo el paso actual se ilumina */}
                   <div
                     className={`
-                      w-full rounded-2xl border-2 bg-[var(--brand-bg-lavender)] p-5 text-center
-                      transition-all duration-300 hover:shadow-lg hover:border-[var(--brand-primary)]/30
+                      w-full rounded-2xl border border-[var(--brand-primary)]/15 bg-white p-5 text-center shadow-md
+                      transition-all duration-300 hover:shadow-lg hover:border-[var(--brand-primary)]/25
                       ${i === activeStep
                         ? "border-[var(--brand-primary)] shadow-lg flow-card-current scale-[1.02]"
-                        : "border-[var(--brand-primary)]/20 opacity-90"
+                        : "opacity-95"
                       }
                     `}
                   >
                     <div
                       className={`mx-auto w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors ${
-                        i === activeStep ? "bg-[var(--brand-primary)]/25 text-[var(--brand-primary)]" : "bg-[var(--brand-primary)]/15 text-[var(--brand-primary)]"
+                        i === activeStep ? "bg-[var(--brand-primary)]/20 text-[var(--brand-primary)]" : "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]"
                       }`}
                     >
                       <Icon className="w-6 h-6" strokeWidth={2} />

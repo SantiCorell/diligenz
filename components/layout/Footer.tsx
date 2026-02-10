@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="bg-[var(--brand-primary)] text-[var(--brand-bg)] py-12 md:py-14">
+    <footer className="bg-[var(--brand-primary)] text-[var(--brand-bg)] py-10 md:py-12 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         <div>
           <Link href="/" className="inline-block hover:opacity-90 transition">
@@ -50,7 +50,7 @@ export default function Footer() {
           </ul>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10 pt-6 border-t border-[var(--brand-bg)]/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 pt-6 border-t border-[var(--brand-bg)]/20 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-xs opacity-75">
           © {new Date().getFullYear()} Diligenz. Todos los derechos reservados.
         </p>

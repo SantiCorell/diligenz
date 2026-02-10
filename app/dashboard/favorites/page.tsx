@@ -3,16 +3,16 @@ import Link from "next/link";
 export default function FavoritesPage() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
-      <div className="rounded-2xl bg-[var(--brand-primary)]/5 border-2 border-[var(--brand-primary)]/20 p-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
+      <div className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
           Favoritas
         </h1>
-        <p className="mt-1 text-[var(--foreground)] opacity-90">
+        <p className="mt-1 text-sm sm:text-base text-[var(--foreground)] opacity-90">
           Empresas que has guardado para revisar más tarde.
         </p>
       </div>
-      <div className="rounded-2xl border-2 border-[var(--brand-primary)]/20 bg-white p-8 shadow-lg">
-        <p className="text-[var(--foreground)] opacity-85">
+      <div className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-8">
+        <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90">
           Aquí aparecerán tus empresas favoritas. Mientras tanto, puedes explorar el catálogo.
         </p>
         <Link

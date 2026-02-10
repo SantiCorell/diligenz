@@ -79,7 +79,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [{ url: "/logo-dili.png", type: "image/png" }],
-    apple: "/logo-dili.png",
+    apple: [{ url: "/icon-pwa.svg", type: "image/svg+xml" }],
   },
   formatDetection: {
     email: false,
@@ -90,7 +90,7 @@ export const metadata: Metadata = {
   category: "business",
   other: {
     "geo.region": "ES",
-    "theme-color": "#1a365d",
+    "theme-color": "#2F175F",
   },
 };
 
@@ -109,6 +109,9 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/logo-dili.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/icon-pwa.svg" />
+        <meta name="theme-color" content="#2F175F" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="google-site-verification" content="paVL-Zk5dS7LpLeMXgbx5r1rn6bYGD1iWgtg1uJL-ZI" />
         {/* Structured data para buscadores y IA: Organization, WebSite, Marketplace */}
         <script

@@ -80,7 +80,7 @@ export default function CompanyCard({
       <div className={`mt-5 ${showBlur ? "relative select-none" : ""}`}>
         {showBlur && (
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-[var(--brand-bg)]/90 backdrop-blur-md z-10 border border-[var(--brand-primary)]/10"
+            className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-white/95 backdrop-blur-md z-10 border border-[var(--brand-primary)]/10"
             aria-hidden
           >
             <p className="text-sm font-medium text-[var(--brand-primary)] px-4 text-center">
@@ -92,7 +92,7 @@ export default function CompanyCard({
                 e.preventDefault();
                 onRequestAuth?.();
               }}
-              className="mt-3 rounded-xl bg-[var(--brand-primary)] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+              className="mt-3 rounded-xl px-5 py-3 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95"
             >
               Regístrate para ver la ficha completa
             </button>
@@ -123,7 +123,7 @@ export default function CompanyCard({
         <div className={`pt-3 border-t border-[var(--brand-primary)]/10 ${compact ? "mt-3" : "mt-5 pt-4"}`}>
           <Link
             href={`/companies/${company.id}`}
-            className={`flex items-center justify-center gap-2 w-full rounded-xl bg-[var(--brand-primary)] font-semibold text-white hover:opacity-90 transition ${compact ? "py-2 text-xs" : "py-3 text-sm"}`}
+            className={`flex items-center justify-center gap-2 w-full rounded-xl font-semibold bg-[var(--brand-primary)] text-white shadow-md hover:opacity-95 transition ${compact ? "py-2.5 text-xs" : "py-3.5 text-sm"}`}
           >
             Solicitar información
             <ChevronRight className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
@@ -134,8 +134,8 @@ export default function CompanyCard({
   );
 
   const wrapperClass = compact
-    ? "w-full rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] p-4 shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/25 transition block text-left overflow-hidden"
-    : "w-full rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] p-6 shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/25 transition block text-left overflow-hidden";
+    ? "w-full rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-4 shadow-md hover:shadow-lg hover:border-[var(--brand-primary)]/20 transition block text-left overflow-hidden"
+    : "w-full rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 shadow-md hover:shadow-lg hover:border-[var(--brand-primary)]/20 transition block text-left overflow-hidden";
 
   return <div className={wrapperClass}>{cardContent}</div>;
 }

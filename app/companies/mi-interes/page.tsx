@@ -26,14 +26,14 @@ export default async function MiInteresPage() {
       </p>
 
       {companies.length === 0 ? (
-        <div className="mt-12 rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] p-12 text-center">
+        <div className="mt-8 rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] p-8 text-center">
           <p className="text-[var(--foreground)] opacity-85">
             Aún no tienes empresas en tu lista. Explora el catálogo y haz clic en
             &quot;Solicitar información&quot; o &quot;Guardar en seguimiento&quot; en cualquier ficha.
           </p>
           <Link
             href="/companies"
-            className="mt-6 inline-block rounded-xl bg-[var(--brand-primary)] px-6 py-3 text-white font-medium hover:opacity-90"
+            className="mt-6 inline-block rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
           >
             Ver empresas
           </Link>

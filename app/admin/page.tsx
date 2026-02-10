@@ -56,16 +56,16 @@ export default async function AdminDashboard({
   return (
     <main className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80 mb-2">
+        <span className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)]/80 mb-2">
           Panel
         </span>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
           Panel de administración
         </h1>
-        <p className="mt-3 text-[var(--foreground)] opacity-85 leading-relaxed max-w-2xl">
+        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
           Visión global del marketplace: usuarios, empresas, leads y solicitudes de información. Desde aquí puedes publicar empresas en la web, sincronizar el listado y acceder a cada sección del panel.
         </p>
-        <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
+        <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
           Las empresas solo son visibles en el marketplace cuando las publicas desde su ficha en Empresas.
         </p>
       </div>
@@ -102,7 +102,7 @@ export default async function AdminDashboard({
       </div>
 
       <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <section className="rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+        <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
           <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
             Empresas por sector
           </h2>
@@ -125,7 +125,7 @@ export default async function AdminDashboard({
             )}
           </ul>
         </section>
-        <section className="rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+        <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
           <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
             Empresas por ubicación
           </h2>
@@ -150,7 +150,7 @@ export default async function AdminDashboard({
         </section>
       </div>
 
-      <div className="mt-10 rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-6 shadow-lg">
+      <div className="mt-10 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
         <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
           Acciones rápidas
         </h2>
@@ -169,38 +169,38 @@ export default async function AdminDashboard({
           >
             <button
               type="submit"
-              className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700 transition"
+              className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-green-600 text-white shadow-lg hover:opacity-95 transition"
             >
               Sincronizar publicadas con la web
             </button>
           </form>
           <Link
             href="/admin/companies"
-            className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
           >
             Gestionar empresas
           </Link>
           <Link
             href="/admin/actions"
-            className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
           >
             Ver solicitudes de información
           </Link>
           <Link
             href="/admin/leads"
-            className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
           >
             Ver leads (valoraciones y contacto)
           </Link>
           <Link
             href="/admin/users"
-            className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
           >
             Crear usuarios / Admins
           </Link>
           <Link
             href="/companies"
-            className="rounded-xl border-2 border-[var(--brand-primary)]/30 px-5 py-2.5 text-sm font-medium text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5 transition"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] bg-white hover:bg-[var(--brand-primary)]/10 transition"
           >
             Ver listado público
           </Link>
@@ -224,19 +224,19 @@ function KpiCard({
   accent: "primary" | "green" | "blue" | "gray";
 }) {
   const styles = {
-    primary: "border-[var(--brand-primary)]/20 text-[var(--brand-primary)]",
+    primary: "border-[var(--brand-primary)]/10 text-[var(--brand-primary)]",
     green: "border-green-200 text-green-700",
     blue: "border-blue-200 text-blue-700",
     gray: "border-gray-200 text-gray-700",
   };
   const content = (
     <div
-      className={`rounded-2xl border-2 bg-white p-6 shadow-lg transition hover:shadow-xl ${href ? "cursor-pointer" : ""} ${styles[accent]}`}
+      className={`rounded-2xl bg-white border p-6 shadow-md transition hover:shadow-lg ${href ? "cursor-pointer" : ""} ${styles[accent]}`}
     >
       <p className="text-sm font-medium opacity-90">{title}</p>
-      <p className="mt-2 text-3xl font-bold">{value}</p>
+      <p className="mt-2 text-2xl sm:text-3xl font-bold">{value}</p>
       {subtitle && (
-        <p className="mt-1 text-xs opacity-75">{subtitle}</p>
+        <p className="mt-1 text-xs sm:text-sm opacity-75">{subtitle}</p>
       )}
     </div>
   );

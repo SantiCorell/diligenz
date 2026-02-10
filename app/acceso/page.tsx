@@ -78,7 +78,7 @@ export default function AccesoPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-[var(--brand-primary)] text-white font-semibold hover:bg-[var(--brand-primary-hover)] disabled:opacity-60 transition-colors"
+              className="w-full py-3 rounded-xl bg-[var(--brand-primary)] text-white font-semibold hover:opacity-95 disabled:opacity-60 transition-colors"
             >
               {loading ? "Comprobando…" : "Entrar"}
             </button>

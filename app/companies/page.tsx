@@ -68,20 +68,19 @@ export default async function CompaniesPage({ searchParams }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-[var(--brand-primary)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8">
+          <div className="mb-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
               Empresas en venta
               {sectorLabel && (
                 <span className="opacity-70"> · {sectorLabel}</span>
               )}
             </h1>
-            <p className="mt-3 text-[var(--foreground)] opacity-90 max-w-2xl">
-              Explora empresas disponibles y oportunidades activas de adquisición.
-              Regístrate para ver la ficha completa y datos financieros.
+            <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90 max-w-2xl">
+              Explora empresas disponibles y oportunidades activas de adquisición. Regístrate para ver la ficha completa y datos financieros.
             </p>
             {useOnlyReal && (
-              <p className="mt-2 text-sm text-[var(--foreground)] opacity-75">
+              <p className="mt-1 text-xs sm:text-sm text-[var(--foreground)] opacity-80">
                 Mostrando solo empresas reales publicadas en el marketplace.
               </p>
             )}

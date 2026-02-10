@@ -38,21 +38,20 @@ const sectors = [
 
 export default function SpecializedSectors() {
   return (
-    <section className="bg-[var(--brand-bg)] py-12 md:py-16 border-t border-[var(--brand-primary)]/10">
+    <section className="bg-[var(--brand-bg)] py-10 md:py-12 border-t border-[var(--brand-primary)]/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <h2 className="text-3xl font-bold text-[var(--brand-primary)]">
-          Sectores en los que estamos especializados
+        <h2 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
+          Sectores especializados
         </h2>
-        <p className="mt-3 text-[var(--foreground)] opacity-85 max-w-2xl">
-          Analizamos y acompañamos operaciones en sectores con alta
-          actividad y demanda inversora.
+        <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-85 max-w-2xl">
+          Analizamos y acompañamos operaciones en sectores con alta actividad y demanda inversora.
         </p>
 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {sectors.map((sector) => (
             <div
               key={sector.slug}
-              className="bg-[var(--brand-bg-lavender)] rounded-xl overflow-hidden border border-[var(--brand-primary)]/10 hover:shadow-lg transition"
+              className="bg-white rounded-xl overflow-hidden border border-[var(--brand-primary)]/10 shadow-md hover:shadow-lg transition"
             >
               <div className="relative aspect-[4/3]">
                 <Image
@@ -63,15 +62,15 @@ export default function SpecializedSectors() {
                   sizes="(max-width: 768px) 100vw, 25vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <h3 className="absolute bottom-3 left-3 right-3 text-lg font-semibold text-white">
+                <h3 className="absolute bottom-3 left-3 right-3 text-base font-semibold text-white drop-shadow-sm">
                   {sector.name}
                 </h3>
               </div>
-              <div className="p-4">
-                <p className="text-sm text-[var(--foreground)] opacity-85">
+              <div className="p-4 bg-white">
+                <p className="text-sm text-[var(--foreground)] opacity-90 leading-relaxed">
                   {sector.description}
                 </p>
-                <p className="mt-2 text-xs opacity-75">
+                <p className="mt-1.5 text-xs text-[var(--foreground)] opacity-75">
                   {sector.stat}
                 </p>
                 <Link

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[calc(100vh-8rem)] flex flex-col justify-center bg-gradient-to-br from-[var(--brand-bg)] via-white to-[var(--brand-primary)]/10 overflow-hidden">
+    <section className="relative min-h-[calc(100vh-10rem)] flex flex-col justify-center bg-gradient-to-br from-[var(--brand-bg)] via-white to-[var(--brand-primary)]/10 overflow-hidden">
       {/* Ilustración de fondo: red de conexiones (compradores ↔ vendedores) */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden>
         <svg
@@ -49,25 +49,25 @@ export default function Hero() {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-[var(--brand-primary)] rounded-full blur-3xl" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-14 md:py-16">
-        <div className="text-center mb-12">
-          {/* Logo grande */}
-          <div className="flex justify-center mb-8">
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        <div className="text-center mb-8">
+          {/* Logo */}
+          <div className="flex justify-center mb-5">
             <Image
               src="/logo-dili-panel.png"
               alt="Diligenz"
-              width={120}
-              height={120}
-              className="h-24 w-24 md:h-32 md:w-32 object-contain"
+              width={88}
+              height={88}
+              className="h-20 w-20 md:h-24 md:w-24 object-contain"
               priority
             />
           </div>
 
-          <span className="inline-block mb-6 rounded-full bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 px-6 py-2 text-sm font-medium text-[var(--brand-primary)]">
+          <span className="inline-block mb-4 rounded-full bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 px-4 py-1.5 text-xs font-medium text-[var(--brand-primary)]">
             Marketplace líder en España — Compra, vende y valora empresas
           </span>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-[var(--brand-primary)] mb-6 leading-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--brand-primary)] mb-4 leading-snug">
             Compra, vende y valora empresas
             <br />
             <span className="text-[var(--foreground)] opacity-90">
@@ -75,53 +75,52 @@ export default function Hero() {
             </span>
           </h1>
 
-          <p className="mt-6 max-w-3xl mx-auto text-xl sm:text-2xl text-[var(--foreground)] opacity-90 leading-relaxed mb-4">
-            La plataforma de referencia en España para M&A y compraventa de pymes. Valoración en minutos, inversores verificados y asesoramiento hasta el cierre.
-            <br />
-            <span className="text-lg sm:text-xl opacity-80">
-              Privado, seguro y 100% enfocado en el mercado español.
-            </span>
+          <p className="mt-4 max-w-2xl mx-auto text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed mb-2">
+            Accede a más de 1.500 empresas verificadas en venta. Valoración en minutos, inversores verificados y asesoramiento hasta el cierre.
+          </p>
+          <p className="text-xs sm:text-sm text-[var(--foreground)] opacity-80">
+            Privado, seguro y 100% enfocado en el mercado español.
           </p>
 
           {/* Beneficios destacados */}
-          <div className="mt-10 flex flex-wrap justify-center gap-6 text-sm sm:text-base text-[var(--foreground)] opacity-80">
-            <div className="flex items-center gap-2">
-              <span className="text-green-600 text-xl font-bold">✓</span>
+          <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs sm:text-sm text-[var(--foreground)] opacity-85">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--brand-bg-mint)] text-sm font-bold">✓</span>
               <span>100% Privado</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-600 text-xl font-bold">✓</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--brand-bg-mint)] text-sm font-bold">✓</span>
               <span>Inversores Verificados</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-600 text-xl font-bold">✓</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--brand-bg-mint)] text-sm font-bold">✓</span>
               <span>Valoración Instantánea</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-600 text-xl font-bold">✓</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--brand-bg-mint)] text-sm font-bold">✓</span>
               <span>Soporte Dedicado</span>
             </div>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
+        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4 flex-wrap">
+          <Link
+            href="/register"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition text-center"
+          >
+            Crear cuenta gratuita
+          </Link>
           <Link
             href="/sell"
-            className="rounded-xl bg-[var(--brand-primary)] px-8 py-4 text-white font-semibold hover:opacity-90 transition shadow-lg hover:shadow-xl text-center"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] bg-white hover:bg-[var(--brand-primary)]/10 transition text-center"
           >
             Vender mi empresa
           </Link>
           <Link
             href="/companies"
-            className="rounded-xl border-2 border-[var(--brand-primary)]/40 px-8 py-4 font-semibold text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10 transition shadow-md hover:shadow-lg text-center"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] bg-white hover:bg-[var(--brand-primary)]/10 transition text-center"
           >
             Ver empresas disponibles
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-xl bg-white border-2 border-[var(--brand-primary)]/20 px-8 py-4 font-semibold text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5 transition shadow-md hover:shadow-lg text-center"
-          >
-            Crear cuenta gratuita
           </Link>
         </div>
       </div>

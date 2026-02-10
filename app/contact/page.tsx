@@ -56,29 +56,29 @@ export default function ContactPage() {
   return (
     <ShellLayout>
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-primary)]/10 py-12 md:py-14">
+        <section className="border-b border-[var(--brand-primary)]/10 py-8 md:py-10">
           <div className="max-w-2xl mx-auto px-4 sm:px-6">
-            <span className="inline-block text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-90 mb-2">
+            <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-90 mb-2">
               Hablemos
             </span>
-            <h1 className="text-3xl md:text-4xl font-bold text-[var(--brand-primary)]">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
               Contacto
             </h1>
-            <p className="mt-3 text-[var(--foreground)] opacity-85">
+            <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
               Escríbenos y te respondemos lo antes posible. Indica si eres particular o empresa y tus datos.
             </p>
           </div>
         </section>
 
-        <section className="py-10 md:py-14">
+        <section className="py-6 md:py-8">
           <div className="max-w-2xl mx-auto px-4 sm:px-6">
-            <div className="rounded-2xl border-2 border-[var(--brand-primary)]/20 bg-white p-8 shadow-lg">
+            <div className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 md:p-8 shadow-md">
               {sent ? (
                 <div className="text-center py-8">
-                  <p className="text-lg font-semibold text-[var(--brand-primary)]">
+                  <p className="text-base font-semibold text-[var(--brand-primary)]">
                     Mensaje enviado correctamente
                   </p>
-                  <p className="mt-2 text-[var(--foreground)] opacity-85">
+                  <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
                     Te contestaremos a la mayor brevedad.
                   </p>
                 </div>
@@ -95,7 +95,7 @@ export default function ContactPage() {
                         className={`flex-1 rounded-xl px-5 py-3 text-sm font-semibold transition-all ${
                           type === "PARTICULAR"
                             ? "bg-[var(--brand-primary)] text-white shadow-md"
-                            : "border-2 border-[var(--brand-primary)]/20 bg-[var(--brand-bg-lavender)] text-[var(--brand-primary)] hover:border-[var(--brand-primary)]/40"
+                            : "border-2 border-[var(--brand-primary)]/20 bg-white text-[var(--brand-primary)] hover:border-[var(--brand-primary)]/40"
                         }`}
                       >
                         Particular
@@ -106,7 +106,7 @@ export default function ContactPage() {
                         className={`flex-1 rounded-xl px-5 py-3 text-sm font-semibold transition-all ${
                           type === "EMPRESA"
                             ? "bg-[var(--brand-primary)] text-white shadow-md"
-                            : "border-2 border-[var(--brand-primary)]/20 bg-[var(--brand-bg-lavender)] text-[var(--brand-primary)] hover:border-[var(--brand-primary)]/40"
+                            : "border-2 border-[var(--brand-primary)]/20 bg-white text-[var(--brand-primary)] hover:border-[var(--brand-primary)]/40"
                         }`}
                       >
                         Empresa
@@ -211,7 +211,7 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full rounded-xl bg-[var(--brand-primary)] py-3.5 text-white font-semibold hover:opacity-90 disabled:opacity-50 transition shadow-md"
+                    className="w-full rounded-xl py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 disabled:opacity-50 transition"
                   >
                     {loading ? "Enviando…" : "Enviar mensaje"}
                   </button>

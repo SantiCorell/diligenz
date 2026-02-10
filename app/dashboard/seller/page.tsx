@@ -25,20 +25,20 @@ export default async function SellerDashboardPage() {
 
   return (
     <main className="max-w-6xl mx-auto">
-        {/* Header - colores corporativos */}
-        <div className="mb-8 rounded-2xl bg-[var(--brand-primary)]/5 border-2 border-[var(--brand-primary)]/20 p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Header */}
+        <div className="mb-8 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
               Panel del vendedor
             </h1>
-            <p className="mt-1 text-[var(--foreground)] opacity-90">
+            <p className="mt-1 text-sm sm:text-base text-[var(--foreground)] opacity-90">
               Gestiona tus proyectos de forma confidencial y profesional.
             </p>
           </div>
 
           <Link
             href="/sell"
-            className="inline-flex items-center justify-center rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-medium text-white hover:opacity-90 transition shadow-md shrink-0"
+            className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition shrink-0"
           >
             Valorar nueva empresa
           </Link>
@@ -46,17 +46,17 @@ export default async function SellerDashboardPage() {
 
         {/* Empty state */}
         {companies.length === 0 ? (
-          <div className="rounded-2xl border-2 border-[var(--brand-primary)]/20 bg-white p-10 text-center shadow-lg">
-            <h2 className="text-xl font-semibold text-[var(--brand-primary)]">
+          <div className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-10 text-center">
+            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--brand-primary)]">
               Aún no has creado ningún proyecto
             </h2>
-            <p className="mt-2 text-[var(--foreground)] opacity-85">
+            <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
               Empieza valorando tu empresa y recibe un rango orientativo en minutos.
             </p>
 
             <Link
               href="/sell"
-              className="mt-6 inline-block rounded-xl bg-[var(--brand-primary)] px-6 py-3 text-white font-medium hover:opacity-90 transition"
+              className="mt-6 inline-block rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
             >
               Valorar mi empresa
             </Link>
@@ -74,12 +74,12 @@ export default async function SellerDashboardPage() {
               return (
                 <div
                   key={company.id}
-                  className="rounded-2xl border-2 border-[var(--brand-primary)]/20 bg-white p-6 shadow-lg transition hover:shadow-xl"
+                  className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 transition hover:shadow-lg"
                 >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     {/* Left */}
                     <div>
-                      <h2 className="text-2xl font-semibold text-[var(--brand-primary)]">
+                      <h2 className="text-xl sm:text-2xl font-semibold text-[var(--brand-primary)]">
                         {deal?.title || "Proyecto confidencial"}
                       </h2>
                       <p className="mt-1 text-sm text-[var(--foreground)] opacity-85">
@@ -125,7 +125,7 @@ export default async function SellerDashboardPage() {
 
                   {/* Footer / Legal / Actions */}
                   {!deal?.published && (
-                    <div className="mt-6 space-y-4 rounded-xl bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/10 p-5 text-sm text-[var(--foreground)]">
+                    <div className="mt-6 space-y-4 rounded-xl bg-white border border-[var(--brand-primary)]/10 p-5 text-sm sm:text-base text-[var(--foreground)] opacity-90">
                       {!allDocsSigned ? (
                         <p className="flex items-center gap-2">
                           <span>🔒</span>
@@ -155,7 +155,7 @@ export default async function SellerDashboardPage() {
                           <input type="hidden" name="companyId" value={company.id} />
                           <button
                             type="submit"
-                            className="mt-2 inline-flex items-center justify-center rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+                            className="mt-2 inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
                           >
                             Solicitar publicación
                           </button>

@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import ShellLayout from "@/components/layout/ShellLayout";
-import Link from "next/link";
-import Image from "next/image";
 import { BLOG_POSTS } from "@/lib/blog-posts";
+import { CASOS_EXITO } from "@/lib/casos-exito";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
+import BlogTabbedGrid from "@/components/blog/BlogTabbedGrid";
+
+const ITEMS_PER_PAGE = 4;
 
 export const metadata: Metadata = {
   title: `Blog M&A España | Valoración, due diligence y compraventa de empresas | ${SITE_NAME}`,
   description:
-    "Guías y artículos sobre valoración de empresas, due diligence y M&A en España. Consejos para vender o comprar pymes. Blog del marketplace líder en compraventa de empresas.",
+    "Guías y artículos sobre valoración de empresas, due diligence y M&A en España. Casos de éxito y consejos para vender o comprar pymes.",
   keywords: [
     "valoración empresas España",
     "due diligence España",
@@ -16,77 +18,89 @@ export const metadata: Metadata = {
     "vender empresa España",
     "comprar empresa España",
     "blog M&A",
+    "casos de éxito venta empresas",
   ],
   openGraph: {
     title: `Blog M&A España | ${SITE_NAME}`,
     description:
-      "Artículos sobre valoración, due diligence y compraventa de empresas en España. Guías para pymes e inversores.",
+      "Artículos y casos de éxito sobre valoración, due diligence y compraventa de empresas en España.",
     url: `${SITE_URL}/blog`,
     type: "website",
   },
   alternates: { canonical: `${SITE_URL}/blog` },
 };
 
-export default function BlogPage() {
+type PageProps = {
+  searchParams: Promise<{ page?: string; casosPage?: string }>;
+};
+
+export default async function BlogPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const articles = [...BLOG_POSTS].sort((a, b) =>
+    b.date > a.date ? 1 : -1
+  );
+  const casos = [...CASOS_EXITO].sort((a, b) => (b.date > a.date ? 1 : -1));
+
+  const articlePage = Math.max(
+    1,
+    Math.min(
+      Math.ceil(articles.length / ITEMS_PER_PAGE),
+      parseInt(params.page ?? "1", 10) || 1
+    )
+  );
+  const casosPage = Math.max(
+    1,
+    Math.min(
+      Math.ceil(casos.length / ITEMS_PER_PAGE),
+      parseInt(params.casosPage ?? "1", 10) || 1
+    )
+  );
+  const totalArticlePages = Math.ceil(articles.length / ITEMS_PER_PAGE);
+  const totalCasosPages = Math.ceil(casos.length / ITEMS_PER_PAGE);
+  const initialTab = params.casosPage != null ? "casos" : "articulos";
+
   return (
     <ShellLayout>
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-12 md:py-14">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-[var(--brand-primary)]">
+        <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-8 md:py-10">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)] tracking-tight">
               Blog
             </h1>
-            <p className="mt-3 text-[var(--foreground)] opacity-90">
-              Noticias y guías sobre valoración, due diligence y compraventa de empresas.
+            <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90 max-w-2xl mx-auto">
+              Noticias, guías y casos reales sobre valoración, due diligence y compraventa de empresas.
+            </p>
+            <p className="mt-0.5 text-xs sm:text-sm text-[var(--foreground)] opacity-80">
+              Elige entre artículos de fondo o casos de éxito con Diligenz.
             </p>
           </div>
         </section>
 
-        <section className="py-12 md:py-16">
-          <div className="max-w-4xl mx-auto px-6">
-            <ul className="space-y-10">
-              {BLOG_POSTS.map((post) => (
-                <li key={post.slug}>
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="group block rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg-lavender)] overflow-hidden hover:shadow-lg transition"
-                  >
-                    <div className="grid md:grid-cols-2 gap-0">
-                      <div className="relative aspect-video md:aspect-square bg-[var(--brand-primary)]/10">
-                        <Image
-                          src={post.image}
-                          alt=""
-                          fill
-                          className="object-cover group-hover:scale-105 transition duration-300"
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
-                      </div>
-                      <div className="p-6 md:p-8 flex flex-col justify-center">
-                        <time className="text-sm text-[var(--brand-primary)] opacity-80">
-                          {new Date(post.date).toLocaleDateString("es-ES", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </time>
-                        <span className="text-sm text-[var(--foreground)] opacity-70 ml-2">
-                          · {post.readTime} de lectura
-                        </span>
-                        <h2 className="mt-2 text-xl font-bold text-[var(--brand-primary)] group-hover:underline">
-                          {post.title}
-                        </h2>
-                        <p className="mt-2 text-[var(--foreground)] opacity-85 line-clamp-2">
-                          {post.excerpt}
-                        </p>
-                        <span className="mt-3 text-sm font-medium text-[var(--brand-primary)]">
-                          Leer más →
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+        <section className="py-6 md:py-8">
+          <div className="max-w-6xl mx-auto px-6">
+            <BlogTabbedGrid
+              articles={articles}
+              casos={casos}
+              articlePage={articlePage}
+              casosPage={casosPage}
+              totalArticlePages={totalArticlePages}
+              totalCasosPages={totalCasosPages}
+              initialTab={initialTab}
+            />
+          </div>
+        </section>
+
+        <section className="border-t border-[var(--brand-primary)]/10 py-6 bg-[var(--brand-bg-lavender)]/50">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <p className="text-[var(--foreground)] opacity-85">
+              ¿Quiere valorar su empresa o explorar una venta con criterio?
+            </p>
+            <a
+              href="/servicios#pricing"
+              className="mt-3 inline-block rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
+            >
+              Ver servicios y precios
+            </a>
           </div>
         </section>
       </div>

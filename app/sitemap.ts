@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/seo";
 import { getAllSlugs } from "@/lib/blog-posts";
+import { getAllCasoSlugs } from "@/lib/casos-exito";
 import { prisma } from "@/lib/prisma";
 
 /** Rutas estáticas públicas con prioridad y frecuencia */
@@ -34,6 +35,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const slug of slugs) {
     entries.push({
       url: `${base}/blog/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    });
+  }
+
+  // Casos de éxito (listado y cada caso)
+  entries.push({
+    url: `${base}/blog/casos-exito`,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.85,
+  });
+  const casoSlugs = getAllCasoSlugs();
+  for (const slug of casoSlugs) {
+    entries.push({
+      url: `${base}/blog/casos-exito/${slug}`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,

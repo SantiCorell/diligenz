@@ -45,17 +45,17 @@ export default async function AdminLeadsPage() {
   return (
     <main className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80 mb-2">
+        <span className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)]/80 mb-2">
           CRM
         </span>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
           Leads
         </h1>
-        <p className="mt-3 text-[var(--foreground)] opacity-85 leading-relaxed max-w-2xl">
+        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
           Personas que han rellenado &quot;Valora tu empresa&quot; o el formulario de
           &quot;Contactar&quot;. Aquí aparecen todos para dar seguimiento.
         </p>
-        <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
+        <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
           {totalLeads} lead{totalLeads !== 1 ? "s" : ""} en total
           {totalLeads > 0 &&
             ` (${countValuation} valoración${countValuation !== 1 ? "es" : ""}, ${countContact} contacto${countContact !== 1 ? "s" : ""})`}
@@ -64,8 +64,8 @@ export default async function AdminLeadsPage() {
       </div>
 
       {allLeads.length === 0 ? (
-        <div className="rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white p-12 text-center shadow-lg">
-          <p className="text-[var(--foreground)] opacity-80">
+        <div className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-12 text-center">
+          <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90">
             Aún no hay leads. Aparecerán aquí cuando alguien rellene &quot;Valora tu
             empresa&quot; o el formulario de &quot;Contacto&quot;.
           </p>
@@ -105,7 +105,7 @@ export default async function AdminLeadsPage() {
 
 function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
   return (
-    <article className="rounded-2xl border-2 border-[var(--brand-primary)]/15 bg-white p-5 md:p-6 shadow-lg">
+    <article className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-5 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
           <div className="flex items-center gap-2 text-sm">
@@ -196,7 +196,7 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
 function ContactLeadCard({ lead }: { lead: ContactRequest }) {
   const sourceLabel = lead.source === "servicios" ? "Servicios" : "Contacto";
   return (
-    <article className="rounded-2xl border-2 border-[var(--brand-primary)]/15 bg-white p-5 md:p-6 shadow-lg">
+    <article className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-5 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
           <div className="flex items-center gap-2 text-sm">

@@ -52,10 +52,10 @@ export default function HomePage() {
           aria-label="Qué es Diligenz"
         >
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <h2 className="text-xl font-semibold text-[var(--brand-primary)] mb-3">
+            <h2 className="text-lg sm:text-xl font-semibold text-[var(--brand-primary)] mb-3">
               Qué es Diligenz
             </h2>
-            <p className="text-[var(--foreground)] opacity-90 leading-relaxed text-lg">
+            <p className="text-[var(--foreground)] text-sm sm:text-base opacity-90 leading-relaxed">
               {AI_DEFINITION}
             </p>
           </div>

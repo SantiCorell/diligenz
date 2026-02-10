@@ -58,9 +58,9 @@ export default function Navbar() {
   }, [mobileMenuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[var(--brand-primary)]">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="flex h-14 sm:h-16 items-center justify-between">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[var(--brand-primary)] shadow-sm">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="flex h-12 sm:h-14 items-center justify-between">
           <Link
               href="/"
               className="flex items-center shrink-0 hover:opacity-90 transition"
@@ -69,15 +69,15 @@ export default function Navbar() {
               <Image
                 src="/logo-diligenz-claro.png"
                 alt="Diligenz"
-                width={140}
-                height={40}
-                className="h-7 sm:h-9 w-auto object-contain"
+                width={120}
+                height={36}
+                className="h-6 sm:h-8 w-auto object-contain"
                 priority
               />
             </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-[var(--brand-bg)]">
+          <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-white">
             <div
               className="relative group"
               onMouseEnter={() => setInicioOpen(true)}
@@ -92,11 +92,11 @@ export default function Navbar() {
               </button>
               {inicioOpen && (
                 <div className="absolute top-full left-0 pt-2">
-                  <div className="w-52 rounded-lg border border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
-                    <Link href="/" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10 rounded-t-lg">
+                  <div className="w-52 rounded-xl border border-white/20 bg-[var(--brand-primary)] py-1.5 shadow-xl overflow-hidden">
+                    <Link href="/" className="block px-4 py-2.5 text-white hover:bg-white/10">
                       Inicio
                     </Link>
-                    <Link href="/sobre-nosotros" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10 rounded-b-lg">
+                    <Link href="/sobre-nosotros" className="block px-4 py-2.5 text-white hover:bg-white/10">
                       Sobre nosotros
                     </Link>
                   </div>
@@ -120,11 +120,11 @@ export default function Navbar() {
               </button>
               {serviciosOpen && (
                 <div className="absolute top-full left-0 pt-2">
-                  <div className="w-52 rounded-lg border border-white/20 bg-[var(--brand-primary)] py-2 shadow-xl">
-                    <Link href="/servicios" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10 rounded-t-lg">
+                  <div className="w-52 rounded-xl border border-white/20 bg-[var(--brand-primary)] py-1.5 shadow-xl overflow-hidden">
+                    <Link href="/servicios" className="block px-4 py-2.5 text-white hover:bg-white/10">
                       Ver servicios
                     </Link>
-                    <Link href="/servicios#pricing" className="block px-4 py-2 text-[var(--brand-bg)] hover:bg-white/10 rounded-b-lg">
+                    <Link href="/servicios#pricing" className="block px-4 py-2.5 text-white hover:bg-white/10">
                       Precios
                     </Link>
                   </div>
@@ -151,7 +151,7 @@ export default function Navbar() {
               >
                 <button
                   type="button"
-                  className="flex items-center gap-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 text-sm font-semibold text-[var(--brand-bg)] transition"
+                  className="flex items-center gap-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 text-sm font-semibold text-white transition"
                   aria-expanded={userMenuOpen}
                   aria-haspopup="true"
                   aria-controls="user-menu-desktop"
@@ -163,20 +163,20 @@ export default function Navbar() {
                 {userMenuOpen && (
                   <div id="user-menu-desktop" role="menu" aria-labelledby="user-menu-button" className="absolute right-0 top-full pt-2 min-w-[14rem]">
                     <div className="w-56 rounded-xl border border-white/20 bg-[var(--brand-primary)]/95 backdrop-blur py-1.5 shadow-xl shadow-black/20">
-                      <Link href={panelHref} prefetch={false} className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5 font-medium">
+                      <Link href={panelHref} prefetch={false} className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5 font-medium">
                         <LayoutDashboard className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Mi Panel</span>
                       </Link>
-                      <Link href="/companies/mi-interes" className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5">
+                      <Link href="/companies/mi-interes" className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5">
                         <Star className="w-4 h-4 shrink-0 opacity-90" />
                         <span>De mi interés</span>
                       </Link>
                       <div className="my-1.5 border-t border-white/15" role="separator" aria-hidden />
-                      <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5">
+                      <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5">
                         <Globe className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Volver a la web</span>
                       </Link>
-                      <button type="button" onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-bg)] hover:bg-white/10 transition rounded-lg mx-1.5 w-full text-left">
+                      <button type="button" onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5 w-full text-left">
                         <LogOut className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Cerrar sesión</span>
                       </button>
@@ -186,12 +186,12 @@ export default function Navbar() {
               </div>
             ) : (
               <>
-                <Link href="/login" className="text-sm font-medium text-[var(--brand-bg)] hover:opacity-90">
+                <Link href="/login" className="text-sm font-medium text-white hover:opacity-90">
                   Iniciar sesión
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-lg bg-[var(--brand-bg)] px-4 py-2 text-sm font-medium text-[var(--brand-primary)] hover:opacity-90 transition"
+                  className="rounded-lg border border-white px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 transition"
                 >
                   Crear cuenta
                 </Link>
@@ -202,7 +202,7 @@ export default function Navbar() {
           {/* Hamburger: solo móvil */}
           <button
             type="button"
-            className="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-lg text-[var(--brand-bg)] hover:bg-white/10"
+            className="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-lg text-white hover:bg-white/10"
             onClick={() => setMobileMenuOpen((o) => !o)}
             aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={mobileMenuOpen}
@@ -216,11 +216,11 @@ export default function Navbar() {
 
       {/* Menú móvil desplegable */}
       <div
-        className={`md:hidden absolute inset-x-0 top-full bg-[var(--brand-primary)] border-t border-white/10 shadow-xl overflow-y-auto transition-all duration-200 ${
+        className={`md:hidden absolute inset-x-0 top-full bg-[var(--brand-primary)] border-t border-white/10 shadow-xl overflow-y-auto transition-all duration-200 rounded-b-2xl ${
           mobileMenuOpen ? "max-h-[85vh] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
         }`}
       >
-        <nav className="px-6 py-4 pb-6 flex flex-col gap-1 text-[var(--brand-bg)]">
+        <nav className="px-6 py-4 pb-6 flex flex-col gap-1 text-white">
           <span className="py-2 text-xs font-semibold uppercase tracking-wider opacity-80">
             Inicio
           </span>
@@ -317,7 +317,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
-                  className="flex items-center gap-3 py-3 pl-4 text-center rounded-xl border border-white/20 font-medium mt-2 w-full text-[var(--brand-bg)]"
+                  className="flex items-center gap-3 py-3 pl-4 text-center rounded-xl border border-white/20 font-medium mt-2 w-full text-white"
                 >
                   <LogOut className="w-4 h-4 shrink-0 opacity-90" />
                   Cerrar sesión
@@ -334,7 +334,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   href="/register"
-                  className="py-3 text-center rounded-xl bg-[var(--brand-bg)] text-[var(--brand-primary)] font-medium"
+                  className="py-3 text-center rounded-xl border-2 border-white text-white font-medium hover:bg-white/10 transition"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Crear cuenta

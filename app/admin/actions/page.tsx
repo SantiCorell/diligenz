@@ -50,16 +50,16 @@ export default function AdminActionsPage() {
   return (
     <main className="max-w-5xl mx-auto">
       <div className="mb-8">
-        <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80 mb-2">
+        <span className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)]/80 mb-2">
           CRM
         </span>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
           Solicitudes de información
         </h1>
-        <p className="mt-3 text-[var(--foreground)] opacity-85 leading-relaxed max-w-2xl">
+        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
           Cuando un usuario registrado hace clic en &quot;Solicitar información&quot; en una empresa, aparece aquí. Revisa quién ha pedido info de qué empresa y actualiza el estado: pendiente, gestionada o rechazada para llevar el seguimiento.
         </p>
-        <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
+        <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
           Filtra por estado para ver solo pendientes o ya gestionadas.
         </p>
       </div>
@@ -68,10 +68,10 @@ export default function AdminActionsPage() {
         <button
           type="button"
           onClick={() => setFilter("")}
-          className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
+          className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
             filter === ""
-              ? "bg-[var(--brand-primary)] text-white"
-              : "bg-white border-2 border-[var(--brand-primary)]/20 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5"
+              ? "bg-[var(--brand-primary)] text-white shadow-lg"
+              : "bg-white border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10"
           }`}
         >
           Todas
@@ -79,9 +79,9 @@ export default function AdminActionsPage() {
         <button
           type="button"
           onClick={() => setFilter("PENDING")}
-          className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
+          className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
             filter === "PENDING"
-              ? "bg-amber-500 text-white"
+              ? "bg-amber-500 text-white shadow-lg"
               : "bg-white border-2 border-amber-200 text-amber-700 hover:bg-amber-50"
           }`}
         >
@@ -90,9 +90,9 @@ export default function AdminActionsPage() {
         <button
           type="button"
           onClick={() => setFilter("MANAGED")}
-          className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
+          className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
             filter === "MANAGED"
-              ? "bg-green-600 text-white"
+              ? "bg-green-600 text-white shadow-lg"
               : "bg-white border-2 border-green-200 text-green-700 hover:bg-green-50"
           }`}
         >
@@ -101,9 +101,9 @@ export default function AdminActionsPage() {
         <button
           type="button"
           onClick={() => setFilter("REJECTED")}
-          className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
+          className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
             filter === "REJECTED"
-              ? "bg-red-600 text-white"
+              ? "bg-red-600 text-white shadow-lg"
               : "bg-white border-2 border-red-200 text-red-700 hover:bg-red-50"
           }`}
         >
@@ -111,7 +111,7 @@ export default function AdminActionsPage() {
         </button>
       </div>
 
-      <div className="rounded-2xl border-2 border-[var(--brand-primary)]/10 bg-white shadow-lg overflow-hidden">
+      <div className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-[var(--foreground)] opacity-70">
             Cargando…
@@ -124,7 +124,7 @@ export default function AdminActionsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-[var(--brand-primary)]/20 bg-[var(--brand-primary)]/5">
+                <tr className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-primary)]/5">
                   <th className="px-4 py-3 font-semibold text-[var(--brand-primary)]">
                     Usuario
                   </th>

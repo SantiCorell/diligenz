@@ -82,10 +82,10 @@ export default function SobreNosotrosPage() {
                 <p className="text-white/90 text-sm font-medium uppercase tracking-widest mb-2">
                   Nuestra sede
                 </p>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
                   Sobre nosotros
                 </h1>
-                <p className="mt-2 text-lg md:text-xl text-white/95 max-w-2xl">
+                <p className="mt-2 text-sm sm:text-base text-white/95 max-w-2xl">
                   Nacemos en <strong>Valencia</strong> con una misión clara: ser el marketplace de referencia en España para comprar, vender y valorar empresas.
                 </p>
               </div>
@@ -93,26 +93,26 @@ export default function SobreNosotrosPage() {
           </div>
         </header>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 md:py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12">
           {/* Qué hacemos */}
           <section
-            className="rounded-2xl border border-[var(--brand-primary)]/15 bg-white/80 backdrop-blur-sm p-8 md:p-10 shadow-sm mb-10"
+            className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 md:p-8 shadow-md mb-6"
             aria-labelledby="que-hacemos"
           >
             <h2
               id="que-hacemos"
-              className="text-2xl font-bold text-[var(--brand-primary)] mb-4"
+              className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)] mb-3"
             >
               Qué hacemos
             </h2>
-            <p className="text-[var(--foreground)] opacity-90 leading-relaxed text-lg">
+            <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed">
               En <strong>{SITE_NAME}</strong> ofrecemos un marketplace privado para la compraventa de empresas en España. Conectamos a propietarios e inversores con oportunidades verificadas, valoraciones orientativas en minutos y un proceso seguro hasta el cierre. Nuestros servicios incluyen valoración de empresas, due diligence, asesoramiento en venta y en compra, con un enfoque profesional y transparente.
             </p>
           </section>
 
           {/* Dónde estamos — Valencia */}
           <section
-            className="rounded-2xl overflow-hidden border border-[var(--brand-primary)]/15 bg-[var(--brand-bg-lavender)]/80 mb-10"
+            className="rounded-2xl overflow-hidden border border-[var(--brand-primary)]/10 bg-white shadow-md mb-6"
             aria-labelledby="donde-estamos"
           >
             <div className="grid md:grid-cols-2 gap-0">
@@ -125,14 +125,14 @@ export default function SobreNosotrosPage() {
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
-              <div className="p-8 md:p-10 flex flex-col justify-center">
-                <span className="text-[var(--brand-primary)] font-semibold text-sm uppercase tracking-wider">
+              <div className="p-6 md:p-8 flex flex-col justify-center bg-white">
+                <span className="text-[var(--brand-primary)] font-semibold text-xs uppercase tracking-wider">
                   Dónde estamos
                 </span>
-                <h2 id="donde-estamos" className="text-2xl font-bold text-[var(--brand-primary)] mt-2 mb-4">
+                <h2 id="donde-estamos" className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)] mt-2 mb-3">
                   Valencia, nuestra base
                 </h2>
-                <p className="text-[var(--foreground)] opacity-90 leading-relaxed">
+                <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed">
                   Operamos desde <strong>Valencia</strong>, una ciudad con tradición empresarial y conectada con el resto de España. Desde aquí atendemos a vendedores y compradores de empresas en todo el territorio, con la agilidad de una plataforma digital y el respaldo de los mejores socios.
                 </p>
               </div>
@@ -161,11 +161,11 @@ export default function SobreNosotrosPage() {
             <div className="relative flex flex-col justify-end p-8 md:p-12 min-h-[320px] md:min-h-[380px]">
               <h2
                 id="mas-sobre-nosotros"
-                className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg mb-3"
+                className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg mb-3"
               >
                 Más sobre nosotros
               </h2>
-              <p className="text-white/95 text-lg max-w-2xl drop-shadow-md">
+              <p className="text-white/95 text-sm sm:text-base max-w-2xl drop-shadow-md">
                 Miramos lejos: nuestra visión es ser el referente en España en compraventa de empresas. Con la solidez de Valencia como base y el respaldo de Cañizares Valle, acompañamos a vendedores e inversores en cada paso del camino.
               </p>
             </div>
@@ -173,19 +173,19 @@ export default function SobreNosotrosPage() {
 
           {/* Socio estratégico — Cañizares Valle */}
           <section
-            className="rounded-2xl border-2 border-[var(--brand-primary)]/20 bg-white p-8 md:p-10 shadow-sm mb-10"
+            className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 md:p-8 shadow-md mb-6"
             aria-labelledby="socio-estrategico"
           >
-            <span className="text-[var(--brand-primary)] font-semibold text-sm uppercase tracking-wider">
+            <span className="text-[var(--brand-primary)] font-semibold text-xs uppercase tracking-wider">
               Alianza estratégica
             </span>
-            <h2 id="socio-estrategico" className="text-2xl font-bold text-[var(--brand-primary)] mt-2 mb-6">
+            <h2 id="socio-estrategico" className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)] mt-2 mb-4">
               Nuestro socio: Cañizares Valle
             </h2>
-            <p className="text-[var(--foreground)] opacity-90 leading-relaxed text-lg mb-8">
+            <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed mb-6">
               Las operaciones que gestionamos cuentan con el respaldo de <strong>Cañizares Valle</strong>, despacho de abogados y consultores con más de <strong>50 años de experiencia</strong> en asesoramiento integral a empresas. Su trayectoria nos permite ofrecer a nuestros clientes soluciones jurídicas, fiscales, laborales y financieras de alto nivel en todas las fases de una operación de M&A.
             </p>
-            <div className="flex flex-col sm:flex-row items-center gap-8 p-6 rounded-xl bg-[var(--brand-bg)] border border-[var(--brand-primary)]/10">
+            <div className="flex flex-col sm:flex-row items-center gap-8 p-6 rounded-xl bg-white border border-[var(--brand-primary)]/10">
               <div className="relative w-52 h-28 shrink-0">
                 <Image
                   src="/logo-canizares-valle.png"
@@ -195,10 +195,10 @@ export default function SobreNosotrosPage() {
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-[var(--brand-primary)] text-lg">
+                <h3 className="font-bold text-[var(--brand-primary)] text-base sm:text-lg">
                   Cañizares Valle
                 </h3>
-                <p className="text-[var(--foreground)] opacity-85 text-sm mt-2 leading-relaxed">
+                <p className="text-sm text-[var(--foreground)] opacity-85 mt-2 leading-relaxed">
                   Más de 50 años de experiencia en asesoramiento fiscal, contable, laboral y jurídico empresarial. Especialistas en sector farmacéutico (más de 500 oficinas de farmacia como clientes), compraventa de empresas, sucesión familiar y consultoría especializada.
                 </p>
                 <a
@@ -216,34 +216,34 @@ export default function SobreNosotrosPage() {
 
           {/* Por qué confiar */}
           <section
-            className="rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg-lavender)]/50 p-8 md:p-10 mb-12"
+            className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 md:p-8 shadow-md mb-10"
             aria-labelledby="por-que-confiar"
           >
-            <h2 id="por-que-confiar" className="text-2xl font-bold text-[var(--brand-primary)] mb-4">
+            <h2 id="por-que-confiar" className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)] mb-3">
               Por qué confiar en nosotros
             </h2>
-            <p className="text-[var(--foreground)] opacity-90 leading-relaxed text-lg">
+            <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed">
               Combinamos la agilidad y la tecnología de una plataforma digital con el respaldo de un despacho con décadas de historia. Nuestros clientes obtienen valoraciones rápidas, acceso a oportunidades verificadas y el soporte jurídico y fiscal necesario para tomar decisiones con seguridad. Todo desde Valencia, para toda España.
             </p>
           </section>
 
-          {/* CTAs */}
+          {/* CTAs: principal = Ver empresas, secundarios = Servicios y Contactar */}
           <nav className="flex flex-wrap gap-4" aria-label="Acciones siguientes">
             <Link
               href="/companies"
-              className="rounded-xl bg-[var(--brand-primary)] px-6 py-3.5 text-white font-semibold hover:opacity-90 transition shadow-lg"
+              className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
             >
               Ver empresas en venta
             </Link>
             <Link
               href="/servicios"
-              className="rounded-xl border-2 border-[var(--brand-primary)]/40 px-6 py-3.5 text-[var(--brand-primary)] font-semibold hover:bg-[var(--brand-primary)]/10 transition"
+              className="rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] bg-white hover:bg-[var(--brand-primary)]/10 transition"
             >
               Nuestros servicios
             </Link>
             <Link
               href="/contact"
-              className="rounded-xl border border-[var(--brand-primary)]/30 px-6 py-3.5 text-[var(--foreground)] font-medium hover:bg-[var(--brand-primary)]/5 transition"
+              className="rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] bg-white hover:bg-[var(--brand-primary)]/10 transition"
             >
               Contactar
             </Link>

@@ -126,17 +126,17 @@ export default function ServiciosPage() {
       />
       <div className="min-h-screen bg-[var(--brand-bg)]">
         {/* Hero */}
-        <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-12 md:py-16">
+        <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-8 md:py-10">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--brand-primary)]">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
               Servicios profesionales
             </h1>
-            <p className="mt-4 text-lg text-[var(--foreground)] opacity-90">
+            <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90">
               Due diligence, venta y compra de empresas. Asesoramiento experto para operaciones de M&A.
             </p>
             <a
               href="#pricing"
-              className="mt-6 inline-block rounded-xl bg-[var(--brand-primary)] px-6 py-3 text-white font-medium hover:opacity-90"
+              className="mt-5 inline-block rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
             >
               Ver precios
             </a>
@@ -144,7 +144,7 @@ export default function ServiciosPage() {
         </section>
 
         {/* Servicios: en móvil se apilan en columna (imagen arriba, texto abajo) */}
-        <section className="py-12 md:py-16">
+        <section className="py-8 md:py-10">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-14 md:space-y-16">
             {SERVICES.map((srv) => (
               <article
@@ -162,19 +162,19 @@ export default function ServiciosPage() {
                   />
                 </div>
                 <div className="order-2">
-                  <span className="text-sm font-medium text-[var(--brand-primary)] opacity-80">
+                  <span className="text-xs font-medium text-[var(--brand-primary)] opacity-80">
                     {srv.subtitle}
                   </span>
-                  <h2 className="mt-1 text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
+                  <h2 className="mt-1 text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
                     {srv.title}
                   </h2>
-                  <p className="mt-4 text-[var(--foreground)] opacity-90 leading-relaxed">
+                  <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed">
                     {srv.description}
                   </p>
-                  <p className="mt-4 text-sm font-semibold text-[var(--brand-primary)]">
+                  <p className="mt-3 text-sm font-semibold text-[var(--brand-primary)]">
                     {srv.price}
                   </p>
-                  <p className="text-sm text-[var(--foreground)] opacity-75">
+                  <p className="text-xs sm:text-sm text-[var(--foreground)] opacity-80">
                     {srv.priceNote}
                   </p>
                 </div>
@@ -184,16 +184,16 @@ export default function ServiciosPage() {
         </section>
 
         {/* Pricing - en sintonía con el resto del proyecto */}
-        <section id="pricing" className="py-12 md:py-16 border-t border-[var(--brand-primary)]/10 bg-[var(--brand-bg)]">
+        <section id="pricing" className="py-8 md:py-10 border-t border-[var(--brand-primary)]/10 bg-[var(--brand-bg)]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-10">
-              <span className="text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80">
+            <div className="text-center mb-6">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-80">
                 Tarifas
               </span>
-              <h2 className="mt-2 text-3xl md:text-4xl font-bold text-[var(--brand-primary)]">
+              <h2 className="mt-2 text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
                 Precios
               </h2>
-              <p className="mt-3 text-lg text-[var(--foreground)] opacity-85 max-w-2xl mx-auto">
+              <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90 max-w-2xl mx-auto">
                 Tarifas orientativas. Consulte sin compromiso para un presupuesto adaptado a su caso.
               </p>
             </div>
@@ -204,7 +204,7 @@ export default function ServiciosPage() {
                 return (
                   <div
                     key={row.service}
-                    className="rounded-2xl border-2 border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] p-6 shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/25 transition-all duration-300 flex flex-col"
+                    className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 shadow-md hover:shadow-lg hover:border-[var(--brand-primary)]/20 transition-all duration-300 flex flex-col"
                   >
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-11 h-11 rounded-xl bg-[var(--brand-primary)]/15 flex items-center justify-center text-[var(--brand-primary)] shrink-0">
@@ -238,34 +238,34 @@ export default function ServiciosPage() {
               En las opciones de venta se aplica un porcentaje sobre la operación cerrada, a negociar.
             </p>
 
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/sell"
-                className="inline-flex items-center justify-center rounded-xl bg-[var(--brand-primary)] px-8 py-3.5 text-white font-semibold hover:opacity-90 shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
+                className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition w-full sm:w-auto"
               >
                 Valorar mi empresa
               </Link>
               <a
                 href="#contacto"
-                className="inline-flex items-center justify-center text-sm font-medium text-[var(--brand-primary)] hover:underline w-full sm:w-auto"
+                className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] bg-white hover:bg-[var(--brand-primary)]/10 transition w-full sm:w-auto"
               >
-                ¿Dudas? Contacta con nosotros
+                Contactar
               </a>
             </div>
           </div>
         </section>
 
         {/* Ponte en contacto - formulario tipo Deale */}
-        <section id="contacto" className="py-12 md:py-16 bg-gradient-to-b from-[var(--brand-bg-lavender)]/40 to-[var(--brand-bg)] border-t border-[var(--brand-primary)]/10">
+        <section id="contacto" className="py-8 md:py-10 border-t border-[var(--brand-primary)]/10">
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-10">
-              <span className="inline-block text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-90 mb-2">
+            <div className="text-center mb-6">
+              <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-90 mb-2">
                 Consúltanos
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-[var(--brand-primary)]">
+              <h2 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
                 Ponte en contacto con nosotros
               </h2>
-              <p className="mt-3 text-[var(--foreground)] opacity-85 max-w-xl mx-auto">
+              <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90 max-w-xl mx-auto">
                 Elige el motivo de tu consulta y te respondemos sin compromiso. Si es otro tema, selecciona «Otro» y cuéntanos.
               </p>
             </div>

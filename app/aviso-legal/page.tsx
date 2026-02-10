@@ -17,17 +17,18 @@ export default function AvisoLegalPage() {
   return (
     <ShellLayout>
       <div className="min-h-screen bg-[var(--brand-bg)]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 md:py-16">
-          <h1 className="text-3xl md:text-4xl font-bold text-[var(--brand-primary)]">
-            Aviso legal
-          </h1>
-          <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
-            Última actualización: febrero 2025
-          </p>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-8">
+          <div className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 md:p-8 shadow-md">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
+              Aviso legal
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
+              Última actualización: febrero 2025
+            </p>
 
-          <div className="mt-8 space-y-6 text-[var(--foreground)] opacity-90 leading-relaxed text-sm md:text-base">
-            <section>
-              <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-2">
+            <div className="mt-6 space-y-5 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed">
+              <section>
+                <h2 className="text-base sm:text-lg font-semibold text-[var(--brand-primary)] mb-2">
                 1. Datos identificativos
               </h2>
               <p>
@@ -39,7 +40,7 @@ export default function AvisoLegalPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-2">
+              <h2 className="text-base sm:text-lg font-semibold text-[var(--brand-primary)] mb-2">
                 2. Objeto y aceptación
               </h2>
               <p>
@@ -48,7 +49,7 @@ export default function AvisoLegalPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-2">
+              <h2 className="text-base sm:text-lg font-semibold text-[var(--brand-primary)] mb-2">
                 3. Condiciones de uso
               </h2>
               <p>
@@ -60,7 +61,7 @@ export default function AvisoLegalPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-2">
+              <h2 className="text-base sm:text-lg font-semibold text-[var(--brand-primary)] mb-2">
                 4. Propiedad intelectual e industrial
               </h2>
               <p>
@@ -69,7 +70,7 @@ export default function AvisoLegalPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-2">
+              <h2 className="text-base sm:text-lg font-semibold text-[var(--brand-primary)] mb-2">
                 5. Enlaces
               </h2>
               <p>
@@ -78,18 +79,19 @@ export default function AvisoLegalPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-2">
+              <h2 className="text-base sm:text-lg font-semibold text-[var(--brand-primary)] mb-2">
                 6. Modificaciones y ley aplicable
               </h2>
               <p>
                 Diligenz se reserva el derecho de modificar el presente aviso legal en cualquier momento. La relación con los usuarios se rige por la normativa española aplicable, sometiéndose las partes a los juzgados y tribunales del domicilio del usuario o los que correspondan conforme a ley.
               </p>
             </section>
-          </div>
+            </div>
 
-          <p className="mt-10 pt-6 border-t border-[var(--brand-primary)]/10 text-sm text-[var(--foreground)] opacity-70">
-            <Link href="/" className="text-[var(--brand-primary)] hover:underline">← Volver al inicio</Link>
-          </p>
+            <p className="mt-8 pt-5 border-t border-[var(--brand-primary)]/10 text-sm text-[var(--foreground)] opacity-80">
+              <Link href="/" className="text-[var(--brand-primary)] hover:underline">← Volver al inicio</Link>
+            </p>
+          </div>
         </div>
       </div>
     </ShellLayout>
