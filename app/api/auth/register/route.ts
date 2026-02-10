@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
@@ -137,25 +136,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Cookie de sesión (Next 15: await cookies())
-    try {
-      const cookieStore = await cookies();
-      cookieStore.set("session", user.id, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 30, // 30 min; se renueva al usar el panel (sesión deslizante)
-      });
-    } catch (cookieError) {
-      console.error("Register cookie:", process.env.NODE_ENV === "production" ? "set failed" : cookieError);
-      return NextResponse.json(
-        { error: "Cuenta creada pero no se pudo iniciar sesión. Inicia sesión manualmente." },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(
+    // Cookie de sesión en la respuesta (igual que login) para que el navegador la guarde
+    const SESSION_OPTIONS = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
+      path: "/",
+      maxAge: 60 * 30,
+    };
+    const res = NextResponse.json(
       {
         message: "Usuario creado exitosamente",
         role: user.role,
@@ -169,6 +158,8 @@ export async function POST(req: Request) {
         },
       }
     );
+    res.cookies.set("session", user.id, SESSION_OPTIONS);
+    return res;
   } catch (error) {
     console.error("Register error:", error);
     return NextResponse.json(

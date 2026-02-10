@@ -48,7 +48,11 @@ export default async function AdminDashboard({
     take: 6,
   });
 
-  const leadsCount = await prisma.valuationLead.count();
+  const [valuationLeadsCount, contactLeadsCount] = await Promise.all([
+    prisma.valuationLead.count(),
+    prisma.contactRequest.count(),
+  ]);
+  const leadsCount = valuationLeadsCount + contactLeadsCount;
 
   return (
     <main className="max-w-6xl mx-auto">
@@ -90,9 +94,9 @@ export default async function AdminDashboard({
         <KpiCard title="En revisión" value={inProcess} accent="blue" />
         <KpiCard title="Borrador" value={draft} accent="gray" />
         <KpiCard
-          title="Leads valoración"
+          title="Leads"
           value={leadsCount}
-          subtitle="Formulario Valora tu empresa"
+          subtitle="Valoraciones y contacto"
           href="/admin/leads"
           accent="primary"
         />
@@ -187,7 +191,7 @@ export default async function AdminDashboard({
             href="/admin/leads"
             className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
           >
-            Ver leads (valoraciones)
+            Ver leads (valoraciones y contacto)
           </Link>
           <Link
             href="/admin/users"

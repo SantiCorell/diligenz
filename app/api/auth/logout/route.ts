@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 
+// Mismas opciones que al crear la cookie para que el navegador la borre correctamente
 function clearSession(response: NextResponse) {
   response.cookies.set("session", "", {
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
     path: "/",
     maxAge: 0,
   });

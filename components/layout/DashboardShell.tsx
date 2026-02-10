@@ -32,6 +32,12 @@ export default function DashboardShell({
     router.refresh();
   };
 
+  // Renovar cookie en el servidor y luego ir a la web para no perder la sesión al volver al panel
+  const goToWeb = async () => {
+    await fetch("/api/auth/session", { credentials: "include" });
+    window.location.href = "/";
+  };
+
   return (
     <div className="flex min-h-screen bg-[var(--brand-bg)]">
       {/* Sidebar: fondo marca Diligenz para que el logo blanco se vea */}
@@ -133,14 +139,15 @@ export default function DashboardShell({
         </nav>
 
         <div className={`${collapsed ? "p-2" : "p-3"} border-t border-white/10`}>
-          <Link
-            href="/"
-            className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-lg ${collapsed ? "px-2 py-2" : "px-3 py-2"} text-white/80 hover:bg-white/10 transition`}
+          <button
+            type="button"
+            onClick={goToWeb}
+            className={`w-full flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-lg ${collapsed ? "px-2 py-2" : "px-3 py-2"} text-white/80 hover:bg-white/10 transition text-left`}
             title={collapsed ? "Volver al sitio" : undefined}
           >
             <span className={collapsed ? "text-lg" : ""}>←</span>
             {!collapsed && <span>Volver al sitio</span>}
-          </Link>
+          </button>
         </div>
       </aside>
 

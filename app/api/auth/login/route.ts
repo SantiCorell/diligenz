@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { cookies } from "next/headers";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
+
+const SESSION_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: 60 * 30, // 30 min; se renueva en middleware y en /api/auth/session
+};
 import { getClientIP, isValidEmail } from "@/lib/security";
 
 export async function POST(req: Request) {
@@ -117,25 +124,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Crear cookie de sesión con configuración segura
-    try {
-      const cookieStore = await cookies();
-      cookieStore.set("session", user.id, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 30, // 30 min; se renueva al usar el panel (sesión deslizante)
-      });
-    } catch (cookieError) {
-      console.error("Login cookie error:", process.env.NODE_ENV === "production" ? "set failed" : cookieError);
-      return NextResponse.json(
-        { error: "Error al iniciar sesión. Inténtalo de nuevo." },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(
+    // Cookie de sesión en la respuesta explícita para que el navegador la guarde siempre
+    const res = NextResponse.json(
       { success: true },
       {
         headers: {
@@ -145,6 +135,8 @@ export async function POST(req: Request) {
         },
       }
     );
+    res.cookies.set("session", user.id, SESSION_COOKIE_OPTIONS);
+    return res;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     const isPrisma = message.includes("Prisma") || message.includes("connect");

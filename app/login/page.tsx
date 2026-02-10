@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import ShellLayout from "@/components/layout/ShellLayout";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -23,6 +21,7 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include",
       });
       const data = await res.json();
       if (!res.ok) {
@@ -30,8 +29,9 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      router.push("/dashboard");
-      router.refresh();
+      // Redirección completa para que el navegador envíe la cookie de sesión en la siguiente petición
+      window.location.href = "/dashboard";
+      return;
     } catch {
       setError("Error inesperado");
     } finally {
