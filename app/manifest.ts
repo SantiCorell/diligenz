@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION } from "@/lib/seo";
 
-/** Icono PWA: logo blanco sobre fondo #2F175F (paleta) para acceso directo en móvil */
+/** Icono PWA: LOGO DILI sobre fondo blanco para acceso directo en móvil */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: `${SITE_NAME} — Compra, vende y valora empresas`,
@@ -9,19 +9,19 @@ export default function manifest(): MetadataRoute.Manifest {
     description: DEFAULT_DESCRIPTION,
     start_url: "/",
     display: "standalone",
-    background_color: "#2F175F",
-    theme_color: "#2F175F",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     icons: [
       {
-        src: "/icon-pwa.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/logo-dili.png",
+        sizes: "512x512",
+        type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icon-pwa.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/logo-dili.png",
+        sizes: "512x512",
+        type: "image/png",
         purpose: "maskable",
       },
     ],
