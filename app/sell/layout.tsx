@@ -1,12 +1,11 @@
-import { redirect } from "next/navigation";
-import { getUserIdFromSession } from "@/lib/session";
-
-export default async function SellLayout({
+/**
+ * Valora tu empresa: acceso público, sin registro obligatorio.
+ * El formulario envía a /api/valuation (crea ValuationLead; si hay sesión también crea Company).
+ */
+export default function SellLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const userId = await getUserIdFromSession();
-  if (!userId) redirect("/login");
   return <>{children}</>;
 }

@@ -155,19 +155,6 @@ export default function DashboardShell({
       <div className="flex-1 flex flex-col min-w-0">
         <header className="flex items-center justify-between gap-4 bg-[var(--brand-primary)] text-white border-b border-white/10 px-6 lg:px-8 py-4 shadow-sm">
           <div className="flex items-center gap-3">
-            {collapsed && (
-              <button
-                onClick={() => setCollapsed(false)}
-                className="rounded-lg p-2 text-white/90 hover:bg-white/10 hover:text-white transition-colors"
-                aria-label="Expandir menú"
-                title="Expandir menú lateral"
-                type="button"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
             <span className="text-sm font-medium text-white">
               {userDisplayName ? (
                 <>Hola, <span className="font-semibold">{userDisplayName}</span></>
@@ -185,14 +172,6 @@ export default function DashboardShell({
             )}
           </div>
           <div className="flex items-center gap-3">
-            {collapsed && (
-              <Link
-                href={effectiveRole === "ADMIN" ? "/admin" : `/dashboard/${effectiveRole.toLowerCase()}`}
-                className="text-sm font-medium text-white/90 hover:text-white hover:underline"
-              >
-                Volver al panel
-              </Link>
-            )}
             <button
               onClick={logout}
               className="text-sm font-medium text-white/90 hover:text-white hover:underline"

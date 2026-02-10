@@ -23,8 +23,8 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(accesoUrl);
   }
 
-  // Rutas que requieren autenticación (login)
-  const protectedRoutes = ["/sell", "/dashboard", "/admin", "/documents", "/companies/mi-interes"];
+  // Rutas que requieren autenticación (login). /sell es público (Valora tu empresa sin registro).
+  const protectedRoutes = ["/dashboard", "/admin", "/documents", "/companies/mi-interes"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
