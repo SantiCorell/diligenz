@@ -12,15 +12,15 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#1a365d",
     icons: [
       {
-        src: "/icon.svg",
+        src: "/logo-dili.png",
         sizes: "any",
-        type: "image/svg+xml",
+        type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icon.svg",
+        src: "/logo-dili.png",
         sizes: "any",
-        type: "image/svg+xml",
+        type: "image/png",
         purpose: "maskable",
       },
     ],

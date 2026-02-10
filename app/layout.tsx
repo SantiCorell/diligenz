@@ -79,8 +79,8 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    apple: "/icon.svg",
+    icon: [{ url: "/logo-dili.png", type: "image/png" }],
+    apple: "/logo-dili.png",
   },
   formatDetection: {
     email: false,
@@ -108,6 +108,7 @@ export default async function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/logo-dili.png" type="image/png" />
         {/* Structured data para buscadores y IA: Organization, WebSite, Marketplace */}
         <script
           type="application/ld+json"
