@@ -64,22 +64,22 @@ export default function Hero() {
           </div>
 
           <span className="inline-block mb-6 rounded-full bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20 px-6 py-2 text-sm font-medium text-[var(--brand-primary)]">
-            Marketplace privado para compraventa de empresas
+            Marketplace líder en España — Compra, vende y valora empresas
           </span>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-[var(--brand-primary)] mb-6 leading-tight">
-            Tu futuro empresarial
+            Compra, vende y valora empresas
             <br />
             <span className="text-[var(--foreground)] opacity-90">
-              comienza aquí
+              en España con total confianza
             </span>
           </h1>
 
           <p className="mt-6 max-w-3xl mx-auto text-xl sm:text-2xl text-[var(--foreground)] opacity-90 leading-relaxed mb-4">
-            El marketplace más confiable de España para comprar, vender y valorar empresas.
+            La plataforma de referencia en España para M&A y compraventa de pymes. Valoración en minutos, inversores verificados y asesoramiento hasta el cierre.
             <br />
             <span className="text-lg sm:text-xl opacity-80">
-              Conecta con inversores verificados y oportunidades exclusivas en un entorno 100% privado y seguro.
+              Privado, seguro y 100% enfocado en el mercado español.
             </span>
           </p>
 

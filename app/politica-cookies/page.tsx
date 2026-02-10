@@ -1,9 +1,16 @@
 import ShellLayout from "@/components/layout/ShellLayout";
 import Link from "next/link";
 
-export const metadata = {
-  title: "Política de cookies",
-  description: "Información sobre el uso de cookies en el sitio web de Diligenz.",
+import type { Metadata } from "next";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: `Política de cookies | ${SITE_NAME}`,
+  description:
+    "Información sobre el uso de cookies en el sitio web de Diligenz. Tipos de cookies, finalidad y cómo gestionarlas.",
+  robots: { index: true, follow: true },
+  alternates: { canonical: `${SITE_URL}/politica-cookies` },
+  openGraph: { url: `${SITE_URL}/politica-cookies`, type: "website" },
 };
 
 export default function PoliticaCookiesPage() {

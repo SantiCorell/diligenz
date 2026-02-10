@@ -1,9 +1,16 @@
 import ShellLayout from "@/components/layout/ShellLayout";
 import Link from "next/link";
 
-export const metadata = {
-  title: "Aviso legal",
-  description: "Aviso legal y condiciones de uso del sitio web de Diligenz.",
+import type { Metadata } from "next";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: `Aviso legal | ${SITE_NAME}`,
+  description:
+    "Aviso legal y condiciones de uso del sitio web de Diligenz. Datos del responsable y condiciones generales.",
+  robots: { index: true, follow: true },
+  alternates: { canonical: `${SITE_URL}/aviso-legal` },
+  openGraph: { url: `${SITE_URL}/aviso-legal`, type: "website" },
 };
 
 export default function AvisoLegalPage() {

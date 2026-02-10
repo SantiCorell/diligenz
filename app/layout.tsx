@@ -2,6 +2,17 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { auth } from "@/auth";
+import {
+  SITE_URL,
+  SITE_NAME,
+  TAGLINE,
+  DEFAULT_DESCRIPTION,
+  DEFAULT_OG_IMAGE,
+  SEO_KEYWORDS,
+  getOrganizationSchema,
+  getWebSiteSchema,
+  getMarketplaceSchema,
+} from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,48 +25,73 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const TITLE_DEFAULT = `${SITE_NAME} | ${TAGLINE} — Marketplace líder en España`;
+
 /* ===================== */
 /* SEO & METADATA GLOBAL */
 /* ===================== */
 export const metadata: Metadata = {
   title: {
-    default: "DILIGENZ | Compra, vende y valora empresas",
-    template: "%s | DILIGENZ",
+    default: TITLE_DEFAULT,
+    template: `%s | ${SITE_NAME}`,
   },
-  icons: {
-    icon: "/icon.png",
+  applicationName: SITE_NAME,
+  description: DEFAULT_DESCRIPTION,
+  keywords: SEO_KEYWORDS,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: SITE_URL,
   },
-  description:
-    "Marketplace para comprar y vender empresas de forma privada y segura. Obtén una valoración orientativa de tu empresa en minutos y conecta con inversores verificados.",
-  keywords: [
-    "comprar empresas",
-    "vender empresa",
-    "valorar empresa",
-    "valoración de empresas",
-    "marketplace de empresas",
-    "venta de negocios",
-    "inversores privados",
-    "due diligence",
-  ],
-  metadataBase: new URL("https://www.diligenz.es"),
   openGraph: {
-    title: "DILIGENZ | Compra, vende y valora empresas",
-    description:
-      "Compra y vende empresas de forma privada. Valora tu empresa en minutos y conecta con inversores verificados.",
-    url: "https://www.diligenz.es",
-    siteName: "DILIGENZ",
-    locale: "es_ES",
     type: "website",
+    locale: "es_ES",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: TITLE_DEFAULT,
+    description: DEFAULT_DESCRIPTION,
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE,
+        width: 512,
+        height: 512,
+        alt: `${SITE_NAME} - Marketplace de compraventa de empresas`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "DILIGENZ | Compra, vende y valora empresas",
-    description:
-      "Marketplace para comprar, vender y valorar empresas en minutos.",
+    title: TITLE_DEFAULT,
+    description: DEFAULT_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  referrer: "origin-when-cross-origin",
+  category: "business",
+  other: {
+    "geo.region": "ES",
+    "theme-color": "#1a365d",
   },
 };
 
@@ -67,33 +103,28 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Sincroniza sesión de Auth.js (Google) con la cookie "session" usada por el resto de la app
+  // Sincroniza sesión de Auth.js (OAuth; actualmente Google está deshabilitado) con la cookie "session"
   await auth();
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        {/* ===================== */}
-        {/* STRUCTURED DATA (JSON-LD) */}
-        {/* ===================== */}
+        {/* Structured data para buscadores y IA: Organization, WebSite, Marketplace */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Marketplace",
-              name: "DILIGENZ",
-              description:
-                "Marketplace para comprar, vender y valorar empresas de forma privada y segura.",
-              url: "https://www.diligenz.es",
-              areaServed: "ES",
-              potentialAction: [
-                {
-                  "@type": "SearchAction",
-                  target: "https://www.diligenz.es/companies",
-                  "query-input": "required name=search_term_string",
-                },
-              ],
-            }),
+            __html: JSON.stringify(getOrganizationSchema()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(getWebSiteSchema()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(getMarketplaceSchema()),
           }}
         />
       </head>

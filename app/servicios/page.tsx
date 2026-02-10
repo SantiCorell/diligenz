@@ -1,8 +1,32 @@
+import type { Metadata } from "next";
 import ShellLayout from "@/components/layout/ShellLayout";
 import Link from "next/link";
 import Image from "next/image";
 import { FileSearch, Store, TrendingUp, Briefcase, Check } from "lucide-react";
 import ContactFormServicios from "@/components/contact/ContactFormServicios";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: `Servicios M&A en España | Valoración, due diligence y venta de empresas | ${SITE_NAME}`,
+  description:
+    "Servicios de M&A en España: due diligence, valoración de empresas, venta de empresa y asesoramiento a compradores. Preparación para la venta, búsqueda de comprador y apoyo en el cierre. Líder en compraventa de pymes.",
+  keywords: [
+    "servicios M&A España",
+    "due diligence España",
+    "vender empresa España",
+    "comprar empresa España",
+    "valoración de empresas España",
+    "asesoramiento M&A España",
+  ],
+  openGraph: {
+    title: `Servicios M&A España | Due diligence y venta de empresas | ${SITE_NAME}`,
+    description:
+      "Due diligence, valoración y venta de empresas en España. Servicios profesionales de M&A del marketplace líder.",
+    url: `${SITE_URL}/servicios`,
+    type: "website",
+  },
+  alternates: { canonical: `${SITE_URL}/servicios` },
+};
 
 const SERVICES = [
   {

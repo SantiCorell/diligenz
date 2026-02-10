@@ -1,9 +1,16 @@
 import ShellLayout from "@/components/layout/ShellLayout";
 import Link from "next/link";
 
-export const metadata = {
-  title: "Política de privacidad",
-  description: "Política de privacidad y protección de datos de Diligenz.",
+import type { Metadata } from "next";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: `Política de privacidad | ${SITE_NAME}`,
+  description:
+    "Política de privacidad y protección de datos de Diligenz. Cómo tratamos tus datos personales en el marketplace de compraventa de empresas.",
+  robots: { index: true, follow: true },
+  alternates: { canonical: `${SITE_URL}/politica-privacidad` },
+  openGraph: { url: `${SITE_URL}/politica-privacidad`, type: "website" },
 };
 
 export default function PoliticaPrivacidadPage() {

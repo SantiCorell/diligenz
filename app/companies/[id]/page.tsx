@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -6,6 +7,7 @@ import { MOCK_COMPANIES } from "@/lib/mock-companies";
 import { prisma } from "@/lib/prisma";
 import CompanyFicha from "./CompanyFicha";
 import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -40,6 +42,32 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     sellerDescription: company.sellerDescription ?? null,
     documentLinks: Array.isArray(docLinks) ? docLinks : null,
     attachmentsApproved: company.attachmentsApproved ?? false,
+  };
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const company = await getCompanyById(id);
+  if (!company)
+    return { title: "Empresa no encontrada" };
+  const title = `${company.name} | Empresa en venta | ${SITE_NAME}`;
+  const description =
+    company.description && company.description !== "Sin descripción."
+      ? company.description.slice(0, 160) + (company.description.length > 160 ? "…" : "")
+      : `${company.name} en venta en España. Sector ${company.sector}. Ficha en el marketplace líder Diligenz para comprar empresas.`;
+  const url = `${SITE_URL}/companies/${id}`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+    },
+    alternates: {
+      canonical: url,
+    },
   };
 }
 

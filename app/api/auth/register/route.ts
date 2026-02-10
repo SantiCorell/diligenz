@@ -93,10 +93,10 @@ export async function POST(req: Request) {
     }
 
     if (existingUser) {
-      // Si el usuario existe con OAuth, sugerir usar Google
+      // Si el usuario existe con OAuth (p. ej. Google, actualmente deshabilitado)
       if (existingUser.provider) {
         return NextResponse.json(
-          { error: "Este email ya está registrado con Google. Por favor, inicia sesión con Google." },
+          { error: "Este email ya está registrado con un proveedor externo. Contacta con soporte si necesitas acceso." },
           { status: 409 }
         );
       }

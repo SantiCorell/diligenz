@@ -75,10 +75,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Si el usuario se registró con OAuth (Google), no puede usar email/password
+    // Si el usuario se registró con OAuth (p. ej. Google, actualmente deshabilitado), no puede usar email/password
     if (user.provider && !user.passwordHash) {
       return NextResponse.json(
-        { error: "Esta cuenta está vinculada con Google. Por favor, inicia sesión con Google." },
+        { error: "Esta cuenta está vinculada con un proveedor externo. Contacta con soporte si necesitas acceso." },
         { status: 401 }
       );
     }

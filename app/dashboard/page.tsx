@@ -1,7 +1,15 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import DashboardRedirect from "./DashboardRedirect";
 
+/**
+ * Página índice del dashboard: redirige según el rol.
+ * Usamos redirección en cliente (DashboardRedirect) en lugar de redirect()
+ * en servidor para que la cookie de sesión que renueva el layout se envíe
+ * en la respuesta. Con redirect() en servidor, esa cookie se pierde y al
+ * volver al panel la sesión parece expirada.
+ */
 export default async function DashboardRouter() {
   const cookieStore = await cookies();
   const session = cookieStore.get("session");
@@ -19,17 +27,9 @@ export default async function DashboardRouter() {
     redirect("/login");
   }
 
-  if (user.role === "SELLER") {
-    redirect("/dashboard/seller");
+  if (user.role !== "SELLER" && user.role !== "BUYER" && user.role !== "ADMIN") {
+    redirect("/login");
   }
 
-  if (user.role === "BUYER") {
-    redirect("/dashboard/buyer");
-  }
-
-  if (user.role === "ADMIN") {
-    redirect("/admin");
-  }
-
-  redirect("/login");
+  return <DashboardRedirect role={user.role} />;
 }

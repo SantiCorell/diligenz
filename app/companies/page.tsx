@@ -1,7 +1,9 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import ShellLayout from "@/components/layout/ShellLayout";
 import CompaniesGrid from "@/components/companies/CompaniesGrid";
 import { getPublicCompanies } from "@/lib/public-companies";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 const SECTOR_LABELS: Record<string, string> = {
   salud: "Salud",
@@ -15,6 +17,32 @@ const SECTOR_LABELS: Record<string, string> = {
 type Props = {
   searchParams: Promise<{ sector?: string }>;
 };
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const params = await searchParams;
+  const sector = params.sector;
+  const sectorLabel = sector ? SECTOR_LABELS[sector] : null;
+  const title = sectorLabel
+    ? `Empresas en venta en España · ${sectorLabel} | ${SITE_NAME}`
+    : `Empresas en venta en España | Marketplace M&A | ${SITE_NAME}`;
+  const description =
+    sectorLabel
+      ? `Oportunidades de adquisición en España, sector ${sectorLabel}. Empresas verificadas en venta en el marketplace líder Diligenz.`
+      : "Empresas en venta en España. Explora oportunidades de inversión y compraventa de pymes en el marketplace líder. Regístrate y accede a fichas completas y datos financieros.";
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: sector ? `${SITE_URL}/companies?sector=${sector}` : `${SITE_URL}/companies`,
+      type: "website",
+    },
+    alternates: {
+      canonical: sector ? `${SITE_URL}/companies?sector=${sector}` : `${SITE_URL}/companies`,
+    },
+  };
+}
 
 export default async function CompaniesPage({ searchParams }: Props) {
   const params = await searchParams;

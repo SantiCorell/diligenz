@@ -1,12 +1,30 @@
+import type { Metadata } from "next";
 import ShellLayout from "@/components/layout/ShellLayout";
 import Link from "next/link";
 import Image from "next/image";
 import { BLOG_POSTS } from "@/lib/blog-posts";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
-export const metadata = {
-  title: "Blog | Noticias sobre valoración y compraventa de empresas",
+export const metadata: Metadata = {
+  title: `Blog M&A España | Valoración, due diligence y compraventa de empresas | ${SITE_NAME}`,
   description:
-    "Artículos sobre valoración de empresas, due diligence, M&A y venta de pymes. Consejos y tendencias del sector.",
+    "Guías y artículos sobre valoración de empresas, due diligence y M&A en España. Consejos para vender o comprar pymes. Blog del marketplace líder en compraventa de empresas.",
+  keywords: [
+    "valoración empresas España",
+    "due diligence España",
+    "M&A España",
+    "vender empresa España",
+    "comprar empresa España",
+    "blog M&A",
+  ],
+  openGraph: {
+    title: `Blog M&A España | ${SITE_NAME}`,
+    description:
+      "Artículos sobre valoración, due diligence y compraventa de empresas en España. Guías para pymes e inversores.",
+    url: `${SITE_URL}/blog`,
+    type: "website",
+  },
+  alternates: { canonical: `${SITE_URL}/blog` },
 };
 
 export default function BlogPage() {
