@@ -5,8 +5,6 @@ import { getDisplayName } from "@/lib/user-display";
 import DashboardShell from "@/components/layout/DashboardShell";
 import ProfileStatus from "@/components/dashboard/ProfileStatus";
 
-const SESSION_MAX_AGE = 60 * 30; // 30 min
-
 export default async function DashboardLayout({
   children,
 }: {
@@ -17,15 +15,7 @@ export default async function DashboardLayout({
 
   if (!session) redirect("/login");
 
-  // Renovar cookie para sesión deslizante (cada visita al panel extiende 30 min)
-  cookieStore.set("session", session.value, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-  });
-
+  // La renovación de la cookie se hace en middleware (no se puede set en layout en Vercel)
   let user;
   try {
     user = await prisma.user.findUnique({

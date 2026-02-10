@@ -4,8 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { getDisplayName } from "@/lib/user-display";
 import AdminShell from "@/components/layout/AdminShell";
 
-const SESSION_MAX_AGE = 60 * 30; // 30 min
-
 export default async function AdminLayout({
   children,
 }: {
@@ -14,15 +12,6 @@ export default async function AdminLayout({
   const cookieStore = await cookies();
   const session = cookieStore.get("session");
   if (!session) redirect("/login");
-
-  // Renovar cookie para sesión deslizante (cada visita al panel extiende 30 min)
-  cookieStore.set("session", session.value, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-  });
 
   const user = await prisma.user.findUnique({
     where: { id: session.value },

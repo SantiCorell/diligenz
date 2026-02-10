@@ -5,8 +5,6 @@ import { getDisplayName } from "@/lib/user-display";
 import DashboardShell from "@/components/layout/DashboardShell";
 import ProfileStatus from "@/components/dashboard/ProfileStatus";
 
-const SESSION_MAX_AGE = 60 * 30; // 30 min
-
 export default async function MiInteresLayout({
   children,
 }: {
@@ -16,15 +14,6 @@ export default async function MiInteresLayout({
   const session = cookieStore.get("session");
 
   if (!session) redirect("/login");
-
-  // Renovar cookie para sesión deslizante
-  cookieStore.set("session", session.value, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-  });
 
   const user = await prisma.user.findUnique({
     where: { id: session.value },
