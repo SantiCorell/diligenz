@@ -170,15 +170,15 @@ export default function HowItWorks() {
           Elige tu perfil y sigue el camino paso a paso
         </p>
 
-        {/* Tabs: 3 roles */}
-        <div className="mt-8 flex flex-wrap justify-center gap-2 sm:gap-3">
+        {/* Tabs: 3 roles — en móvil se deslizan en horizontal */}
+        <div className="mt-8 flex overflow-x-auto justify-center gap-2 sm:gap-3 pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap snap-x snap-mandatory">
           {(Object.keys(FLOWS) as Role[]).map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => setRole(r)}
               className={`
-                relative rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-300
+                relative rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-300 shrink-0 snap-center
                 ${role === r
                   ? "bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/25 scale-[1.02]"
                   : "bg-[var(--brand-bg-lavender)] text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20"
@@ -195,21 +195,30 @@ export default function HowItWorks() {
           {flow.short}
         </p>
 
-        {/* Diagrama de pasos: horizontal en desktop, vertical en móvil */}
-        <div className="mt-10 relative">
-          {/* Línea conectora horizontal (solo desktop), a la altura de los iconos */}
+        {/* Móvil: hint deslizar */}
+        <p className="lg:hidden mt-6 text-center text-xs text-[var(--foreground)] opacity-70">
+          Desliza para ver todos los pasos →
+        </p>
+
+        {/* Diagrama de pasos: scroll horizontal en móvil, grid en escritorio */}
+        <div className="mt-6 lg:mt-10 relative">
+          {/* Línea conectora horizontal (solo desktop) */}
           <div className="hidden lg:block absolute top-[3.25rem] left-[8%] right-[8%] h-0.5 bg-[var(--brand-primary)]/20 rounded-full" style={{ zIndex: 0 }} />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 lg:gap-4 relative" style={{ zIndex: 2 }}>
+          {/* Móvil: contenedor con scroll horizontal y snap */}
+          <div
+            className="flex lg:grid overflow-x-auto overflow-y-visible gap-4 pb-3 lg:pb-0 lg:overflow-visible lg:grid-cols-6 lg:gap-4 relative snap-x snap-mandatory -mx-4 px-4 lg:mx-0 lg:px-0"
+            style={{ zIndex: 2, scrollbarWidth: "thin" }}
+          >
             {flow.steps.map((step, i) => {
               const Icon = step.icon;
               return (
                 <div
                   key={`${role}-${i}`}
-                  className="flow-step-enter relative flex flex-col items-center"
+                  className="flow-step-enter relative flex flex-col items-center min-w-[280px] max-w-[280px] lg:min-w-0 lg:max-w-none shrink-0 snap-center lg:snap-align-none"
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
-                  {/* Card: solo el paso actual se ilumina */}
+                  {/* Card */}
                   <div
                     className={`
                       w-full rounded-2xl border border-[var(--brand-primary)]/15 bg-white p-5 text-center shadow-md
@@ -243,22 +252,14 @@ export default function HowItWorks() {
                     )}
                   </div>
 
-                  {/* Flecha hacia el siguiente paso: solo la que sale del paso actual se anima (sentido del flujo) */}
+                  {/* Flecha: solo en desktop entre pasos */}
                   {i < flow.steps.length - 1 && (
-                    <>
-                      <div className="hidden lg:flex absolute -right-3 top-[2.75rem] text-[var(--brand-primary)]/50">
-                        <ChevronRight
-                          className={`w-5 h-5 ${i === activeStep ? "flow-arrow-active-right text-[var(--brand-primary)]" : "opacity-40"}`}
-                          aria-hidden
-                        />
-                      </div>
-                      <div className="lg:hidden flex justify-center my-1 text-[var(--brand-primary)]/50">
-                        <ChevronRight
-                          className={`w-5 h-5 rotate-90 ${i === activeStep ? "flow-arrow-active-down text-[var(--brand-primary)]" : "opacity-40"}`}
-                          aria-hidden
-                        />
-                      </div>
-                    </>
+                    <div className="hidden lg:flex absolute -right-3 top-[2.75rem] text-[var(--brand-primary)]/50">
+                      <ChevronRight
+                        className={`w-5 h-5 ${i === activeStep ? "flow-arrow-active-right text-[var(--brand-primary)]" : "opacity-40"}`}
+                        aria-hidden
+                      />
+                    </div>
                   )}
                 </div>
               );

@@ -3,8 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Star, Globe, LogOut } from "lucide-react";
+import { LayoutDashboard, Star, Globe, LogOut, ChevronDown, ChevronUp } from "lucide-react";
 import { authFetch, clearStoredToken, syncSessionCookie } from "@/lib/auth-client";
+import LoginModal from "@/components/auth/LoginModal";
+import RegisterFormModal from "@/components/auth/RegisterFormModal";
 
 type SessionRole = "ADMIN" | "BUYER" | "SELLER" | null;
 
@@ -13,6 +15,10 @@ export default function Navbar() {
   const [serviciosOpen, setServiciosOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileInicioOpen, setMobileInicioOpen] = useState(false);
+  const [mobileServiciosOpen, setMobileServiciosOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [session, setSession] = useState<{ loggedIn: boolean; role: SessionRole }>({ loggedIn: false, role: null });
 
   const fetchSession = () => {
@@ -51,7 +57,11 @@ export default function Navbar() {
 
   useEffect(() => {
     if (mobileMenuOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
+    else {
+      document.body.style.overflow = "";
+      setMobileInicioOpen(false);
+      setMobileServiciosOpen(false);
+    }
     return () => {
       document.body.style.overflow = "";
     };
@@ -214,75 +224,76 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Menú móvil desplegable */}
+      {/* Menú móvil: Inicio y Servicios desplegables; solo se ven las líneas principales + botones */}
       <div
         className={`md:hidden absolute inset-x-0 top-full bg-[var(--brand-primary)] border-t border-white/10 shadow-xl overflow-y-auto transition-all duration-200 rounded-b-2xl ${
           mobileMenuOpen ? "max-h-[85vh] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
         }`}
       >
-        <nav className="px-6 py-4 pb-6 flex flex-col gap-1 text-white">
-          <span className="py-2 text-xs font-semibold uppercase tracking-wider opacity-80">
-            Inicio
-          </span>
-          <Link
-            href="/"
-            className="py-2.5 pl-4 border-b border-white/5"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Inicio
-          </Link>
-          <Link
-            href="/sobre-nosotros"
-            className="py-2.5 pl-4 border-b border-white/10 font-medium"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Sobre nosotros
-          </Link>
-          <Link
-            href="/companies"
-            className="py-3 border-b border-white/10 font-medium mt-1"
-            onClick={() => setMobileMenuOpen(false)}
-          >
+        <nav className="px-6 py-4 pb-6 flex flex-col text-white">
+          {/* Inicio (desplegable) */}
+          <div className="border-b border-white/10">
+            <button
+              type="button"
+              onClick={() => setMobileInicioOpen((o) => !o)}
+              className="flex items-center justify-between w-full py-3 font-medium"
+              aria-expanded={mobileInicioOpen}
+            >
+              Inicio
+              <span className="shrink-0 ml-2">
+                {mobileInicioOpen ? <ChevronUp className="w-5 h-5 opacity-80" /> : <ChevronDown className="w-5 h-5 opacity-80" />}
+              </span>
+            </button>
+            <div className={`overflow-hidden transition-all duration-200 ${mobileInicioOpen ? "max-h-32 opacity-100" : "max-h-0 opacity-0"}`}>
+              <Link href="/" className="block py-2 pl-4 text-white/95 hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                Inicio
+              </Link>
+              <Link href="/sobre-nosotros" className="block py-2 pl-4 text-white/95 hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                Sobre nosotros
+              </Link>
+            </div>
+          </div>
+
+          {/* Empresas */}
+          <Link href="/companies" className="py-3 font-medium border-b border-white/10 block" onClick={() => setMobileMenuOpen(false)}>
             Empresas
           </Link>
-          <span className="py-2 text-xs font-semibold uppercase tracking-wider opacity-80 mt-1">
-            Servicios
-          </span>
-          <Link
-            href="/servicios"
-            className="py-2.5 pl-4 border-b border-white/5"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Ver servicios
-          </Link>
-          <Link
-            href="/servicios#pricing"
-            className="py-2.5 pl-4 border-b border-white/10"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Precios
-          </Link>
-          <Link
-            href="/sell"
-            className="py-3 border-b border-white/10 font-medium"
-            onClick={() => setMobileMenuOpen(false)}
-          >
+
+          {/* Servicios (desplegable) */}
+          <div className="border-b border-white/10">
+            <button
+              type="button"
+              onClick={() => setMobileServiciosOpen((o) => !o)}
+              className="flex items-center justify-between w-full py-3 font-medium"
+              aria-expanded={mobileServiciosOpen}
+            >
+              Servicios
+              <span className="shrink-0 ml-2">
+                {mobileServiciosOpen ? <ChevronUp className="w-5 h-5 opacity-80" /> : <ChevronDown className="w-5 h-5 opacity-80" />}
+              </span>
+            </button>
+            <div className={`overflow-hidden transition-all duration-200 ${mobileServiciosOpen ? "max-h-32 opacity-100" : "max-h-0 opacity-0"}`}>
+              <Link href="/servicios" className="block py-2 pl-4 text-white/95 hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                Ver servicios
+              </Link>
+              <Link href="/servicios#pricing" className="block py-2 pl-4 text-white/95 hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                Precios
+              </Link>
+            </div>
+          </div>
+
+          {/* Valorar / Vender, Blog, Contacto */}
+          <Link href="/sell" className="py-3 font-medium border-b border-white/10 block" onClick={() => setMobileMenuOpen(false)}>
             Valorar / Vender
           </Link>
-          <Link
-            href="/blog"
-            className="py-3 border-b border-white/10 font-medium"
-            onClick={() => setMobileMenuOpen(false)}
-          >
+          <Link href="/blog" className="py-3 font-medium border-b border-white/10 block" onClick={() => setMobileMenuOpen(false)}>
             Blog
           </Link>
-          <Link
-            href="/contact"
-            className="py-3 border-b border-white/10 font-medium"
-            onClick={() => setMobileMenuOpen(false)}
-          >
+          <Link href="/contact" className="py-3 font-medium border-b border-white/10 block" onClick={() => setMobileMenuOpen(false)}>
             Contacto
           </Link>
+
+          {/* Botones: Iniciar sesión / Crear cuenta o Mi Panel */}
           <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/15">
             {loggedIn ? (
               <>
@@ -325,25 +336,39 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link
-                  href="/login"
-                  className="py-3 text-center rounded-xl border-2 border-white/30 font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
+                <button
+                  type="button"
+                  className="py-3 text-center rounded-xl border-2 border-white/30 font-medium w-full text-white"
+                  onClick={() => { setMobileMenuOpen(false); setLoginModalOpen(true); }}
                 >
                   Iniciar sesión
-                </Link>
-                <Link
-                  href="/register"
-                  className="py-3 text-center rounded-xl border-2 border-white text-white font-medium hover:bg-white/10 transition"
-                  onClick={() => setMobileMenuOpen(false)}
+                </button>
+                <button
+                  type="button"
+                  className="py-3 text-center rounded-xl border-2 border-white text-white font-medium hover:bg-white/10 transition w-full"
+                  onClick={() => { setMobileMenuOpen(false); setRegisterModalOpen(true); }}
                 >
                   Crear cuenta
-                </Link>
+                </button>
               </>
             )}
           </div>
         </nav>
       </div>
+
+      {/* Modales de login y registro (móvil: carta con logo y formulario) */}
+      <LoginModal
+        open={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        onOpenRegister={() => { setLoginModalOpen(false); setRegisterModalOpen(true); }}
+        onSuccess={fetchSession}
+      />
+      <RegisterFormModal
+        open={registerModalOpen}
+        onClose={() => setRegisterModalOpen(false)}
+        onOpenLogin={() => { setRegisterModalOpen(false); setLoginModalOpen(true); }}
+        onSuccess={fetchSession}
+      />
     </header>
   );
 }

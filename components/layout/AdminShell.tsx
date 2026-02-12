@@ -16,6 +16,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [viewSwitcherOpen, setViewSwitcherOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const logout = async () => {
     await authFetch("/api/auth/logout", { method: "POST" });
@@ -24,18 +25,15 @@ export default function AdminShell({ userDisplayName, children }: Props) {
     router.refresh();
   };
 
-  return (
-    <div className="flex min-h-screen bg-[var(--brand-bg)]">
-      {/* Sidebar: fondo marca Diligenz para que el logo blanco se vea */}
-      <aside
-        className={`${
-          collapsed ? "w-20" : "w-64"
-        } bg-[var(--brand-primary)] text-white transition-all duration-200 flex flex-col border-r border-white/10`}
-      >
-        <div className={`flex ${collapsed ? "flex-col items-center gap-3 py-4 px-2" : "items-center justify-between gap-3 px-4 py-4"} border-b border-white/10`}>
+  const renderSidebar = (forMobile = false) => {
+    const expanded = forMobile ? true : !collapsed;
+    return (
+    <>
+        <div className={`flex ${expanded ? "items-center justify-between gap-3 px-4 py-4" : "flex-col items-center gap-3 py-4 px-2"} border-b border-white/10`}>
           <Link
             href="/admin"
-            className={`flex min-w-0 items-center ${collapsed ? "justify-center" : "gap-2"}`}
+            className={`flex min-w-0 items-center ${expanded ? "gap-2" : "justify-center"}`}
+            onClick={() => setMobileSidebarOpen(false)}
           >
             <Image
               src="/icon-diligenz-claro.png"
@@ -44,13 +42,13 @@ export default function AdminShell({ userDisplayName, children }: Props) {
               height={44}
               className={collapsed ? "h-9 w-9 object-contain" : "h-10 w-10 object-contain"}
             />
-            {!collapsed && (
+            {expanded && (
               <span className="text-sm font-semibold truncate text-white/90">Admin</span>
             )}
           </Link>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="rounded-lg p-2.5 text-white/90 hover:bg-white/10 hover:text-white shrink-0 transition-colors"
+            className="rounded-lg p-2.5 text-white/90 hover:bg-white/10 hover:text-white shrink-0 transition-colors md:block hidden"
             aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
             title={collapsed ? "Expandir menú" : "Contraer menú"}
             type="button"
@@ -59,64 +57,116 @@ export default function AdminShell({ userDisplayName, children }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen(false)}
+            className="md:hidden rounded-lg p-2.5 text-white/90 hover:bg-white/10 shrink-0"
+            aria-label="Cerrar menú"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
 
-        <nav className={`${collapsed ? "mt-2" : "mt-4"} space-y-1 ${collapsed ? "px-2" : "px-3"} text-sm flex-1`}>
+        <nav className={`${expanded ? "mt-4 px-3" : "mt-2 px-2"} space-y-1 text-sm flex-1`}>
           <AdminNavLink
             href="/admin"
             label="Dashboard"
-            collapsed={collapsed}
+            collapsed={!expanded}
             active={pathname === "/admin"}
+            onNavigate={() => setMobileSidebarOpen(false)}
           />
           <AdminNavLink
             href="/admin/companies"
             label="Empresas"
-            collapsed={collapsed}
+            collapsed={!expanded}
             active={pathname.startsWith("/admin/companies")}
+            onNavigate={() => setMobileSidebarOpen(false)}
           />
           <AdminNavLink
             href="/admin/actions"
             label="Acciones"
-            collapsed={collapsed}
+            collapsed={!expanded}
             active={pathname.startsWith("/admin/actions")}
+            onNavigate={() => setMobileSidebarOpen(false)}
           />
           <AdminNavLink
             href="/admin/leads"
             label="Leads"
-            collapsed={collapsed}
+            collapsed={!expanded}
             active={pathname.startsWith("/admin/leads")}
+            onNavigate={() => setMobileSidebarOpen(false)}
           />
           <AdminNavLink
             href="/admin/users"
             label="Usuarios"
-            collapsed={collapsed}
+            collapsed={!expanded}
             active={pathname.startsWith("/admin/users")}
+            onNavigate={() => setMobileSidebarOpen(false)}
           />
           <AdminNavLink
             href="/"
             label="Ver web"
-            collapsed={collapsed}
+            collapsed={!expanded}
             active={false}
+            onNavigate={() => setMobileSidebarOpen(false)}
           />
         </nav>
 
-        <div className={`${collapsed ? "p-2" : "p-3"} border-t border-white/10`}>
+        <div className={`${expanded ? "p-3" : "p-2"} border-t border-white/10`}>
           <Link
             href="/dashboard"
-            className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-xl ${collapsed ? "px-2 py-2" : "px-3 py-2"} text-white/80 hover:bg-white/10 transition`}
-            title={collapsed ? "Panel usuario" : undefined}
+            className={`flex items-center ${expanded ? "gap-3 px-3 py-2" : "justify-center px-2 py-2"} rounded-xl text-white/80 hover:bg-white/10 transition`}
+            title={!expanded ? "Panel usuario" : undefined}
+            onClick={() => setMobileSidebarOpen(false)}
           >
-            <span className={collapsed ? "text-lg" : ""}>←</span>
-            {!collapsed && <span>Panel usuario</span>}
+            <span className={!expanded ? "text-lg" : ""}>←</span>
+            {expanded && <span>Panel usuario</span>}
           </Link>
         </div>
+    </>
+  );
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row min-h-screen bg-[var(--brand-bg)]">
+      {/* Sidebar móvil: overlay */}
+      {mobileSidebarOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            aria-hidden
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-[var(--brand-primary)] text-white flex flex-col border-r border-white/10 md:hidden">
+            {renderSidebar(true)}
+          </aside>
+        </>
+      )}
+
+      {/* Sidebar escritorio */}
+      <aside
+        className={`hidden md:flex ${
+          collapsed ? "w-20" : "w-64"
+        } bg-[var(--brand-primary)] text-white transition-all duration-200 flex-col border-r border-white/10 shrink-0`}
+      >
+        {renderSidebar(false)}
       </aside>
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-between gap-4 bg-[var(--brand-primary)] text-white border-b border-white/10 px-6 lg:px-8 py-4 shadow-sm">
-          <div className="flex items-center gap-4">
-            <p className="text-base font-medium text-white">
+      {/* Main: en móvil ancho completo, no lo encoge el sidebar */}
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <header className="flex items-center justify-between gap-4 bg-[var(--brand-primary)] text-white border-b border-white/10 px-4 sm:px-6 lg:px-8 py-4 shadow-sm">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="md:hidden rounded-lg p-2.5 text-white/90 hover:bg-white/10 shrink-0"
+              aria-label="Abrir menú"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <p className="text-sm sm:text-base font-medium text-white truncate">
               Hola, <span className="font-semibold">{userDisplayName}</span>
             </p>
             <div className="relative">
@@ -183,15 +233,18 @@ function AdminNavLink({
   label,
   collapsed,
   active,
+  onNavigate,
 }: {
   href: string;
   label: string;
   collapsed: boolean;
   active: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-xl ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"} transition ${
         active ? "bg-white/15 text-white font-medium" : "text-white/80 hover:bg-white/10"
       }`}

@@ -36,6 +36,14 @@ export async function POST(req: Request) {
   const gmv = formData.get("gmv")?.toString();
   const employeesRaw = formData.get("employees")?.toString();
   const attachmentsApproved = formData.get("attachmentsApproved") === "on";
+  const companyTypeRaw = formData.get("companyType")?.toString();
+  const yearsOperatingRaw = formData.get("yearsOperating")?.toString();
+  const revenueGrowthPercentRaw = formData.get("revenueGrowthPercent")?.toString();
+  const stageRaw = formData.get("stage")?.toString();
+  const takeRatePercentRaw = formData.get("takeRatePercent")?.toString();
+  const arrRaw = formData.get("arr")?.toString();
+  const hasReceivedFundingRaw = formData.get("hasReceivedFunding")?.toString();
+  const websiteRaw = formData.get("website")?.toString();
 
   const documentLinks = parseDocumentLinks(documentLinksRaw ?? null);
   const employees =
@@ -46,6 +54,43 @@ export async function POST(req: Request) {
     employees != null && !Number.isNaN(employees) && employees >= 0
       ? employees
       : null;
+  const companyTypeValue =
+    companyTypeRaw && ["EMPRESA", "STARTUP", "MARKETPLACE"].includes(companyTypeRaw.trim())
+      ? companyTypeRaw.trim()
+      : null;
+  const yearsOperatingValue =
+    yearsOperatingRaw != null && yearsOperatingRaw.trim() !== ""
+      ? (() => {
+          const n = parseInt(yearsOperatingRaw.trim(), 10);
+          return !Number.isNaN(n) && n >= 0 ? n : null;
+        })()
+      : null;
+  const revenueGrowthPercentValue =
+    revenueGrowthPercentRaw != null && revenueGrowthPercentRaw.trim() !== ""
+      ? (() => {
+          const n = parseFloat(revenueGrowthPercentRaw.trim());
+          return !Number.isNaN(n) ? n : null;
+        })()
+      : null;
+  const stageValue = (stageRaw ?? "").trim() || null;
+  const takeRatePercentValue =
+    takeRatePercentRaw != null && takeRatePercentRaw.trim() !== ""
+      ? (() => {
+          const n = parseFloat(takeRatePercentRaw.trim());
+          return !Number.isNaN(n) && n >= 0 ? n : null;
+        })()
+      : null;
+  const arrValue =
+    arrRaw != null && arrRaw.trim() !== ""
+      ? (() => {
+          const n = parseInt(arrRaw.trim(), 10);
+          return !Number.isNaN(n) && n >= 0 ? n : null;
+        })()
+      : null;
+  const hasReceivedFundingValue =
+    hasReceivedFundingRaw !== undefined
+      ? hasReceivedFundingRaw === "on" || hasReceivedFundingRaw === "true"
+      : undefined;
 
   await prisma.company.update({
     where: { id: companyId },
@@ -57,6 +102,14 @@ export async function POST(req: Request) {
       gmv: (gmv ?? "").trim() || null,
       employees: employeesValue,
       attachmentsApproved,
+      companyType: companyTypeValue,
+      yearsOperating: yearsOperatingValue,
+      revenueGrowthPercent: revenueGrowthPercentValue,
+      stage: stageValue,
+      takeRatePercent: takeRatePercentValue,
+      arr: arrValue,
+      ...(hasReceivedFundingValue !== undefined && { hasReceivedFunding: hasReceivedFundingValue }),
+      website: (websiteRaw ?? "").trim() || null,
     },
   });
 

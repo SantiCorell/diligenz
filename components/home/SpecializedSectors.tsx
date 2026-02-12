@@ -47,11 +47,15 @@ export default function SpecializedSectors() {
           Analizamos y acompañamos operaciones en sectores con alta actividad y demanda inversora.
         </p>
 
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <p className="md:hidden mt-6 text-center text-xs text-[var(--foreground)] opacity-70">
+          Desliza para ver sectores →
+        </p>
+
+        <div className="mt-6 md:mt-10 flex md:grid overflow-x-auto md:overflow-visible gap-4 md:gap-6 pb-3 md:pb-0 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 md:grid-cols-2 lg:grid-cols-4">
           {sectors.map((sector) => (
             <div
               key={sector.slug}
-              className="bg-white rounded-xl overflow-hidden border border-[var(--brand-primary)]/10 shadow-md hover:shadow-lg transition"
+              className="bg-white rounded-xl overflow-hidden border border-[var(--brand-primary)]/10 shadow-md hover:shadow-lg transition min-w-[280px] max-w-[280px] md:min-w-0 md:max-w-none shrink-0 snap-center md:snap-align-none"
             >
               <div className="relative aspect-[4/3]">
                 <Image

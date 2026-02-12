@@ -31,6 +31,10 @@ export async function getPublicCompanies(): Promise<{
       sellerDescription?: string | null;
       documentLinks?: DocumentLink[] | null;
       attachmentsApproved?: boolean;
+      companyType?: string | null;
+      yearsOperating?: number | null;
+      hasReceivedFunding?: boolean | null;
+      website?: string | null;
     };
     const val = c.valuations[0];
     const revenueStr = val
@@ -51,6 +55,10 @@ export async function getPublicCompanies(): Promise<{
       sellerDescription: c.sellerDescription ?? null,
       documentLinks: Array.isArray(docLinks) ? docLinks : null,
       attachmentsApproved: c.attachmentsApproved ?? false,
+      companyType: c.companyType ?? null,
+      yearsOperating: c.yearsOperating ?? null,
+      hasReceivedFunding: c.hasReceivedFunding ?? null,
+      website: c.website ?? null,
     };
   });
 

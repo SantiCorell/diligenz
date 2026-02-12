@@ -72,10 +72,28 @@ export default async function AdminCompanyDetail({
 
         <div className="mt-5 grid grid-cols-2 gap-4 text-sm text-[var(--foreground)] opacity-90">
           <p><strong>Ingresos:</strong> {company.revenue}</p>
-          <p><strong>EBITDA:</strong> {company.ebitda || "-"}</p>
-          <p><strong>GMV:</strong> {company.gmv || "-"}</p>
+          <p><strong>EBITDA:</strong> {company.ebitda ?? "-"}</p>
+          <p><strong>GMV:</strong> {company.gmv ?? "-"}</p>
           <p><strong>Empleados:</strong> {company.employees ?? "-"}</p>
+          <p><strong>Tipo:</strong> {company.companyType ?? "—"}</p>
+          <p><strong>Años operando:</strong> {company.yearsOperating ?? "-"}</p>
+          {company.companyType === "STARTUP" && (
+            <>
+              <p><strong>Etapa:</strong> {company.stage ?? "-"}</p>
+              <p><strong>Ha recibido financiación:</strong> {company.hasReceivedFunding === true ? "Sí" : company.hasReceivedFunding === false ? "No" : "—"}</p>
+            </>
+          )}
+          {company.revenueGrowthPercent != null && <p><strong>Crecimiento (%):</strong> {company.revenueGrowthPercent}%</p>}
+          {company.arr != null && <p><strong>ARR (€):</strong> {company.arr.toLocaleString("es-ES")}</p>}
+          {company.takeRatePercent != null && <p><strong>Take rate (%):</strong> {company.takeRatePercent}%</p>}
           <p><strong>Propietario:</strong> {company.owner.email}</p>
+          {company.website && (
+            <p><strong>Web:</strong>{" "}
+              <a href={company.website.startsWith("http") ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-primary)] hover:underline">
+                {company.website}
+              </a>
+            </p>
+          )}
 
           <p>
             <strong>Estado:</strong>{" "}
@@ -176,6 +194,104 @@ export default async function AdminCompanyDetail({
               className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
               placeholder="Ej. 25"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Tipo de entidad</label>
+            <select
+              name="companyType"
+              defaultValue={company.companyType ?? ""}
+              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+            >
+              <option value="">No especificado</option>
+              <option value="EMPRESA">Empresa</option>
+              <option value="STARTUP">Startup</option>
+              <option value="MARKETPLACE">Marketplace</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Años operando</label>
+            <input
+              type="number"
+              name="yearsOperating"
+              min={0}
+              defaultValue={company.yearsOperating ?? ""}
+              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              placeholder="Ej. 5"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Crecimiento facturación (%)</label>
+            <input
+              type="number"
+              name="revenueGrowthPercent"
+              step={0.1}
+              defaultValue={company.revenueGrowthPercent ?? ""}
+              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              placeholder="Ej. 50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Etapa (startups)</label>
+            <select
+              name="stage"
+              defaultValue={company.stage ?? ""}
+              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+            >
+              <option value="">—</option>
+              <option value="idea">Idea / pre-producto</option>
+              <option value="pre_seed">Pre-seed</option>
+              <option value="seed">Seed</option>
+              <option value="serie_a">Serie A</option>
+              <option value="serie_b">Serie B</option>
+              <option value="growth">Growth</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Take rate (%)</label>
+            <input
+              type="number"
+              name="takeRatePercent"
+              min={0}
+              max={100}
+              step={0.1}
+              defaultValue={company.takeRatePercent ?? ""}
+              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              placeholder="Marketplace"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">ARR (€)</label>
+            <input
+              type="number"
+              name="arr"
+              min={0}
+              defaultValue={company.arr ?? ""}
+              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              placeholder="Ingresos recurrentes anuales"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Página web</label>
+            <input
+              type="url"
+              name="website"
+              defaultValue={company.website ?? ""}
+              className="mt-2 w-full max-w-md rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              placeholder="https://www.ejemplo.com"
+            />
+          </div>
+          <div className="flex items-center gap-3 rounded-xl bg-[var(--brand-bg-lavender)]/50 border border-[var(--brand-primary)]/10 p-4">
+            <input
+              type="checkbox"
+              name="hasReceivedFunding"
+              id="hasReceivedFunding"
+              defaultChecked={company.hasReceivedFunding === true}
+              className="h-4 w-4 rounded border-[var(--brand-primary)]/30 text-[var(--brand-primary)]"
+            />
+            <label htmlFor="hasReceivedFunding" className="text-sm font-medium text-[var(--foreground)]">
+              Ha recibido financiación (startup)
+            </label>
           </div>
 
           <div className="flex items-center gap-3 rounded-xl bg-[var(--brand-bg-lavender)]/50 border border-[var(--brand-primary)]/10 p-4">

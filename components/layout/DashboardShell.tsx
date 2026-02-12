@@ -18,6 +18,7 @@ export default function DashboardShell({
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Admin viendo como comprador/vendedor: mostrar menú del rol que está simulando
   const effectiveRole: "BUYER" | "SELLER" | "ADMIN" =
@@ -39,124 +40,169 @@ export default function DashboardShell({
     window.location.href = "/";
   };
 
-  return (
-    <div className="flex min-h-screen bg-[var(--brand-bg)]">
-      {/* Sidebar: fondo marca Diligenz para que el logo blanco se vea */}
-      <aside
-        className={`${
-          collapsed ? "w-20" : "w-64"
-        } bg-[var(--brand-primary)] text-white transition-all duration-200 flex flex-col border-r border-white/10`}
-      >
-        <div className={`flex ${collapsed ? "flex-col items-center gap-3 py-4 px-2" : "items-center justify-between gap-3 px-4 py-4"} border-b border-white/10`}>
-          <Link
-            href="/dashboard"
-            className={`flex min-w-0 items-center ${collapsed ? "justify-center" : "gap-2"}`}
-          >
-            <Image
-              src="/icon-diligenz-claro.png"
-              alt="Diligenz"
-              width={44}
-              height={44}
-              className={collapsed ? "h-9 w-9 object-contain" : "h-10 w-10 object-contain"}
+  const renderSidebar = (forMobile = false) => {
+    const expanded = forMobile ? true : !collapsed;
+    return (
+    <>
+      <div className={`flex ${expanded ? "items-center justify-between gap-3 px-4 py-4" : "flex-col items-center gap-3 py-4 px-2"} border-b border-white/10`}>
+        <Link
+          href="/dashboard"
+          className={`flex min-w-0 items-center ${expanded ? "gap-2" : "justify-center"}`}
+          onClick={() => setMobileSidebarOpen(false)}
+        >
+          <Image
+            src="/icon-diligenz-claro.png"
+            alt="Diligenz"
+            width={44}
+            height={44}
+            className={expanded ? "h-10 w-10 object-contain" : "h-9 w-9 object-contain"}
+          />
+          {expanded && (
+            <span className="text-sm font-semibold truncate text-white/90">Panel</span>
+          )}
+        </Link>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="rounded-lg p-2.5 text-white/90 hover:bg-white/10 hover:text-white shrink-0 transition-colors md:block hidden"
+          aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
+          type="button"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileSidebarOpen(false)}
+          className="md:hidden rounded-lg p-2.5 text-white/90 hover:bg-white/10 shrink-0"
+          aria-label="Cerrar menú"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <nav className={`${expanded ? "mt-4 px-3" : "mt-2 px-2"} space-y-1 text-sm flex-1`}>
+        <NavItem
+          href={effectiveRole === "ADMIN" ? "/admin" : `/dashboard/${effectiveRole.toLowerCase()}`}
+          label="Dashboard"
+          active={
+            effectiveRole === "ADMIN"
+              ? pathname.startsWith("/admin")
+              : pathname === `/dashboard/${effectiveRole.toLowerCase()}`
+          }
+          collapsed={!expanded}
+          onNavigate={() => setMobileSidebarOpen(false)}
+        />
+        <NavItem
+          href="/companies/mi-interes"
+          label="De mi interés"
+          active={pathname.startsWith("/companies/mi-interes")}
+          collapsed={!expanded}
+          onNavigate={() => setMobileSidebarOpen(false)}
+        />
+        {effectiveRole === "BUYER" && (
+          <>
+            <NavItem
+              href="/companies"
+              label="Empresas"
+              active={
+                pathname === "/companies" ||
+                (pathname.startsWith("/companies/") && !pathname.startsWith("/companies/mi-interes"))
+              }
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
             />
-            {!collapsed && (
-              <span className="text-sm font-semibold truncate text-white/90">Panel</span>
-            )}
-          </Link>
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="rounded-lg p-2.5 text-white/90 hover:bg-white/10 hover:text-white shrink-0 transition-colors"
-            aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
-            type="button"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
+            <NavItem
+              href="/dashboard/favorites"
+              label="Favoritas"
+              active={pathname.startsWith("/dashboard/favorites")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
+              href="/dashboard/interests"
+              label="Solicitudes"
+              active={pathname.startsWith("/dashboard/interests")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+          </>
+        )}
+        {effectiveRole === "SELLER" && (
+          <>
+            <NavItem
+              href="/dashboard/seller"
+              label="Mis proyectos"
+              active={pathname.startsWith("/dashboard/seller")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
+              href="/sell"
+              label="Valorar empresa"
+              active={pathname.startsWith("/sell")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+          </>
+        )}
+      </nav>
 
-        <nav className={`${collapsed ? "mt-2" : "mt-4"} space-y-1 ${collapsed ? "px-2" : "px-3"} text-sm flex-1`}>
-          <NavItem
-            href={effectiveRole === "ADMIN" ? "/admin" : `/dashboard/${effectiveRole.toLowerCase()}`}
-            label="Dashboard"
-            active={
-              effectiveRole === "ADMIN"
-                ? pathname.startsWith("/admin")
-                : pathname === `/dashboard/${effectiveRole.toLowerCase()}`
-            }
-            collapsed={collapsed}
+      <div className={`${expanded ? "p-3" : "p-2"} border-t border-white/10`}>
+        <button
+          type="button"
+          onClick={() => { setMobileSidebarOpen(false); goToWeb(); }}
+          className={`w-full flex items-center ${expanded ? "gap-3 px-3 py-2" : "justify-center px-2 py-2"} rounded-lg text-white/80 hover:bg-white/10 transition text-left`}
+          title={!expanded ? "Volver al sitio" : undefined}
+        >
+          <span className={!expanded ? "text-lg" : ""}>←</span>
+          {expanded && <span>Volver al sitio</span>}
+        </button>
+      </div>
+    </>
+  );
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row min-h-screen bg-[var(--brand-bg)]">
+      {/* Sidebar móvil: overlay, siempre expandido */}
+      {mobileSidebarOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            aria-hidden
+            onClick={() => setMobileSidebarOpen(false)}
           />
+          <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-[var(--brand-primary)] text-white flex flex-col border-r border-white/10 md:hidden">
+            {renderSidebar(true)}
+          </aside>
+        </>
+      )}
 
-          <NavItem
-            href="/companies/mi-interes"
-            label="De mi interés"
-            active={pathname.startsWith("/companies/mi-interes")}
-            collapsed={collapsed}
-          />
-
-          {effectiveRole === "BUYER" && (
-            <>
-              <NavItem
-                href="/companies"
-                label="Empresas"
-                active={
-                  pathname === "/companies" ||
-                  (pathname.startsWith("/companies/") &&
-                    !pathname.startsWith("/companies/mi-interes"))
-                }
-                collapsed={collapsed}
-              />
-              <NavItem
-                href="/dashboard/favorites"
-                label="Favoritas"
-                active={pathname.startsWith("/dashboard/favorites")}
-                collapsed={collapsed}
-              />
-              <NavItem
-                href="/dashboard/interests"
-                label="Solicitudes"
-                active={pathname.startsWith("/dashboard/interests")}
-                collapsed={collapsed}
-              />
-            </>
-          )}
-
-          {effectiveRole === "SELLER" && (
-            <>
-              <NavItem
-                href="/dashboard/seller"
-                label="Mis proyectos"
-                active={pathname.startsWith("/dashboard/seller")}
-                collapsed={collapsed}
-              />
-              <NavItem
-                href="/sell"
-                label="Valorar empresa"
-                active={pathname.startsWith("/sell")}
-                collapsed={collapsed}
-              />
-            </>
-          )}
-        </nav>
-
-        <div className={`${collapsed ? "p-2" : "p-3"} border-t border-white/10`}>
-          <button
-            type="button"
-            onClick={goToWeb}
-            className={`w-full flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-lg ${collapsed ? "px-2 py-2" : "px-3 py-2"} text-white/80 hover:bg-white/10 transition text-left`}
-            title={collapsed ? "Volver al sitio" : undefined}
-          >
-            <span className={collapsed ? "text-lg" : ""}>←</span>
-            {!collapsed && <span>Volver al sitio</span>}
-          </button>
-        </div>
+      {/* Sidebar escritorio */}
+      <aside
+        className={`hidden md:flex ${
+          collapsed ? "w-20" : "w-64"
+        } bg-[var(--brand-primary)] text-white transition-all duration-200 flex-col border-r border-white/10 shrink-0`}
+      >
+        {renderSidebar(false)}
       </aside>
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-between gap-4 bg-[var(--brand-primary)] text-white border-b border-white/10 px-6 lg:px-8 py-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-white">
+      {/* Main: en móvil ancho completo */}
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <header className="flex items-center justify-between gap-4 bg-[var(--brand-primary)] text-white border-b border-white/10 px-4 sm:px-6 lg:px-8 py-4 shadow-sm">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="md:hidden rounded-lg p-2.5 text-white/90 hover:bg-white/10 shrink-0"
+              aria-label="Abrir menú"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <span className="text-sm font-medium text-white truncate">
               {userDisplayName ? (
                 <>Hola, <span className="font-semibold">{userDisplayName}</span></>
               ) : (
@@ -193,15 +239,18 @@ function NavItem({
   label,
   active,
   collapsed,
+  onNavigate,
 }: {
   href: string;
   label: string;
   active: boolean;
   collapsed: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-xl ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"} transition ${
         active
           ? "bg-white/15 text-white font-medium"

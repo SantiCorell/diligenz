@@ -16,20 +16,24 @@ function isValidPhone(phone: string): boolean {
 
 /**
  * Valoración orientativa por múltiplos de sector.
- * - Con EBITDA: múltiplo sobre EBITDA (más fiable).
- * - Sin EBITDA: múltiplo sobre facturación (más conservador).
- * Sectores con rangos típicos de múltiplos (EBITDA o revenue según caso).
+ * - Con EBITDA positivo: múltiplo sobre EBITDA (más fiable).
+ * - Sin EBITDA o EBITDA negativo / cero: múltiplo sobre facturación (startups, en pérdidas, etc.).
+ * - companyType STARTUP/MARKETPLACE: se usa revenue (o ARR si se indica); EBITDA negativo permitido.
  */
 function computeValuation(body: {
   sector: string;
   revenue: number;
   ebitda?: number | null;
   employees?: number | null;
+  companyType?: string | null;
+  yearsOperating?: number | null;
+  revenueGrowthPercent?: number | null;
+  arr?: number | null;
 }) {
-  const { sector, revenue, ebitda, employees } = body;
+  const { sector, revenue, ebitda, employees, companyType, yearsOperating, revenueGrowthPercent, arr } = body;
   const s = String(sector).toLowerCase();
+  const typeUpper = companyType ? String(companyType).toUpperCase() : null;
 
-  // Múltiplos típicos por sector (sobre EBITDA cuando hay; si no, sobre revenue)
   type SectorMultipliers = { ebitdaMin: number; ebitdaMax: number; revenueMin: number; revenueMax: number };
   const sectors: Record<string, SectorMultipliers> = {
     tecnologia: { ebitdaMin: 5, ebitdaMax: 12, revenueMin: 1, revenueMax: 3 },
@@ -54,18 +58,27 @@ function computeValuation(body: {
     }
   }
 
-  const useEbitda = ebitda != null && ebitda > 0;
-  const base = useEbitda ? ebitda : revenue;
+  // Usar EBITDA solo si es estrictamente positivo; si no (negativo, cero o null), valorar por revenue/ARR
+  const useEbitda = ebitda != null && ebitda > 0 && typeUpper !== "STARTUP";
+  const base = useEbitda ? ebitda : (arr != null && arr > 0 ? arr : revenue);
   const [multipleMin, multipleMax] = useEbitda
     ? [mult.ebitdaMin, mult.ebitdaMax]
     : [mult.revenueMin, mult.revenueMax];
 
-  const teamFactor =
+  let teamFactor =
     typeof employees === "number" && employees > 15
       ? 1.05
       : typeof employees === "number" && employees > 5
         ? 1.02
         : 1.0;
+
+  // Años operando: más madurez puede subir ligeramente el múltiplo
+  if (typeof yearsOperating === "number" && yearsOperating >= 5) teamFactor *= 1.02;
+  if (typeof yearsOperating === "number" && yearsOperating >= 10) teamFactor *= 1.02;
+
+  // Crecimiento fuerte sube el rango (startups / scale-up)
+  if (typeof revenueGrowthPercent === "number" && revenueGrowthPercent >= 50) teamFactor *= 1.05;
+  if (typeof revenueGrowthPercent === "number" && revenueGrowthPercent >= 100) teamFactor *= 1.05;
 
   const minValue = Math.round(base * multipleMin * teamFactor);
   const maxValue = Math.round(base * multipleMax * teamFactor);
@@ -88,6 +101,15 @@ export async function POST(req: Request) {
       description,
       email,
       phone,
+      companyType,
+      yearsOperating,
+      revenueGrowthPercent,
+      stage,
+      takeRatePercent,
+      arr,
+      breakevenExpectedYear,
+      hasReceivedFunding,
+      website,
     } = body;
 
     const emailStr = email != null ? String(email).trim() : "";
@@ -131,12 +153,25 @@ export async function POST(req: Request) {
     const numRevenue = Number(revenue);
     const numEbitda = ebitda != null && ebitda !== "" ? Number(ebitda) : null;
     const numEmployees = employees != null && employees !== "" ? Number(employees) : null;
+    const numYearsOperating = yearsOperating != null && yearsOperating !== "" ? Number(yearsOperating) : null;
+    const numRevenueGrowth = revenueGrowthPercent != null && revenueGrowthPercent !== "" ? Number(revenueGrowthPercent) : null;
+    const numTakeRate = takeRatePercent != null && takeRatePercent !== "" ? Number(takeRatePercent) : null;
+    const numArr = arr != null && arr !== "" ? Number(arr) : null;
+    const numBreakevenYear = breakevenExpectedYear != null && breakevenExpectedYear !== "" ? Number(breakevenExpectedYear) : null;
+    const companyTypeStr = companyType && String(companyType).trim() ? String(companyType).trim().toUpperCase() : null;
+    const stageStr = stage && String(stage).trim() ? String(stage).trim() : null;
+    const hasFunding = hasReceivedFunding === true || hasReceivedFunding === "true";
+    const websiteStr = website != null && String(website).trim() !== "" ? String(website).trim() : null;
 
     const { minValue, maxValue } = computeValuation({
       sector,
       revenue: numRevenue,
       ebitda: numEbitda,
       employees: numEmployees,
+      companyType: companyTypeStr,
+      yearsOperating: numYearsOperating,
+      revenueGrowthPercent: numRevenueGrowth,
+      arr: numArr,
     });
 
     await prisma.valuationLead.create({
@@ -152,6 +187,15 @@ export async function POST(req: Request) {
         description: descriptionStr,
         minValue,
         maxValue,
+        companyType: companyTypeStr,
+        yearsOperating: numYearsOperating,
+        revenueGrowthPercent: numRevenueGrowth,
+        stage: stageStr,
+        takeRatePercent: numTakeRate,
+        arr: numArr,
+        breakevenExpectedYear: numBreakevenYear,
+        hasReceivedFunding: hasReceivedFunding != null ? hasFunding : null,
+        website: websiteStr,
       },
     });
 
@@ -168,6 +212,15 @@ export async function POST(req: Request) {
           employees: numEmployees ?? null,
           description: descriptionStr,
           ownerId: userId,
+          companyType: companyTypeStr,
+          yearsOperating: numYearsOperating,
+          revenueGrowthPercent: numRevenueGrowth,
+          stage: stageStr,
+          takeRatePercent: numTakeRate,
+          arr: numArr,
+          breakevenExpectedYear: numBreakevenYear,
+          hasReceivedFunding: hasReceivedFunding != null ? hasFunding : null,
+          website: websiteStr,
         },
       });
       await prisma.valuation.create({

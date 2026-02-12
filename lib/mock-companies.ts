@@ -17,6 +17,11 @@ export type CompanyMock = {
   documentLinks?: DocumentLink[] | null;
   /** Si true, usuarios registrados pueden ver documentación, enlaces y fotos subidas */
   attachmentsApproved?: boolean;
+  /** Tipo: EMPRESA | STARTUP | MARKETPLACE; null = no especificado */
+  companyType?: string | null;
+  yearsOperating?: number | null;
+  hasReceivedFunding?: boolean | null;
+  website?: string | null;
 };
 
 export const MOCK_COMPANIES: CompanyMock[] = [

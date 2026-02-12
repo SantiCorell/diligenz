@@ -117,13 +117,14 @@ enum RequestStatus {
  * COMPANY
  * =====================
  */
+/// Tipo de entidad: EMPRESA (tradicional), STARTUP, MARKETPLACE. Null = no especificado (registros legacy).
 model Company {
   id          String        @id @default(cuid())
   name        String
   sector      String
   location    String
   revenue     String
-  ebitda      String?
+  ebitda      String?       // Puede ser negativo, ej. "-50000"
   gmv         String?       // Gross Merchandise Value (volumen de negocio)
   employees   Int?
   description String?       // Resumen breve para listados y tarjetas
@@ -132,6 +133,17 @@ model Company {
   attachmentsApproved Boolean  @default(false) // Si true, usuarios registrados pueden ver docs/enlaces/fotos
   status      CompanyStatus @default(DRAFT)
   createdAt   DateTime      @default(now())
+
+  // Valoración mejorada: tipo de entidad, madurez, crecimiento, startup/marketplace
+  companyType         String?   // "EMPRESA" | "STARTUP" | "MARKETPLACE" | null (NONE/legacy)
+  yearsOperating      Int?      // Años en operación
+  revenueGrowthPercent Float?   // Crecimiento interanual de facturación
+  stage               String?   // Para startups: idea, pre_seed, seed, serie_a, etc.
+  takeRatePercent     Float?    // Para marketplaces: % comisión sobre GMV
+  arr                 Int?      // Annual Recurring Revenue (€), SaaS/subscriptions
+  breakevenExpectedYear Int?    // Año esperado de breakeven (opcional)
+  hasReceivedFunding  Boolean?  // Startup: si ha recibido financiación
+  website             String?  // URL de la página web
 
   // Relations
   ownerId    String
@@ -288,10 +300,21 @@ model ValuationLead {
   sector      String
   location    String
   revenue     Int      // facturación anual €
-  ebitda      Int?     // EBITDA €
+  ebitda      Int?     // EBITDA € (puede ser negativo)
   employees   Int?
   description String?  @db.Text
   minValue    Int      // valoración mínima €
   maxValue    Int      // valoración máxima €
   createdAt   DateTime @default(now())
+
+  // Mismos campos que Company para valoración mejorada (todos opcionales para leads existentes)
+  companyType         String?   // "EMPRESA" | "STARTUP" | "MARKETPLACE" | null
+  yearsOperating      Int?
+  revenueGrowthPercent Float?
+  stage               String?
+  takeRatePercent     Float?
+  arr                 Int?
+  breakevenExpectedYear Int?
+  hasReceivedFunding  Boolean?
+  website             String?  // URL de la página web
 }

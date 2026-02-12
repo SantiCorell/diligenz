@@ -12,6 +12,7 @@ import {
   MessageSquare,
   User,
   Tag,
+  Globe,
 } from "lucide-react";
 import type { ValuationLead, ContactRequest } from "@prisma/client";
 
@@ -105,24 +106,41 @@ export default async function AdminLeadsPage() {
 
 function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
   return (
-    <article className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-5 md:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
-          <div className="flex items-center gap-2 text-sm">
-            <Mail className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/70" />
-            <a href={`mailto:${lead.email}`} className="text-[var(--brand-primary)] hover:underline truncate">
+    <article className="rounded-xl sm:rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md overflow-hidden">
+      {/* Móvil: bloques bien separados y táctiles. Escritorio: fila con wrap */}
+      <div className="p-4 sm:p-5 md:p-6">
+        {/* Tipo + Rango: en móvil arriba como cabecera de la tarjeta */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4 pb-4 border-b border-[var(--brand-primary)]/10">
+          <span className="rounded-xl bg-amber-500/15 px-3 py-2 text-xs font-semibold text-amber-700 shrink-0 inline-flex items-center justify-center">
+            Valoración
+          </span>
+          <div className="rounded-xl bg-[var(--brand-primary)]/10 px-4 py-3 flex-1 min-w-0 text-center">
+            <p className="text-xs font-medium text-[var(--brand-primary)] opacity-90 mb-0.5">
+              Rango estimado
+            </p>
+            <p className="text-lg sm:text-xl font-bold text-[var(--brand-primary)] truncate">
+              {lead.minValue.toLocaleString("es-ES")} – {lead.maxValue.toLocaleString("es-ES")} €
+            </p>
+          </div>
+        </div>
+
+        {/* Contacto: en móvil lista vertical clara */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 min-w-0">
+          <div className="flex items-center gap-3 min-h-[44px] py-1">
+            <Mail className="w-5 h-5 shrink-0 text-[var(--brand-primary)]/70" />
+            <a href={`mailto:${lead.email}`} className="text-sm sm:text-base text-[var(--brand-primary)] hover:underline truncate break-all">
               {lead.email}
             </a>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Phone className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/70" />
-            <a href={`tel:${lead.phone}`} className="text-[var(--brand-primary)] hover:underline">
+          <div className="flex items-center gap-3 min-h-[44px] py-1">
+            <Phone className="w-5 h-5 shrink-0 text-[var(--brand-primary)]/70" />
+            <a href={`tel:${lead.phone}`} className="text-sm sm:text-base text-[var(--brand-primary)] hover:underline">
               {lead.phone}
             </a>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/70" />
-            <span className="text-[var(--foreground)] opacity-90">
+          <div className="flex items-center gap-3 min-h-[44px] py-1">
+            <Calendar className="w-5 h-5 shrink-0 text-[var(--brand-primary)]/70" />
+            <span className="text-sm text-[var(--foreground)] opacity-90">
               {new Date(lead.createdAt).toLocaleDateString("es-ES", {
                 day: "2-digit",
                 month: "short",
@@ -132,55 +150,62 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
               })}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Building2 className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/70" />
-            <span className="text-[var(--foreground)] truncate">
+          <div className="flex items-center gap-3 min-h-[44px] py-1">
+            <Building2 className="w-5 h-5 shrink-0 text-[var(--brand-primary)]/70" />
+            <span className="text-sm text-[var(--foreground)] truncate">
               {lead.companyName || "—"}
             </span>
           </div>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="rounded-xl bg-amber-500/15 px-3 py-1.5 text-xs font-semibold text-amber-700">
-            Valoración
-          </span>
-          <div className="rounded-xl bg-[var(--brand-primary)]/10 px-4 py-2 text-center">
-            <p className="text-xs font-medium text-[var(--brand-primary)] opacity-90">
-              Rango
-            </p>
-            <p className="text-lg font-bold text-[var(--brand-primary)]">
-              {lead.minValue.toLocaleString("es-ES")} – {lead.maxValue.toLocaleString("es-ES")} €
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 pt-4 border-t border-[var(--brand-primary)]/10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/50" />
-          <span>{lead.sector}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[var(--foreground)] opacity-70">Ubicación:</span>
-          <span>{lead.location}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/50" />
-          <span>Facturación: {lead.revenue.toLocaleString("es-ES")} €</span>
-        </div>
-        <div>
-          <span className="text-[var(--foreground)] opacity-70">EBITDA: </span>
-          <span>{lead.ebitda != null ? `${lead.ebitda.toLocaleString("es-ES")} €` : "—"}</span>
-          {lead.employees != null && (
-            <>
-              <span className="text-[var(--foreground)] opacity-70 ml-2">· Empleados: </span>
-              <span>{lead.employees}</span>
-            </>
+          {lead.website && (
+            <div className="flex items-center gap-3 min-h-[44px] py-1 sm:col-span-2 lg:col-span-1">
+              <Globe className="w-5 h-5 shrink-0 text-[var(--brand-primary)]/70" />
+              <a href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--brand-primary)] hover:underline truncate break-all">
+                {lead.website}
+              </a>
+            </div>
           )}
         </div>
       </div>
 
+      <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6 pt-0">
+      <div className="mt-4 pt-4 border-t border-[var(--brand-primary)]/10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs sm:text-sm">
+        <div className="flex items-center gap-3 min-h-[40px]">
+          <MapPin className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/50" />
+          <span>{lead.sector}</span>
+        </div>
+        <div className="flex items-center gap-3 min-h-[40px]">
+          <span className="text-[var(--foreground)] opacity-70 shrink-0">Ubicación:</span>
+          <span>{lead.location}</span>
+        </div>
+        <div className="flex items-center gap-3 min-h-[40px]">
+          <BarChart3 className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/50" />
+          <span>Facturación: {lead.revenue.toLocaleString("es-ES")} €</span>
+        </div>
+        <div className="flex items-start sm:items-center gap-2 min-h-[40px] flex-wrap">
+          <span className="text-[var(--foreground)] opacity-70">EBITDA: </span>
+          <span>{lead.ebitda != null ? `${lead.ebitda.toLocaleString("es-ES")} €` : "—"}</span>
+          {lead.employees != null && (
+            <>
+              <span className="text-[var(--foreground)] opacity-70">· Empleados: </span>
+              <span>{lead.employees}</span>
+            </>
+          )}
+        </div>
+        {(lead.companyType || lead.yearsOperating != null || lead.revenueGrowthPercent != null || lead.stage || lead.hasReceivedFunding != null || lead.arr != null) && (
+          <div className="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--foreground)] opacity-80">
+            {lead.companyType && <span><strong>Tipo:</strong> {lead.companyType}</span>}
+            {lead.yearsOperating != null && <span><strong>Años:</strong> {lead.yearsOperating}</span>}
+            {lead.revenueGrowthPercent != null && <span><strong>Crecimiento:</strong> {lead.revenueGrowthPercent}%</span>}
+            {lead.stage && <span><strong>Etapa:</strong> {lead.stage}</span>}
+            {lead.hasReceivedFunding === true && <span><strong>Financiación:</strong> Sí</span>}
+            {lead.arr != null && <span><strong>ARR:</strong> {lead.arr.toLocaleString("es-ES")} €</span>}
+          </div>
+        )}
+      </div>
+      </div>
+
       {lead.description && (
-        <div className="mt-4 pt-4 border-t border-[var(--brand-primary)]/10">
+        <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6 mt-4 pt-4 border-t border-[var(--brand-primary)]/10">
           <p className="text-xs font-semibold text-[var(--brand-primary)] opacity-90 mb-1">
             Descripción de la actividad
           </p>
@@ -196,30 +221,44 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
 function ContactLeadCard({ lead }: { lead: ContactRequest }) {
   const sourceLabel = lead.source === "servicios" ? "Servicios" : "Contacto";
   return (
-    <article className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-5 md:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
-          <div className="flex items-center gap-2 text-sm">
-            <User className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/70" />
-            <span className="font-medium text-[var(--foreground)]">{lead.name}</span>
+    <article className="rounded-xl sm:rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md overflow-hidden">
+      <div className="p-4 sm:p-5 md:p-6">
+        {/* Badges arriba en móvil */}
+        <div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b border-[var(--brand-primary)]/10">
+          <span className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+            <MessageSquare className="w-4 h-4" />
+            {sourceLabel}
+          </span>
+          {lead.type && (
+            <span className="rounded-xl bg-[var(--brand-primary)]/10 px-3 py-2 text-xs font-medium text-[var(--brand-primary)] flex items-center gap-1.5">
+              <Tag className="w-4 h-4" />
+              {lead.type === "EMPRESA" ? "Empresa" : "Particular"}
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 min-w-0">
+          <div className="flex items-center gap-3 min-h-[44px] py-1">
+            <User className="w-5 h-5 shrink-0 text-[var(--brand-primary)]/70" />
+            <span className="font-medium text-[var(--foreground)] text-sm sm:text-base">{lead.name}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Mail className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/70" />
-            <a href={`mailto:${lead.email}`} className="text-[var(--brand-primary)] hover:underline truncate">
+          <div className="flex items-center gap-3 min-h-[44px] py-1">
+            <Mail className="w-5 h-5 shrink-0 text-[var(--brand-primary)]/70" />
+            <a href={`mailto:${lead.email}`} className="text-sm sm:text-base text-[var(--brand-primary)] hover:underline truncate break-all">
               {lead.email}
             </a>
           </div>
           {lead.phone && (
-            <div className="flex items-center gap-2 text-sm">
-              <Phone className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/70" />
-              <a href={`tel:${lead.phone}`} className="text-[var(--brand-primary)] hover:underline">
+            <div className="flex items-center gap-3 min-h-[44px] py-1">
+              <Phone className="w-5 h-5 shrink-0 text-[var(--brand-primary)]/70" />
+              <a href={`tel:${lead.phone}`} className="text-sm sm:text-base text-[var(--brand-primary)] hover:underline">
                 {lead.phone}
               </a>
             </div>
           )}
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/70" />
-            <span className="text-[var(--foreground)] opacity-90">
+          <div className="flex items-center gap-3 min-h-[44px] py-1">
+            <Calendar className="w-5 h-5 shrink-0 text-[var(--brand-primary)]/70" />
+            <span className="text-sm text-[var(--foreground)] opacity-90">
               {new Date(lead.createdAt).toLocaleDateString("es-ES", {
                 day: "2-digit",
                 month: "short",
@@ -230,9 +269,9 @@ function ContactLeadCard({ lead }: { lead: ContactRequest }) {
             </span>
           </div>
           {(lead.companyName || lead.contactPerson) && (
-            <div className="flex items-center gap-2 text-sm sm:col-span-2">
-              <Building2 className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/70" />
-              <span className="text-[var(--foreground)]">
+            <div className="flex items-center gap-3 min-h-[44px] py-1 sm:col-span-2 lg:col-span-1">
+              <Building2 className="w-5 h-5 shrink-0 text-[var(--brand-primary)]/70" />
+              <span className="text-sm text-[var(--foreground)]">
                 {lead.companyName || ""}
                 {lead.companyName && lead.contactPerson && " · "}
                 {lead.contactPerson ? `Contacto: ${lead.contactPerson}` : ""}
@@ -240,22 +279,10 @@ function ContactLeadCard({ lead }: { lead: ContactRequest }) {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="rounded-xl bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-700 flex items-center gap-1">
-            <MessageSquare className="w-3.5 h-3.5" />
-            {sourceLabel}
-          </span>
-          {lead.type && (
-            <span className="rounded-xl bg-[var(--brand-primary)]/10 px-3 py-1.5 text-xs font-medium text-[var(--brand-primary)] flex items-center gap-1">
-              <Tag className="w-3.5 h-3.5" />
-              {lead.type === "EMPRESA" ? "Empresa" : "Particular"}
-            </span>
-          )}
-        </div>
       </div>
 
       {(lead.subject || lead.message) && (
-        <div className="mt-4 pt-4 border-t border-[var(--brand-primary)]/10 space-y-2">
+        <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6 mt-4 pt-4 border-t border-[var(--brand-primary)]/10 space-y-2">
           {lead.subject && (
             <p className="text-sm">
               <span className="font-medium text-[var(--brand-primary)] opacity-90">Asunto: </span>
