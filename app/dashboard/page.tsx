@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { getSessionWithUser } from "@/lib/session";
-import DashboardRedirect from "./DashboardRedirect";
+
+const ROLE_TARGET: Record<string, string> = {
+  SELLER: "/dashboard/seller",
+  BUYER: "/dashboard/buyer",
+  ADMIN: "/admin",
+};
 
 export default async function DashboardRouter() {
   const session = await getSessionWithUser();
@@ -11,5 +16,7 @@ export default async function DashboardRouter() {
     redirect("/login");
   }
 
-  return <DashboardRedirect role={user.role} />;
+  // Redirección en servidor: una sola carga en lugar de "Redirigiendo..." + segunda navegación
+  const target = ROLE_TARGET[user.role] ?? "/login";
+  redirect(target);
 }

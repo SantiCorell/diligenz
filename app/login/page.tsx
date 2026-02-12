@@ -1,12 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import ShellLayout from "@/components/layout/ShellLayout";
 import { setStoredToken } from "@/lib/auth-client";
 
+const ROLE_TARGET: Record<string, string> = {
+  ADMIN: "/admin",
+  BUYER: "/dashboard/buyer",
+  SELLER: "/dashboard/seller",
+};
+
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,8 +41,9 @@ export default function LoginPage() {
       if (data.token) {
         setStoredToken(data.token);
       }
-      window.location.href = "/dashboard";
-      return;
+      // Navegación client-side + directo al panel según role (sin recarga completa)
+      const target = (data.role && ROLE_TARGET[data.role]) || "/dashboard";
+      router.push(target);
     } catch {
       setError("Error inesperado");
     } finally {

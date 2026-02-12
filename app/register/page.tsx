@@ -53,7 +53,9 @@ export default function RegisterPage() {
       if (data.token) {
         setStoredToken(data.token);
       }
-      router.push("/dashboard");
+      // Ir directo al panel según rol (evita /dashboard → redirect, una petición menos)
+      const target = data.role === "BUYER" ? "/dashboard/buyer" : "/dashboard/seller";
+      router.push(target);
     } catch {
       setError("Error inesperado. Inténtalo de nuevo.");
     } finally {

@@ -4,6 +4,7 @@
  * Así la sesión es más fiable (no depende solo de que la cookie llegue bien).
  */
 
+import { cache } from "react";
 import type { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
@@ -104,18 +105,17 @@ export async function getUserIdFromRequest(req: Request): Promise<string | null>
   return session?.userId ?? null;
 }
 
-/** Obtiene el userId si la sesión es válida; si no, null */
+/** Obtiene el userId si la sesión es válida; si no, null. Usa getSessionWithUser cacheado (1 sola consulta por request). */
 export async function getUserIdFromSession(): Promise<string | null> {
-  const token = await getSessionTokenFromCookies();
-  const session = await getSessionFromToken(token ?? undefined);
+  const session = await getSessionWithUser();
   return session?.userId ?? null;
 }
 
-/** Sesión con user incluido; null si no hay sesión válida. Para layouts y páginas. */
-export async function getSessionWithUser() {
+/** Sesión con user incluido; null si no hay sesión válida. Para layouts y páginas. Deduplicada por request (layout + page comparten 1 sola consulta a DB). */
+export const getSessionWithUser = cache(async () => {
   const token = await getSessionTokenFromCookies();
   return getSessionFromToken(token ?? undefined);
-}
+});
 
 /** Escribe la cookie de sesión en una respuesta (login, register, renovación) */
 export function setSessionCookieOnResponse(res: NextResponse, token: string) {

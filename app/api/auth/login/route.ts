@@ -47,12 +47,13 @@ export async function POST(req: Request) {
     }
 
     const normalizedEmail = String(email).toLowerCase().trim();
-    let user: { id: string; passwordHash: string | null; blocked: boolean; blockedUntil: Date | null; provider: string | null } | null = null;
+    let user: { id: string; role: string; passwordHash: string | null; blocked: boolean; blockedUntil: Date | null; provider: string | null } | null = null;
     try {
       user = await prisma.user.findUnique({
         where: { email: normalizedEmail },
         select: {
           id: true,
+          role: true,
           passwordHash: true,
           blocked: true,
           blockedUntil: true,
@@ -119,7 +120,7 @@ export async function POST(req: Request) {
 
     const token = await createSession(user.id);
     return NextResponse.json(
-      { success: true, token },
+      { success: true, token, role: user.role },
       {
         headers: {
           "X-RateLimit-Limit": "10",

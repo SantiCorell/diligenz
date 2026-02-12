@@ -106,8 +106,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 12);
+    // Hash password (10 rounds: buen equilibrio seguridad/rendimiento; 12 era más lento en registro)
+    const passwordHash = await bcrypt.hash(password, 10);
 
     // Create user
     let user: { id: string; role: string };
