@@ -68,7 +68,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
   const breadcrumbItems = [
     { name: "Inicio", url: SITE_URL },
     { name: "Empresas en venta", url: `${SITE_URL}/companies` },
-    ...(sectorLabel ? [{ name: sectorLabel, url: `${SITE_URL}/companies?sector=${sector}` }] : []),
+    ...(sectorLabel ? [{ name: sectorLabel, url: `${SITE_URL}/companies?sector=${sectorSlug}` }] : []),
   ];
   const breadcrumbSchema = getBreadcrumbSchema(breadcrumbItems);
 
