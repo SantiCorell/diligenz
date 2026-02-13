@@ -53,8 +53,8 @@ export default function CompaniesGrid({
   const router = useRouter();
   const pathname = usePathname();
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
-  const [sector, setSector] = useState(sectorSlugFromUrl);
-  const [location, setLocation] = useState(locationFromUrl);
+  const [sector, setSector] = useState(sectorSlugFromUrl ?? "");
+  const [location, setLocation] = useState(locationFromUrl ?? "");
 
   useEffect(() => {
     setSector(sectorSlugFromUrl ?? "");

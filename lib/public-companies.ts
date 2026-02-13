@@ -4,27 +4,22 @@ import { MOCK_COMPANIES } from "@/lib/mock-companies";
 
 const THRESHOLD_REAL_ONLY = 10;
 
-function mapDealToMock(
-  deal: Awaited<ReturnType<typeof prisma.deal.findMany>>[number] & {
-    company: { valuations: { minValue: number; maxValue: number }[] } & Record<string, unknown>;
-  }
-): CompanyMock {
-  const c = deal.company as typeof deal.company & {
-    gmv?: string | null;
-    sellerDescription?: string | null;
-    documentLinks?: DocumentLink[] | null;
-    attachmentsApproved?: boolean;
-    companyType?: string | null;
-    yearsOperating?: number | null;
-    hasReceivedFunding?: boolean | null;
-    website?: string | null;
-  };
+type DealWithCompany = Awaited<
+  ReturnType<
+    typeof prisma.deal.findMany<{
+      include: { company: { include: { valuations: true } } };
+    }>
+  >
+>[number];
+
+function mapDealToMock(deal: DealWithCompany): CompanyMock {
+  const c = deal.company;
   const val = c.valuations?.[0];
   const revenueStr = val
     ? `${(val.minValue / 1_000_000).toFixed(1)}–${(val.maxValue / 1_000_000).toFixed(1)}M €`
     : "—";
-  const ebitdaStr = (c as { ebitda?: string | null }).ebitda ?? "—";
-  const docLinks = c.documentLinks;
+  const ebitdaStr = c.ebitda ?? "—";
+  const docLinks = (c as { documentLinks?: DocumentLink[] | null }).documentLinks;
   return {
     id: c.id,
     name: c.name,
@@ -32,16 +27,16 @@ function mapDealToMock(
     location: c.location,
     revenue: revenueStr,
     ebitda: ebitdaStr,
-    gmv: c.gmv ?? null,
+    gmv: (c as { gmv?: string | null }).gmv ?? null,
     employees: c.employees ?? null,
     description: c.description ?? "Sin descripción.",
-    sellerDescription: c.sellerDescription ?? null,
+    sellerDescription: (c as { sellerDescription?: string | null }).sellerDescription ?? null,
     documentLinks: Array.isArray(docLinks) ? docLinks : null,
-    attachmentsApproved: c.attachmentsApproved ?? false,
-    companyType: c.companyType ?? null,
-    yearsOperating: c.yearsOperating ?? null,
-    hasReceivedFunding: c.hasReceivedFunding ?? null,
-    website: c.website ?? null,
+    attachmentsApproved: (c as { attachmentsApproved?: boolean }).attachmentsApproved ?? false,
+    companyType: (c as { companyType?: string | null }).companyType ?? null,
+    yearsOperating: (c as { yearsOperating?: number | null }).yearsOperating ?? null,
+    hasReceivedFunding: (c as { hasReceivedFunding?: boolean | null }).hasReceivedFunding ?? null,
+    website: (c as { website?: string | null }).website ?? null,
   };
 }
 
