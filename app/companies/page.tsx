@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ShellLayout from "@/components/layout/ShellLayout";
 import { getUserIdFromSession } from "@/lib/session";
 import CompaniesGrid from "@/components/companies/CompaniesGrid";
-import { getPublicCompanies } from "@/lib/public-companies";
+import { getPublicCompanies, getDistinctLocations } from "@/lib/public-companies";
 import { SITE_URL, SITE_NAME, getBreadcrumbSchema } from "@/lib/seo";
 
 const SECTOR_LABELS: Record<string, string> = {
@@ -15,7 +15,7 @@ const SECTOR_LABELS: Record<string, string> = {
 };
 
 type Props = {
-  searchParams: Promise<{ sector?: string }>;
+  searchParams: Promise<{ sector?: string; location?: string; page?: string }>;
 };
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
@@ -46,10 +46,21 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function CompaniesPage({ searchParams }: Props) {
   const params = await searchParams;
-  const sector = params.sector;
-  const sectorLabel = sector ? SECTOR_LABELS[sector] : null;
+  const sectorSlug = params.sector;
+  const sectorLabel = sectorSlug ? SECTOR_LABELS[sectorSlug] : null;
+  const location = params.location ?? "";
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
-  const { companies, useOnlyReal } = await getPublicCompanies();
+  const [result, locations] = await Promise.all([
+    getPublicCompanies({
+      sector: sectorLabel ?? undefined,
+      location: location || undefined,
+      page,
+      pageSize: 12,
+    }),
+    getDistinctLocations(),
+  ]);
+  const { companies, useOnlyReal, total, totalPages } = result;
 
   const userId = await getUserIdFromSession();
   const isLoggedIn = Boolean(userId);
@@ -90,6 +101,12 @@ export default async function CompaniesPage({ searchParams }: Props) {
             companies={companies}
             isLoggedIn={isLoggedIn}
             sectorFromUrl={sectorLabel ?? undefined}
+            locationFromUrl={location || undefined}
+            locations={locations}
+            total={total}
+            totalPages={totalPages}
+            currentPage={page}
+            sectorSlugFromUrl={sectorSlug ?? undefined}
           />
         </div>
       </div>

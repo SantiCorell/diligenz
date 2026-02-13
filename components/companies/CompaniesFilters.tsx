@@ -5,6 +5,7 @@ type Props = {
   location: string;
   onSectorChange: (v: string) => void;
   onLocationChange: (v: string) => void;
+  onClearFilters?: () => void;
   sectors: { value: string; label: string }[];
   locations: string[];
 };
@@ -14,6 +15,7 @@ export default function CompaniesFilters({
   location,
   onSectorChange,
   onLocationChange,
+  onClearFilters,
   sectors,
   locations,
 }: Props) {
@@ -46,10 +48,7 @@ export default function CompaniesFilters({
       {(sector || location) && (
         <button
           type="button"
-          onClick={() => {
-            onSectorChange("");
-            onLocationChange("");
-          }}
+          onClick={() => (onClearFilters ? onClearFilters() : (onSectorChange(""), onLocationChange("")))}
           className="text-sm text-[var(--brand-primary)] hover:underline"
         >
           Limpiar filtros

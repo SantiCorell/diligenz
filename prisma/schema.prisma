@@ -289,6 +289,7 @@ model ContactRequest {
   subject       String?  // motivo de consulta (Valoración, Due diligence, etc.)
   message       String?  // texto libre
   createdAt     DateTime @default(now())
+  category      String?  // "activo" | "pruebas" | "archivado" | null
 }
 
 /// Leads del formulario "Valora tu empresa": datos de contacto + datos empresa + valoración orientativa (CRM).
@@ -317,4 +318,5 @@ model ValuationLead {
   breakevenExpectedYear Int?
   hasReceivedFunding  Boolean?
   website             String?  // URL de la página web
+  category            String?  // "activo" | "pruebas" | "archivado" | null
 }

@@ -28,3 +28,5 @@ ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "arr" INTEGER;
 ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "breakevenExpectedYear" INTEGER;
 ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "hasReceivedFunding" BOOLEAN;
 ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "website" TEXT;
+ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "category" TEXT;
+ALTER TABLE "ContactRequest" ADD COLUMN IF NOT EXISTS "category" TEXT;

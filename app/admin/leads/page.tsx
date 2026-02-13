@@ -15,6 +15,9 @@ import {
   Globe,
 } from "lucide-react";
 import type { ValuationLead, ContactRequest } from "@prisma/client";
+import { Suspense } from "react";
+import LeadsFiltersSort from "@/components/admin/LeadsFiltersSort";
+import LeadCardActions from "@/components/admin/LeadCardActions";
 
 type LeadRow =
   | { kind: "valuation"; data: ValuationLead }
@@ -24,28 +27,83 @@ function getLeadDate(lead: LeadRow): Date {
   return new Date(lead.data.createdAt);
 }
 
-export default async function AdminLeadsPage() {
+function sortLeads(leads: LeadRow[], orden: string): LeadRow[] {
+  const arr = [...leads];
+  switch (orden) {
+    case "fecha_asc":
+      return arr.sort((a, b) => getLeadDate(a).getTime() - getLeadDate(b).getTime());
+    case "fecha_desc":
+      return arr.sort((a, b) => getLeadDate(b).getTime() - getLeadDate(a).getTime());
+    case "valoracion_desc":
+      return arr.sort((a, b) => {
+        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(b.data.createdAt).getTime() - getLeadDate(a.data.createdAt).getTime();
+        if (a.kind !== "valuation") return 1;
+        if (b.kind !== "valuation") return -1;
+        return (b.data as ValuationLead).maxValue - (a.data as ValuationLead).maxValue;
+      });
+    case "valoracion_asc":
+      return arr.sort((a, b) => {
+        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(a.data.createdAt).getTime() - getLeadDate(b.data.createdAt).getTime();
+        if (a.kind !== "valuation") return 1;
+        if (b.kind !== "valuation") return -1;
+        return (a.data as ValuationLead).minValue - (b.data as ValuationLead).minValue;
+      });
+    case "facturacion_desc":
+      return arr.sort((a, b) => {
+        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(b.data.createdAt).getTime() - getLeadDate(a.data.createdAt).getTime();
+        if (a.kind !== "valuation") return 1;
+        if (b.kind !== "valuation") return -1;
+        return (b.data as ValuationLead).revenue - (a.data as ValuationLead).revenue;
+      });
+    case "facturacion_asc":
+      return arr.sort((a, b) => {
+        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(a.data.createdAt).getTime() - getLeadDate(b.data.createdAt).getTime();
+        if (a.kind !== "valuation") return 1;
+        if (b.kind !== "valuation") return -1;
+        return (a.data as ValuationLead).revenue - (b.data as ValuationLead).revenue;
+      });
+    default:
+      return arr.sort((a, b) => getLeadDate(b).getTime() - getLeadDate(a).getTime());
+  }
+}
+
+export default async function AdminLeadsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ categoria?: string; tipo?: string; orden?: string }>;
+}) {
   const session = await getSessionWithUser();
   if (!session) redirect("/login");
   if (session.user.role !== "ADMIN") redirect("/login");
 
+  const params = await searchParams;
+  const categoria = params.categoria && ["activo", "pruebas", "archivado"].includes(params.categoria) ? params.categoria : undefined;
+  const tipo = params.tipo === "valoracion" || params.tipo === "contacto" ? params.tipo : undefined;
+  const orden = params.orden ?? "fecha_desc";
+
+  const whereValuation = categoria ? { category: categoria } : {};
+  const whereContact = categoria ? { category: categoria } : {};
+
   const [valuationLeads, contactRequests] = await Promise.all([
-    prisma.valuationLead.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.contactRequest.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.valuationLead.findMany({ where: whereValuation, orderBy: { createdAt: "desc" } }),
+    prisma.contactRequest.findMany({ where: whereContact, orderBy: { createdAt: "desc" } }),
   ]);
 
-  const allLeads: LeadRow[] = [
-    ...valuationLeads.map((data) => ({ kind: "valuation" as const, data })),
-    ...contactRequests.map((data) => ({ kind: "contact" as const, data })),
-  ].sort((a, b) => getLeadDate(b).getTime() - getLeadDate(a).getTime());
+  let allLeads: LeadRow[] = [
+    ...(tipo !== "contacto" ? valuationLeads.map((data) => ({ kind: "valuation" as const, data })) : []),
+    ...(tipo !== "valoracion" ? contactRequests.map((data) => ({ kind: "contact" as const, data })) : []),
+  ];
+  allLeads = sortLeads(allLeads, orden);
 
   const totalLeads = allLeads.length;
-  const countValuation = valuationLeads.length;
-  const countContact = contactRequests.length;
+  const countValuation = allLeads.filter((l) => l.kind === "valuation").length;
+  const countContact = allLeads.filter((l) => l.kind === "contact").length;
+
+  const ordenLabel = orden === "fecha_desc" ? "más reciente primero" : orden === "fecha_asc" ? "más antigua primero" : orden.startsWith("valoracion") ? "por valoración" : orden.startsWith("facturacion") ? "por facturación" : "por fecha";
 
   return (
     <main className="max-w-6xl mx-auto">
-      <div className="mb-8">
+      <div className="mb-6">
         <span className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)]/80 mb-2">
           CRM
         </span>
@@ -57,12 +115,16 @@ export default async function AdminLeadsPage() {
           &quot;Contactar&quot;. Aquí aparecen todos para dar seguimiento.
         </p>
         <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
-          {totalLeads} lead{totalLeads !== 1 ? "s" : ""} en total
+          {totalLeads} lead{totalLeads !== 1 ? "s" : ""} mostrados
           {totalLeads > 0 &&
             ` (${countValuation} valoración${countValuation !== 1 ? "es" : ""}, ${countContact} contacto${countContact !== 1 ? "s" : ""})`}
-          . Ordenados del más reciente al más antiguo.
+          . Orden: {ordenLabel}.
         </p>
       </div>
+
+      <Suspense fallback={<div className="h-20 rounded-xl bg-white border border-[var(--brand-primary)]/10 animate-pulse mb-6" />}>
+        <LeadsFiltersSort />
+      </Suspense>
 
       {allLeads.length === 0 ? (
         <div className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-12 text-center">
@@ -105,8 +167,24 @@ export default async function AdminLeadsPage() {
 }
 
 function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
+  const categoryLabel = lead.category === "pruebas" ? "Pruebas" : lead.category === "archivado" ? "Archivado" : lead.category === "activo" ? "Activo" : null;
   return (
     <article className="rounded-xl sm:rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md overflow-hidden">
+      {/* Barra de acciones: categoría + eliminar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 md:px-6 py-3 border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)]/50">
+        <div className="flex items-center gap-2 flex-wrap">
+          {categoryLabel && (
+            <span className={`rounded-lg px-2.5 py-1 text-xs font-medium ${
+              lead.category === "pruebas" ? "bg-amber-500/20 text-amber-800" :
+              lead.category === "archivado" ? "bg-slate-400/20 text-slate-700" :
+              "bg-emerald-500/20 text-emerald-800"
+            }`}>
+              {categoryLabel}
+            </span>
+          )}
+        </div>
+        <LeadCardActions leadId={lead.id} kind="valuation" category={lead.category} />
+      </div>
       {/* Móvil: bloques bien separados y táctiles. Escritorio: fila con wrap */}
       <div className="p-4 sm:p-5 md:p-6">
         {/* Tipo + Rango: en móvil arriba como cabecera de la tarjeta */}
@@ -220,8 +298,24 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
 
 function ContactLeadCard({ lead }: { lead: ContactRequest }) {
   const sourceLabel = lead.source === "servicios" ? "Servicios" : "Contacto";
+  const categoryLabel = lead.category === "pruebas" ? "Pruebas" : lead.category === "archivado" ? "Archivado" : lead.category === "activo" ? "Activo" : null;
   return (
     <article className="rounded-xl sm:rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md overflow-hidden">
+      {/* Barra de acciones: categoría + eliminar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 md:px-6 py-3 border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)]/50">
+        <div className="flex items-center gap-2 flex-wrap">
+          {categoryLabel && (
+            <span className={`rounded-lg px-2.5 py-1 text-xs font-medium ${
+              lead.category === "pruebas" ? "bg-amber-500/20 text-amber-800" :
+              lead.category === "archivado" ? "bg-slate-400/20 text-slate-700" :
+              "bg-emerald-500/20 text-emerald-800"
+            }`}>
+              {categoryLabel}
+            </span>
+          )}
+        </div>
+        <LeadCardActions leadId={lead.id} kind="contact" category={lead.category} />
+      </div>
       <div className="p-4 sm:p-5 md:p-6">
         {/* Badges arriba en móvil */}
         <div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b border-[var(--brand-primary)]/10">
