@@ -36,28 +36,28 @@ function sortLeads(leads: LeadRow[], orden: string): LeadRow[] {
       return arr.sort((a, b) => getLeadDate(b).getTime() - getLeadDate(a).getTime());
     case "valoracion_desc":
       return arr.sort((a, b) => {
-        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(b.data.createdAt).getTime() - getLeadDate(a.data.createdAt).getTime();
+        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(b).getTime() - getLeadDate(a).getTime();
         if (a.kind !== "valuation") return 1;
         if (b.kind !== "valuation") return -1;
         return (b.data as ValuationLead).maxValue - (a.data as ValuationLead).maxValue;
       });
     case "valoracion_asc":
       return arr.sort((a, b) => {
-        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(a.data.createdAt).getTime() - getLeadDate(b.data.createdAt).getTime();
+        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(a).getTime() - getLeadDate(b).getTime();
         if (a.kind !== "valuation") return 1;
         if (b.kind !== "valuation") return -1;
         return (a.data as ValuationLead).minValue - (b.data as ValuationLead).minValue;
       });
     case "facturacion_desc":
       return arr.sort((a, b) => {
-        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(b.data.createdAt).getTime() - getLeadDate(a.data.createdAt).getTime();
+        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(b).getTime() - getLeadDate(a).getTime();
         if (a.kind !== "valuation") return 1;
         if (b.kind !== "valuation") return -1;
         return (b.data as ValuationLead).revenue - (a.data as ValuationLead).revenue;
       });
     case "facturacion_asc":
       return arr.sort((a, b) => {
-        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(a.data.createdAt).getTime() - getLeadDate(b.data.createdAt).getTime();
+        if (a.kind !== "valuation" && b.kind !== "valuation") return getLeadDate(a).getTime() - getLeadDate(b).getTime();
         if (a.kind !== "valuation") return 1;
         if (b.kind !== "valuation") return -1;
         return (a.data as ValuationLead).revenue - (b.data as ValuationLead).revenue;
