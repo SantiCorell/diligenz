@@ -8,7 +8,7 @@ import type { DocumentType } from "@prisma/client";
 
 function entityTypeLabel(t: string | null | undefined) {
   if (t === "EMPRESA") return "Empresa";
-  if (t === "AUTONOMO") return "Autónomo";
+  if (t === "AUTONOMO") return "Profesional / Autónomo";
   if (t === "STARTUP") return "Startup (histórico)";
   if (t === "MARKETPLACE") return "Marketplace (histórico)";
   return "—";
@@ -351,7 +351,7 @@ export default async function AdminCompanyDetail({
               className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
             >
               <option value="EMPRESA">Empresa</option>
-              <option value="AUTONOMO">Autónomo</option>
+              <option value="AUTONOMO">Profesional / Autónomo</option>
             </select>
             {(company.companyType === "STARTUP" || company.companyType === "MARKETPLACE") && (
               <p className="mt-1 text-xs text-amber-700">

@@ -153,6 +153,7 @@ export function computeValuationRange(body: {
   const typeUpper = companyType ? String(companyType).toUpperCase() : null;
 
   const mult = resolveMults(sector);
+  // Solo «startup» histórico prioriza ingresos/ARR sobre EBITDA; empresa y autónomo usan EBITDA si es positivo.
   const useEbitda = ebitda != null && ebitda > 0 && typeUpper !== "STARTUP";
   const base = useEbitda ? ebitda : arr != null && arr > 0 ? arr : revenue;
   const [multipleMin, multipleMax] = useEbitda

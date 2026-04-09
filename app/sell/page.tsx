@@ -15,18 +15,7 @@ type ValuationResult = {
 const COMPANY_TYPES = [
   { value: "", label: "No especificado" },
   { value: "EMPRESA", label: "Empresa" },
-  { value: "STARTUP", label: "Startup" },
-  { value: "MARKETPLACE", label: "Marketplace" },
-];
-
-const STAGES = [
-  { value: "", label: "No especificado" },
-  { value: "idea", label: "Idea / pre-producto" },
-  { value: "pre_seed", label: "Pre-seed" },
-  { value: "seed", label: "Seed" },
-  { value: "serie_a", label: "Serie A" },
-  { value: "serie_b", label: "Serie B" },
-  { value: "growth", label: "Growth" },
+  { value: "AUTONOMO", label: "Profesional / Autónomo" },
 ];
 
 export default function SellPage() {
@@ -43,10 +32,7 @@ export default function SellPage() {
   const [companyType, setCompanyType] = useState<string>("");
   const [yearsOperating, setYearsOperating] = useState<string>("");
   const [revenueGrowthPercent, setRevenueGrowthPercent] = useState<string>("");
-  const [stage, setStage] = useState<string>("");
-  const [takeRatePercent, setTakeRatePercent] = useState<string>("");
   const [arr, setArr] = useState<string>("");
-  const [hasReceivedFunding, setHasReceivedFunding] = useState<boolean | null>(null);
   const [website, setWebsite] = useState<string>("");
   const [description, setDescription] = useState("");
   const [showOptional, setShowOptional] = useState(false);
@@ -107,10 +93,7 @@ export default function SellPage() {
           companyType: companyType || undefined,
           yearsOperating: yearsOperating === "" ? undefined : Number(yearsOperating),
           revenueGrowthPercent: revenueGrowthPercent === "" ? undefined : Number(revenueGrowthPercent),
-          stage: stage || undefined,
-          takeRatePercent: takeRatePercent === "" ? undefined : Number(takeRatePercent),
           arr: arr === "" ? undefined : Number(arr),
-          hasReceivedFunding: hasReceivedFunding === null ? undefined : hasReceivedFunding,
           website: website.trim() || undefined,
         }),
       });
@@ -343,46 +326,6 @@ export default function SellPage() {
                       </p>
                     </div>
                   </div>
-
-                  {/* Campos condicionales por tipo (siempre visibles si aplican) */}
-                  {companyType === "STARTUP" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-[var(--brand-primary)]/10">
-                      <div>
-                        <label htmlFor="stage" className={labelClass}>Etapa {optionalBadge}</label>
-                        <select id="stage" className={inputClass} value={stage} onChange={(e) => setStage(e.target.value)}>
-                          {STAGES.map((st) => <option key={st.value} value={st.value}>{st.label}</option>)}
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-3 rounded-xl border border-[var(--brand-primary)]/15 bg-white p-4 self-end">
-                        <input
-                          type="checkbox"
-                          id="hasReceivedFunding"
-                          checked={hasReceivedFunding === true}
-                          onChange={(e) => setHasReceivedFunding(e.target.checked)}
-                          className="h-4 w-4 rounded border-[var(--brand-primary)]/30 text-[var(--brand-primary)]"
-                        />
-                        <label htmlFor="hasReceivedFunding" className="text-sm font-medium text-[var(--foreground)]">
-                          Ha recibido financiación
-                        </label>
-                      </div>
-                    </div>
-                  )}
-                  {companyType === "MARKETPLACE" && (
-                    <div className="mt-4 pt-4 border-t border-[var(--brand-primary)]/10">
-                      <label htmlFor="takeRatePercent" className={labelClass}>Take rate / comisión (%) {optionalBadge}</label>
-                      <input
-                        id="takeRatePercent"
-                        type="number"
-                        min={0}
-                        max={100}
-                        step={0.1}
-                        className={`${inputClass} max-w-[8rem]`}
-                        placeholder="Ej. 15"
-                        value={takeRatePercent}
-                        onChange={(e) => setTakeRatePercent(e.target.value)}
-                      />
-                    </div>
-                  )}
                 </div>
 
                 {/* Bloque opcional colapsable — botón estilo Dili */}

@@ -97,7 +97,15 @@ export async function POST(req: Request) {
     const numTakeRate = takeRatePercent != null && takeRatePercent !== "" ? Number(takeRatePercent) : null;
     const numArr = arr != null && arr !== "" ? Number(arr) : null;
     const numBreakevenYear = breakevenExpectedYear != null && breakevenExpectedYear !== "" ? Number(breakevenExpectedYear) : null;
-    const companyTypeStr = companyType && String(companyType).trim() ? String(companyType).trim().toUpperCase() : null;
+    const companyTypeRaw =
+      companyType && String(companyType).trim() ? String(companyType).trim().toUpperCase() : null;
+    const companyTypeStr =
+      companyTypeRaw === "EMPRESA" ||
+      companyTypeRaw === "AUTONOMO" ||
+      companyTypeRaw === "STARTUP" ||
+      companyTypeRaw === "MARKETPLACE"
+        ? companyTypeRaw
+        : null;
     const stageStr = stage && String(stage).trim() ? String(stage).trim() : null;
     const hasFunding = hasReceivedFunding === true || hasReceivedFunding === "true";
     const websiteStr = website != null && String(website).trim() !== "" ? String(website).trim() : null;

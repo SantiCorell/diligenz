@@ -122,7 +122,7 @@ enum RequestStatus {
  * COMPANY
  * =====================
  */
-/// Tipo de entidad en UI: EMPRESA | AUTONOMO (histórico: STARTUP, MARKETPLACE). Null = legacy.
+  /// Tipo de entidad: EMPRESA | AUTONOMO (profesional/autónomo). Histórico: STARTUP, MARKETPLACE.
 model Company {
   id          String        @id @default(cuid())
   name        String
