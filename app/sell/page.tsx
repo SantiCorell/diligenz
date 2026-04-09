@@ -5,23 +5,12 @@ import Link from "next/link";
 import ShellLayout from "@/components/layout/ShellLayout";
 import { Mail, Phone, Building2, MapPin, BarChart3, Users, FileText, Globe, ChevronDown, ChevronUp, TrendingUp } from "lucide-react";
 import { authFetch } from "@/lib/auth-client";
+import { VALUATION_SECTOR_OPTIONS } from "@/lib/valuation-sectors";
 
 type ValuationResult = {
   minValue: number;
   maxValue: number;
 };
-
-const SECTORS = [
-  { value: "", label: "Selecciona un sector" },
-  { value: "tecnologia", label: "Tecnología" },
-  { value: "salud", label: "Salud" },
-  { value: "industria", label: "Industria" },
-  { value: "consumo", label: "Consumo y retail" },
-  { value: "hosteleria", label: "Hostelería" },
-  { value: "servicios", label: "Servicios" },
-  { value: "energia", label: "Energía" },
-  { value: "logistica", label: "Logística" },
-];
 
 const COMPANY_TYPES = [
   { value: "", label: "No especificado" },
@@ -45,6 +34,7 @@ export default function SellPage() {
   const [phone, setPhone] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [sector, setSector] = useState("");
+  const [sectorSubcategory, setSectorSubcategory] = useState("");
   const [location, setLocation] = useState("");
   const [revenue, setRevenue] = useState<string>("");
   const [ebitda, setEbitda] = useState<string>("");
@@ -108,6 +98,7 @@ export default function SellPage() {
           companyName: companyName.trim() || undefined,
           description: description.trim() || undefined,
           sector,
+          sectorSubcategory: sectorSubcategory.trim() || undefined,
           location,
           revenue: Number(revenue),
           ebitda: ebitda === "" ? null : Number(ebitda),
@@ -155,7 +146,8 @@ export default function SellPage() {
               Valora tu empresa en minutos
             </h1>
             <p className="mt-2 sm:mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-85 leading-relaxed max-w-xl">
-              Rango orientativo según múltiplos de mercado. Te lo enviamos por correo — confidencial y sin compromiso.
+              Rango orientativo afinado por sector y datos que indiques (banda más estrecha que una estimación
+              genérica). Confidencial y sin compromiso.
             </p>
           </div>
         </section>
@@ -268,10 +260,29 @@ export default function SellPage() {
                         value={sector}
                         onChange={(e) => setSector(e.target.value)}
                       >
-                        {SECTORS.map((s) => (
-                          <option key={s.value} value={s.value} disabled={s.value === ""}>{s.label}</option>
+                        {VALUATION_SECTOR_OPTIONS.map((s) => (
+                          <option key={s.value || "empty"} value={s.value} disabled={s.value === ""}>
+                            {s.label}
+                          </option>
                         ))}
                       </select>
+                    </div>
+                    <div>
+                      <label htmlFor="sectorSubcategory" className={labelClass}>
+                        Subcategoría o nicho {optionalBadge}
+                      </label>
+                      <input
+                        id="sectorSubcategory"
+                        type="text"
+                        className={inputClass}
+                        maxLength={280}
+                        placeholder="Ej. software dental, franquicias de cafetería, logística frigorífica…"
+                        value={sectorSubcategory}
+                        onChange={(e) => setSectorSubcategory(e.target.value)}
+                      />
+                      <p className="mt-1 text-xs text-[var(--foreground)]/60">
+                        Texto libre para precisar el segmento; ayuda al equipo a contextualizar el proyecto.
+                      </p>
                     </div>
                     <div>
                       <label htmlFor="location" className={labelClass}>Ubicación <span className="text-red-500">*</span></label>
@@ -502,7 +513,8 @@ export default function SellPage() {
                   Valoración orientativa
                 </h2>
                 <p className="mt-2 text-[var(--foreground)]/80 text-sm">
-                  Basada en múltiplos de mercado y los datos indicados. Es <strong>orientativa</strong> y no sustituye una valoración profesional.
+                  Banda relativamente estrecha según sector y cifras aportadas (menos dispersión que un rango
+                  genérico amplio). Es <strong>orientativa</strong> y no sustituye una valoración profesional.
                 </p>
                 <div className="mt-4 sm:mt-6 rounded-xl bg-white border-2 border-[var(--brand-primary)]/15 p-4 sm:p-6">
                   <p className="text-sm font-semibold text-[var(--brand-primary)]/90 mb-1">

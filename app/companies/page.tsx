@@ -4,15 +4,9 @@ import { getUserIdFromSession } from "@/lib/session";
 import CompaniesGrid from "@/components/companies/CompaniesGrid";
 import { getPublicCompanies, getDistinctLocations } from "@/lib/public-companies";
 import { SITE_URL, SITE_NAME, getBreadcrumbSchema } from "@/lib/seo";
+import { catalogSectorLabelsRecord } from "@/lib/valuation-sectors";
 
-const SECTOR_LABELS: Record<string, string> = {
-  salud: "Salud",
-  tecnologia: "Tecnología",
-  industria: "Industria",
-  consumo: "Consumo",
-  energia: "Energía",
-  logistica: "Logística",
-};
+const SECTOR_LABELS = catalogSectorLabelsRecord();
 
 type Props = {
   searchParams: Promise<{ sector?: string; location?: string; page?: string }>;

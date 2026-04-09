@@ -28,11 +28,9 @@ export default function DashboardShell({
   const [collapsed, setCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Profesional: mismo menú que comprador. Admin viendo como comprador/vendedor: simular ese rol.
+  // Admin viendo como comprador/vendedor: simular ese rol. Profesional: menú dual (inversor + vendedor) en el nav.
   const effectiveRole: "BUYER" | "SELLER" | "ADMIN" =
-    role === "PROFESSIONAL"
-      ? "BUYER"
-      : role === "ADMIN" && pathnameIsBuyerPanel(pathname)
+    role === "ADMIN" && pathnameIsBuyerPanel(pathname)
       ? "BUYER"
       : role === "ADMIN" && pathname.startsWith("/dashboard/seller")
       ? "SELLER"
@@ -40,7 +38,9 @@ export default function DashboardShell({
       ? "ADMIN"
       : role === "BUYER"
       ? "BUYER"
-      : "SELLER";
+      : role === "SELLER"
+      ? "SELLER"
+      : "BUYER";
 
   const showAdminNavInUserPanel = role === "ADMIN" && effectiveRole !== "ADMIN";
 
@@ -98,18 +98,7 @@ export default function DashboardShell({
       </div>
 
       <nav className={`${expanded ? "mt-4 px-3" : "mt-2 px-2"} space-y-1 text-sm flex-1`}>
-        <NavItem
-          href={effectiveRole === "ADMIN" ? "/admin" : `/dashboard/${effectiveRole.toLowerCase()}`}
-          label="Dashboard"
-          active={
-            effectiveRole === "ADMIN"
-              ? pathname.startsWith("/admin")
-              : pathname === `/dashboard/${effectiveRole.toLowerCase()}`
-          }
-          collapsed={!expanded}
-          onNavigate={() => setMobileSidebarOpen(false)}
-        />
-        {effectiveRole === "BUYER" && (
+        {role === "PROFESSIONAL" ? (
           <>
             <NavItem
               href="/dashboard/profile"
@@ -118,9 +107,21 @@ export default function DashboardShell({
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
+            {expanded && (
+              <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-wide text-white/45">
+                Como inversor
+              </p>
+            )}
+            <NavItem
+              href="/dashboard/buyer"
+              label="Panel inversor"
+              active={pathname === "/dashboard/buyer"}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
             <NavItem
               href="/dashboard/buyer/documents"
-              label="Mis documentos"
+              label="Documentos (inversor)"
               active={pathname.startsWith("/dashboard/buyer/documents")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -138,36 +139,30 @@ export default function DashboardShell({
             />
             <NavItem
               href="/dashboard/mis-empresas"
-              label="Mis empresas"
+              label="Solicitudes e intereses"
               active={pathname.startsWith("/dashboard/mis-empresas")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
-          </>
-        )}
-        {effectiveRole === "SELLER" && (
-          <>
+            {expanded && (
+              <p className="px-3 pt-3 text-[10px] font-semibold uppercase tracking-wide text-white/45">
+                Como vendedor
+              </p>
+            )}
             <NavItem
-              href="/dashboard/profile"
-              label="Mi perfil"
-              active={pathname.startsWith("/dashboard/profile")}
+              href="/dashboard/seller"
+              label="Mis empresas en venta"
+              active={
+                pathname.startsWith("/dashboard/seller") &&
+                !pathname.startsWith("/dashboard/seller/documents")
+              }
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
             <NavItem
               href="/dashboard/seller/documents"
-              label="Mis documentos"
+              label="Documentos (vendedor)"
               active={pathname.startsWith("/dashboard/seller/documents")}
-              collapsed={!expanded}
-              onNavigate={() => setMobileSidebarOpen(false)}
-            />
-            <NavItem
-              href="/dashboard/seller"
-              label="Mis empresas"
-              active={
-                pathname.startsWith("/dashboard/seller") &&
-                !pathname.startsWith("/dashboard/seller/documents")
-              }
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
@@ -178,6 +173,91 @@ export default function DashboardShell({
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
+          </>
+        ) : (
+          <>
+            <NavItem
+              href={effectiveRole === "ADMIN" ? "/admin" : `/dashboard/${effectiveRole.toLowerCase()}`}
+              label="Dashboard"
+              active={
+                effectiveRole === "ADMIN"
+                  ? pathname.startsWith("/admin")
+                  : pathname === `/dashboard/${effectiveRole.toLowerCase()}`
+              }
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            {effectiveRole === "BUYER" && (
+              <>
+                <NavItem
+                  href="/dashboard/profile"
+                  label="Mi perfil"
+                  active={pathname.startsWith("/dashboard/profile")}
+                  collapsed={!expanded}
+                  onNavigate={() => setMobileSidebarOpen(false)}
+                />
+                <NavItem
+                  href="/dashboard/buyer/documents"
+                  label="Mis documentos"
+                  active={pathname.startsWith("/dashboard/buyer/documents")}
+                  collapsed={!expanded}
+                  onNavigate={() => setMobileSidebarOpen(false)}
+                />
+                <NavItem
+                  href="/companies"
+                  label="Explorar empresas"
+                  active={
+                    pathname === "/companies" ||
+                    (pathname.startsWith("/companies/") &&
+                      !pathname.startsWith("/companies/mi-interes"))
+                  }
+                  collapsed={!expanded}
+                  onNavigate={() => setMobileSidebarOpen(false)}
+                />
+                <NavItem
+                  href="/dashboard/mis-empresas"
+                  label="Mis empresas"
+                  active={pathname.startsWith("/dashboard/mis-empresas")}
+                  collapsed={!expanded}
+                  onNavigate={() => setMobileSidebarOpen(false)}
+                />
+              </>
+            )}
+            {effectiveRole === "SELLER" && (
+              <>
+                <NavItem
+                  href="/dashboard/profile"
+                  label="Mi perfil"
+                  active={pathname.startsWith("/dashboard/profile")}
+                  collapsed={!expanded}
+                  onNavigate={() => setMobileSidebarOpen(false)}
+                />
+                <NavItem
+                  href="/dashboard/seller/documents"
+                  label="Mis documentos"
+                  active={pathname.startsWith("/dashboard/seller/documents")}
+                  collapsed={!expanded}
+                  onNavigate={() => setMobileSidebarOpen(false)}
+                />
+                <NavItem
+                  href="/dashboard/seller"
+                  label="Mis empresas"
+                  active={
+                    pathname.startsWith("/dashboard/seller") &&
+                    !pathname.startsWith("/dashboard/seller/documents")
+                  }
+                  collapsed={!expanded}
+                  onNavigate={() => setMobileSidebarOpen(false)}
+                />
+                <NavItem
+                  href="/sell"
+                  label="Valorar empresa"
+                  active={pathname.startsWith("/sell")}
+                  collapsed={!expanded}
+                  onNavigate={() => setMobileSidebarOpen(false)}
+                />
+              </>
+            )}
           </>
         )}
         {showAdminNavInUserPanel && (

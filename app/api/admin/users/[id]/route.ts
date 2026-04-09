@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { UserAccountStatus } from "@prisma/client";
+import type { UserAccountStatus, UserRole } from "@prisma/client";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 
 type Params = { params: Promise<{ id: string }> };
 
 const STATUSES: UserAccountStatus[] = ["PENDING", "IN_REVIEW", "ACTIVE", "REJECTED"];
+const ASSIGNABLE_ROLES: UserRole[] = ["ADMIN", "BUYER", "SELLER", "PROFESSIONAL"];
 
 type PatchBody = {
   emailVerified?: unknown;
@@ -13,6 +14,7 @@ type PatchBody = {
   dniVerified?: unknown;
   profileVerifiedByAdmin?: unknown;
   accountStatus?: unknown;
+  role?: unknown;
 };
 
 /**
@@ -37,6 +39,7 @@ export async function PATCH(req: Request, { params }: Params) {
     dniVerified?: boolean;
     profileVerifiedByAdmin?: boolean;
     accountStatus?: UserAccountStatus;
+    role?: UserRole;
   } = {};
 
   if (typeof body.emailVerified === "boolean") data.emailVerified = body.emailVerified;
@@ -52,11 +55,32 @@ export async function PATCH(req: Request, { params }: Params) {
     data.accountStatus = body.accountStatus as UserAccountStatus;
   }
 
+  if (typeof body.role === "string" && ASSIGNABLE_ROLES.includes(body.role as UserRole)) {
+    const newRole = body.role as UserRole;
+    const target = await prisma.user.findFirst({
+      where: { id: userId, deletedAt: null },
+      select: { role: true },
+    });
+    if (!target) {
+      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    }
+    if (target.role === "ADMIN" && newRole !== "ADMIN") {
+      const admins = await prisma.user.count({ where: { role: "ADMIN", deletedAt: null } });
+      if (admins <= 1) {
+        return NextResponse.json(
+          { error: "No se puede quitar el rol Admin al único administrador activo." },
+          { status: 400 }
+        );
+      }
+    }
+    data.role = newRole;
+  }
+
   if (Object.keys(data).length === 0) {
     return NextResponse.json(
       {
         error:
-          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, accountStatus",
+          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, accountStatus, role",
       },
       { status: 400 }
     );
@@ -83,6 +107,7 @@ export async function PATCH(req: Request, { params }: Params) {
         profileVerifiedByAdmin: true,
         phone: true,
         accountStatus: true,
+        role: true,
       },
     });
     return NextResponse.json({ user });

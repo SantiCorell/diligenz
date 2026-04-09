@@ -6,17 +6,8 @@ import CompanyCard from "./CompanyCard";
 import CompaniesFilters from "./CompaniesFilters";
 import RegisterModal from "@/components/auth/RegisterModal";
 import type { CompanyMock } from "@/lib/mock-companies";
+import { CATALOG_SECTOR_OPTIONS } from "@/lib/valuation-sectors";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-const SECTOR_OPTIONS = [
-  { value: "", label: "Todos los sectores" },
-  { value: "salud", label: "Salud" },
-  { value: "tecnologia", label: "Tecnología" },
-  { value: "industria", label: "Industria" },
-  { value: "consumo", label: "Consumo" },
-  { value: "energia", label: "Energía" },
-  { value: "logistica", label: "Logística" },
-];
 
 type Props = {
   companies: CompanyMock[];
@@ -85,7 +76,7 @@ export default function CompaniesGrid({
         onSectorChange={handleSectorChange}
         onLocationChange={handleLocationChange}
         onClearFilters={clearFilters}
-        sectors={SECTOR_OPTIONS}
+        sectors={CATALOG_SECTOR_OPTIONS}
         locations={locationOptions}
       />
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

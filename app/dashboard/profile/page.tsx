@@ -12,7 +12,7 @@ export default async function DashboardProfilePage() {
     Boolean(user.phone?.trim() && user.name?.trim()) || user.profileVerifiedByAdmin;
 
   const isBuyerLike = user.role === "BUYER" || user.role === "PROFESSIONAL";
-  const isSeller = user.role === "SELLER";
+  const isSellerLike = user.role === "SELLER" || user.role === "PROFESSIONAL";
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -56,17 +56,19 @@ export default async function DashboardProfilePage() {
             Rol:{" "}
             <span className="font-medium">
               {user.role === "BUYER" && "Comprador / inversor"}
-              {user.role === "PROFESSIONAL" && "Profesional / asesor"}
               {user.role === "SELLER" && "Vendedor"}
+              {user.role === "PROFESSIONAL" && "Profesional (inversor y vendedor)"}
               {user.role === "ADMIN" && "Administrador"}
             </span>
           </p>
         </div>
       </div>
 
-      {isBuyerLike && (
+      {isBuyerLike && user.role !== "SELLER" && (
         <div className="rounded-2xl border border-dashed border-[var(--brand-primary)]/20 bg-[var(--brand-bg)]/40 p-6">
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">Documentación</h2>
+          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+            Documentación inversor
+          </h2>
           <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
             Accede a tu espacio de documentos y, si está configurado, a tu Google Drive personal.
           </p>
@@ -74,14 +76,16 @@ export default async function DashboardProfilePage() {
             href="/dashboard/buyer/documents"
             className="mt-4 inline-flex rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white hover:opacity-95"
           >
-            Mis documentos y Drive
+            Mis documentos y Drive (inversor)
           </Link>
         </div>
       )}
 
-      {isSeller && (
+      {isSellerLike && user.role !== "BUYER" && (
         <div className="rounded-2xl border border-dashed border-[var(--brand-primary)]/20 bg-[var(--brand-bg)]/40 p-6">
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">Documentación</h2>
+          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+            Documentación vendedor
+          </h2>
           <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
             Carpeta Drive del vendedor y seguimiento de documentos por proyecto.
           </p>
@@ -89,7 +93,7 @@ export default async function DashboardProfilePage() {
             href="/dashboard/seller/documents"
             className="mt-4 inline-flex rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white hover:opacity-95"
           >
-            Mis documentos y Drive
+            Mis documentos y Drive (vendedor)
           </Link>
         </div>
       )}
@@ -115,7 +119,7 @@ export default async function DashboardProfilePage() {
             ← Volver al panel del inversor
           </Link>
         )}
-        {isSeller && (
+        {isSellerLike && (
           <Link
             href="/dashboard/seller"
             className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
@@ -123,7 +127,7 @@ export default async function DashboardProfilePage() {
             ← Volver al panel del vendedor
           </Link>
         )}
-        {!isBuyerLike && !isSeller && (
+        {!isBuyerLike && !isSellerLike && (
           <Link
             href="/dashboard"
             className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"

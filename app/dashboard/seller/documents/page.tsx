@@ -7,7 +7,11 @@ const DRIVE_URL = process.env.NEXT_PUBLIC_SELLER_DOCUMENTS_DRIVE_URL?.trim();
 export default async function SellerDocumentsPage() {
   const session = await getSessionWithUser();
   if (!session) redirect("/login");
-  if (session.user.role !== "SELLER" && session.user.role !== "ADMIN") {
+  if (
+    session.user.role !== "SELLER" &&
+    session.user.role !== "PROFESSIONAL" &&
+    session.user.role !== "ADMIN"
+  ) {
     redirect("/dashboard");
   }
 

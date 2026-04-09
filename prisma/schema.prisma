@@ -127,6 +127,8 @@ model Company {
   id          String        @id @default(cuid())
   name        String
   sector      String
+  /// Subcategoría o nicho (texto libre, ej. “ERP B2B”, “clínicas dentales”).
+  sectorSubcategory String?
   location    String
   revenue     String
   ebitda      String?       // Puede ser negativo, ej. "-50000"
@@ -322,6 +324,7 @@ model ValuationLead {
   phone       String
   companyName String?
   sector      String
+  sectorSubcategory String?
   location    String
   revenue     Int      // facturación anual €
   ebitda      Int?     // EBITDA € (puede ser negativo)

@@ -160,6 +160,7 @@ function UserVerificationPanel({
   );
 }
 
+/** Comprador, vendedor, profesional y administrador (mismo conjunto que al crear usuario). */
 const ROLES: UserRole[] = ["ADMIN", "BUYER", "SELLER", "PROFESSIONAL"];
 
 export default function AdminUsersPage() {
@@ -265,6 +266,19 @@ export default function AdminUsersPage() {
       body: JSON.stringify({ accountStatus }),
     });
     if (res.ok) loadUsers();
+  };
+
+  const updateUserRole = async (userId: string, newRole: UserRole) => {
+    const res = await authFetch(`/api/admin/users/${userId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: newRole }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert((data as { error?: string }).error ?? "No se pudo cambiar el rol.");
+    }
+    loadUsers();
   };
 
   const deleteUser = async (u: UserRow) => {
@@ -558,17 +572,27 @@ export default function AdminUsersPage() {
                           </a>
                         </td>
                         <td className="px-4 py-3.5">
-                          <span
-                            className={`inline-flex rounded-lg px-2.5 py-1 text-xs font-medium ${
-                              u.role === "ADMIN"
-                                ? "bg-violet-100 text-violet-900"
-                                : u.role === "PROFESSIONAL"
-                                ? "bg-indigo-100 text-indigo-900"
-                                : "bg-slate-100 text-slate-800"
-                            }`}
-                          >
-                            {ADMIN_ROLE_LABELS[u.role]}
-                          </span>
+                          <div className="relative inline-flex items-center min-w-[10.5rem]">
+                            <select
+                              value={u.role}
+                              onChange={(e) => updateUserRole(u.id, e.target.value as UserRole)}
+                              className={`appearance-none cursor-pointer w-full rounded-lg pl-2.5 pr-7 py-1.5 text-xs font-semibold border border-slate-200/90 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/25 ${
+                                u.role === "ADMIN"
+                                  ? "bg-violet-100 text-violet-900"
+                                  : u.role === "PROFESSIONAL"
+                                  ? "bg-indigo-100 text-indigo-900"
+                                  : "bg-slate-100 text-slate-800"
+                              }`}
+                              aria-label="Rol del usuario"
+                            >
+                              {ROLES.map((r) => (
+                                <option key={r} value={r}>
+                                  {ADMIN_ROLE_LABELS[r]}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-50" />
+                          </div>
                         </td>
                         <td className="px-4 py-3.5">
                           <div className="relative inline-flex items-center">

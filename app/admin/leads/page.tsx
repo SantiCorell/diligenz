@@ -24,6 +24,7 @@ import {
   normalizeLeadCategory,
   type LeadCategory,
 } from "@/lib/lead-category";
+import { sectorLabel } from "@/lib/valuation-sectors";
 
 type LeadRow =
   | { kind: "valuation"; data: ValuationLead }
@@ -258,9 +259,14 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
 
       <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6 pt-0">
       <div className="mt-4 pt-4 border-t border-[var(--brand-primary)]/10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs sm:text-sm">
-        <div className="flex items-center gap-3 min-h-[40px]">
+        <div className="flex items-center gap-3 min-h-[40px] sm:col-span-2">
           <MapPin className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/50" />
-          <span>{lead.sector}</span>
+          <span>
+            {sectorLabel(lead.sector)}
+            {lead.sectorSubcategory ? (
+              <span className="text-[var(--foreground)]/75"> · {lead.sectorSubcategory}</span>
+            ) : null}
+          </span>
         </div>
         <div className="flex items-center gap-3 min-h-[40px]">
           <span className="text-[var(--foreground)] opacity-70 shrink-0">Ubicación:</span>

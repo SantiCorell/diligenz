@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserIdFromRequest } from "@/lib/session";
 import { generateDealTitle } from "@/lib/dealCode";
 import { computeValuationRange } from "@/lib/compute-valuation-range";
-import { sanitizeLongText } from "@/lib/security";
+import { sanitizeLongText, sanitizeString } from "@/lib/security";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -39,6 +39,7 @@ export async function POST(req: Request) {
       breakevenExpectedYear,
       hasReceivedFunding,
       website,
+      sectorSubcategory,
     } = body;
 
     const emailStr = email != null ? String(email).trim() : "";
@@ -100,6 +101,10 @@ export async function POST(req: Request) {
     const stageStr = stage && String(stage).trim() ? String(stage).trim() : null;
     const hasFunding = hasReceivedFunding === true || hasReceivedFunding === "true";
     const websiteStr = website != null && String(website).trim() !== "" ? String(website).trim() : null;
+    const sectorSubcategoryStr =
+      sectorSubcategory != null && String(sectorSubcategory).trim() !== ""
+        ? sanitizeString(sectorSubcategory).slice(0, 280) || null
+        : null;
 
     const { minValue, maxValue } = computeValuationRange({
       sector,
@@ -118,6 +123,7 @@ export async function POST(req: Request) {
         phone: phoneStr,
         companyName: name !== "Empresa sin nombre" ? name : null,
         sector,
+        sectorSubcategory: sectorSubcategoryStr,
         location: String(location),
         revenue: numRevenue,
         ebitda: numEbitda ?? null,
@@ -146,6 +152,7 @@ export async function POST(req: Request) {
         data: {
           name,
           sector,
+          sectorSubcategory: sectorSubcategoryStr,
           location: String(location),
           revenue: String(numRevenue),
           ebitda: numEbitda != null ? String(numEbitda) : null,
