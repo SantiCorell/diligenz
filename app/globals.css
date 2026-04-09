@@ -2,17 +2,17 @@
 
 /* ===================== */
 /* DILIGENZ BRAND COLORS */
-/* Paleta única: #6A5ACD, #C3B1E1, #F5F5DC, #D9ED92, #2F175F + blanco solo para texto claro */
+/* Paleta: #894af6 (principal), #C3B1E1, #F3F2EF (fondo LinkedIn), #D9ED92, #2F175F */
 /* ===================== */
 :root {
-  --background: #F5F5DC;
+  --background: #F3F2EF;
   --foreground: #2F175F;
-  --brand-primary: #6A5ACD;
-  --brand-bg: #F5F5DC;
+  --brand-primary: #894af6;
+  --brand-bg: #F3F2EF;
   --brand-bg-lavender: #C3B1E1;
   --brand-bg-mint: #D9ED92;
   --brand-dark: #2F175F;
-  --gradient-start: #6A5ACD;
+  --gradient-start: #894af6;
   --gradient-end: #D9ED92;
 }
 
@@ -120,10 +120,10 @@ body {
 @keyframes flow-glow-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(106, 90, 205, 0.25);
+    box-shadow: 0 0 0 0 rgba(137, 74, 246, 0.25);
   }
   50% {
-    box-shadow: 0 0 0 12px rgba(106, 90, 205, 0);
+    box-shadow: 0 0 0 12px rgba(137, 74, 246, 0);
   }
 }
 
@@ -169,10 +169,10 @@ body {
 /* Paso actual: iluminado, uno solo a la vez */
 @keyframes flow-card-current {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(106, 90, 205, 0.2), 0 4px 20px rgba(106, 90, 205, 0.15);
+    box-shadow: 0 0 0 0 rgba(137, 74, 246, 0.2), 0 4px 20px rgba(137, 74, 246, 0.15);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(106, 90, 205, 0.12), 0 8px 28px rgba(106, 90, 205, 0.2);
+    box-shadow: 0 0 0 8px rgba(137, 74, 246, 0.12), 0 8px 28px rgba(137, 74, 246, 0.2);
   }
 }
 

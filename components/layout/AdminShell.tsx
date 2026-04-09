@@ -103,6 +103,50 @@ export default function AdminShell({ userDisplayName, children }: Props) {
             active={pathname.startsWith("/admin/users")}
             onNavigate={() => setMobileSidebarOpen(false)}
           />
+          {expanded && (
+            <p className="mt-3 px-3 text-[10px] font-semibold uppercase tracking-wide text-white/45">
+              Panel comprador
+            </p>
+          )}
+          <AdminNavLink
+            href="/dashboard/buyer"
+            label="Inicio comprador"
+            collapsed={!expanded}
+            active={pathname.startsWith("/dashboard/buyer")}
+            onNavigate={() => setMobileSidebarOpen(false)}
+          />
+          <AdminNavLink
+            href="/dashboard/mis-empresas"
+            label="Mis empresas"
+            collapsed={!expanded}
+            active={pathname.startsWith("/dashboard/mis-empresas")}
+            onNavigate={() => setMobileSidebarOpen(false)}
+          />
+          <AdminNavLink
+            href="/dashboard/profile"
+            label="Mi perfil"
+            collapsed={!expanded}
+            active={pathname.startsWith("/dashboard/profile")}
+            onNavigate={() => setMobileSidebarOpen(false)}
+          />
+          <AdminNavLink
+            href="/dashboard/buyer/documents"
+            label="Documentos comprador"
+            collapsed={!expanded}
+            active={pathname.startsWith("/dashboard/buyer/documents")}
+            onNavigate={() => setMobileSidebarOpen(false)}
+          />
+          <AdminNavLink
+            href="/companies"
+            label="Explorar empresas"
+            collapsed={!expanded}
+            active={
+              pathname === "/companies" ||
+              (pathname.startsWith("/companies/") &&
+                !pathname.startsWith("/companies/mi-interes"))
+            }
+            onNavigate={() => setMobileSidebarOpen(false)}
+          />
           <AdminNavLink
             href="/"
             label="Ver web"

@@ -5,6 +5,7 @@ const ROLE_TARGET: Record<string, string> = {
   SELLER: "/dashboard/seller",
   BUYER: "/dashboard/buyer",
   ADMIN: "/admin",
+  PROFESSIONAL: "/dashboard/buyer",
 };
 
 export default async function DashboardRouter() {
@@ -12,7 +13,12 @@ export default async function DashboardRouter() {
   if (!session) redirect("/login");
 
   const { user } = session;
-  if (user.role !== "SELLER" && user.role !== "BUYER" && user.role !== "ADMIN") {
+  if (
+    user.role !== "SELLER" &&
+    user.role !== "BUYER" &&
+    user.role !== "ADMIN" &&
+    user.role !== "PROFESSIONAL"
+  ) {
     redirect("/login");
   }
 

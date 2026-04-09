@@ -20,15 +20,27 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     include: {
       deals: { where: { published: true }, take: 1 },
       valuations: { orderBy: { createdAt: "desc" }, take: 1 },
+      companyFiles: {
+        where: { kind: "image" },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        take: 12,
+        select: { id: true },
+      },
     },
   });
-  if (!company || company.deals.length === 0) return null;
+  if (!company || company.removedAt || company.deals.length === 0) return null;
 
   const val = company.valuations[0];
   const revenueStr = val
     ? `${(val.minValue / 1_000_000).toFixed(1)}–${(val.maxValue / 1_000_000).toFixed(1)}M €`
     : "—";
   const docLinks = company.documentLinks as DocumentLink[] | null | undefined;
+  const imgFiles = company.companyFiles;
+  const heroFile = imgFiles[0];
+  const galleryImageSrcs =
+    imgFiles.length > 1
+      ? imgFiles.slice(1).map((f) => `/api/companies/${company.id}/files/${f.id}`)
+      : [];
   return {
     id: company.id,
     name: company.name,
@@ -36,12 +48,17 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     location: company.location,
     revenue: revenueStr,
     ebitda: company.ebitda ?? "—",
+    exerciseResult: company.exerciseResult?.trim() || null,
     gmv: company.gmv ?? null,
     employees: company.employees ?? null,
     description: company.description ?? "Sin descripción.",
     sellerDescription: company.sellerDescription ?? null,
     documentLinks: Array.isArray(docLinks) ? docLinks : null,
     attachmentsApproved: company.attachmentsApproved ?? false,
+    heroImageSrc: heroFile ? `/api/companies/${company.id}/files/${heroFile.id}` : null,
+    galleryImageSrcs,
+    valuationSaleMin: val?.salePriceMin ?? null,
+    valuationSaleMax: val?.salePriceMax ?? null,
   };
 }
 
@@ -96,6 +113,12 @@ export default async function CompanyDetailPage({ params }: Props) {
     { name: company.name, url: `${SITE_URL}/companies/${id}` },
   ]);
 
+  const canSeeDriveLinks = isOwner || isAdmin;
+  const companyForFicha: CompanyMock = {
+    ...company,
+    documentLinks: canSeeDriveLinks ? company.documentLinks : null,
+  };
+
   return (
     <ShellLayout>
       <script
@@ -111,7 +134,7 @@ export default async function CompanyDetailPage({ params }: Props) {
             ← Volver a empresas
           </Link>
           <CompanyFicha
-            company={company}
+            company={companyForFicha}
             isLoggedIn={isLoggedIn}
             isOwner={isOwner}
             isAdmin={isAdmin}

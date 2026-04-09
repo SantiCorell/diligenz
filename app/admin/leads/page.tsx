@@ -18,6 +18,12 @@ import type { ValuationLead, ContactRequest } from "@prisma/client";
 import { Suspense } from "react";
 import LeadsFiltersSort from "@/components/admin/LeadsFiltersSort";
 import LeadCardActions from "@/components/admin/LeadCardActions";
+import {
+  LEAD_CATEGORIES,
+  LEAD_CATEGORY_LABELS,
+  normalizeLeadCategory,
+  type LeadCategory,
+} from "@/lib/lead-category";
 
 type LeadRow =
   | { kind: "valuation"; data: ValuationLead }
@@ -77,7 +83,10 @@ export default async function AdminLeadsPage({
   if (session.user.role !== "ADMIN") redirect("/login");
 
   const params = await searchParams;
-  const categoria = params.categoria && ["activo", "pruebas", "archivado"].includes(params.categoria) ? params.categoria : undefined;
+  const categoria =
+    params.categoria && LEAD_CATEGORIES.includes(params.categoria as LeadCategory)
+      ? (params.categoria as LeadCategory)
+      : undefined;
   const tipo = params.tipo === "valoracion" || params.tipo === "contacto" ? params.tipo : undefined;
   const orden = params.orden ?? "fecha_desc";
 
@@ -166,22 +175,24 @@ export default async function AdminLeadsPage({
   );
 }
 
+function leadCategoryBadgeClass(cat: LeadCategory) {
+  if (cat === "pendiente") return "bg-amber-500/20 text-amber-900";
+  if (cat === "gestionado") return "bg-emerald-500/20 text-emerald-900";
+  return "bg-red-500/15 text-red-900";
+}
+
 function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
-  const categoryLabel = lead.category === "pruebas" ? "Pruebas" : lead.category === "archivado" ? "Archivado" : lead.category === "activo" ? "Activo" : null;
+  const cat = normalizeLeadCategory(lead.category);
   return (
     <article className="rounded-xl sm:rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md overflow-hidden">
       {/* Barra de acciones: categoría + eliminar */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 md:px-6 py-3 border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)]/50">
         <div className="flex items-center gap-2 flex-wrap">
-          {categoryLabel && (
-            <span className={`rounded-lg px-2.5 py-1 text-xs font-medium ${
-              lead.category === "pruebas" ? "bg-amber-500/20 text-amber-800" :
-              lead.category === "archivado" ? "bg-slate-400/20 text-slate-700" :
-              "bg-emerald-500/20 text-emerald-800"
-            }`}>
-              {categoryLabel}
-            </span>
-          )}
+          <span
+            className={`rounded-lg px-2.5 py-1 text-xs font-medium ${leadCategoryBadgeClass(cat)}`}
+          >
+            {LEAD_CATEGORY_LABELS[cat]}
+          </span>
         </div>
         <LeadCardActions leadId={lead.id} kind="valuation" category={lead.category} />
       </div>
@@ -262,6 +273,12 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
         <div className="flex items-start sm:items-center gap-2 min-h-[40px] flex-wrap">
           <span className="text-[var(--foreground)] opacity-70">EBITDA: </span>
           <span>{lead.ebitda != null ? `${lead.ebitda.toLocaleString("es-ES")} €` : "—"}</span>
+          <span className="text-[var(--foreground)] opacity-70">· Resultado ejercicio: </span>
+          <span>
+            {lead.exerciseResult != null
+              ? `${lead.exerciseResult.toLocaleString("es-ES")} €`
+              : "—"}
+          </span>
           {lead.employees != null && (
             <>
               <span className="text-[var(--foreground)] opacity-70">· Empleados: </span>
@@ -283,11 +300,11 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
       </div>
 
       {lead.description && (
-        <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6 mt-4 pt-4 border-t border-[var(--brand-primary)]/10">
+        <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6 mt-4 pt-4 border-t border-[var(--brand-primary)]/10 min-w-0">
           <p className="text-xs font-semibold text-[var(--brand-primary)] opacity-90 mb-1">
             Descripción de la actividad
           </p>
-          <p className="text-sm text-[var(--foreground)] opacity-90 whitespace-pre-wrap">
+          <p className="text-sm text-[var(--foreground)] opacity-90 whitespace-pre-wrap break-words">
             {lead.description}
           </p>
         </div>
@@ -298,21 +315,17 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
 
 function ContactLeadCard({ lead }: { lead: ContactRequest }) {
   const sourceLabel = lead.source === "servicios" ? "Servicios" : "Contacto";
-  const categoryLabel = lead.category === "pruebas" ? "Pruebas" : lead.category === "archivado" ? "Archivado" : lead.category === "activo" ? "Activo" : null;
+  const cat = normalizeLeadCategory(lead.category);
   return (
     <article className="rounded-xl sm:rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md overflow-hidden">
       {/* Barra de acciones: categoría + eliminar */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 md:px-6 py-3 border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)]/50">
         <div className="flex items-center gap-2 flex-wrap">
-          {categoryLabel && (
-            <span className={`rounded-lg px-2.5 py-1 text-xs font-medium ${
-              lead.category === "pruebas" ? "bg-amber-500/20 text-amber-800" :
-              lead.category === "archivado" ? "bg-slate-400/20 text-slate-700" :
-              "bg-emerald-500/20 text-emerald-800"
-            }`}>
-              {categoryLabel}
-            </span>
-          )}
+          <span
+            className={`rounded-lg px-2.5 py-1 text-xs font-medium ${leadCategoryBadgeClass(cat)}`}
+          >
+            {LEAD_CATEGORY_LABELS[cat]}
+          </span>
         </div>
         <LeadCardActions leadId={lead.id} kind="contact" category={lead.category} />
       </div>
@@ -376,19 +389,19 @@ function ContactLeadCard({ lead }: { lead: ContactRequest }) {
       </div>
 
       {(lead.subject || lead.message) && (
-        <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6 mt-4 pt-4 border-t border-[var(--brand-primary)]/10 space-y-2">
+        <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6 mt-4 pt-4 border-t border-[var(--brand-primary)]/10 space-y-2 min-w-0">
           {lead.subject && (
-            <p className="text-sm">
+            <p className="text-sm break-words">
               <span className="font-medium text-[var(--brand-primary)] opacity-90">Asunto: </span>
               <span className="text-[var(--foreground)] opacity-90">{lead.subject}</span>
             </p>
           )}
           {lead.message && (
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold text-[var(--brand-primary)] opacity-90 mb-1">
                 Mensaje
               </p>
-              <p className="text-sm text-[var(--foreground)] opacity-90 whitespace-pre-wrap">
+              <p className="text-sm text-[var(--foreground)] opacity-90 whitespace-pre-wrap break-words">
                 {lead.message}
               </p>
             </div>

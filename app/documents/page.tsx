@@ -7,7 +7,7 @@ export default async function DocumentsPage() {
   if (!userId) redirect("/login");
 
   const companies = await prisma.company.findMany({
-    where: { ownerId: userId },
+    where: { ownerId: userId, removedAt: null },
     include: {
       deals: true,
       documents: true,

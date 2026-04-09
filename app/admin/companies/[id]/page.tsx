@@ -2,16 +2,34 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSessionWithUser } from "@/lib/session";
+import UserOwnerSearch from "@/components/admin/UserOwnerSearch";
+import CompanyImagesEditor from "@/components/companies/CompanyImagesEditor";
+import type { DocumentType } from "@prisma/client";
+
+function entityTypeLabel(t: string | null | undefined) {
+  if (t === "EMPRESA") return "Empresa";
+  if (t === "AUTONOMO") return "Autónomo";
+  if (t === "STARTUP") return "Startup (histórico)";
+  if (t === "MARKETPLACE") return "Marketplace (histórico)";
+  return "—";
+}
+
+function docSigned(docs: { type: DocumentType; signed: boolean }[], type: DocumentType) {
+  return docs.find((d) => d.type === type)?.signed ?? false;
+}
 
 export default async function AdminCompanyDetail({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ success?: string; error?: string }>;
 }) {
   const session = await getSessionWithUser();
   if (!session || session.user.role !== "ADMIN") redirect("/login");
 
   const { id } = await params;
+  const sp = await searchParams;
 
   const company = await prisma.company.findUnique({
     where: { id },
@@ -24,6 +42,7 @@ export default async function AdminCompanyDetail({
         take: 1,
       },
       owner: true,
+      removedBy: { select: { email: true, name: true } },
     },
   });
 
@@ -55,9 +74,65 @@ export default async function AdminCompanyDetail({
         <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
           {company.sector} · {company.location}
         </p>
+        {company.removedAt && (
+          <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            Empresa archivada el{" "}
+            {company.removedAt.toLocaleString("es-ES", {
+              dateStyle: "short",
+              timeStyle: "short",
+            })}
+            {company.removedBy
+              ? ` por ${company.removedBy.name?.trim() || company.removedBy.email}`
+              : ""}
+            . No aparece en listados públicos ni en el panel del vendedor; los datos se conservan en base de
+            datos.
+          </p>
+        )}
         <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
           En esta ficha puedes ver la información general, editar los textos y enlaces que verán los usuarios en el listado y en la página de detalle, revisar documentos subidos por el vendedor, la documentación legal y publicar o despublicar la empresa en el marketplace.
         </p>
+        {sp.success === "created" && (
+          <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            Empresa creada. Completa o revisa los datos abajo y guarda.
+          </p>
+        )}
+        {sp.success === "company_updated" && (
+          <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            Ficha actualizada.
+          </p>
+        )}
+        {sp.success === "valuation" && (
+          <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            Valoración guardada.
+          </p>
+        )}
+        {sp.success === "docs" && (
+          <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            Estado de documentación legal actualizado.
+          </p>
+        )}
+        {sp.success === "deal" && (
+          <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            Datos del deal actualizados.
+          </p>
+        )}
+        {sp.success === "status_updated" && (
+          <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            Estado de la empresa actualizado.
+          </p>
+        )}
+        {(sp.error === "valuation" ||
+          sp.error === "deal" ||
+          sp.error === "deal_slug" ||
+          sp.error === "company_removed") && (
+          <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {sp.error === "deal_slug"
+              ? "Ese slug ya está en uso; elige otro."
+              : sp.error === "company_removed"
+              ? "Esta empresa está archivada: no se pueden guardar cambios desde el panel."
+              : "Revisa los valores introducidos e inténtalo de nuevo."}
+          </p>
+        )}
       </div>
 
       {/* INFORMACIÓN GENERAL */}
@@ -71,11 +146,11 @@ export default async function AdminCompanyDetail({
         </p>
 
         <div className="mt-5 grid grid-cols-2 gap-4 text-sm text-[var(--foreground)] opacity-90">
-          <p><strong>Ingresos:</strong> {company.revenue}</p>
+          <p><strong>Facturación anual (€):</strong> {company.gmv ?? company.revenue}</p>
           <p><strong>EBITDA:</strong> {company.ebitda ?? "-"}</p>
-          <p><strong>GMV:</strong> {company.gmv ?? "-"}</p>
+          <p><strong>Resultado del ejercicio:</strong> {company.exerciseResult ?? "-"}</p>
           <p><strong>Empleados:</strong> {company.employees ?? "-"}</p>
-          <p><strong>Tipo:</strong> {company.companyType ?? "—"}</p>
+          <p><strong>Tipo de entidad:</strong> {entityTypeLabel(company.companyType)}</p>
           <p><strong>Años operando:</strong> {company.yearsOperating ?? "-"}</p>
           {company.companyType === "STARTUP" && (
             <>
@@ -83,9 +158,14 @@ export default async function AdminCompanyDetail({
               <p><strong>Ha recibido financiación:</strong> {company.hasReceivedFunding === true ? "Sí" : company.hasReceivedFunding === false ? "No" : "—"}</p>
             </>
           )}
-          {company.revenueGrowthPercent != null && <p><strong>Crecimiento (%):</strong> {company.revenueGrowthPercent}%</p>}
+          {company.revenueGrowthPercent != null && (
+            <p><strong>Crecimiento facturación anual %:</strong> {company.revenueGrowthPercent}%</p>
+          )}
           {company.arr != null && <p><strong>ARR (€):</strong> {company.arr.toLocaleString("es-ES")}</p>}
           {company.takeRatePercent != null && <p><strong>Take rate (%):</strong> {company.takeRatePercent}%</p>}
+          {company.breakevenExpectedYear != null && (
+            <p><strong>Breakeven (año previsto):</strong> {company.breakevenExpectedYear}</p>
+          )}
           <p><strong>Propietario:</strong> {company.owner.email}</p>
           {company.website && (
             <p><strong>Web:</strong>{" "}
@@ -104,11 +184,22 @@ export default async function AdminCompanyDetail({
 
           {valuation && (
             <p>
-              <strong>Valoración:</strong>{" "}
+              <strong>Valoración orientativa:</strong>{" "}
               {valuation.minValue.toLocaleString("es-ES")} € –{" "}
               {valuation.maxValue.toLocaleString("es-ES")} €
             </p>
           )}
+          {valuation &&
+            (valuation.salePriceMin != null || valuation.salePriceMax != null) && (
+              <p>
+                <strong>Precio de venta:</strong>{" "}
+                {valuation.salePriceMin != null &&
+                valuation.salePriceMax != null &&
+                valuation.salePriceMin === valuation.salePriceMax
+                  ? `${valuation.salePriceMin.toLocaleString("es-ES")} €`
+                  : `${(valuation.salePriceMin ?? valuation.salePriceMax)!.toLocaleString("es-ES")} € – ${(valuation.salePriceMax ?? valuation.salePriceMin)!.toLocaleString("es-ES")} €`}
+              </p>
+            )}
         </div>
       </section>
 
@@ -118,19 +209,78 @@ export default async function AdminCompanyDetail({
           Editar ficha pública (listado y detalle)
         </h2>
         <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
-          Descripción breve en listados. Descripción del vendedor y enlaces a Drive solo visibles para usuarios registrados. Activa la opción inferior para permitir que usuarios registrados vean documentación y fotos.
+          Descripción breve en listados. La descripción ampliada del vendedor la ven los usuarios registrados. Los enlaces a Google Drive solo los ven el propietario de la empresa y los administradores en la ficha pública. Activa la opción inferior para permitir que usuarios registrados vean los archivos subidos y fotos (no los enlaces de Drive).
         </p>
         <form action="/api/admin/company/update" method="POST" className="mt-4 space-y-4">
           <input type="hidden" name="companyId" value={company.id} />
 
-          <div>
-            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Nombre empresa</label>
-            <input
-              type="text"
-              name="name"
-              defaultValue={company.name}
-              className="mt-2 w-full max-w-md rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
-            />
+          <UserOwnerSearch
+            initialUserId={company.ownerId}
+            initialSummary={`${company.owner.name ? `${company.owner.name} · ` : ""}${company.owner.email}`}
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-semibold text-[var(--brand-primary)]">Nombre empresa</label>
+              <input
+                type="text"
+                name="name"
+                defaultValue={company.name}
+                className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--brand-primary)]">Sector</label>
+              <input
+                type="text"
+                name="sector"
+                defaultValue={company.sector}
+                className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--brand-primary)]">Ubicación</label>
+              <input
+                type="text"
+                name="location"
+                defaultValue={company.location}
+                className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--brand-primary)]">Facturación anual (€)</label>
+              <input
+                type="text"
+                name="revenue"
+                defaultValue={company.revenue}
+                className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+                placeholder="Texto o cifra mostrada en ficha"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-semibold text-[var(--brand-primary)]">EBITDA</label>
+              <input
+                type="text"
+                name="ebitda"
+                defaultValue={company.ebitda ?? ""}
+                className="mt-2 w-full max-w-md rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-semibold text-[var(--brand-primary)]">
+                Resultado del ejercicio
+              </label>
+              <p className="mt-0.5 text-xs text-[var(--foreground)] opacity-70">
+                Beneficio neto del último ejercicio (puede ser negativo). Texto libre o cifra en €.
+              </p>
+              <input
+                type="text"
+                name="exerciseResult"
+                defaultValue={company.exerciseResult ?? ""}
+                className="mt-2 w-full max-w-md rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+                placeholder="ej. 125000 o -15.000 €"
+              />
+            </div>
           </div>
 
           <div>
@@ -156,8 +306,12 @@ export default async function AdminCompanyDetail({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Enlaces a documentación (Drive, etc.)</label>
-            <p className="mt-0.5 text-xs text-[var(--foreground)] opacity-70">Una línea por enlace: Etiqueta|URL</p>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">
+              Enlaces a Google Drive (solo propietario y administradores)
+            </label>
+            <p className="mt-0.5 text-xs text-[var(--foreground)] opacity-70">
+              Visible en la ficha pública únicamente para el vendedor titular y el equipo admin. Una línea por enlace: Etiqueta|URL
+            </p>
             <textarea
               name="documentLinks"
               rows={4}
@@ -170,17 +324,6 @@ export default async function AdminCompanyDetail({
               }
               className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 font-mono text-sm text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
               placeholder="Memoria comercial|https://drive.google.com/..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-[var(--brand-primary)]">GMV (volumen de negocio)</label>
-            <input
-              type="text"
-              name="gmv"
-              defaultValue={company.gmv ?? ""}
-              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
-              placeholder="ej. 2,5M €"
             />
           </div>
 
@@ -200,14 +343,21 @@ export default async function AdminCompanyDetail({
             <label className="block text-sm font-semibold text-[var(--brand-primary)]">Tipo de entidad</label>
             <select
               name="companyType"
-              defaultValue={company.companyType ?? ""}
+              defaultValue={
+                company.companyType === "AUTONOMO"
+                  ? "AUTONOMO"
+                  : "EMPRESA"
+              }
               className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
             >
-              <option value="">No especificado</option>
               <option value="EMPRESA">Empresa</option>
-              <option value="STARTUP">Startup</option>
-              <option value="MARKETPLACE">Marketplace</option>
+              <option value="AUTONOMO">Autónomo</option>
             </select>
+            {(company.companyType === "STARTUP" || company.companyType === "MARKETPLACE") && (
+              <p className="mt-1 text-xs text-amber-700">
+                Registro anterior: {entityTypeLabel(company.companyType)}. Al guardar pasará a la opción seleccionada arriba.
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-semibold text-[var(--brand-primary)]">Años operando</label>
@@ -221,7 +371,7 @@ export default async function AdminCompanyDetail({
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Crecimiento facturación (%)</label>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Crecimiento facturación anual %</label>
             <input
               type="number"
               name="revenueGrowthPercent"
@@ -229,6 +379,18 @@ export default async function AdminCompanyDetail({
               defaultValue={company.revenueGrowthPercent ?? ""}
               className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
               placeholder="Ej. 50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Año previsto breakeven</label>
+            <input
+              type="number"
+              name="breakevenExpectedYear"
+              min={2000}
+              max={2100}
+              defaultValue={company.breakevenExpectedYear ?? ""}
+              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              placeholder="Ej. 2027"
             />
           </div>
           <div>
@@ -316,6 +478,132 @@ export default async function AdminCompanyDetail({
         </form>
       </section>
 
+      <section className="mt-8 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
+        <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+          Valoración orientativa y precio de venta (€)
+        </h2>
+        <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
+          El rango orientativo y el precio pedido se muestran en la ficha pública cuando corresponda. Deja el precio de venta vacío si aún no lo queréis publicar.
+        </p>
+        <form action="/api/admin/company/valuation" method="POST" className="mt-4 flex flex-wrap items-end gap-4">
+          <input type="hidden" name="companyId" value={company.id} />
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">
+              Valoración mín. (€)
+            </label>
+            <input
+              type="text"
+              name="minValue"
+              required
+              defaultValue={valuation?.minValue ?? ""}
+              className="mt-2 w-40 rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">
+              Valoración máx. (€)
+            </label>
+            <input
+              type="text"
+              name="maxValue"
+              required
+              defaultValue={valuation?.maxValue ?? ""}
+              className="mt-2 w-40 rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">
+              Precio venta mín. (€)
+            </label>
+            <input
+              type="text"
+              name="salePriceMin"
+              defaultValue={valuation?.salePriceMin ?? ""}
+              className="mt-2 w-40 rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              placeholder="Opcional"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">
+              Precio venta máx. (€)
+            </label>
+            <input
+              type="text"
+              name="salePriceMax"
+              defaultValue={valuation?.salePriceMax ?? ""}
+              className="mt-2 w-40 rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              placeholder="Opcional"
+            />
+          </div>
+          <button
+            type="submit"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
+          >
+            Guardar valoración y precio
+          </button>
+        </form>
+      </section>
+
+      {deal && (
+        <section className="mt-8 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
+          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">Deal (marketplace)</h2>
+          <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
+            Título y slug del anuncio interno. El slug debe ser único (solo letras minúsculas, números y guiones).
+          </p>
+          <form action="/api/admin/deal/update" method="POST" className="mt-4 space-y-4 max-w-xl">
+            <input type="hidden" name="companyId" value={company.id} />
+            <input type="hidden" name="dealId" value={deal.id} />
+            <div>
+              <label className="block text-sm font-semibold text-[var(--brand-primary)]">Título</label>
+              <input
+                type="text"
+                name="title"
+                required
+                defaultValue={deal.title}
+                className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--brand-primary)]">Slug (URL)</label>
+              <input
+                type="text"
+                name="slug"
+                required
+                defaultValue={deal.slug}
+                className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 font-mono text-sm text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
+            >
+              Guardar deal
+            </button>
+          </form>
+        </section>
+      )}
+
+      <section className="mt-8 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
+        <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+          Imágenes del anuncio (portada y galería)
+        </h2>
+        <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
+          La primera imagen es la portada en listado y cabecera de la ficha. Las demás aparecen como galería. Las imágenes son visibles públicamente solo cuando el deal está publicado en el marketplace.
+        </p>
+        <CompanyImagesEditor companyId={company.id} />
+      </section>
+
+      {company.sellerDocumentsNote?.trim() && (
+        <section className="mt-8 rounded-2xl bg-amber-50/90 border border-amber-200/80 shadow-md p-6">
+          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+            Comentario del vendedor (documentación)
+          </h2>
+          <p className="mt-3 text-sm text-[var(--foreground)] whitespace-pre-wrap leading-relaxed">
+            {company.sellerDocumentsNote}
+          </p>
+        </section>
+      )}
+
       {/* DOCUMENTOS SUBIDOS POR EL VENDEDOR */}
       <section className="mt-8 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
         <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
@@ -356,33 +644,41 @@ export default async function AdminCompanyDetail({
           Documentación legal
         </h2>
         <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
-          Estado de firma de mandato, NDA y autorizaciones. La empresa no puede publicarse en el marketplace hasta que toda la documentación esté firmada.
+          Marca si cada documento está firmado. La empresa no debería publicarse en el marketplace hasta que todo esté firmado.
         </p>
 
-        <ul className="mt-4 space-y-3">
-          {company.documents.map((doc) => (
-            <li
-              key={doc.id}
-              className="flex items-center justify-between rounded-xl border border-[var(--brand-primary)]/10 px-4 py-3 text-sm"
+        <form action="/api/admin/company/documents" method="POST" className="mt-4 space-y-4">
+          <input type="hidden" name="companyId" value={company.id} />
+          {(
+            [
+              ["SALES_MANDATE", "Mandato de venta"],
+              ["NDA", "Acuerdo de confidencialidad"],
+              ["AUTHORIZATION", "Autorización"],
+            ] as const
+          ).map(([type, label]) => (
+            <label
+              key={type}
+              className="flex items-center justify-between gap-4 rounded-xl border border-[var(--brand-primary)]/10 px-4 py-3 text-sm cursor-pointer"
             >
-              <span className="text-[var(--foreground)]">
-                {doc.type === "SALES_MANDATE" && "Mandato de venta"}
-                {doc.type === "NDA" && "Acuerdo de confidencialidad"}
-                {doc.type === "AUTHORIZATION" && "Autorización"}
+              <span className="text-[var(--foreground)] font-medium">{label}</span>
+              <span className="flex items-center gap-2 shrink-0">
+                <span className="text-xs text-[var(--foreground)] opacity-70">Firmado</span>
+                <input
+                  type="checkbox"
+                  name={`signed_${type}`}
+                  defaultChecked={docSigned(company.documents, type)}
+                  className="h-4 w-4 rounded border-[var(--brand-primary)]/30 text-[var(--brand-primary)]"
+                />
               </span>
-
-              <span
-                className={
-                  doc.signed
-                    ? "text-green-600 font-medium"
-                    : "text-amber-600 font-medium"
-                }
-              >
-                {doc.signed ? "✔ Firmado" : "Pendiente"}
-              </span>
-            </li>
+            </label>
           ))}
-        </ul>
+          <button
+            type="submit"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--foreground)]/90 text-white shadow-lg hover:opacity-95 transition"
+          >
+            Guardar estado de documentación
+          </button>
+        </form>
 
         {!allDocsSigned && (
           <p className="mt-4 text-xs text-amber-700 font-medium">

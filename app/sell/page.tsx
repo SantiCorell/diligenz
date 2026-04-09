@@ -48,6 +48,7 @@ export default function SellPage() {
   const [location, setLocation] = useState("");
   const [revenue, setRevenue] = useState<string>("");
   const [ebitda, setEbitda] = useState<string>("");
+  const [exerciseResult, setExerciseResult] = useState<string>("");
   const [employees, setEmployees] = useState<string>("");
   const [companyType, setCompanyType] = useState<string>("");
   const [yearsOperating, setYearsOperating] = useState<string>("");
@@ -91,6 +92,10 @@ export default function SellPage() {
       setError("Completa al menos sector, ubicación y facturación anual.");
       return;
     }
+    if (exerciseResult !== "" && !Number.isFinite(Number(exerciseResult))) {
+      setError("Indica un resultado del ejercicio numérico válido o déjalo vacío.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -106,6 +111,7 @@ export default function SellPage() {
           location,
           revenue: Number(revenue),
           ebitda: ebitda === "" ? null : Number(ebitda),
+          exerciseResult: exerciseResult === "" ? null : Number(exerciseResult),
           employees: employees === "" ? null : Number(employees),
           companyType: companyType || undefined,
           yearsOperating: yearsOperating === "" ? undefined : Number(yearsOperating),
@@ -308,6 +314,22 @@ export default function SellPage() {
                         onChange={(e) => setEbitda(e.target.value)}
                       />
                       <p className="mt-1 text-xs text-[var(--foreground)]/60">Puede ser negativo.</p>
+                    </div>
+                    <div>
+                      <label htmlFor="exerciseResult" className={labelClass}>
+                        Resultado del ejercicio (€) {optionalBadge}
+                      </label>
+                      <input
+                        id="exerciseResult"
+                        type="number"
+                        className={inputClass}
+                        placeholder="Ej. 45 000 o -12 000"
+                        value={exerciseResult}
+                        onChange={(e) => setExerciseResult(e.target.value)}
+                      />
+                      <p className="mt-1 text-xs text-[var(--foreground)]/60">
+                        Beneficio neto contable del último ejercicio. Puede ser negativo.
+                      </p>
                     </div>
                   </div>
 

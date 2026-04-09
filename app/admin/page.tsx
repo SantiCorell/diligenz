@@ -20,18 +20,17 @@ export default async function AdminDashboard({
   const inProcess = await prisma.company.count({
     where: { status: "IN_PROCESS" },
   });
-  const draft = await prisma.company.count({
-    where: { status: "DRAFT" },
-  });
 
-  const totalUsers = await prisma.user.count();
+  const totalUsers = await prisma.user.count({ where: { deletedAt: null } });
   const usersByRole = await prisma.user.groupBy({
     by: ["role"],
+    where: { deletedAt: null },
     _count: true,
   });
   const buyers = usersByRole.find((r) => r.role === "BUYER")?._count ?? 0;
   const sellers = usersByRole.find((r) => r.role === "SELLER")?._count ?? 0;
   const admins = usersByRole.find((r) => r.role === "ADMIN")?._count ?? 0;
+  const professionals = usersByRole.find((r) => r.role === "PROFESSIONAL")?._count ?? 0;
 
   const bySector = await prisma.company.groupBy({
     by: ["sector"],
@@ -47,9 +46,10 @@ export default async function AdminDashboard({
     take: 6,
   });
 
-  const [valuationLeadsCount, contactLeadsCount] = await Promise.all([
+  const [valuationLeadsCount, contactLeadsCount, actionsCount] = await Promise.all([
     prisma.valuationLead.count(),
     prisma.contactRequest.count(),
+    prisma.userCompanyInterest.count({ where: { type: "REQUEST_INFO" } }),
   ]);
   const leadsCount = valuationLeadsCount + contactLeadsCount;
 
@@ -70,11 +70,12 @@ export default async function AdminDashboard({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard
           title="Usuarios"
           value={totalUsers}
-          subtitle={`${buyers} compradores · ${sellers} vendedores · ${admins} admin`}
+          subtitle={`${buyers} compradores · ${sellers} vendedores · ${professionals} profesionales · ${admins} admin`}
+          href="/admin/users"
           accent="primary"
         />
         <KpiCard
@@ -86,12 +87,24 @@ export default async function AdminDashboard({
         <KpiCard
           title="Visibles en la web"
           value={publishedOnWeb}
-          subtitle="Publicadas en marketplace"
-          href="/admin/companies"
+          subtitle="Deals publicados en marketplace"
+          href="/admin/companies?marketplace=1"
           accent="green"
         />
-        <KpiCard title="En revisión" value={inProcess} accent="blue" />
-        <KpiCard title="Borrador" value={draft} accent="gray" />
+        <KpiCard
+          title="En revisión"
+          value={inProcess}
+          subtitle="Estado interno"
+          href="/admin/companies?status=IN_PROCESS"
+          accent="blue"
+        />
+        <KpiCard
+          title="Acciones"
+          value={actionsCount}
+          subtitle="Solicitudes de información"
+          href="/admin/actions"
+          accent="gray"
+        />
         <KpiCard
           title="Leads"
           value={leadsCount}
@@ -181,18 +194,6 @@ export default async function AdminDashboard({
             Gestionar empresas
           </Link>
           <Link
-            href="/admin/actions"
-            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-          >
-            Ver solicitudes de información
-          </Link>
-          <Link
-            href="/admin/leads"
-            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-          >
-            Ver leads (valoraciones y contacto)
-          </Link>
-          <Link
             href="/admin/users"
             className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
           >
@@ -203,6 +204,18 @@ export default async function AdminDashboard({
             className="rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] bg-white hover:bg-[var(--brand-primary)]/10 transition"
           >
             Ver listado público
+          </Link>
+          <Link
+            href="/admin/actions"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
+          >
+            Ver solicitudes de información
+          </Link>
+          <Link
+            href="/admin/leads"
+            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
+          >
+            Ver leads (valoraciones y contacto)
           </Link>
         </div>
       </div>

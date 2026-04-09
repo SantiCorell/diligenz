@@ -68,7 +68,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (role !== "SELLER" && role !== "BUYER") {
+    if (role !== "SELLER" && role !== "BUYER" && role !== "PROFESSIONAL") {
       return NextResponse.json(
         { error: "Rol de usuario inválido" },
         { status: 400 }

@@ -1,16 +1,23 @@
 import { prisma } from "@/lib/prisma";
-import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
+import type { Prisma } from "@prisma/client";
+import type { CompanyMock } from "@/lib/mock-companies";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
 
 const THRESHOLD_REAL_ONLY = 10;
 
-type DealWithCompany = Awaited<
-  ReturnType<
-    typeof prisma.deal.findMany<{
-      include: { company: { include: { valuations: true } } };
-    }>
-  >
->[number];
+const companyPublicInclude = {
+  valuations: { orderBy: { createdAt: "desc" as const }, take: 1 },
+  companyFiles: {
+    where: { kind: "image" },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    take: 1,
+    select: { id: true },
+  },
+} satisfies Prisma.CompanyInclude;
+
+type DealWithCompany = Prisma.DealGetPayload<{
+  include: { company: { include: typeof companyPublicInclude } };
+}>;
 
 function mapDealToMock(deal: DealWithCompany): CompanyMock {
   const c = deal.company;
@@ -19,7 +26,9 @@ function mapDealToMock(deal: DealWithCompany): CompanyMock {
     ? `${(val.minValue / 1_000_000).toFixed(1)}–${(val.maxValue / 1_000_000).toFixed(1)}M €`
     : "—";
   const ebitdaStr = c.ebitda ?? "—";
-  const docLinks = (c as { documentLinks?: DocumentLink[] | null }).documentLinks;
+  const exerciseResultStr = (c as { exerciseResult?: string | null }).exerciseResult?.trim() || null;
+  const heroFile = c.companyFiles?.[0];
+  const heroImageSrc = heroFile ? `/api/companies/${c.id}/files/${heroFile.id}` : null;
   return {
     id: c.id,
     name: c.name,
@@ -27,16 +36,21 @@ function mapDealToMock(deal: DealWithCompany): CompanyMock {
     location: c.location,
     revenue: revenueStr,
     ebitda: ebitdaStr,
+    exerciseResult: exerciseResultStr,
     gmv: (c as { gmv?: string | null }).gmv ?? null,
     employees: c.employees ?? null,
     description: c.description ?? "Sin descripción.",
     sellerDescription: (c as { sellerDescription?: string | null }).sellerDescription ?? null,
-    documentLinks: Array.isArray(docLinks) ? docLinks : null,
+    // Enlaces Drive: solo en ficha /companies/[id] y solo para propietario o admin (no en listado).
+    documentLinks: null,
     attachmentsApproved: (c as { attachmentsApproved?: boolean }).attachmentsApproved ?? false,
     companyType: (c as { companyType?: string | null }).companyType ?? null,
     yearsOperating: (c as { yearsOperating?: number | null }).yearsOperating ?? null,
     hasReceivedFunding: (c as { hasReceivedFunding?: boolean | null }).hasReceivedFunding ?? null,
     website: (c as { website?: string | null }).website ?? null,
+    heroImageSrc,
+    valuationSaleMin: val?.salePriceMin ?? null,
+    valuationSaleMax: val?.salePriceMax ?? null,
   };
 }
 
@@ -74,7 +88,10 @@ export async function getPublicCompanies(
     };
     const baseWhere = {
       published: true,
-      ...(Object.keys(companyWhere).length ? { company: companyWhere } : {}),
+      company: {
+        removedAt: null,
+        ...(Object.keys(companyWhere).length ? companyWhere : {}),
+      },
     };
 
     const total = await prisma.deal.count({ where: baseWhere });
@@ -84,9 +101,7 @@ export async function getPublicCompanies(
         where: baseWhere,
         include: {
           company: {
-            include: {
-              valuations: { orderBy: { createdAt: "desc" }, take: 1 },
-            },
+            include: companyPublicInclude,
           },
         },
         orderBy: { company: { name: "asc" } },
@@ -109,9 +124,7 @@ export async function getPublicCompanies(
       where: baseWhere,
       include: {
         company: {
-          include: {
-            valuations: { orderBy: { createdAt: "desc" }, take: 1 },
-          },
+          include: companyPublicInclude,
         },
       },
       orderBy: { company: { name: "asc" } },
@@ -153,7 +166,7 @@ export async function getPublicCompanies(
 export async function getDistinctLocations(): Promise<string[]> {
   try {
     const rows = await prisma.company.findMany({
-      where: { deals: { some: { published: true } } },
+      where: { removedAt: null, deals: { some: { published: true } } },
       select: { location: true },
       distinct: ["location"],
       orderBy: { location: "asc" },

@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { X } from "lucide-react";
+import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { setStoredToken } from "@/lib/auth-client";
 
 const ROLE_TARGET: Record<string, string> = {
   ADMIN: "/admin",
   BUYER: "/dashboard/buyer",
   SELLER: "/dashboard/seller",
+  PROFESSIONAL: "/dashboard/buyer",
 };
 
 type Props = {
@@ -46,12 +48,14 @@ export default function LoginModal({ open, onClose, onOpenRegister, onSuccess }:
       }
       if (data.token) setStoredToken(data.token);
       onSuccess?.();
-      onClose();
       const target = (data.role && ROLE_TARGET[data.role]) || "/dashboard";
       router.push(target);
+      window.setTimeout(() => {
+        onClose();
+        setLoading(false);
+      }, 400);
     } catch {
       setError("Error inesperado");
-    } finally {
       setLoading(false);
     }
   };
@@ -68,6 +72,7 @@ export default function LoginModal({ open, onClose, onOpenRegister, onSuccess }:
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50"
       onClick={onClose}
     >
+      {loading && <LoadingOverlay message="Entrando…" zClass="z-[300]" />}
       <div
         className="bg-white rounded-2xl border-2 border-[var(--brand-primary)]/20 shadow-xl max-w-md w-full overflow-hidden"
         onClick={(e) => e.stopPropagation()}

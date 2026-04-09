@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "Valuation" ADD COLUMN IF NOT EXISTS "salePriceMin" INTEGER;
+ALTER TABLE "Valuation" ADD COLUMN IF NOT EXISTS "salePriceMax" INTEGER;
+
+-- AlterTable
+ALTER TABLE "CompanyFile" ADD COLUMN IF NOT EXISTS "sortOrder" INTEGER NOT NULL DEFAULT 0;

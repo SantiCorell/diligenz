@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import {
   SITE_URL,
   SITE_NAME,
@@ -13,6 +12,8 @@ import {
   getMarketplaceSchema,
 } from "@/lib/seo";
 import "./globals.css";
+import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
+import ConditionalSpeedInsights from "@/components/consent/ConditionalSpeedInsights";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -139,7 +140,8 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {children}
-        <SpeedInsights />
+        <CookieConsentBanner />
+        <ConditionalSpeedInsights />
       </body>
     </html>
   );

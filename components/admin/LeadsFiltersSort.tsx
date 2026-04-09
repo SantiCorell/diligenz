@@ -4,9 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 const CATEGORY_OPTIONS = [
   { value: "", label: "Todas las categorías" },
-  { value: "activo", label: "Activo" },
-  { value: "pruebas", label: "Pruebas" },
-  { value: "archivado", label: "Archivado" },
+  { value: "pendiente", label: "Pendiente" },
+  { value: "gestionado", label: "Gestionado" },
+  { value: "rechazado", label: "Rechazado" },
 ];
 
 const TYPE_OPTIONS = [

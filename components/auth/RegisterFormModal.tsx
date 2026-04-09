@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { X } from "lucide-react";
+import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { setStoredToken } from "@/lib/auth-client";
 
-type Role = "SELLER" | "BUYER";
+type Role = "SELLER" | "BUYER" | "PROFESSIONAL";
 
 type Props = {
   open: boolean;
@@ -58,12 +59,15 @@ export default function RegisterFormModal({ open, onClose, onOpenLogin, onSucces
       }
       if (data.token) setStoredToken(data.token);
       onSuccess?.();
-      onClose();
-      const target = data.role === "BUYER" ? "/dashboard/buyer" : "/dashboard/seller";
+      const target =
+        data.role === "SELLER" ? "/dashboard/seller" : "/dashboard/buyer";
       router.push(target);
+      window.setTimeout(() => {
+        onClose();
+        setLoading(false);
+      }, 400);
     } catch {
       setError("Error inesperado. Inténtalo de nuevo.");
-    } finally {
       setLoading(false);
     }
   };
@@ -80,6 +84,7 @@ export default function RegisterFormModal({ open, onClose, onOpenLogin, onSucces
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 overflow-y-auto py-6"
       onClick={onClose}
     >
+      {loading && <LoadingOverlay message="Creando cuenta…" zClass="z-[300]" />}
       <div
         className="bg-white rounded-2xl border-2 border-[var(--brand-primary)]/20 shadow-xl max-w-md w-full overflow-hidden my-auto"
         onClick={(e) => e.stopPropagation()}
@@ -194,7 +199,7 @@ export default function RegisterFormModal({ open, onClose, onOpenLogin, onSucces
               <label className="block text-sm font-medium text-[var(--brand-primary)] mb-2">
                 ¿Qué quieres hacer en DILIGENZ?
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-2">
                 <button
                   type="button"
                   onClick={() => setRole("SELLER")}
@@ -216,6 +221,17 @@ export default function RegisterFormModal({ open, onClose, onOpenLogin, onSucces
                   }`}
                 >
                   Comprar / Invertir
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("PROFESSIONAL")}
+                  className={`rounded-xl border-2 px-4 py-3 text-sm font-medium transition ${
+                    role === "PROFESSIONAL"
+                      ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-md"
+                      : "border-[var(--brand-primary)]/30 text-[var(--foreground)] hover:border-[var(--brand-primary)]/50 hover:bg-[var(--brand-primary)]/5"
+                  }`}
+                >
+                  Profesional / Asesor
                 </button>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { canOwnerEditCompanyListing } from "@/lib/company-owner-edit";
 import { prisma } from "@/lib/prisma";
 import { getUserIdFromRequest } from "@/lib/session";
 import { writeFile, mkdir } from "fs/promises";
@@ -10,7 +11,7 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
   const [company, user] = await Promise.all([
     prisma.company.findUnique({
       where: { id: companyId },
-      select: { ownerId: true, attachmentsApproved: true },
+      select: { ownerId: true, attachmentsApproved: true, removedAt: true },
     }),
     prisma.user.findUnique({
       where: { id: userId },
@@ -18,6 +19,9 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
     }),
   ]);
   if (!company || !user) return false;
+  if (company.removedAt) {
+    return company.ownerId === userId || user.role === "ADMIN";
+  }
   if (company.ownerId === userId || user.role === "ADMIN") return true;
   return company.attachmentsApproved === true;
 }
@@ -41,8 +45,16 @@ export async function GET(req: Request, { params }: Params) {
 
   const files = await prisma.companyFile.findMany({
     where: { companyId },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, name: true, size: true, mimeType: true, kind: true, createdAt: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      name: true,
+      size: true,
+      mimeType: true,
+      kind: true,
+      sortOrder: true,
+      createdAt: true,
+    },
   });
 
   return NextResponse.json({ files });
@@ -60,9 +72,15 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: "companyId requerido" }, { status: 400 });
   }
 
-  const allowed = await canAccessCompanyFiles(companyId, userId);
+  const allowed = await canOwnerEditCompanyListing(companyId, userId);
   if (!allowed) {
-    return NextResponse.json({ error: "Solo el dueño de la empresa o un administrador pueden subir documentos" }, { status: 403 });
+    return NextResponse.json(
+      {
+        error:
+          "No puedes subir archivos: el proyecto está publicado o no tienes permiso. Contacta con Diligenz para cambios.",
+      },
+      { status: 403 }
+    );
   }
 
   const formData = await req.formData();
@@ -90,6 +108,14 @@ export async function POST(req: Request, { params }: Params) {
   await writeFile(absolutePath, Buffer.from(bytes));
 
   const isImage = (file.type || "").startsWith("image/");
+  let sortOrder = 0;
+  if (isImage) {
+    const agg = await prisma.companyFile.aggregate({
+      where: { companyId, kind: "image" },
+      _max: { sortOrder: true },
+    });
+    sortOrder = (agg._max.sortOrder ?? -1) + 1;
+  }
   await prisma.companyFile.create({
     data: {
       companyId,
@@ -99,6 +125,7 @@ export async function POST(req: Request, { params }: Params) {
       mimeType: file.type || "application/octet-stream",
       size: file.size,
       kind: isImage ? "image" : "document",
+      sortOrder,
     },
   });
 

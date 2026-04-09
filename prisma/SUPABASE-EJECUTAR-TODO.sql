@@ -175,12 +175,24 @@ CREATE TABLE IF NOT EXISTS "ContactRequest" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "ContactRequest_pkey" PRIMARY KEY ("id")
 );
+ALTER TABLE "ContactRequest" ADD COLUMN IF NOT EXISTS "category" TEXT NOT NULL DEFAULT 'pendiente';
 
 -- Company: columnas extra (GMV, descripción vendedor, enlaces)
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "gmv" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "sellerDescription" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "documentLinks" JSONB;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "attachmentsApproved" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "exerciseResult" TEXT;
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "removedAt" TIMESTAMP(3);
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "removedById" TEXT;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Company_removedById_fkey') THEN
+    ALTER TABLE "Company" ADD CONSTRAINT "Company_removedById_fkey"
+      FOREIGN KEY ("removedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END $$;
+CREATE INDEX IF NOT EXISTS "Company_removedAt_idx" ON "Company"("removedAt");
 
 -- CompanyFile
 CREATE TABLE IF NOT EXISTS "CompanyFile" (
@@ -198,6 +210,10 @@ CREATE TABLE IF NOT EXISTS "CompanyFile" (
   CONSTRAINT "CompanyFile_uploadedById_fkey" FOREIGN KEY ("uploadedById") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE INDEX IF NOT EXISTS "CompanyFile_companyId_idx" ON "CompanyFile"("companyId");
+ALTER TABLE "CompanyFile" ADD COLUMN IF NOT EXISTS "sortOrder" INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE "Valuation" ADD COLUMN IF NOT EXISTS "salePriceMin" INTEGER;
+ALTER TABLE "Valuation" ADD COLUMN IF NOT EXISTS "salePriceMax" INTEGER;
 
 -- ValuationLead (leads del formulario "Valora tu empresa")
 CREATE TABLE IF NOT EXISTS "ValuationLead" (
@@ -218,6 +234,8 @@ CREATE TABLE IF NOT EXISTS "ValuationLead" (
 );
 CREATE INDEX IF NOT EXISTS "ValuationLead_createdAt_idx" ON "ValuationLead"("createdAt" DESC);
 CREATE INDEX IF NOT EXISTS "ValuationLead_email_idx" ON "ValuationLead"("email");
+ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "exerciseResult" INTEGER;
+ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "category" TEXT NOT NULL DEFAULT 'pendiente';
 
 -- Índices únicos (ignorar si ya existen)
 CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
@@ -260,3 +278,32 @@ BEGIN
     ALTER TABLE "Interest" ADD CONSTRAINT "Interest_dealId_fkey" FOREIGN KEY ("dealId") REFERENCES "Deal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
   END IF;
 END $$;
+
+-- User: validación admin del perfil (checks del dashboard)
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "profileVerifiedByAdmin" BOOLEAN NOT NULL DEFAULT false;
+
+-- Leads: categorías pendiente/gestionado/rechazado + mensaje contacto TEXT
+ALTER TABLE "ContactRequest" ALTER COLUMN "message" TYPE TEXT;
+UPDATE "ContactRequest" SET "category" = 'gestionado' WHERE "category" = 'pruebas';
+UPDATE "ContactRequest" SET "category" = 'rechazado' WHERE "category" = 'archivado';
+UPDATE "ContactRequest" SET "category" = 'pendiente' WHERE "category" IS NULL OR "category" = 'activo';
+UPDATE "ContactRequest" SET "category" = 'pendiente' WHERE "category" NOT IN ('pendiente', 'gestionado', 'rechazado');
+ALTER TABLE "ContactRequest" ALTER COLUMN "category" SET DEFAULT 'pendiente';
+ALTER TABLE "ContactRequest" ALTER COLUMN "category" SET NOT NULL;
+UPDATE "ValuationLead" SET "category" = 'gestionado' WHERE "category" = 'pruebas';
+UPDATE "ValuationLead" SET "category" = 'rechazado' WHERE "category" = 'archivado';
+UPDATE "ValuationLead" SET "category" = 'pendiente' WHERE "category" IS NULL OR "category" = 'activo';
+UPDATE "ValuationLead" SET "category" = 'pendiente' WHERE "category" NOT IN ('pendiente', 'gestionado', 'rechazado');
+ALTER TABLE "ValuationLead" ALTER COLUMN "category" SET DEFAULT 'pendiente';
+ALTER TABLE "ValuationLead" ALTER COLUMN "category" SET NOT NULL;
+
+-- User: rol profesional, estado de cuenta y baja lógica
+DO $$ BEGIN CREATE TYPE "UserAccountStatus" AS ENUM ('PENDING', 'IN_REVIEW', 'ACTIVE', 'REJECTED'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN ALTER TYPE "UserRole" ADD VALUE 'PROFESSIONAL'; EXCEPTION WHEN duplicate_object THEN null; END $$;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "accountStatus" "UserAccountStatus" NOT NULL DEFAULT 'ACTIVE';
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMP(3);
+CREATE INDEX IF NOT EXISTS "User_deletedAt_idx" ON "User"("deletedAt");
+CREATE INDEX IF NOT EXISTS "User_accountStatus_idx" ON "User"("accountStatus");
+
+-- Company: nota libre del vendedor sobre documentación
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "sellerDocumentsNote" TEXT;

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
-
-const CATEGORIES = ["activo", "pruebas", "archivado"] as const;
+import { LEAD_CATEGORIES, type LeadCategory } from "@/lib/lead-category";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -14,11 +13,18 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
-  const category = body.category === null || body.category === undefined
-    ? null
-    : typeof body.category === "string" && CATEGORIES.includes(body.category as typeof CATEGORIES[number])
-      ? body.category
+  const raw = body.category;
+  const category: LeadCategory | null =
+    typeof raw === "string" && LEAD_CATEGORIES.includes(raw as LeadCategory)
+      ? (raw as LeadCategory)
       : null;
+
+  if (!category) {
+    return NextResponse.json(
+      { error: "Categoría inválida (pendiente, gestionado o rechazado)." },
+      { status: 400 }
+    );
+  }
 
   const updated = await prisma.valuationLead.updateMany({
     where: { id },

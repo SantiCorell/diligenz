@@ -16,6 +16,14 @@ export function sanitizeString(input: unknown): string {
     .slice(0, 1000); // Limitar longitud
 }
 
+/** Texto largo (mensajes, descripciones): mismo saneado, límite alto para no cortar en panel. */
+export function sanitizeLongText(input: unknown, maxLength = 500_000): string {
+  if (typeof input !== "string") {
+    return "";
+  }
+  return input.trim().replace(/[<>]/g, "").slice(0, maxLength);
+}
+
 /**
  * Valida formato de email
  */

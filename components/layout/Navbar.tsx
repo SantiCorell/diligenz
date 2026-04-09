@@ -8,7 +8,7 @@ import { authFetch, clearStoredToken, syncSessionCookie } from "@/lib/auth-clien
 import LoginModal from "@/components/auth/LoginModal";
 import RegisterFormModal from "@/components/auth/RegisterFormModal";
 
-type SessionRole = "ADMIN" | "BUYER" | "SELLER" | null;
+type SessionRole = "ADMIN" | "BUYER" | "SELLER" | "PROFESSIONAL" | null;
 
 export default function Navbar() {
   const [inicioOpen, setInicioOpen] = useState(false);
@@ -47,6 +47,8 @@ export default function Navbar() {
   }, []);
 
   const panelHref = session.role === "ADMIN" ? "/admin" : "/dashboard";
+  const misEmpresasHref =
+    session.role === "SELLER" ? "/dashboard/seller" : "/dashboard/mis-empresas";
   const loggedIn = session.loggedIn;
 
   const handleLogout = async () => {
@@ -177,9 +179,9 @@ export default function Navbar() {
                         <LayoutDashboard className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Mi Panel</span>
                       </Link>
-                      <Link href="/companies/mi-interes" className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5">
+                      <Link href={misEmpresasHref} prefetch={false} className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5">
                         <Star className="w-4 h-4 shrink-0 opacity-90" />
-                        <span>De mi interés</span>
+                        <span>Mis empresas</span>
                       </Link>
                       <div className="my-1.5 border-t border-white/15" role="separator" aria-hidden />
                       <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5">
@@ -310,12 +312,13 @@ export default function Navbar() {
                   Mi Panel
                 </Link>
                 <Link
-                  href="/companies/mi-interes"
+                  href={misEmpresasHref}
+                  prefetch={false}
                   className="flex items-center gap-3 py-2.5 pl-4 border-b border-white/10"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Star className="w-4 h-4 shrink-0 opacity-90" />
-                  De mi interés
+                  Mis empresas
                 </Link>
                 <Link
                   href="/"

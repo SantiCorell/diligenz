@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getSessionWithUserFromRequest } from "@/lib/session";
+import { isCompanyRemoved } from "@/lib/is-company-removed";
 
 export async function POST(req: Request) {
   const session = await getSessionWithUserFromRequest(req);
@@ -15,6 +16,12 @@ export async function POST(req: Request) {
   if (!companyId) {
     return NextResponse.redirect(
       new URL("/admin/companies?error=missing_company", req.url)
+    );
+  }
+
+  if (await isCompanyRemoved(companyId)) {
+    return NextResponse.redirect(
+      new URL(`/admin/companies/${companyId}?error=company_removed`, req.url)
     );
   }
 

@@ -39,6 +39,10 @@ export async function POST(req: Request) {
       );
     }
 
+    if (company.removedAt) {
+      return NextResponse.json({ error: "Company removed" }, { status: 400 });
+    }
+
     // 4️⃣ Ownership
     if (company.ownerId !== userId) {
       return NextResponse.json(

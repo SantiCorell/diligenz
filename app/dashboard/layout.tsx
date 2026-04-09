@@ -14,7 +14,9 @@ export default async function DashboardLayout({
 
   const user = session.user;
 
-  const profileComplete = Boolean(user.phone);
+  const profileComplete =
+    Boolean(user.phone?.trim() && user.name?.trim()) ||
+    user.profileVerifiedByAdmin;
   const userDisplayName = getDisplayName(user.email);
 
   return (
@@ -26,6 +28,10 @@ export default async function DashboardLayout({
           ndaSigned={user.ndaSigned}
           dniVerified={user.dniVerified}
           profileComplete={profileComplete}
+          profileVerifiedByAdmin={user.profileVerifiedByAdmin}
+          userName={user.name}
+          userPhone={user.phone}
+          role={user.role}
         />
       </div>
 

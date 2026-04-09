@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 import { getClientIP } from "@/lib/security";
 import { getUserIdFromRequest } from "@/lib/session";
+import { isCompanyRemoved } from "@/lib/is-company-removed";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -73,7 +74,11 @@ export async function POST(req: Request, { params }: Params) {
   if (!companyId || typeof companyId !== "string" || companyId.length > 100) {
     return NextResponse.json({ error: "ID de empresa inválido" }, { status: 400 });
   }
-  
+
+  if (await isCompanyRemoved(companyId)) {
+    return NextResponse.json({ error: "Empresa no disponible" }, { status: 404 });
+  }
+
   const ip = getClientIP(req.headers);
   const rateLimitResult = checkRateLimit(
     getRateLimitIdentifier(ip, userId),

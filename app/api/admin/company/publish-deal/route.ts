@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
+import { isCompanyRemoved } from "@/lib/is-company-removed";
 
 /**
  * Publicar el deal en el marketplace (visible para usuarios).
@@ -18,6 +19,12 @@ export async function POST(req: Request) {
   if (!companyId) {
     return NextResponse.redirect(
       new URL("/admin/companies?error=missing_company", req.url)
+    );
+  }
+
+  if (await isCompanyRemoved(companyId)) {
+    return NextResponse.redirect(
+      new URL(`/admin/companies/${companyId}?error=company_removed`, req.url)
     );
   }
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
+import { isCompanyRemoved } from "@/lib/is-company-removed";
 
 function parseDocumentLinks(raw: string | null): { label: string; url: string }[] | null {
   if (!raw || !raw.trim()) return null;
@@ -17,6 +18,8 @@ function parseDocumentLinks(raw: string | null): { label: string; url: string }[
   return links.length ? links : null;
 }
 
+const COMPANY_TYPES = ["EMPRESA", "AUTONOMO", "STARTUP", "MARKETPLACE"] as const;
+
 export async function POST(req: Request) {
   const session = await getSessionWithUserFromRequest(req);
   if (!session || session.user.role !== "ADMIN") {
@@ -29,11 +32,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing companyId" }, { status: 400 });
   }
 
+  const url = new URL(req.url);
+  if (await isCompanyRemoved(companyId)) {
+    return NextResponse.redirect(
+      new URL(`/admin/companies/${companyId}?error=company_removed`, url.origin)
+    );
+  }
+
   const name = formData.get("name")?.toString();
+  const sector = formData.get("sector")?.toString()?.trim();
+  const location = formData.get("location")?.toString()?.trim();
+  const revenue = formData.get("revenue")?.toString()?.trim();
+  const ebitdaRaw = formData.get("ebitda")?.toString();
+  const exerciseResultRaw = formData.get("exerciseResult")?.toString();
   const description = formData.get("description")?.toString();
   const sellerDescription = formData.get("sellerDescription")?.toString();
   const documentLinksRaw = formData.get("documentLinks")?.toString();
-  const gmv = formData.get("gmv")?.toString();
   const employeesRaw = formData.get("employees")?.toString();
   const attachmentsApproved = formData.get("attachmentsApproved") === "on";
   const companyTypeRaw = formData.get("companyType")?.toString();
@@ -44,6 +58,8 @@ export async function POST(req: Request) {
   const arrRaw = formData.get("arr")?.toString();
   const hasReceivedFundingRaw = formData.get("hasReceivedFunding")?.toString();
   const websiteRaw = formData.get("website")?.toString();
+  const ownerIdRaw = formData.get("ownerId")?.toString()?.trim();
+  const breakevenExpectedYearRaw = formData.get("breakevenExpectedYear")?.toString();
 
   const documentLinks = parseDocumentLinks(documentLinksRaw ?? null);
   const employees =
@@ -54,10 +70,10 @@ export async function POST(req: Request) {
     employees != null && !Number.isNaN(employees) && employees >= 0
       ? employees
       : null;
-  const companyTypeValue =
-    companyTypeRaw && ["EMPRESA", "STARTUP", "MARKETPLACE"].includes(companyTypeRaw.trim())
-      ? companyTypeRaw.trim()
-      : null;
+  const companyTypeTrim = (companyTypeRaw ?? "").trim();
+  const companyTypeValue = COMPANY_TYPES.includes(companyTypeTrim as (typeof COMPANY_TYPES)[number])
+    ? companyTypeTrim
+    : null;
   const yearsOperatingValue =
     yearsOperatingRaw != null && yearsOperatingRaw.trim() !== ""
       ? (() => {
@@ -92,14 +108,39 @@ export async function POST(req: Request) {
       ? hasReceivedFundingRaw === "on" || hasReceivedFundingRaw === "true"
       : undefined;
 
+  const breakevenExpectedYearValue =
+    breakevenExpectedYearRaw != null && breakevenExpectedYearRaw.trim() !== ""
+      ? (() => {
+          const n = parseInt(breakevenExpectedYearRaw.trim(), 10);
+          return !Number.isNaN(n) ? n : null;
+        })()
+      : null;
+
+  let ownerIdUpdate: { ownerId: string } | Record<string, never> = {};
+  if (ownerIdRaw) {
+    const owner = await prisma.user.findUnique({ where: { id: ownerIdRaw } });
+    if (owner && !owner.blocked) {
+      ownerIdUpdate = { ownerId: ownerIdRaw };
+    }
+  }
+
+  const ebitdaTrim = (ebitdaRaw ?? "").trim();
+  const ebitdaValue = ebitdaTrim === "" ? null : ebitdaTrim;
+  const exerciseResultTrim = (exerciseResultRaw ?? "").trim();
+  const exerciseResultValue = exerciseResultTrim === "" ? null : exerciseResultTrim;
+
   await prisma.company.update({
     where: { id: companyId },
     data: {
       ...(name != null && name !== "" && { name }),
+      ...(sector != null && sector !== "" && { sector }),
+      ...(location != null && location !== "" && { location }),
+      ...(revenue != null && revenue !== "" && { revenue, gmv: null }),
+      ebitda: ebitdaValue,
+      exerciseResult: exerciseResultValue,
       description: (description ?? "").trim() || null,
       sellerDescription: (sellerDescription ?? "").trim() || null,
       documentLinks: documentLinks ?? Prisma.JsonNull,
-      gmv: (gmv ?? "").trim() || null,
       employees: employeesValue,
       attachmentsApproved,
       companyType: companyTypeValue,
@@ -108,11 +149,12 @@ export async function POST(req: Request) {
       stage: stageValue,
       takeRatePercent: takeRatePercentValue,
       arr: arrValue,
+      breakevenExpectedYear: breakevenExpectedYearValue,
       ...(hasReceivedFundingValue !== undefined && { hasReceivedFunding: hasReceivedFundingValue }),
       website: (websiteRaw ?? "").trim() || null,
+      ...ownerIdUpdate,
     },
   });
 
-  const url = new URL(req.url);
   return NextResponse.redirect(new URL(`/admin/companies/${companyId}?success=company_updated`, url.origin));
 }

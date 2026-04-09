@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
-import { getClientIP, sanitizeString, isValidEmail, isValidPhone, isValidLength } from "@/lib/security";
+import {
+  getClientIP,
+  sanitizeString,
+  sanitizeLongText,
+  isValidEmail,
+  isValidPhone,
+  isValidLength,
+} from "@/lib/security";
 
 export async function POST(req: Request) {
   try {
@@ -72,8 +79,8 @@ export async function POST(req: Request) {
     const sanitizedPhone = phone ? sanitizeString(phone).slice(0, 50) : null;
     const sanitizedCompanyName = companyName ? sanitizeString(companyName).slice(0, 200) : null;
     const sanitizedContactPerson = contactPerson ? sanitizeString(contactPerson).slice(0, 100) : null;
-    const sanitizedSubject = subject ? sanitizeString(subject).slice(0, 200) : null;
-    const sanitizedMessage = message ? sanitizeString(message).slice(0, 2000) : null;
+    const sanitizedSubject = subject ? sanitizeLongText(subject, 2000) : null;
+    const sanitizedMessage = message ? sanitizeLongText(message) : null;
 
     await prisma.contactRequest.create({
       data: {
@@ -86,6 +93,7 @@ export async function POST(req: Request) {
         contactPerson: sanitizedContactPerson,
         subject: sanitizedSubject,
         message: sanitizedMessage,
+        category: "pendiente",
       },
     });
 

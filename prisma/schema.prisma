@@ -2,13 +2,13 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Usa DATABASE_URL (pooler) y DIRECT_URL (conexión directa).
-// En Vercel + Supabase a veces se llaman POSTGRES_PRISMA_URL y POSTGRES_URL_NON_POOLING:
-// pon en .env DATABASE_URL=<pooler> y DIRECT_URL=<direct>.
+// Solo DATABASE_URL (pooler transaccional 6543 + pgbouncer=true en Supabase).
+// En Vercel: POSTGRES_PRISMA_URL suele mapearse a DATABASE_URL.
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  // Solo DATABASE_URL: migraciones/db push usan el mismo pooler (6543 + pgbouncer=true).
+  // Evita DIRECT_URL a db.*:5432 (IPv6 / timeout) y a Session pooler :5432 ("Tenant or user not found").
+  url = env("DATABASE_URL")
 }
 
 /**
@@ -22,11 +22,15 @@ model User {
   passwordHash  String?  // Opcional para usuarios OAuth
   phone         String?
   role          UserRole
+  accountStatus UserAccountStatus @default(ACTIVE)
+  deletedAt     DateTime?
   emailVerified Boolean  @default(false)
 
   ndaSigned     Boolean  @default(false)
   dniVerified   Boolean  @default(false)
-  
+  /// Si true, el dashboard cuenta "Perfil completo" aunque falte teléfono (validación admin).
+  profileVerifiedByAdmin Boolean @default(false)
+
   blocked       Boolean  @default(false)
   blockedUntil  DateTime?
 
@@ -39,7 +43,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  companies          Company[]
+  companies          Company[] @relation("CompanyOwner")
+  removedCompanies   Company[] @relation("CompanyRemovedBy")
   interests          Interest[]
   companyInterests   UserCompanyInterest[]
   accounts           Account[]
@@ -117,7 +122,7 @@ enum RequestStatus {
  * COMPANY
  * =====================
  */
-/// Tipo de entidad: EMPRESA (tradicional), STARTUP, MARKETPLACE. Null = no especificado (registros legacy).
+/// Tipo de entidad en UI: EMPRESA | AUTONOMO (histórico: STARTUP, MARKETPLACE). Null = legacy.
 model Company {
   id          String        @id @default(cuid())
   name        String
@@ -125,29 +130,35 @@ model Company {
   location    String
   revenue     String
   ebitda      String?       // Puede ser negativo, ej. "-50000"
-  gmv         String?       // Gross Merchandise Value (volumen de negocio)
+  exerciseResult String?    // Resultado del ejercicio (beneficio neto último ejercicio); texto o cifra, puede ser negativo
+  gmv         String?       // Opcional; si existe se muestra como facturación anual en ficha. Preferir `revenue`.
   employees   Int?
   description String?       // Resumen breve para listados y tarjetas
   sellerDescription String?  @db.Text  // Descripción amplia del vendedor (solo usuarios registrados)
-  documentLinks       Json?    // [{ label: string, url: string }] enlaces a Drive, etc.
+  documentLinks       Json?    // [{ label, url }] Google Drive; solo propietario + ADMIN en ficha pública
   attachmentsApproved Boolean  @default(false) // Si true, usuarios registrados pueden ver docs/enlaces/fotos
   status      CompanyStatus @default(DRAFT)
   createdAt   DateTime      @default(now())
+  removedAt   DateTime?
+  removedById String?
+  removedBy   User?         @relation("CompanyRemovedBy", fields: [removedById], references: [id], onDelete: SetNull)
 
   // Valoración mejorada: tipo de entidad, madurez, crecimiento, startup/marketplace
-  companyType         String?   // "EMPRESA" | "STARTUP" | "MARKETPLACE" | null (NONE/legacy)
+  companyType         String?   // "EMPRESA" | "AUTONOMO" | "STARTUP" | "MARKETPLACE" | null
   yearsOperating      Int?      // Años en operación
   revenueGrowthPercent Float?   // Crecimiento interanual de facturación
   stage               String?   // Para startups: idea, pre_seed, seed, serie_a, etc.
-  takeRatePercent     Float?    // Para marketplaces: % comisión sobre GMV
+  takeRatePercent     Float?    // Para marketplaces: % comisión sobre volumen
   arr                 Int?      // Annual Recurring Revenue (€), SaaS/subscriptions
   breakevenExpectedYear Int?    // Año esperado de breakeven (opcional)
   hasReceivedFunding  Boolean?  // Startup: si ha recibido financiación
   website             String?  // URL de la página web
+  /// Comentario libre del vendedor sobre documentación (visible para él y admin)
+  sellerDocumentsNote String?  @db.Text
 
   // Relations
   ownerId    String
-  owner      User        @relation(fields: [ownerId], references: [id])
+  owner      User        @relation("CompanyOwner", fields: [ownerId], references: [id])
   documents  Document[]
   deals      Deal[]
   valuations Valuation[]
@@ -166,6 +177,7 @@ model CompanyFile {
   mimeType      String?  @default("application/octet-stream")
   size          Int?     // bytes
   kind          String   @default("document") // "document" | "image"
+  sortOrder     Int      @default(0) // imágenes: menor = portada / primero en galería
   createdAt     DateTime @default(now())
 }
 
@@ -213,6 +225,9 @@ model Valuation {
   id        String   @id @default(cuid())
   minValue  Int
   maxValue  Int
+  /// Precio de venta pedido (€), rango opcional; independiente de la valoración orientativa
+  salePriceMin Int?
+  salePriceMax Int?
   createdAt DateTime @default(now())
 
   // Relations
@@ -246,6 +261,14 @@ enum UserRole {
   SELLER
   BUYER
   ADMIN
+  PROFESSIONAL
+}
+
+enum UserAccountStatus {
+  PENDING
+  IN_REVIEW
+  ACTIVE
+  REJECTED
 }
 
 enum CompanyStatus {
@@ -287,9 +310,9 @@ model ContactRequest {
   companyName   String?
   contactPerson String?  // persona a la que dirigirse (si empresa)
   subject       String?  // motivo de consulta (Valoración, Due diligence, etc.)
-  message       String?  // texto libre
+  message       String?  @db.Text // texto libre (longitud amplia)
   createdAt     DateTime @default(now())
-  category      String?  // "activo" | "pruebas" | "archivado" | null
+  category      String   @default("pendiente") // pendiente | gestionado | rechazado
 }
 
 /// Leads del formulario "Valora tu empresa": datos de contacto + datos empresa + valoración orientativa (CRM).
@@ -302,6 +325,7 @@ model ValuationLead {
   location    String
   revenue     Int      // facturación anual €
   ebitda      Int?     // EBITDA € (puede ser negativo)
+  exerciseResult Int?   // Resultado del ejercicio € (puede ser negativo)
   employees   Int?
   description String?  @db.Text
   minValue    Int      // valoración mínima €
@@ -318,5 +342,5 @@ model ValuationLead {
   breakevenExpectedYear Int?
   hasReceivedFunding  Boolean?
   website             String?  // URL de la página web
-  category            String?  // "activo" | "pruebas" | "archivado" | null
+  category            String   @default("pendiente") // pendiente | gestionado | rechazado
 }

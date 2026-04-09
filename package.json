@@ -10,10 +10,13 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:local": "npx --yes dotenv-cli@7 -e .env.local -- prisma migrate dev",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:push:local": "npx --yes dotenv-cli@7 -e .env.local -- prisma db push",
     "db:export-local": "node scripts/export-local-to-supabase.mjs",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:fix-user-columns": "prisma db execute --file prisma/ejecutar-si-error-User-columns.sql --schema prisma/schema.prisma"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",

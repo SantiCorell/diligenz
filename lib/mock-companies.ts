@@ -7,6 +7,8 @@ export type CompanyMock = {
   location: string;
   revenue: string;
   ebitda: string;
+  /** Resultado del ejercicio (beneficio neto); opcional */
+  exerciseResult?: string | null;
   gmv?: string | null;
   /** Nº de empleados (para mostrar en tarjeta y ficha) */
   employees?: number | null;
@@ -22,6 +24,13 @@ export type CompanyMock = {
   yearsOperating?: number | null;
   hasReceivedFunding?: boolean | null;
   website?: string | null;
+  /** URL de portada (imagen subida); si no hay, se usa imagen por defecto por sector */
+  heroImageSrc?: string | null;
+  /** Resto de imágenes públicas (misma API, empresa publicada) */
+  galleryImageSrcs?: string[];
+  /** Precio de venta pedido (€), desde valoración */
+  valuationSaleMin?: number | null;
+  valuationSaleMax?: number | null;
 };
 
 export const MOCK_COMPANIES: CompanyMock[] = [
@@ -32,6 +41,7 @@ export const MOCK_COMPANIES: CompanyMock[] = [
     location: "Madrid",
     revenue: "2–5M €",
     ebitda: "650k €",
+    exerciseResult: "410k €",
     gmv: "2,8M €",
     employees: 24,
     description:

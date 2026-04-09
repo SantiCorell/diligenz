@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import ShellLayout from "@/components/layout/ShellLayout";
+import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { setStoredToken } from "@/lib/auth-client";
 
-type Role = "SELLER" | "BUYER";
+type Role = "SELLER" | "BUYER" | "PROFESSIONAL";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -53,18 +54,18 @@ export default function RegisterPage() {
       if (data.token) {
         setStoredToken(data.token);
       }
-      // Ir directo al panel según rol (evita /dashboard → redirect, una petición menos)
-      const target = data.role === "BUYER" ? "/dashboard/buyer" : "/dashboard/seller";
+      const target =
+        data.role === "SELLER" ? "/dashboard/seller" : "/dashboard/buyer";
       router.push(target);
     } catch {
       setError("Error inesperado. Inténtalo de nuevo.");
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <ShellLayout>
+      {loading && <LoadingOverlay message="Creando tu cuenta…" />}
       <div className="min-h-screen bg-gradient-to-br from-[var(--brand-bg)] via-white to-[var(--brand-primary)]/5">
         <div className="max-w-7xl mx-auto px-6 py-8 md:py-10">
           {/* Logo centrado arriba */}
@@ -241,7 +242,7 @@ export default function RegisterPage() {
                     <label className="block text-sm font-medium text-[var(--brand-primary)] mb-2">
                       ¿Qué quieres hacer en DILIGENZ?
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <button
                         type="button"
                         onClick={() => setRole("SELLER")}
@@ -263,6 +264,17 @@ export default function RegisterPage() {
                         }`}
                       >
                         Comprar / Invertir
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRole("PROFESSIONAL")}
+                        className={`rounded-xl border-2 px-4 py-3 text-sm font-medium transition ${
+                          role === "PROFESSIONAL"
+                            ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white shadow-md"
+                            : "border-[var(--brand-primary)]/30 text-[var(--foreground)] hover:border-[var(--brand-primary)]/50 hover:bg-[var(--brand-primary)]/5"
+                        }`}
+                      >
+                        Profesional / Asesor
                       </button>
                     </div>
                   </div>

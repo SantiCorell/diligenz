@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import ShellLayout from "@/components/layout/ShellLayout";
+import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { setStoredToken } from "@/lib/auth-client";
 
 const ROLE_TARGET: Record<string, string> = {
   ADMIN: "/admin",
   BUYER: "/dashboard/buyer",
   SELLER: "/dashboard/seller",
+  PROFESSIONAL: "/dashboard/buyer",
 };
 
 export default function LoginPage() {
@@ -41,18 +43,17 @@ export default function LoginPage() {
       if (data.token) {
         setStoredToken(data.token);
       }
-      // Navegación client-side + directo al panel según role (sin recarga completa)
       const target = (data.role && ROLE_TARGET[data.role]) || "/dashboard";
       router.push(target);
     } catch {
       setError("Error inesperado");
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <ShellLayout>
+      {loading && <LoadingOverlay message="Entrando al panel…" />}
       <div className="min-h-screen bg-gradient-to-br from-[var(--brand-bg)] via-white to-[var(--brand-primary)]/5">
         <div className="max-w-7xl mx-auto px-6 py-8 md:py-10">
           {/* Logo centrado arriba */}

@@ -6,13 +6,21 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { authFetch, clearStoredToken } from "@/lib/auth-client";
 
+/** Rutas de experiencia comprador: el admin debe ver el menú completo del comprador (no solo «Dashboard» → /admin). */
+function pathnameIsBuyerPanel(path: string): boolean {
+  if (path.startsWith("/dashboard/buyer")) return true;
+  if (path.startsWith("/dashboard/mis-empresas")) return true;
+  if (path.startsWith("/dashboard/profile")) return true;
+  return false;
+}
+
 export default function DashboardShell({
   children,
   role,
   userDisplayName,
 }: {
   children: React.ReactNode;
-  role: "BUYER" | "SELLER" | "ADMIN";
+  role: "BUYER" | "SELLER" | "ADMIN" | "PROFESSIONAL";
   userDisplayName?: string;
 }) {
   const pathname = usePathname();
@@ -20,13 +28,21 @@ export default function DashboardShell({
   const [collapsed, setCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Admin viendo como comprador/vendedor: mostrar menú del rol que está simulando
+  // Profesional: mismo menú que comprador. Admin viendo como comprador/vendedor: simular ese rol.
   const effectiveRole: "BUYER" | "SELLER" | "ADMIN" =
-    role === "ADMIN" && pathname.startsWith("/dashboard/buyer")
+    role === "PROFESSIONAL"
+      ? "BUYER"
+      : role === "ADMIN" && pathnameIsBuyerPanel(pathname)
       ? "BUYER"
       : role === "ADMIN" && pathname.startsWith("/dashboard/seller")
       ? "SELLER"
-      : role;
+      : role === "ADMIN"
+      ? "ADMIN"
+      : role === "BUYER"
+      ? "BUYER"
+      : "SELLER";
+
+  const showAdminNavInUserPanel = role === "ADMIN" && effectiveRole !== "ADMIN";
 
   const logout = async () => {
     await authFetch("/api/auth/logout", { method: "POST" });
@@ -93,36 +109,37 @@ export default function DashboardShell({
           collapsed={!expanded}
           onNavigate={() => setMobileSidebarOpen(false)}
         />
-        <NavItem
-          href="/companies/mi-interes"
-          label="De mi interés"
-          active={pathname.startsWith("/companies/mi-interes")}
-          collapsed={!expanded}
-          onNavigate={() => setMobileSidebarOpen(false)}
-        />
         {effectiveRole === "BUYER" && (
           <>
             <NavItem
+              href="/dashboard/profile"
+              label="Mi perfil"
+              active={pathname.startsWith("/dashboard/profile")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
+              href="/dashboard/buyer/documents"
+              label="Mis documentos"
+              active={pathname.startsWith("/dashboard/buyer/documents")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
               href="/companies"
-              label="Empresas"
+              label="Explorar empresas"
               active={
                 pathname === "/companies" ||
-                (pathname.startsWith("/companies/") && !pathname.startsWith("/companies/mi-interes"))
+                (pathname.startsWith("/companies/") &&
+                  !pathname.startsWith("/companies/mi-interes"))
               }
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
             <NavItem
-              href="/dashboard/favorites"
-              label="Favoritas"
-              active={pathname.startsWith("/dashboard/favorites")}
-              collapsed={!expanded}
-              onNavigate={() => setMobileSidebarOpen(false)}
-            />
-            <NavItem
-              href="/dashboard/interests"
-              label="Solicitudes"
-              active={pathname.startsWith("/dashboard/interests")}
+              href="/dashboard/mis-empresas"
+              label="Mis empresas"
+              active={pathname.startsWith("/dashboard/mis-empresas")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
@@ -131,9 +148,26 @@ export default function DashboardShell({
         {effectiveRole === "SELLER" && (
           <>
             <NavItem
+              href="/dashboard/profile"
+              label="Mi perfil"
+              active={pathname.startsWith("/dashboard/profile")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
+              href="/dashboard/seller/documents"
+              label="Mis documentos"
+              active={pathname.startsWith("/dashboard/seller/documents")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
               href="/dashboard/seller"
-              label="Mis proyectos"
-              active={pathname.startsWith("/dashboard/seller")}
+              label="Mis empresas"
+              active={
+                pathname.startsWith("/dashboard/seller") &&
+                !pathname.startsWith("/dashboard/seller/documents")
+              }
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
@@ -146,6 +180,52 @@ export default function DashboardShell({
             />
           </>
         )}
+        {showAdminNavInUserPanel && (
+          <div
+            className={`${expanded ? "mt-3 pt-3 border-t border-white/10" : "mt-2 pt-2 border-t border-white/10"} space-y-1`}
+          >
+            {expanded && (
+              <p className="px-3 text-[10px] font-semibold uppercase tracking-wide text-white/45">
+                Administración
+              </p>
+            )}
+            <NavItem
+              href="/admin"
+              label="Admin · Inicio"
+              active={pathname.startsWith("/admin")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
+              href="/admin/companies"
+              label="Admin · Empresas"
+              active={pathname.startsWith("/admin/companies")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
+              href="/admin/actions"
+              label="Admin · Acciones"
+              active={pathname.startsWith("/admin/actions")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
+              href="/admin/leads"
+              label="Admin · Leads"
+              active={pathname.startsWith("/admin/leads")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
+              href="/admin/users"
+              label="Admin · Usuarios"
+              active={pathname.startsWith("/admin/users")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+          </div>
+        )}
       </nav>
 
       <div className={`${expanded ? "p-3" : "p-2"} border-t border-white/10`}>
@@ -153,10 +233,10 @@ export default function DashboardShell({
           type="button"
           onClick={() => { setMobileSidebarOpen(false); goToWeb(); }}
           className={`w-full flex items-center ${expanded ? "gap-3 px-3 py-2" : "justify-center px-2 py-2"} rounded-lg text-white/80 hover:bg-white/10 transition text-left`}
-          title={!expanded ? "Volver al sitio" : undefined}
+          title={!expanded ? "Ir a la web" : undefined}
         >
           <span className={!expanded ? "text-lg" : ""}>←</span>
-          {expanded && <span>Volver al sitio</span>}
+          {expanded && <span>Ir a la web</span>}
         </button>
       </div>
     </>

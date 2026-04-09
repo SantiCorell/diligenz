@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, TrendingUp, BarChart3, Globe, Users, ChevronRight } from "lucide-react";
+import { MapPin, TrendingUp, BarChart3, Users, ChevronRight, Wallet } from "lucide-react";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { getDefaultCompanyImageUrl } from "@/lib/default-company-images";
 
@@ -15,6 +15,8 @@ type Props = {
   positionInGroup?: number;
   /** Versión más compacta para listados con varias cartas */
   compact?: boolean;
+  /** Texto del botón inferior (por defecto solicitar información) */
+  ctaLabel?: string;
 };
 
 export default function CompanyCard({
@@ -24,6 +26,7 @@ export default function CompanyCard({
   linkToFicha: _linkToFicha = false,
   positionInGroup,
   compact = false,
+  ctaLabel = "Solicitar información",
 }: Props) {
   const showBlur = !isLoggedIn && onRequestAuth;
   const descMax = compact ? 100 : 140;
@@ -32,30 +35,43 @@ export default function CompanyCard({
       ? company.description.slice(0, descMax) + "…"
       : company.description;
 
-  // Si hay GMV mostramos GMV; si no, Facturación (no ambos)
-  const revenueOrGmv = company.gmv
-    ? { label: "GMV", value: company.gmv, icon: Globe, title: "Volumen de negocio (Gross Merchandise Value)" }
-    : { label: "Facturación", value: company.revenue, icon: BarChart3, title: "Ingresos anuales" };
+  const annualRevenue = company.gmv ?? company.revenue;
+  const revenueOrGmv = {
+    label: "Facturación anual €",
+    value: annualRevenue,
+    icon: BarChart3,
+    title: "Facturación anual en euros",
+  };
   const metrics = [
     revenueOrGmv,
     { label: "EBITDA", value: company.ebitda, icon: TrendingUp, title: "EBITDA" },
+    ...(company.exerciseResult
+      ? [
+          {
+            label: "Resultado ejercicio",
+            value: company.exerciseResult,
+            icon: Wallet,
+            title: "Resultado del ejercicio (beneficio neto)",
+          },
+        ]
+      : []),
     ...(company.employees != null
       ? [{ label: "Nº Empleados", value: String(company.employees), icon: Users, title: "Número de empleados" }]
       : []),
   ];
 
-  const defaultImageUrl = getDefaultCompanyImageUrl(company, positionInGroup);
+  const cardImageSrc = company.heroImageSrc ?? getDefaultCompanyImageUrl(company, positionInGroup);
 
   const cardContent = (
     <>
       <div className={`relative w-full overflow-hidden bg-[var(--brand-bg-lavender)] border border-[var(--brand-primary)]/10 rounded-xl ${compact ? "aspect-[16/9] -mx-4 -mt-4 mb-3" : "aspect-[16/10] rounded-xl -mx-6 -mt-6 mb-4"}`}>
         <Image
-          src={defaultImageUrl}
+          src={cardImageSrc}
           alt=""
           fill
           className="object-cover"
           sizes={compact ? "(max-width: 480px) 100vw, 280px" : "(max-width: 480px) 100vw, 400px"}
-          unoptimized
+          unoptimized={Boolean(company.heroImageSrc) || cardImageSrc.includes("unsplash.com")}
         />
       </div>
       <div className="flex items-start justify-between gap-3">
@@ -84,7 +100,7 @@ export default function CompanyCard({
             aria-hidden
           >
             <p className="text-sm font-medium text-[var(--brand-primary)] px-4 text-center">
-              Facturación, EBITDA, Nº empleados y datos completos
+              Facturación, EBITDA, resultado del ejercicio y datos completos
             </p>
             <button
               type="button"
@@ -125,7 +141,7 @@ export default function CompanyCard({
             href={`/companies/${company.id}`}
             className={`flex items-center justify-center gap-2 w-full rounded-xl font-semibold bg-[var(--brand-primary)] text-white shadow-md hover:opacity-95 transition ${compact ? "py-2.5 text-xs" : "py-3.5 text-sm"}`}
           >
-            Solicitar información
+            {ctaLabel}
             <ChevronRight className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
           </Link>
         </div>

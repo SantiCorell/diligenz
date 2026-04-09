@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   }
 
   const publishedCompanies = await prisma.company.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: "PUBLISHED", removedAt: null },
     select: { id: true },
   });
   const companyIds = publishedCompanies.map((c) => c.id);

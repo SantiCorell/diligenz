@@ -15,7 +15,7 @@ export default function GlobalError({
         style={{
           margin: 0,
           minHeight: "100vh",
-          backgroundColor: "#F3F0E6",
+          backgroundColor: "#F3F2EF",
           color: "#2F265D",
           fontFamily: "system-ui, sans-serif",
           display: "flex",
@@ -41,8 +41,8 @@ export default function GlobalError({
           <div
             style={{
               borderRadius: "1rem",
-              border: "1px solid rgba(106, 90, 205, 0.2)",
-              backgroundColor: "#F3F0E6",
+              border: "1px solid rgba(137, 74, 246, 0.2)",
+              backgroundColor: "#F3F2EF",
               padding: "2rem",
               boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
             }}
@@ -51,17 +51,17 @@ export default function GlobalError({
               <span
                 style={{
                   borderRadius: "9999px",
-                  backgroundColor: "rgba(106, 90, 205, 0.1)",
+                  backgroundColor: "rgba(137, 74, 246, 0.1)",
                   padding: "0.75rem",
                 }}
               >
                 <AlertCircle
-                  style={{ width: 40, height: 40, color: "#6A5ACD" }}
+                  style={{ width: 40, height: 40, color: "#894af6" }}
                   aria-hidden
                 />
               </span>
             </div>
-            <h1 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#6A5ACD", margin: 0 }}>
+            <h1 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#894af6", margin: 0 }}>
               Ups, ha habido un problema
             </h1>
             <p
@@ -81,7 +81,7 @@ export default function GlobalError({
                 textAlign: "left",
                 borderRadius: "0.75rem",
                 backgroundColor: "rgba(217, 208, 243, 0.6)",
-                border: "1px solid rgba(106, 90, 205, 0.1)",
+                border: "1px solid rgba(137, 74, 246, 0.1)",
                 padding: "1rem",
               }}
             >
@@ -89,7 +89,7 @@ export default function GlobalError({
                 style={{
                   fontSize: "0.75rem",
                   fontWeight: 600,
-                  color: "#6A5ACD",
+                  color: "#894af6",
                   margin: "0 0 0.5rem 0",
                 }}
               >
@@ -128,7 +128,7 @@ export default function GlobalError({
                   justifyContent: "center",
                   gap: "0.5rem",
                   borderRadius: "0.75rem",
-                  backgroundColor: "#6A5ACD",
+                  backgroundColor: "#894af6",
                   padding: "0.75rem 1.25rem",
                   fontSize: "0.875rem",
                   fontWeight: 600,
@@ -148,11 +148,11 @@ export default function GlobalError({
                   justifyContent: "center",
                   gap: "0.5rem",
                   borderRadius: "0.75rem",
-                  border: "2px solid rgba(106, 90, 205, 0.4)",
+                  border: "2px solid rgba(137, 74, 246, 0.4)",
                   padding: "0.75rem 1.25rem",
                   fontSize: "0.875rem",
                   fontWeight: 500,
-                  color: "#6A5ACD",
+                  color: "#894af6",
                   backgroundColor: "transparent",
                   cursor: "pointer",
                 }}
@@ -164,7 +164,7 @@ export default function GlobalError({
 
             <p style={{ marginTop: "1.5rem" }}>
               {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-              <a href="/" style={{ fontSize: "0.875rem", color: "#6A5ACD", textDecoration: "underline" }}>
+              <a href="/" style={{ fontSize: "0.875rem", color: "#894af6", textDecoration: "underline" }}>
                 ← Volver al inicio
               </a>
             </p>

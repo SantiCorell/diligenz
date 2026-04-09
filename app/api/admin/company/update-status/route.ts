@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CompanyStatus } from "@prisma/client";
 import { getSessionWithUserFromRequest } from "@/lib/session";
+import { isCompanyRemoved } from "@/lib/is-company-removed";
 
 export async function POST(req: Request) {
   const session = await getSessionWithUserFromRequest(req);
@@ -42,6 +43,12 @@ export async function POST(req: Request) {
   }
 
   const status = statusRaw as CompanyStatus;
+
+  if (await isCompanyRemoved(companyId)) {
+    return NextResponse.redirect(
+      new URL(`/admin/companies/${companyId}?error=company_removed`, req.url)
+    );
+  }
 
   // =====================
   // 🔁 ACTUALIZAR ESTADO

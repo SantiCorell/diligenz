@@ -27,8 +27,23 @@ type CompanyFileItem = {
   size: number | null;
   mimeType: string | null;
   kind: string;
+  sortOrder?: number;
   createdAt: string;
 };
+
+function formatSalePriceRange(
+  min: number | null | undefined,
+  max: number | null | undefined
+): string | null {
+  if (min == null && max == null) return null;
+  const fmt = (n: number) => n.toLocaleString("es-ES");
+  if (min != null && max != null) {
+    if (min === max) return `${fmt(min)} €`;
+    return `${fmt(min)} – ${fmt(max)} €`;
+  }
+  const n = min ?? max!;
+  return `${fmt(n)} €`;
+}
 
 type Props = {
   company: CompanyMock;
@@ -46,12 +61,13 @@ export default function CompanyFicha({
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("informacion");
   const [requestInfo, setRequestInfo] = useState(false);
-  const [favorite, setFavorite] = useState(false);
-  const [loading, setLoading] = useState<"request" | "favorite" | null>(null);
+  const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<CompanyFileItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const attachmentsApproved = Boolean(company.attachmentsApproved);
   const canSeeDocuments = isOwner || isAdmin || (isLoggedIn && attachmentsApproved);
+  /** Enlaces a Drive / carpeta: solo propietario de la empresa y administradores */
+  const canSeeDriveLinks = isOwner || isAdmin;
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -59,7 +75,6 @@ export default function CompanyFicha({
       .then((r) => r.json())
       .then((d) => {
         setRequestInfo(d.requestInfo ?? false);
-        setFavorite(d.favorite ?? false);
       })
       .catch(() => {});
   }, [company.id, isLoggedIn]);
@@ -73,7 +88,7 @@ export default function CompanyFicha({
   }, [company.id, isLoggedIn, canSeeDocuments]);
 
   const handleRequestInfo = async () => {
-    setLoading("request");
+    setLoading(true);
     try {
       const res = await authFetch(`/api/companies/${company.id}/interest`, {
         method: "POST",
@@ -82,28 +97,7 @@ export default function CompanyFicha({
       });
       if (res.ok) setRequestInfo(true);
     } finally {
-      setLoading(null);
-    }
-  };
-
-  const handleFavorite = async () => {
-    setLoading("favorite");
-    try {
-      if (favorite) {
-        await authFetch(`/api/companies/${company.id}/interest?type=FAVORITE`, {
-          method: "DELETE",
-        });
-        setFavorite(false);
-      } else {
-        const res = await authFetch(`/api/companies/${company.id}/interest`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "FAVORITE" }),
-        });
-        if (res.ok) setFavorite(true);
-      }
-    } finally {
-      setLoading(null);
+      setLoading(false);
     }
   };
 
@@ -135,20 +129,37 @@ export default function CompanyFicha({
     { id: "documentos", label: "Documentos" },
   ];
 
+  const defaultHero = getDefaultCompanyImageUrl(company);
+  const heroSrc = company.heroImageSrc ?? defaultHero;
+  const salePriceLabel = formatSalePriceRange(company.valuationSaleMin, company.valuationSaleMax);
+
   return (
     <>
       {/* Hero tipo Urbanitae: imagen + título + ubicación + panel lateral */}
       <div className="mt-6 rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] overflow-hidden shadow-sm">
         <div className="relative w-full aspect-[21/9] min-h-[180px] bg-[var(--brand-bg-lavender)]">
           <Image
-            src={getDefaultCompanyImageUrl(company)}
+            src={heroSrc}
             alt=""
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 900px"
-            unoptimized
+            unoptimized={Boolean(company.heroImageSrc) || heroSrc.includes("unsplash.com")}
           />
         </div>
+        {company.galleryImageSrcs && company.galleryImageSrcs.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto border-t border-[var(--brand-primary)]/10 bg-[var(--foreground)]/5 px-3 py-2">
+            {company.galleryImageSrcs.map((src) => (
+              <div
+                key={src}
+                className="relative h-16 w-28 shrink-0 overflow-hidden rounded-lg border border-[var(--brand-primary)]/10"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" className="h-full w-full object-cover" />
+              </div>
+            ))}
+          </div>
+        )}
         <div className="grid md:grid-cols-[1fr,280px] gap-0">
           <div className="p-6 md:p-8">
             <div className="flex flex-wrap items-center gap-2">
@@ -171,7 +182,7 @@ export default function CompanyFicha({
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <p className="text-xs text-[var(--foreground)] opacity-70">
-                  {company.gmv ? "GMV" : "Facturación anual"}
+                  Facturación anual €
                 </p>
                 <p className="text-lg font-bold text-[var(--brand-primary)]">
                   {company.gmv ?? company.revenue}
@@ -185,6 +196,24 @@ export default function CompanyFicha({
                   {company.ebitda}
                 </p>
               </div>
+              {company.exerciseResult ? (
+                <div>
+                  <p className="text-xs text-[var(--foreground)] opacity-70">
+                    Resultado del ejercicio
+                  </p>
+                  <p className="text-lg font-bold text-[var(--brand-primary)]">
+                    {company.exerciseResult}
+                  </p>
+                </div>
+              ) : null}
+              {salePriceLabel ? (
+                <div className="md:col-span-2 lg:col-span-1">
+                  <p className="text-xs text-[var(--foreground)] opacity-70">
+                    Precio de venta
+                  </p>
+                  <p className="text-lg font-bold text-[var(--brand-primary)]">{salePriceLabel}</p>
+                </div>
+              ) : null}
               {company.employees != null && (
                 <div>
                   <p className="text-xs text-[var(--foreground)] opacity-70">
@@ -206,20 +235,12 @@ export default function CompanyFicha({
                   <button
                     type="button"
                     onClick={handleRequestInfo}
-                    disabled={loading !== null}
+                    disabled={loading}
                     className="w-full rounded-xl bg-[var(--brand-primary)] py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
                   >
-                    {loading === "request" ? "Enviando…" : "¿Estás interesado?"}
+                    {loading ? "Enviando…" : "¿Estás interesado?"}
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={handleFavorite}
-                  disabled={loading !== null}
-                  className="w-full rounded-xl border-2 border-[var(--brand-primary)]/40 py-2.5 text-sm font-medium text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5 disabled:opacity-60"
-                >
-                  {favorite ? "✓ En seguimiento" : "Guardar en seguimiento"}
-                </button>
               </div>
             ) : (
               <button
@@ -270,7 +291,7 @@ export default function CompanyFicha({
                   <div className="flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-[var(--brand-primary)]/70" />
                     <span className="text-xs font-medium opacity-75">
-                      {company.gmv ? "GMV" : "Facturación"}
+                      Facturación anual €
                     </span>
                   </div>
                   <p className="mt-1 font-bold text-[var(--brand-primary)]">
@@ -283,6 +304,14 @@ export default function CompanyFicha({
                     {company.ebitda}
                   </p>
                 </div>
+                {company.exerciseResult ? (
+                  <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
+                    <span className="text-xs font-medium opacity-75">Resultado del ejercicio</span>
+                    <p className="mt-1 font-bold text-[var(--brand-primary)]">
+                      {company.exerciseResult}
+                    </p>
+                  </div>
+                ) : null}
                 {company.employees != null && (
                   <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
                     <div className="flex items-center gap-2">
@@ -338,14 +367,17 @@ export default function CompanyFicha({
               </p>
             )}
             {isLoggedIn &&
-              canSeeDocuments &&
+              canSeeDriveLinks &&
               company.documentLinks &&
               company.documentLinks.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-[var(--brand-primary)]/10">
                   <h3 className="text-sm font-semibold text-[var(--brand-primary)] opacity-90 flex items-center gap-2">
                     <ExternalLink className="w-4 h-4" />
-                    Enlaces a documentación
+                    Archivos en Google Drive
                   </h3>
+                  <p className="mt-1 text-xs text-[var(--foreground)] opacity-70">
+                    Solo el vendedor titular de esta ficha y los administradores de Diligenz pueden ver estos enlaces.
+                  </p>
                   <ul className="mt-3 space-y-2">
                     {company.documentLinks.map((link, i) => (
                       <li key={i}>

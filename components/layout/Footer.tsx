@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { authFetch } from "@/lib/auth-client";
+import { clearConsentAndPrompt } from "@/lib/cookie-consent";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -46,6 +48,16 @@ export default function Footer() {
   const [plataformaOpen, setPlataformaOpen] = useState(false);
   const [recursosOpen, setRecursosOpen] = useState(false);
   const [legalOpen, setLegalOpen] = useState(false);
+  const [misEmpresasHref, setMisEmpresasHref] = useState("/dashboard/mis-empresas");
+
+  useEffect(() => {
+    authFetch("/api/auth/session")
+      .then((r) => r.json())
+      .then((d: { role?: string }) => {
+        if (d.role === "SELLER") setMisEmpresasHref("/dashboard/seller");
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <footer className="bg-[var(--brand-primary)] text-[var(--brand-bg)] py-8 md:py-12 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
@@ -75,7 +87,7 @@ export default function Footer() {
           >
             <li><Link href="/sobre-nosotros" className="hover:underline">Sobre nosotros</Link></li>
             <li><Link href="/companies" className="hover:underline">Empresas</Link></li>
-            <li><Link href="/companies/mi-interes" className="hover:underline">De mi interés</Link></li>
+            <li><Link href={misEmpresasHref} className="hover:underline">Mis empresas</Link></li>
             <li><Link href="/sell" className="hover:underline">Valorar / Vender</Link></li>
             <li><Link href="/servicios" className="hover:underline">Servicios</Link></li>
             <li><Link href="/servicios#pricing" className="hover:underline">Precios</Link></li>
@@ -101,6 +113,15 @@ export default function Footer() {
             <li><Link href="/aviso-legal" className="hover:underline">Aviso legal</Link></li>
             <li><Link href="/politica-privacidad" className="hover:underline">Política de privacidad</Link></li>
             <li><Link href="/politica-cookies" className="hover:underline">Política de cookies</Link></li>
+            <li>
+              <button
+                type="button"
+                onClick={() => clearConsentAndPrompt()}
+                className="hover:underline text-left"
+              >
+                Configuración de cookies
+              </button>
+            </li>
           </FooterAccordion>
         </div>
       </div>

@@ -2,11 +2,13 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionWithUser } from "@/lib/session";
+import AdminCreateCompanyForm from "@/components/admin/AdminCreateCompanyForm";
+import DeleteCompanyButton from "@/components/companies/DeleteCompanyButton";
 
 export default async function AdminCompaniesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; docs?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; docs?: string; marketplace?: string; error?: string }>;
 }) {
   const session = await getSessionWithUser();
   if (!session || session.user.role !== "ADMIN") redirect("/login");
@@ -15,11 +17,14 @@ export default async function AdminCompaniesPage({
   const q = params.q;
   const status = params.status;
   const docs = params.docs;
+  const marketplaceOnly = params.marketplace === "1";
 
   const companies = await prisma.company.findMany({
     where: {
-      ...(q ? { name: { contains: q } } : {}),
+      removedAt: null,
+      ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
       ...(status ? { status: status as "DRAFT" | "IN_PROCESS" | "PUBLISHED" | "SOLD" } : {}),
+      ...(marketplaceOnly ? { deals: { some: { published: true } } } : {}),
     },
     include: {
       owner: true,
@@ -54,13 +59,30 @@ export default async function AdminCompaniesPage({
           Todas las empresas dadas de alta por vendedores. Entra en cada ficha para editar la información pública, cambiar el estado (borrador, en revisión, publicado) y publicar o despublicar en el marketplace.
         </p>
         <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
-          Usa los filtros para buscar por nombre, estado o documentación firmada.
+          Usa los filtros para buscar por nombre, estado o documentación firmada. El filtro &quot;En marketplace&quot; muestra solo empresas con deal publicado en la web.
         </p>
       </div>
 
+      {params.error === "create_missing" && (
+        <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          Completa todos los campos obligatorios para crear la empresa.
+        </p>
+      )}
+      {params.error === "create_owner" && (
+        <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          El usuario asignado no es válido o está bloqueado.
+        </p>
+      )}
+      {params.error === "create_revenue" && (
+        <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          Indica una facturación anual numérica mayor que cero.
+        </p>
+      )}
+      <AdminCreateCompanyForm />
+
       <form
         method="GET"
-        className="mb-8 grid grid-cols-1 gap-4 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-5 sm:grid-cols-4"
+        className="mb-8 grid grid-cols-1 gap-4 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-5 sm:grid-cols-5"
       >
         <input
           type="text"
@@ -88,6 +110,14 @@ export default async function AdminCompaniesPage({
           <option value="">Documentación</option>
           <option value="signed">Docs completos</option>
           <option value="unsigned">Docs incompletos</option>
+        </select>
+        <select
+          name="marketplace"
+          defaultValue={marketplaceOnly ? "1" : ""}
+          className="rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-sm focus:border-[var(--brand-primary)] focus:outline-none"
+        >
+          <option value="">Todas (web)</option>
+          <option value="1">Solo en marketplace</option>
         </select>
         <button
           type="submit"
@@ -153,6 +183,11 @@ export default async function AdminCompaniesPage({
                 >
                   Editar / Ver
                 </Link>
+                <DeleteCompanyButton
+                  companyId={company.id}
+                  companyName={company.name}
+                  redirectTo="/admin/companies"
+                />
               </div>
             </div>
           );

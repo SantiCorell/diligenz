@@ -47,7 +47,16 @@ export async function POST(req: Request) {
     }
 
     const normalizedEmail = String(email).toLowerCase().trim();
-    let user: { id: string; role: string; passwordHash: string | null; blocked: boolean; blockedUntil: Date | null; provider: string | null } | null = null;
+    let user: {
+      id: string;
+      role: string;
+      passwordHash: string | null;
+      blocked: boolean;
+      blockedUntil: Date | null;
+      provider: string | null;
+      deletedAt: Date | null;
+      accountStatus: string;
+    } | null = null;
     try {
       user = await prisma.user.findUnique({
         where: { email: normalizedEmail },
@@ -58,13 +67,32 @@ export async function POST(req: Request) {
           blocked: true,
           blockedUntil: true,
           provider: true,
+          deletedAt: true,
+          accountStatus: true,
         },
       });
     } catch (dbError) {
-      console.error("Login DB error:", process.env.NODE_ENV === "production" ? "connection failed" : dbError);
+      const dbMessage = dbError instanceof Error ? dbError.message : String(dbError);
+      const isDbUnavailable =
+        dbMessage.includes("Tenant or user not found") ||
+        dbMessage.includes("Can't reach database server") ||
+        dbMessage.includes("Error querying the database");
+
+      console.error(
+        "Login DB error:",
+        process.env.NODE_ENV === "production"
+          ? "connection failed"
+          : isDbUnavailable
+            ? dbMessage
+            : dbError
+      );
       return NextResponse.json(
-        { error: "Error al iniciar sesión. Inténtalo de nuevo en unos segundos." },
-        { status: 500 }
+        {
+          error: isDbUnavailable
+            ? "No se puede conectar con la base de datos en este momento. Revisa la configuración de Supabase."
+            : "Error al iniciar sesión. Inténtalo de nuevo en unos segundos.",
+        },
+        { status: isDbUnavailable ? 503 : 500 }
       );
     }
 
@@ -73,6 +101,20 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Credenciales incorrectas" },
         { status: 401 }
+      );
+    }
+
+    if (user.deletedAt != null) {
+      return NextResponse.json(
+        { error: "Credenciales incorrectas" },
+        { status: 401 }
+      );
+    }
+
+    if (user.accountStatus === "REJECTED") {
+      return NextResponse.json(
+        { error: "Tu cuenta no tiene acceso. Contacta con soporte si crees que es un error." },
+        { status: 403 }
       );
     }
 

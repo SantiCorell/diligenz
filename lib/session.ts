@@ -50,6 +50,8 @@ export async function getSessionFromToken(sessionToken: string | undefined) {
     include: { user: true },
   });
   if (!session || session.expires < new Date()) return null;
+  if (session.user.deletedAt != null) return null;
+  if (session.user.accountStatus === "REJECTED") return null;
   return session;
 }
 
