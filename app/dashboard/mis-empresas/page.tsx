@@ -165,7 +165,6 @@ export default async function MisEmpresasPage() {
                       <CompanyCard
                         company={resolved.company}
                         isLoggedIn
-                        linkToFicha
                         compact
                         ctaLabel="Ver ficha"
                       />

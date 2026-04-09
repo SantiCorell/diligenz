@@ -25,6 +25,7 @@ export default function UserOwnerSearch({
 
   useEffect(() => {
     if (query.trim().length < 2) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- vaciar resultados si la búsqueda es demasiado corta */
       setResults([]);
       return;
     }

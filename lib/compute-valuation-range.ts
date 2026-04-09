@@ -128,7 +128,7 @@ function tightenEuroBand(
   else half *= 0.82;
   if (opts.employees != null && opts.employees > 0) half *= 0.94;
   if (opts.yearsOperating != null && opts.yearsOperating >= 3) half *= 0.96;
-  let minR = Math.round(mid - half);
+  const minR = Math.round(mid - half);
   let maxR = Math.round(mid + half);
   const minSpread = Math.max(50_000, Math.round(mid * 0.04));
   if (maxR - minR < minSpread) {

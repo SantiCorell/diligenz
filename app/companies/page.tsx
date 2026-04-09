@@ -94,7 +94,6 @@ export default async function CompaniesPage({ searchParams }: Props) {
           <CompaniesGrid
             companies={companies}
             isLoggedIn={isLoggedIn}
-            sectorFromUrl={sectorLabel ?? undefined}
             locationFromUrl={location || undefined}
             locations={locations}
             total={total}

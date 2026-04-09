@@ -10,7 +10,6 @@ type Props = {
   company: CompanyMock;
   isLoggedIn?: boolean;
   onRequestAuth?: () => void;
-  linkToFicha?: boolean;
   /** Posición en un grupo de cartas (0, 1, 2…) para que las adyacentes no repitan imagen */
   positionInGroup?: number;
   /** Versión más compacta para listados con varias cartas */
@@ -23,7 +22,6 @@ export default function CompanyCard({
   company,
   isLoggedIn = false,
   onRequestAuth,
-  linkToFicha: _linkToFicha = false,
   positionInGroup,
   compact = false,
   ctaLabel = "Solicitar información",

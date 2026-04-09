@@ -12,7 +12,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 type Props = {
   companies: CompanyMock[];
   isLoggedIn: boolean;
-  sectorFromUrl?: string | null;
   locationFromUrl?: string;
   locations: string[];
   total: number;
@@ -33,7 +32,6 @@ function buildQuery(sector: string, location: string, page: number): string {
 export default function CompaniesGrid({
   companies,
   isLoggedIn,
-  sectorFromUrl: _sectorFromUrl,
   locationFromUrl = "",
   locations,
   total,
@@ -48,8 +46,10 @@ export default function CompaniesGrid({
   const [location, setLocation] = useState(locationFromUrl ?? "");
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- reflejar sector/ubicación de la URL en los filtros */
     setSector(sectorSlugFromUrl ?? "");
     setLocation(locationFromUrl ?? "");
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [sectorSlugFromUrl, locationFromUrl]);
 
   const handleSectorChange = (value: string) => {
@@ -86,7 +86,6 @@ export default function CompaniesGrid({
             company={company}
             isLoggedIn={isLoggedIn}
             onRequestAuth={() => setRegisterModalOpen(true)}
-            linkToFicha
             positionInGroup={i}
           />
         ))}

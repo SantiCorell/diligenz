@@ -34,8 +34,8 @@ export default function AdminActionsPage() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount/filter change
-    fetchActions();
+    /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- cargar lista al montar / al cambiar filtro */
+    void fetchActions();
   }, [filter]);
 
   const updateStatus = async (id: string, status: string) => {

@@ -61,8 +61,10 @@ export default function Navbar() {
     if (mobileMenuOpen) document.body.style.overflow = "hidden";
     else {
       document.body.style.overflow = "";
+      /* eslint-disable react-hooks/set-state-in-effect -- cerrar submenús al ocultar menú móvil */
       setMobileInicioOpen(false);
       setMobileServiciosOpen(false);
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
     return () => {
       document.body.style.overflow = "";

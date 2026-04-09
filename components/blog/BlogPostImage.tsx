@@ -33,6 +33,7 @@ export default function BlogPostImage({ src, alt, className = "", fill, ...rest 
 
   if (isExternal && fill) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element -- URLs externas sin dominio en next.config
       <img
         src={src}
         alt={alt}

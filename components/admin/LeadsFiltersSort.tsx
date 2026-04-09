@@ -34,9 +34,18 @@ export default function LeadsFiltersSort() {
 
   const setParams = (updates: { categoria?: string; tipo?: string; orden?: string }) => {
     const p = new URLSearchParams(searchParams.toString());
-    if (updates.categoria !== undefined) (updates.categoria ? p.set("categoria", updates.categoria) : p.delete("categoria"));
-    if (updates.tipo !== undefined) (updates.tipo ? p.set("tipo", updates.tipo) : p.delete("tipo"));
-    if (updates.orden !== undefined) (updates.orden && updates.orden !== "fecha_desc" ? p.set("orden", updates.orden) : p.delete("orden"));
+    if (updates.categoria !== undefined) {
+      if (updates.categoria) p.set("categoria", updates.categoria);
+      else p.delete("categoria");
+    }
+    if (updates.tipo !== undefined) {
+      if (updates.tipo) p.set("tipo", updates.tipo);
+      else p.delete("tipo");
+    }
+    if (updates.orden !== undefined) {
+      if (updates.orden && updates.orden !== "fecha_desc") p.set("orden", updates.orden);
+      else p.delete("orden");
+    }
     router.push(`/admin/leads?${p.toString()}`);
   };
 

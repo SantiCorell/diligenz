@@ -25,7 +25,6 @@ export default function FeaturedCompanies() {
               <CompanyCard
                 company={company}
                 isLoggedIn
-                linkToFicha
                 compact
                 positionInGroup={i}
               />

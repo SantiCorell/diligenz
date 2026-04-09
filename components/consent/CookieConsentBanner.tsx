@@ -16,9 +16,11 @@ export default function CookieConsentBanner() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- hidratar tras mount (consentimiento y evitar mismatch SSR) */
     setMounted(true);
     const existing = readStoredConsent();
     setOpen(!existing);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     const onReset = () => setOpen(true);
     window.addEventListener(CONSENT_RESET_EVENT, onReset);

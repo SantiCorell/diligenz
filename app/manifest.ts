@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION } from "@/lib/seo";
+import { SITE_NAME, DEFAULT_DESCRIPTION } from "@/lib/seo";
 
 /** Icono PWA: LOGO DILI sobre fondo blanco para acceso directo en móvil */
 export default function manifest(): MetadataRoute.Manifest {

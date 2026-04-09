@@ -47,11 +47,13 @@ function UserVerificationPanel({
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- sincronizar formulario al cambiar usuario en admin */
     setEmailVerified(user.emailVerified);
     setNdaSigned(user.ndaSigned);
     setDniVerified(user.dniVerified);
     setProfileVerifiedByAdmin(user.profileVerifiedByAdmin);
     setMsg(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [user]);
 
   const save = useCallback(async () => {
