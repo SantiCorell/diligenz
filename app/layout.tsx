@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import {
   SITE_URL,
@@ -18,11 +18,15 @@ import ConditionalSpeedInsights from "@/components/consent/ConditionalSpeedInsig
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
+  adjustFontFallback: true,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+  adjustFontFallback: true,
 });
 
 const TITLE_DEFAULT = `${SITE_NAME} | ${TAGLINE} — Marketplace líder en España`;
@@ -93,6 +97,12 @@ export const metadata: Metadata = {
     "geo.region": "ES",
     "theme-color": "#ffffff",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#ffffff",
 };
 
 /* ===================== */
