@@ -31,6 +31,9 @@ model User {
   /// Si true, el dashboard cuenta "Perfil completo" aunque falte teléfono (validación admin).
   profileVerifiedByAdmin Boolean @default(false)
 
+  /// Carpeta de Google Drive con documentos del usuario (solo admin lo gestiona en panel).
+  documentsDriveFolderUrl String?
+
   blocked       Boolean  @default(false)
   blockedUntil  DateTime?
 

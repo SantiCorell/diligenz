@@ -8,6 +8,13 @@ type Params = { params: Promise<{ id: string }> };
 const STATUSES: UserAccountStatus[] = ["PENDING", "IN_REVIEW", "ACTIVE", "REJECTED"];
 const ASSIGNABLE_ROLES: UserRole[] = ["ADMIN", "BUYER", "SELLER", "PROFESSIONAL"];
 
+const DRIVE_URL_MAX = 2048;
+
+function isGoogleDriveDocsHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return h === "drive.google.com" || h.endsWith(".drive.google.com") || h === "docs.google.com" || h.endsWith(".docs.google.com");
+}
+
 type PatchBody = {
   emailVerified?: unknown;
   ndaSigned?: unknown;
@@ -15,6 +22,7 @@ type PatchBody = {
   profileVerifiedByAdmin?: unknown;
   accountStatus?: unknown;
   role?: unknown;
+  documentsDriveFolderUrl?: unknown;
 };
 
 /**
@@ -40,6 +48,7 @@ export async function PATCH(req: Request, { params }: Params) {
     profileVerifiedByAdmin?: boolean;
     accountStatus?: UserAccountStatus;
     role?: UserRole;
+    documentsDriveFolderUrl?: string | null;
   } = {};
 
   if (typeof body.emailVerified === "boolean") data.emailVerified = body.emailVerified;
@@ -76,11 +85,54 @@ export async function PATCH(req: Request, { params }: Params) {
     data.role = newRole;
   }
 
+  if (body.documentsDriveFolderUrl !== undefined) {
+    const raw = body.documentsDriveFolderUrl;
+    if (raw === null) {
+      data.documentsDriveFolderUrl = null;
+    } else if (typeof raw === "string") {
+      const t = raw.trim();
+      if (!t) {
+        data.documentsDriveFolderUrl = null;
+      } else {
+        let parsed: URL;
+        try {
+          parsed = new URL(t);
+        } catch {
+          return NextResponse.json({ error: "URL del enlace no válida." }, { status: 400 });
+        }
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          return NextResponse.json(
+            {
+              error:
+                "El enlace debe usar http o https (carpeta Google Drive o Documentos).",
+            },
+            { status: 400 }
+          );
+        }
+        if (!isGoogleDriveDocsHost(parsed.hostname)) {
+          return NextResponse.json(
+            {
+              error:
+                "El enlace debe ser de Google Drive o Documentos (dominio drive.google.com o docs.google.com).",
+            },
+            { status: 400 }
+          );
+        }
+        data.documentsDriveFolderUrl = t.length > DRIVE_URL_MAX ? t.slice(0, DRIVE_URL_MAX) : t;
+      }
+    } else {
+      return NextResponse.json(
+        { error: "documentsDriveFolderUrl debe ser texto, cadena vacía o null." },
+        { status: 400 }
+      );
+    }
+  }
+
   if (Object.keys(data).length === 0) {
     return NextResponse.json(
       {
         error:
-          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, accountStatus, role",
+          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, accountStatus, role, documentsDriveFolderUrl",
       },
       { status: 400 }
     );
@@ -108,6 +160,7 @@ export async function PATCH(req: Request, { params }: Params) {
         phone: true,
         accountStatus: true,
         role: true,
+        documentsDriveFolderUrl: true,
       },
     });
     return NextResponse.json({ user });

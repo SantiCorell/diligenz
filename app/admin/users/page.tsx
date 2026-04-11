@@ -24,6 +24,8 @@ type UserRow = {
   dniVerified: boolean;
   profileVerifiedByAdmin: boolean;
   hasCompanyDocumentLinks: boolean;
+  hasUserDriveFolder: boolean;
+  documentsDriveFolderUrl: string | null;
 };
 
 function profileCompleteEffective(u: UserRow) {
@@ -162,6 +164,111 @@ function UserVerificationPanel({
   );
 }
 
+function UserDriveFolderPanel({
+  user,
+  onSaved,
+}: {
+  user: UserRow;
+  onSaved: () => void;
+}) {
+  const [url, setUrl] = useState(user.documentsDriveFolderUrl ?? "");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- sincronizar al cambiar usuario */
+    setUrl(user.documentsDriveFolderUrl ?? "");
+    setMsg(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [user]);
+
+  const save = useCallback(async () => {
+    setMsg(null);
+    setSaving(true);
+    try {
+      const trimmed = url.trim();
+      const res = await authFetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentsDriveFolderUrl: trimmed.length ? trimmed : null,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg({ type: "error", text: (data as { error?: string }).error ?? "Error al guardar" });
+        setSaving(false);
+        return;
+      }
+      setMsg({ type: "ok", text: "Enlace guardado." });
+      onSaved();
+    } catch {
+      setMsg({ type: "error", text: "Error de conexión." });
+    }
+    setSaving(false);
+  }, [user.id, url, onSaved]);
+
+  const hasLink = Boolean(user.documentsDriveFolderUrl?.trim());
+
+  return (
+    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
+        Carpeta Google Drive (documentos del usuario)
+      </p>
+      <p className="text-xs text-slate-600 mb-3 max-w-2xl leading-relaxed">
+        Enlace a la carpeta donde están los documentos de este usuario. Debe ser una URL de{" "}
+        <span className="font-medium">drive.google.com</span> o{" "}
+        <span className="font-medium">docs.google.com</span>. Si lo dejas vacío y guardas, se borra el
+        enlace.
+      </p>
+      {!hasLink && (
+        <p className="mb-3 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2 inline-block">
+          Falta carpeta de Drive — añade el enlace cuando la tengas.
+        </p>
+      )}
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 max-w-3xl">
+        <label className="flex-1 min-w-0">
+          <span className="sr-only">URL carpeta Drive</span>
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://drive.google.com/drive/folders/…"
+            className="w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving}
+          className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold bg-slate-800 text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
+        >
+          {saving ? "Guardando…" : "Guardar enlace Drive"}
+        </button>
+      </div>
+      {hasLink && user.documentsDriveFolderUrl && (
+        <p className="mt-2 text-xs">
+          <a
+            href={user.documentsDriveFolderUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--brand-dark)] font-medium underline-offset-2 hover:underline break-all"
+          >
+            Abrir carpeta en nueva pestaña
+          </a>
+        </p>
+      )}
+      {msg && (
+        <p
+          className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}
+        >
+          {msg.text}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /** Comprador, vendedor, profesional y administrador (mismo conjunto que al crear usuario). */
 const ROLES: UserRole[] = ["ADMIN", "BUYER", "SELLER", "PROFESSIONAL"];
 
@@ -291,11 +398,21 @@ function AdminUserMobileCard({
             Docs empresa
           </span>
         )}
+        {u.hasUserDriveFolder ? (
+          <span className="text-[10px] uppercase tracking-wide text-emerald-900 font-semibold bg-emerald-100 px-2.5 py-1.5 rounded-lg">
+            Drive usuario
+          </span>
+        ) : (
+          <span className="text-[10px] uppercase tracking-wide text-amber-900 font-semibold bg-amber-100 px-2.5 py-1.5 rounded-lg">
+            Falta Drive
+          </span>
+        )}
       </div>
 
       {isExpanded && (
         <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
           <UserVerificationPanel user={u} onSaved={onVerificationSaved} />
+          <UserDriveFolderPanel user={u} onSaved={onVerificationSaved} />
         </div>
       )}
     </article>
@@ -341,14 +458,19 @@ export default function AdminUsersPage() {
       if (res.ok) {
         const list = (data.users ?? []) as UserRow[];
         setUsers(
-          list.map((u) => ({
-            ...u,
-            emailVerified: Boolean(u.emailVerified),
-            ndaSigned: Boolean(u.ndaSigned),
-            dniVerified: Boolean(u.dniVerified),
-            profileVerifiedByAdmin: Boolean(u.profileVerifiedByAdmin),
-            hasCompanyDocumentLinks: Boolean(u.hasCompanyDocumentLinks),
-          }))
+          list.map((raw) => {
+            const u = raw as UserRow;
+            return {
+              ...u,
+              emailVerified: Boolean(u.emailVerified),
+              ndaSigned: Boolean(u.ndaSigned),
+              dniVerified: Boolean(u.dniVerified),
+              profileVerifiedByAdmin: Boolean(u.profileVerifiedByAdmin),
+              hasCompanyDocumentLinks: Boolean(u.hasCompanyDocumentLinks),
+              hasUserDriveFolder: Boolean(u.hasUserDriveFolder ?? u.documentsDriveFolderUrl?.trim()),
+              documentsDriveFolderUrl: u.documentsDriveFolderUrl ?? null,
+            };
+          })
         );
       }
     } finally {
@@ -545,7 +667,7 @@ export default function AdminUsersPage() {
                 onChange={(e) => setFDocLinks(e.target.checked)}
                 className="h-5 w-5 rounded border-slate-300 text-[var(--brand-primary)] shrink-0"
               />
-              Enlace documentos (empresa)
+              Con enlace documentos (empresa o carpeta usuario)
             </label>
           </div>
         </div>
@@ -810,7 +932,16 @@ export default function AdminUsersPage() {
                             </button>
                             {u.hasCompanyDocumentLinks && (
                               <span className="ml-2 text-[10px] uppercase tracking-wide text-emerald-800 font-semibold">
-                                Docs
+                                Docs emp.
+                              </span>
+                            )}
+                            {u.hasUserDriveFolder ? (
+                              <span className="ml-2 text-[10px] uppercase tracking-wide text-emerald-800 font-semibold">
+                                Drive
+                              </span>
+                            ) : (
+                              <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-800 font-semibold">
+                                Falta Drive
                               </span>
                             )}
                           </td>
@@ -829,6 +960,7 @@ export default function AdminUsersPage() {
                           <tr className="bg-slate-50/50">
                             <td colSpan={7} className="p-0">
                               <UserVerificationPanel user={u} onSaved={loadUsers} />
+                              <UserDriveFolderPanel user={u} onSaved={loadUsers} />
                             </td>
                           </tr>
                         )}

@@ -68,8 +68,16 @@ export async function GET(req: Request) {
   if (ndaSigned) where.ndaSigned = true;
 
   if (documentLinks) {
-    const ids = await ownerIdsWithCompanyDocumentLinks();
-    where.id = { in: ids.length ? ids : ["__none__"] };
+    const companyIds = await ownerIdsWithCompanyDocumentLinks();
+    const withDriveFolder = await prisma.user.findMany({
+      where: {
+        deletedAt: null,
+        documentsDriveFolderUrl: { not: null },
+      },
+      select: { id: true },
+    });
+    const merged = new Set([...companyIds, ...withDriveFolder.map((r) => r.id)]);
+    where.id = { in: merged.size ? [...merged] : ["__none__"] };
   }
 
   const users = await prisma.user.findMany({
@@ -86,6 +94,7 @@ export async function GET(req: Request) {
       ndaSigned: true,
       dniVerified: true,
       profileVerifiedByAdmin: true,
+      documentsDriveFolderUrl: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -94,6 +103,7 @@ export async function GET(req: Request) {
   const payload = users.map((u) => ({
     ...u,
     hasCompanyDocumentLinks: docLinkOwners.has(u.id),
+    hasUserDriveFolder: Boolean(u.documentsDriveFolderUrl?.trim()),
   }));
 
   return NextResponse.json({ users: payload });
