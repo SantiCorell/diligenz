@@ -9,9 +9,8 @@ export function formatCompactAmountValue(value: number): string {
   }
 
   if (absValue >= 1_000) {
-    const thousands = absValue / 1_000;
-    const decimals = thousands >= 100 || Number.isInteger(thousands) ? 0 : 1;
-    return `${sign}${thousands.toFixed(decimals).replace(/\.0$/, "")}K`;
+    const thousands = Math.round(absValue / 1_000);
+    return `${sign}${thousands}K`;
   }
 
   return `${sign}${Math.round(absValue)}`;
