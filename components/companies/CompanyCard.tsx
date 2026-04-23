@@ -63,7 +63,7 @@ export default function CompanyCard({
     <>
       <div
         className={`relative w-full overflow-hidden bg-[var(--brand-bg-lavender)] ${
-          compact ? "aspect-[16/9]" : "aspect-[16/10]"
+          compact ? "aspect-[16/9]" : "aspect-[16/9]"
         }`}
       >
         <Image
@@ -76,12 +76,12 @@ export default function CompanyCard({
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
       </div>
-      <div className={`${compact ? "p-4 pt-3" : "p-6 pt-4"} flex flex-1 flex-col`}>
+      <div className={`${compact ? "p-4 pt-3" : "p-5 pt-3.5"} flex flex-1 flex-col`}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h3
               className={`font-bold text-[var(--foreground)] leading-tight break-words ${
-                compact ? "text-lg min-h-[2.5rem]" : "text-2xl min-h-[3.25rem]"
+                compact ? "text-lg min-h-[3.8rem]" : "text-[2rem] min-h-[5.4rem]"
               }`}
             >
               {company.name}
@@ -109,13 +109,13 @@ export default function CompanyCard({
 
         <p
           className={`text-[var(--foreground)] opacity-90 leading-relaxed line-clamp-3 ${
-            compact ? "mt-2 text-xs min-h-[3.2rem]" : "mt-4 text-sm min-h-[4rem]"
+            compact ? "mt-2 text-xs min-h-[3.4rem]" : "mt-3.5 text-sm min-h-[4.9rem]"
           }`}
         >
           {descriptionPreview}
         </p>
 
-        <div className={`${compact ? "mt-3" : "mt-5"} rounded-2xl bg-[var(--brand-bg-lavender)]/88 border border-[var(--brand-primary)]/12 p-2.5`}>
+        <div className={`${compact ? "mt-3" : "mt-4"} rounded-2xl bg-[var(--brand-bg-lavender)]/88 border border-[var(--brand-primary)]/12 p-2.5`}>
           <div className="grid grid-cols-2 gap-2">
             {metrics.map(({ label, value, icon: Icon, title, isFinancial }) => (
               <div
@@ -147,10 +147,10 @@ export default function CompanyCard({
           </div>
         </div>
 
-        <div className={`pt-3 border-t border-[var(--brand-primary)]/10 mt-auto ${compact ? "mt-3" : "mt-5 pt-4"}`}>
+        <div className={`pt-3 border-t border-[var(--brand-primary)]/10 mt-auto ${compact ? "mt-3" : "mt-4 pt-3.5"}`}>
           <Link
             href={`/companies/${company.id}`}
-            className={`flex items-center justify-center gap-2 w-full rounded-xl font-semibold bg-[var(--brand-primary)] text-white shadow-md hover:opacity-95 transition ${compact ? "py-2.5 text-xs" : "py-3.5 text-sm"}`}
+            className={`flex items-center justify-center gap-2 w-full rounded-xl font-semibold bg-[var(--brand-primary)] text-white shadow-md hover:opacity-95 transition ${compact ? "py-2.5 text-xs" : "py-3 text-sm"}`}
           >
             {ctaLabel}
             <ChevronRight className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
