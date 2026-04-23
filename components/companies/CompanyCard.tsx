@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, TrendingUp, BarChart3, Users, ChevronRight, Wallet } from "lucide-react";
+import { MapPin, TrendingUp, BarChart3, Users, ChevronRight, Wallet, BriefcaseBusiness } from "lucide-react";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { getDefaultCompanyImageUrl } from "@/lib/default-company-images";
 import { formatCompactAmountValue } from "@/lib/format-financial";
@@ -87,7 +87,7 @@ export default function CompanyCard({
                 compact ? "mt-1 px-2 py-1 text-[11px]" : "mt-2 px-2.5 py-1 text-xs"
               }`}
             >
-              <MapPin className="w-3.5 h-3.5 shrink-0 text-[var(--brand-primary)]/75" />
+              <BriefcaseBusiness className="w-3.5 h-3.5 shrink-0 text-[var(--brand-primary)]/75" />
               <span>{company.sector}</span>
             </div>
           </div>
@@ -96,7 +96,10 @@ export default function CompanyCard({
               compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs"
             }`}
           >
-            {company.location}
+            <span className="inline-flex items-center gap-1">
+              <MapPin className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
+              {company.location}
+            </span>
           </span>
         </div>
 
