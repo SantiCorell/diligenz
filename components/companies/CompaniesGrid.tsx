@@ -77,7 +77,7 @@ export default function CompaniesGrid({
         sectors={CATALOG_SECTOR_OPTIONS}
         locations={locationOptions}
       />
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
         {companies.map((company, i) => (
           <CompanyCard
             key={company.id}
