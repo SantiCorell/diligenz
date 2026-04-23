@@ -63,7 +63,7 @@ export default function CompanyCard({
     <>
       <div
         className={`relative w-full overflow-hidden bg-[var(--brand-bg-lavender)] ${
-          compact ? "aspect-[16/9]" : "aspect-[16/8]"
+          compact ? "aspect-[16/9]" : "aspect-[16/9]"
         }`}
       >
         <Image
@@ -80,8 +80,8 @@ export default function CompanyCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h3
-              className={`font-bold text-[var(--foreground)] leading-tight break-words line-clamp-3 ${
-                compact ? "text-lg h-[3.8rem]" : "text-[1.85rem] h-[5.2rem]"
+              className={`font-bold text-[var(--foreground)] leading-tight break-words ${
+                compact ? "text-lg min-h-[3.8rem]" : "text-[1.65rem] min-h-[4.8rem]"
               }`}
             >
               {company.name}
