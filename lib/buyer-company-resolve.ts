@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
+import { formatCompactEuroRange } from "@/lib/format-financial";
 
 export type ResolvedBuyerCompany = {
   company: CompanyMock | null;
@@ -38,9 +39,7 @@ export async function resolveCompanyForBuyerInterest(
     }
     const published = company.deals.length > 0;
     const val = company.valuations[0];
-    const revenueStr = val
-      ? `${(val.minValue / 1_000_000).toFixed(1)}–${(val.maxValue / 1_000_000).toFixed(1)}M €`
-      : "—";
+    const revenueStr = val ? formatCompactEuroRange(val.minValue, val.maxValue) : "—";
     const imgFiles = company.companyFiles;
     const heroFile = imgFiles[0];
     const galleryImageSrcs =

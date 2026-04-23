@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
+import { formatCompactEuroRange } from "@/lib/format-financial";
 
 const THRESHOLD_REAL_ONLY = 10;
 
@@ -22,9 +23,7 @@ type DealWithCompany = Prisma.DealGetPayload<{
 function mapDealToMock(deal: DealWithCompany): CompanyMock {
   const c = deal.company;
   const val = c.valuations?.[0];
-  const revenueStr = val
-    ? `${(val.minValue / 1_000_000).toFixed(1)}–${(val.maxValue / 1_000_000).toFixed(1)}M €`
-    : "—";
+  const revenueStr = val ? formatCompactEuroRange(val.minValue, val.maxValue) : "—";
   const ebitdaStr = c.ebitda ?? "—";
   const exerciseResultStr = (c as { exerciseResult?: string | null }).exerciseResult?.trim() || null;
   const heroFile = c.companyFiles?.[0];

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import CompanyCard from "./CompanyCard";
 import CompaniesFilters from "./CompaniesFilters";
-import RegisterModal from "@/components/auth/RegisterModal";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { CATALOG_SECTOR_OPTIONS } from "@/lib/valuation-sectors";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -41,7 +40,6 @@ export default function CompaniesGrid({
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [sector, setSector] = useState(sectorSlugFromUrl ?? "");
   const [location, setLocation] = useState(locationFromUrl ?? "");
 
@@ -85,7 +83,6 @@ export default function CompaniesGrid({
             key={company.id}
             company={company}
             isLoggedIn={isLoggedIn}
-            onRequestAuth={() => setRegisterModalOpen(true)}
             positionInGroup={i}
           />
         ))}
@@ -170,10 +167,6 @@ export default function CompaniesGrid({
         </nav>
       )}
 
-      <RegisterModal
-        open={registerModalOpen}
-        onClose={() => setRegisterModalOpen(false)}
-      />
     </>
   );
 }

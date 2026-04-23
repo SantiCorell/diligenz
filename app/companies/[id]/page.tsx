@@ -8,6 +8,7 @@ import { getUserIdFromSession } from "@/lib/session";
 import CompanyFicha from "./CompanyFicha";
 import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
 import { SITE_URL, SITE_NAME, getBreadcrumbSchema } from "@/lib/seo";
+import { formatCompactEuroRange } from "@/lib/format-financial";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -31,9 +32,7 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
   if (!company || company.removedAt || company.deals.length === 0) return null;
 
   const val = company.valuations[0];
-  const revenueStr = val
-    ? `${(val.minValue / 1_000_000).toFixed(1)}–${(val.maxValue / 1_000_000).toFixed(1)}M €`
-    : "—";
+  const revenueStr = val ? formatCompactEuroRange(val.minValue, val.maxValue) : "—";
   const docLinks = company.documentLinks as DocumentLink[] | null | undefined;
   const imgFiles = company.companyFiles;
   const heroFile = imgFiles[0];

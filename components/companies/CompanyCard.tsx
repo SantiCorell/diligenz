@@ -5,11 +5,11 @@ import Image from "next/image";
 import { MapPin, TrendingUp, BarChart3, Users, ChevronRight, Wallet } from "lucide-react";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { getDefaultCompanyImageUrl } from "@/lib/default-company-images";
+import { formatCompactAmountValue } from "@/lib/format-financial";
 
 type Props = {
   company: CompanyMock;
   isLoggedIn?: boolean;
-  onRequestAuth?: () => void;
   /** Posición en un grupo de cartas (0, 1, 2…) para que las adyacentes no repitan imagen */
   positionInGroup?: number;
   /** Versión más compacta para listados con varias cartas */
@@ -20,13 +20,10 @@ type Props = {
 
 export default function CompanyCard({
   company,
-  isLoggedIn = false,
-  onRequestAuth,
   positionInGroup,
   compact = false,
   ctaLabel = "Solicitar información",
 }: Props) {
-  const showBlur = !isLoggedIn && onRequestAuth;
   const descMax = compact ? 100 : 140;
   const descriptionPreview =
     company.description.length > descMax
@@ -36,33 +33,39 @@ export default function CompanyCard({
   const annualRevenue = company.gmv ?? company.revenue;
   const revenueOrGmv = {
     label: "Facturación anual €",
-    value: annualRevenue,
+    value: annualRevenue || "—",
     icon: BarChart3,
     title: "Facturación anual en euros",
+    isFinancial: true,
   };
   const metrics = [
     revenueOrGmv,
-    { label: "EBITDA", value: company.ebitda, icon: TrendingUp, title: "EBITDA" },
-    ...(company.exerciseResult
-      ? [
-          {
-            label: "Resultado ejercicio",
-            value: company.exerciseResult,
-            icon: Wallet,
-            title: "Resultado del ejercicio (beneficio neto)",
-          },
-        ]
-      : []),
-    ...(company.employees != null
-      ? [{ label: "Nº Empleados", value: String(company.employees), icon: Users, title: "Número de empleados" }]
-      : []),
+    { label: "EBITDA", value: company.ebitda || "—", icon: TrendingUp, title: "EBITDA", isFinancial: true },
+    {
+      label: "Resultado ejercicio",
+      value: company.exerciseResult || "—",
+      icon: Wallet,
+      title: "Resultado del ejercicio (beneficio neto)",
+      isFinancial: true,
+    },
+    {
+      label: "Nº Empleados",
+      value: company.employees != null ? String(company.employees) : "—",
+      icon: Users,
+      title: "Número de empleados",
+      isFinancial: false,
+    },
   ];
 
   const cardImageSrc = company.heroImageSrc ?? getDefaultCompanyImageUrl(company, positionInGroup);
 
   const cardContent = (
     <>
-      <div className={`relative w-full overflow-hidden bg-[var(--brand-bg-lavender)] border border-[var(--brand-primary)]/10 rounded-xl ${compact ? "aspect-[16/9] -mx-4 -mt-4 mb-3" : "aspect-[16/10] rounded-xl -mx-6 -mt-6 mb-4"}`}>
+      <div
+        className={`relative w-full overflow-hidden bg-[var(--brand-bg-lavender)] ${
+          compact ? "aspect-[16/9]" : "aspect-[16/10]"
+        }`}
+      >
         <Image
           src={cardImageSrc}
           alt=""
@@ -71,70 +74,65 @@ export default function CompanyCard({
           sizes={compact ? "(max-width: 480px) 100vw, 280px" : "(max-width: 480px) 100vw, 400px"}
           unoptimized={Boolean(company.heroImageSrc) || cardImageSrc.includes("unsplash.com")}
         />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
       </div>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h3 className={`font-bold text-[var(--foreground)] truncate ${compact ? "text-lg" : "text-2xl"}`}>
-            {company.name}
-          </h3>
-          <div className={`flex items-center gap-1.5 text-[var(--foreground)] opacity-75 ${compact ? "mt-1 text-xs" : "mt-1.5 text-sm"}`}>
-            <MapPin className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/70" />
-            <span>{company.location}</span>
-          </div>
-        </div>
-        <span className={`rounded-lg bg-[var(--brand-primary)]/10 font-semibold text-[var(--brand-primary)] shrink-0 ${compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs"}`}>
-          {company.sector}
-        </span>
-      </div>
-
-      <p className={`text-[var(--foreground)] opacity-90 leading-relaxed line-clamp-3 ${compact ? "mt-2 text-xs" : "mt-4 text-sm"}`}>
-        {descriptionPreview}
-      </p>
-
-      <div className={`mt-5 ${showBlur ? "relative select-none" : ""}`}>
-        {showBlur && (
-          <div
-            className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-white/95 backdrop-blur-md z-10 border border-[var(--brand-primary)]/10"
-            aria-hidden
-          >
-            <p className="text-sm font-medium text-[var(--brand-primary)] px-4 text-center">
-              Facturación, EBITDA, resultado del ejercicio y datos completos
-            </p>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                onRequestAuth?.();
-              }}
-              className="mt-3 rounded-xl px-5 py-3 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95"
-            >
-              Regístrate para ver la ficha completa
-            </button>
-          </div>
-        )}
-        <div className={`grid gap-2 ${metrics.length === 3 ? "grid-cols-3" : "grid-cols-2"} ${showBlur ? "blur-sm pointer-events-none" : ""}`}>
-          {metrics.map(({ label, value, icon: Icon, title }) => (
+      <div className={`${compact ? "p-4 pt-3" : "p-6 pt-4"} flex flex-1 flex-col`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className={`font-bold text-[var(--foreground)] truncate ${compact ? "text-lg" : "text-2xl"}`}>
+              {company.name}
+            </h3>
             <div
-              key={label}
-              title={title}
-              className={`rounded-xl bg-[var(--brand-bg-lavender)]/60 border border-[var(--brand-primary)]/10 ${compact ? "px-2 py-1.5" : "px-3 py-2.5"}`}
+              className={`inline-flex items-center gap-1.5 rounded-lg border border-[var(--brand-primary)]/10 bg-[var(--brand-bg-lavender)]/75 text-[var(--foreground)] ${
+                compact ? "mt-1 px-2 py-1 text-[11px]" : "mt-2 px-2.5 py-1 text-xs"
+              }`}
             >
-              <div className="flex items-center gap-1.5">
-                <Icon className={`text-[var(--brand-primary)]/70 shrink-0 ${compact ? "w-3 h-3" : "w-3.5 h-3.5"}`} />
-                <p className={`font-medium text-[var(--foreground)] opacity-75 ${compact ? "text-[10px]" : "text-xs"}`}>
-                  {label}
+              <MapPin className="w-3.5 h-3.5 shrink-0 text-[var(--brand-primary)]/75" />
+              <span>{company.sector}</span>
+            </div>
+          </div>
+          <span
+            className={`rounded-lg bg-[var(--brand-primary)]/12 font-semibold text-[var(--brand-primary)] shrink-0 ${
+              compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs"
+            }`}
+          >
+            {company.location}
+          </span>
+        </div>
+
+        <p
+          className={`text-[var(--foreground)] opacity-90 leading-relaxed line-clamp-3 ${
+            compact ? "mt-2 text-xs min-h-[3.2rem]" : "mt-4 text-sm min-h-[4rem]"
+          }`}
+        >
+          {descriptionPreview}
+        </p>
+
+        <div className={`${compact ? "mt-3" : "mt-5"} rounded-2xl bg-[var(--brand-bg-lavender)]/88 border border-[var(--brand-primary)]/12 p-2.5`}>
+          <div className="grid grid-cols-2 gap-2">
+            {metrics.map(({ label, value, icon: Icon, title, isFinancial }) => (
+              <div
+                key={label}
+                title={title}
+                className={`rounded-xl border border-[var(--brand-primary)]/8 bg-white/45 backdrop-blur-[1px] ${
+                  compact ? "px-2 py-1.5" : "px-3 py-2.5"
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Icon className={`text-[var(--brand-primary)]/70 shrink-0 ${compact ? "w-3 h-3" : "w-3.5 h-3.5"}`} />
+                  <p className={`font-medium text-[var(--foreground)] opacity-75 ${compact ? "text-[10px]" : "text-xs"}`}>
+                    {label}
+                  </p>
+                </div>
+                <p className={`mt-0.5 font-bold text-[var(--brand-primary)] truncate ${compact ? "text-xs" : "text-sm"}`}>
+                  {isFinancial ? formatFinancialText(value) : value}
                 </p>
               </div>
-              <p className={`mt-0.5 font-bold text-[var(--brand-primary)] truncate ${compact ? "text-xs" : "text-sm"}`}>
-                {value}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
-      {!showBlur && (
-        <div className={`pt-3 border-t border-[var(--brand-primary)]/10 ${compact ? "mt-3" : "mt-5 pt-4"}`}>
+        <div className={`pt-3 border-t border-[var(--brand-primary)]/10 mt-auto ${compact ? "mt-3" : "mt-5 pt-4"}`}>
           <Link
             href={`/companies/${company.id}`}
             className={`flex items-center justify-center gap-2 w-full rounded-xl font-semibold bg-[var(--brand-primary)] text-white shadow-md hover:opacity-95 transition ${compact ? "py-2.5 text-xs" : "py-3.5 text-sm"}`}
@@ -143,13 +141,44 @@ export default function CompanyCard({
             <ChevronRight className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
           </Link>
         </div>
-      )}
+      </div>
     </>
   );
 
   const wrapperClass = compact
-    ? "w-full rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-4 shadow-md hover:shadow-lg hover:border-[var(--brand-primary)]/20 transition block text-left overflow-hidden"
-    : "w-full rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 shadow-md hover:shadow-lg hover:border-[var(--brand-primary)]/20 transition block text-left overflow-hidden";
+    ? "h-full w-full rounded-2xl border border-[var(--brand-primary)]/10 bg-white shadow-md hover:shadow-lg hover:border-[var(--brand-primary)]/20 transition block text-left overflow-hidden flex flex-col"
+    : "h-full w-full rounded-2xl border border-[var(--brand-primary)]/10 bg-white shadow-md hover:shadow-lg hover:border-[var(--brand-primary)]/20 transition block text-left overflow-hidden flex flex-col";
 
   return <div className={wrapperClass}>{cardContent}</div>;
+}
+
+function formatFinancialText(value: string): string {
+  if (!value || value === "—") return value;
+
+  return value.replace(/(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?|\d+(?:[.,]\d+)?)(\s*[kKmM])?/g, (token, raw, suffix) => {
+    const parsed = parseLocalizedNumber(raw);
+    if (parsed == null) return token;
+
+    let absoluteValue = parsed;
+    const unit = String(suffix ?? "").trim().toLowerCase();
+    if (unit === "m") absoluteValue *= 1_000_000;
+    if (unit === "k") absoluteValue *= 1_000;
+
+    return formatCompactAmountValue(absoluteValue);
+  });
+}
+
+function parseLocalizedNumber(input: string): number | null {
+  const value = input.trim();
+  if (!value) return null;
+
+  if (/^\d{1,3}(?:[.,]\d{3})+$/.test(value)) {
+    const integerText = value.replace(/[.,]/g, "");
+    const parsedInteger = Number.parseInt(integerText, 10);
+    return Number.isFinite(parsedInteger) ? parsedInteger : null;
+  }
+
+  const normalized = value.replace(",", ".");
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
 }
