@@ -7,9 +7,9 @@ import ContactFormServicios from "@/components/contact/ContactFormServicios";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: `Servicios M&A en España | Valoración, due diligence y venta de empresas | ${SITE_NAME}`,
+  title: `Servicios de M&A | Compra y Venta de Empresas con ${SITE_NAME}`,
   description:
-    "Servicios de M&A en España: due diligence, valoración de empresas, venta de empresa y asesoramiento a compradores. Preparación para la venta, búsqueda de comprador y apoyo en el cierre. Líder en compraventa de pymes.",
+    "Servicios de M&A en España: due diligence, valoración, compra y venta de empresas. Asesoramiento profesional para cerrar tu operación. Solicita presupuesto sin compromiso.",
   keywords: [
     "servicios M&A España",
     "due diligence España",
@@ -129,10 +129,10 @@ export default function ServiciosPage() {
         <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-8 md:py-10">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
-              Servicios profesionales
+              Servicios de M&A: compra y venta de empresas
             </h1>
             <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90">
-              Due diligence, venta y compra de empresas. Asesoramiento experto para operaciones de M&A.
+              Due diligence, valoración y asesoramiento para cerrar tu operación. Solicita presupuesto sin compromiso.
             </p>
             <a
               href="#pricing"

@@ -8,9 +8,9 @@ import BlogTabbedGrid from "@/components/blog/BlogTabbedGrid";
 const ITEMS_PER_PAGE = 4;
 
 export const metadata: Metadata = {
-  title: `Blog M&A España | Valoración, due diligence y compraventa de empresas | ${SITE_NAME}`,
+  title: `Blog M&A | Guías para comprar y vender empresas en España | ${SITE_NAME}`,
   description:
-    "Guías y artículos sobre valoración de empresas, due diligence y M&A en España. Casos de éxito y consejos para vender o comprar pymes.",
+    "Guías prácticas sobre compraventa de empresas, valoración, due diligence y M&A en España. Consejos para vendedores e inversores. Explora el catálogo de empresas en venta.",
   keywords: [
     "valoración empresas España",
     "due diligence España",

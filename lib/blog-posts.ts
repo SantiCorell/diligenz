@@ -313,6 +313,73 @@ La misma lógica se aplica, en otra escala, en el M&A de pymes. Una pyme puede t
 Comprar o invertir en una empresa que no da beneficios puede tener todo el sentido del mundo cuando el valor está en el crecimiento, en los usuarios, en la tecnología o en la posición estratégica, y cuando el comprador tiene capacidad y plan para materializar ese valor. El sector startup ha normalizado esta forma de pensar; operaciones como WhatsApp, Instagram, YouTube o LinkedIn muestran que el precio se paga por lo que el activo puede llegar a ser, no solo por lo que gana hoy. En M&A, ya sea en tech o en pymes, la valoración debe apoyarse en datos, proyecciones creíbles y una tesis clara sobre el futuro del negocio. En Diligenz trabajamos la valoración y la compraventa de empresas en distintas etapas: con beneficios estables o en fase de crecimiento, con la misma exigencia de rigor y el mismo marco de análisis.
     `.trim(),
   },
+  {
+    slug: "guia-comprar-pymes-en-funcionamiento",
+    title: "Guía para Comprar PYMES en Funcionamiento: Pasos y Consejos",
+    excerpt:
+      "Checklist para adquirir una pyme rentable en España: due diligence, financiación, negociación y cierre. Fuentes de financiación y errores a evitar.",
+    date: "2026-05-27",
+    readTime: "7 min",
+    image: "https://images.unsplash.com/photo-1556761175-5973dc0b32e7?w=1200&q=80",
+    body: `
+Comprar una PYME en funcionamiento es una de las vías más directas para entrar en un negocio con clientes, equipo y flujo de caja desde el primer día. A diferencia de crear una empresa desde cero, adquieres activos, contratos y know-how. Pero el proceso exige rigor: una mala due diligence o una valoración inflada pueden convertir una buena oportunidad en un problema.
+
+**Checklist antes de hacer una oferta**
+
+- Revisar cuentas de los últimos 3 años y comparar con la realidad operativa.
+- Confirmar concentración de clientes y dependencia del fundador.
+- Analizar contratos clave, deudas, litigios y obligaciones laborales.
+- Visitar instalaciones y hablar con el equipo directivo si es posible.
+- Definir tu tesis de inversión: ¿crecimiento, consolidación o diversificación?
+
+**Fuentes de financiación habituales**
+
+- Capital propio y socios inversores.
+- Préstamos bancarios con garantías (activos, avalistas).
+- Seller financing: el vendedor financia parte del precio.
+- Fondos y family offices especializados en pymes.
+
+**Negociación y cierre**
+
+Acuerda precio, estructura (compra de activos vs. participaciones), earn-outs si aplica y condiciones suspensivas (financiación, permisos). La due diligence debe cerrarse antes de firmar; no improvises en el contrato de compraventa.
+
+**Conclusión**
+
+En Diligenz encontrarás empresas en venta verificadas y podrás solicitar asesoramiento para compradores. Explora el catálogo, regístrate gratis y accede a fichas completas para evaluar oportunidades con criterio.
+    `.trim(),
+  },
+  {
+    slug: "vender-empresa-por-jubilacion",
+    title: "Vender tu Empresa por Jubilación: Proceso y Consejos",
+    excerpt:
+      "Guía para propietarios que venden por jubilación: valoración, planificación de la transición, aspectos legales y cómo usar Diligenz para encontrar comprador.",
+    date: "2026-05-27",
+    readTime: "6 min",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1200&q=80",
+    body: `
+Vender la empresa por jubilación es una decisión emocional y financiera. Muchos fundadores han dedicado décadas al negocio y quieren asegurar la continuidad del equipo y un precio justo. El proceso requiere planificación con antelación, no improvisación.
+
+**Cuándo empezar a preparar la venta**
+
+Lo ideal es comenzar 2-3 años antes de la jubilación: ordenar cuentas, reducir dependencia personal, documentar procesos y formar un segundo nivel de gestión. Un negocio que funciona sin el dueño cotiza mejor y cierra más rápido.
+
+**Valoración y expectativas**
+
+Obtén una valoración orientativa y, si el importe es relevante, un informe profesional. Los compradores pagarán por beneficios sostenibles, no por recuerdos. Sé realista con el múltiplo según sector y tamaño.
+
+**Transición al comprador**
+
+Negocia un periodo de transición (consultoría, formación, introducción a clientes). Esto tranquiliza al comprador y protege el valor que has construido. Define plazos y compensación por ese periodo.
+
+**Aspectos legales y fiscales**
+
+La estructura de la venta (activos vs. participaciones) tiene implicaciones fiscales distintas. Consulta con asesores antes de firmar. En Diligenz contamos con el respaldo de Cañizares Valle para operaciones complejas.
+
+**Cómo te ayuda Diligenz**
+
+Publica tu empresa con confidencialidad, valora en minutos y conecta con compradores verificados. Ofrecemos asesoramiento en venta y acompañamiento hasta el cierre. Si vendes por jubilación, contacta con nuestro equipo para un plan a medida.
+    `.trim(),
+  },
 ];
 
 export function getPostBySlug(slug: string): BlogPost | undefined {
