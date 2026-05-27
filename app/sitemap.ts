@@ -8,6 +8,10 @@ import { prisma } from "@/lib/prisma";
 const STATIC_ROUTES: { url: string; priority: number; changeFrequency: "weekly" | "monthly" | "yearly" }[] = [
   { url: "", priority: 1, changeFrequency: "weekly" },
   { url: "companies", priority: 0.95, changeFrequency: "weekly" },
+  { url: "comprar-empresas", priority: 0.93, changeFrequency: "weekly" },
+  { url: "vender-empresa", priority: 0.93, changeFrequency: "weekly" },
+  { url: "compraventa-empresas", priority: 0.91, changeFrequency: "weekly" },
+  { url: "plataforma-m-a", priority: 0.88, changeFrequency: "monthly" },
   { url: "sell", priority: 0.92, changeFrequency: "weekly" },
   { url: "servicios", priority: 0.9, changeFrequency: "monthly" },
   { url: "sobre-nosotros", priority: 0.8, changeFrequency: "monthly" },

@@ -5,9 +5,9 @@ import type { Metadata } from "next";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: `Aviso legal | ${SITE_NAME}`,
+  title: `Aviso legal | ${SITE_NAME} — Compraventa de Empresas`,
   description:
-    "Aviso legal y condiciones de uso del sitio web de Diligenz. Datos del responsable y condiciones generales.",
+    "Aviso legal de Diligenz, marketplace de compraventa de empresas en España. Condiciones de uso, responsable y normativa aplicable.",
   robots: { index: true, follow: true },
   alternates: { canonical: `${SITE_URL}/aviso-legal` },
   openGraph: { url: `${SITE_URL}/aviso-legal`, type: "website" },

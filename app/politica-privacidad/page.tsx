@@ -5,9 +5,9 @@ import type { Metadata } from "next";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: `Política de privacidad | ${SITE_NAME}`,
+  title: `Política de privacidad | ${SITE_NAME} — Compraventa de Empresas`,
   description:
-    "Política de privacidad y protección de datos de Diligenz. Cómo tratamos tus datos personales en el marketplace de compraventa de empresas.",
+    "Política de privacidad de Diligenz, plataforma líder en compraventa de empresas en España. Cómo tratamos y protegemos tus datos personales.",
   robots: { index: true, follow: true },
   alternates: { canonical: `${SITE_URL}/politica-privacidad` },
   openGraph: { url: `${SITE_URL}/politica-privacidad`, type: "website" },

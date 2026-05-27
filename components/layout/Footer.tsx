@@ -87,6 +87,8 @@ export default function Footer() {
           >
             <li><Link href="/sobre-nosotros" className="hover:underline">Sobre nosotros</Link></li>
             <li><Link href="/companies" className="hover:underline">Empresas</Link></li>
+            <li><Link href="/comprar-empresas" className="hover:underline">Comprar empresas</Link></li>
+            <li><Link href="/vender-empresa" className="hover:underline">Vender empresa</Link></li>
             <li><Link href={misEmpresasHref} className="hover:underline">Mis empresas</Link></li>
             <li><Link href="/sell" className="hover:underline">Valorar / Vender</Link></li>
             <li><Link href="/servicios" className="hover:underline">Servicios</Link></li>

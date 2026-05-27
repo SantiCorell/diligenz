@@ -13,9 +13,9 @@ const MOUNTAIN_IMAGE =
   "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=90";
 
 export const metadata: Metadata = {
-  title: `Sobre nosotros | Equipo y sede en Valencia | ${SITE_NAME}`,
+  title: `Sobre nosotros | Plataforma líder en compraventa de empresas | ${SITE_NAME}`,
   description:
-    "Diligenz nace en Valencia. Conoce nuestro equipo, nuestra sede y nuestra alianza con Cañizares Valle: más de 50 años de experiencia en asesoramiento empresarial, M&A y valoración de empresas en España.",
+    "Conoce Diligenz, la plataforma líder en compraventa de empresas en España. Más de 300 empresas en venta, sede en Valencia y respaldo de Cañizares Valle.",
   keywords: [
     "Diligenz Valencia",
     "marketplace M&A Valencia",
