@@ -1,17 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { MapPin, TrendingUp, BarChart3, Users, ChevronRight, Wallet, BriefcaseBusiness } from "lucide-react";
+import { MapPin, TrendingUp, BarChart3, Users, ChevronRight, Wallet } from "lucide-react";
 import type { CompanyMock } from "@/lib/mock-companies";
-import { getDefaultCompanyImageUrl } from "@/lib/default-company-images";
 import { formatCompactAmountValue } from "@/lib/format-financial";
+import { getSectorVisual } from "@/lib/sector-visual";
+import SectorVisual from "./SectorVisual";
 
 type Props = {
   company: CompanyMock;
   isLoggedIn?: boolean;
-  /** Posición en un grupo de cartas (0, 1, 2…) para que las adyacentes no repitan imagen */
-  positionInGroup?: number;
   /** Versión más compacta para listados con varias cartas */
   compact?: boolean;
   /** Texto del botón inferior (por defecto solicitar información) */
@@ -20,10 +18,10 @@ type Props = {
 
 export default function CompanyCard({
   company,
-  positionInGroup,
   compact = false,
   ctaLabel = "Solicitar información",
 }: Props) {
+  const sectorVisual = getSectorVisual(company.sector);
   const descMax = compact ? 100 : 140;
   const descriptionPreview =
     company.description.length > descMax
@@ -57,112 +55,103 @@ export default function CompanyCard({
     },
   ];
 
-  const cardImageSrc = company.heroImageSrc ?? getDefaultCompanyImageUrl(company, positionInGroup);
-
   const cardContent = (
-    <>
-      <div
-        className={`relative w-full overflow-hidden bg-[var(--brand-bg-lavender)] ${
-          compact ? "aspect-[16/9]" : "aspect-[16/9]"
-        }`}
-      >
-        <Image
-          src={cardImageSrc}
-          alt=""
-          fill
-          className="object-cover"
-          sizes={compact ? "(max-width: 480px) 100vw, 280px" : "(max-width: 480px) 100vw, 400px"}
-          unoptimized={Boolean(company.heroImageSrc) || cardImageSrc.includes("unsplash.com")}
-        />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
-      </div>
-      <div className={`${compact ? "p-4 pt-3" : "p-4 pt-3"} flex flex-1 flex-col`}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
+    <div className={`${compact ? "p-4" : "p-5"} flex flex-1 flex-col`}>
+      <div className="flex items-start gap-3">
+        <SectorVisual sector={company.sector} compact={compact} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
             <h3
-              className={`font-bold text-[var(--foreground)] leading-tight break-words ${
-                compact ? "text-lg min-h-[3.8rem]" : "text-[1.65rem] min-h-[4.8rem]"
+              className={`font-semibold text-[var(--foreground)] leading-snug break-words ${
+                compact ? "text-[15px] min-h-[2.4rem]" : "text-base min-h-[2.6rem]"
               }`}
             >
               {company.name}
             </h3>
-            <div
-              className={`inline-flex items-center gap-1.5 rounded-lg border border-[var(--brand-primary)]/10 bg-[var(--brand-bg-lavender)]/75 text-[var(--foreground)] ${
-                compact ? "mt-1 px-2 py-1 text-[11px]" : "mt-2 px-2.5 py-1 text-xs"
+            <span
+              className={`rounded-md font-normal text-[var(--foreground)]/55 shrink-0 ${
+                compact ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-[11px]"
               }`}
             >
-              <BriefcaseBusiness className="w-3.5 h-3.5 shrink-0 text-[var(--brand-primary)]/75" />
-              <span>{company.sector}</span>
-            </div>
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3 w-3 opacity-60" />
+                {company.location}
+              </span>
+            </span>
           </div>
-          <span
-            className={`rounded-lg bg-[var(--brand-primary)]/12 font-semibold text-[var(--brand-primary)] shrink-0 ${
-              compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs"
+          <p
+            className={`mt-1 text-[var(--foreground)]/45 leading-tight ${
+              compact ? "text-[10px]" : "text-[11px]"
             }`}
           >
-            <span className="inline-flex items-center gap-1">
-              <MapPin className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
-              {company.location}
-            </span>
-          </span>
-        </div>
-
-        <p
-          className={`text-[var(--foreground)] opacity-90 leading-relaxed line-clamp-3 ${
-            compact ? "mt-2 text-xs h-[3.4rem]" : "mt-3 text-sm h-[4.2rem]"
-          }`}
-        >
-          {descriptionPreview}
-        </p>
-
-        <div className={`${compact ? "mt-3" : "mt-4"} rounded-2xl bg-[var(--brand-bg-lavender)]/88 border border-[var(--brand-primary)]/12 p-2.5`}>
-          <div className="grid grid-cols-2 gap-2">
-            {metrics.map(({ label, value, icon: Icon, title, isFinancial }) => (
-              <div
-                key={label}
-                title={title}
-                className={`rounded-xl border border-[var(--brand-primary)]/8 bg-white/45 backdrop-blur-[1px] ${
-                  compact ? "px-2 py-1.5" : "px-2.5 py-2"
-                }`}
-              >
-                <div className="flex items-center justify-center gap-1.5">
-                  <Icon className={`text-[var(--brand-primary)]/70 shrink-0 ${compact ? "w-3 h-3" : "w-3.5 h-3.5"}`} />
-                  <p
-                    className={`font-medium text-[var(--foreground)] opacity-75 text-center leading-tight ${
-                      compact ? "text-[10px]" : "text-[11px]"
-                    }`}
-                  >
-                    {label}
-                  </p>
-                </div>
-                <p
-                  className={`mt-0.5 font-bold text-[var(--brand-primary)] text-center ${
-                    compact ? "text-xs" : "text-[15px]"
-                  }`}
-                >
-                  {isFinancial ? formatFinancialText(value) : value}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={`pt-3 border-t border-[var(--brand-primary)]/10 mt-auto ${compact ? "mt-3" : "mt-3.5 pt-3"}`}>
-          <Link
-            href={`/companies/${company.id}`}
-            className={`flex items-center justify-center gap-2 w-full rounded-xl font-semibold bg-[var(--brand-primary)] text-white shadow-md hover:opacity-95 transition ${compact ? "py-2.5 text-xs" : "py-2.5 text-sm"}`}
-          >
-            {ctaLabel}
-            <ChevronRight className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
-          </Link>
+            {sectorVisual.label}
+          </p>
         </div>
       </div>
-    </>
+
+      <p
+        className={`text-[var(--foreground)]/70 leading-relaxed line-clamp-3 ${
+          compact ? "mt-2.5 text-xs h-[3.4rem]" : "mt-3 text-sm h-[4.2rem]"
+        }`}
+      >
+        {descriptionPreview}
+      </p>
+
+      <div
+        className={`${compact ? "mt-3" : "mt-4"} rounded-lg border border-black/[0.05] bg-[var(--surface-muted)]/50 p-2`}
+      >
+        <div className="grid grid-cols-2 gap-1.5">
+          {metrics.map(({ label, value, icon: Icon, title, isFinancial }) => (
+            <div
+              key={label}
+              title={title}
+              className={`rounded-md bg-[var(--surface-card)] px-2 py-1.5 ${
+                compact ? "" : "py-2"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-1">
+                <Icon className="h-3 w-3 shrink-0 text-[var(--foreground)]/35" />
+                <p
+                  className={`font-normal text-[var(--foreground)]/50 text-center leading-tight ${
+                    compact ? "text-[9px]" : "text-[10px]"
+                  }`}
+                >
+                  {label}
+                </p>
+              </div>
+              <p
+                className={`mt-0.5 font-semibold text-[var(--foreground)] text-center ${
+                  compact ? "text-xs" : "text-sm"
+                }`}
+              >
+                {isFinancial ? formatFinancialText(value) : value}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={`pt-3 border-t border-black/[0.05] mt-auto ${compact ? "mt-3" : "mt-4"}`}>
+        <Link
+          href={`/companies/${company.id}`}
+          className={`flex items-center justify-center gap-1.5 w-full rounded-lg font-semibold border-2 transition hover:brightness-[0.97] active:scale-[0.99] ${
+            compact ? "py-2 text-xs" : "py-2.5 text-sm"
+          }`}
+          style={{
+            borderColor: sectorVisual.accent,
+            backgroundColor: `${sectorVisual.accent}18`,
+            color: sectorVisual.accent,
+          }}
+        >
+          {ctaLabel}
+          <ChevronRight className={compact ? "w-3.5 h-3.5" : "w-4 h-4"} />
+        </Link>
+      </div>
+    </div>
   );
 
-  const wrapperClass = compact
-    ? "h-full w-full rounded-2xl border border-[var(--brand-primary)]/10 bg-white shadow-md hover:shadow-lg hover:border-[var(--brand-primary)]/20 transition block text-left overflow-hidden flex flex-col"
-    : "h-full w-full rounded-2xl border border-[var(--brand-primary)]/10 bg-white shadow-md hover:shadow-lg hover:border-[var(--brand-primary)]/20 transition block text-left overflow-hidden flex flex-col";
+  const wrapperClass =
+    "h-full w-full rounded-xl border border-black/[0.06] bg-[var(--surface-card)] shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)] hover:border-black/[0.08] transition block text-left overflow-hidden flex flex-col";
 
   return <div className={wrapperClass}>{cardContent}</div>;
 }

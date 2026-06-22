@@ -6,6 +6,29 @@ import { isValidPhone } from "@/lib/security";
 const NAME_MAX = 120;
 const PHONE_MAX = 40;
 
+/** GET: datos básicos del usuario autenticado (p. ej. completar perfil tras Google). */
+export async function GET(req: Request) {
+  const session = await getSessionWithUserFromRequest(req);
+  if (!session) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const u = session.user;
+  if (u.deletedAt != null || u.accountStatus === "REJECTED") {
+    return NextResponse.json({ error: "Cuenta no disponible" }, { status: 403 });
+  }
+
+  return NextResponse.json({
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    phone: u.phone,
+    role: u.role,
+    provider: u.provider,
+    oauthProfileComplete: u.oauthProfileComplete,
+  });
+}
+
 /**
  * PATCH: el usuario autenticado actualiza su nombre y teléfono (comprador, vendedor, profesional, admin).
  */

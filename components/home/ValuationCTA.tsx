@@ -1,34 +1,71 @@
+import Link from "next/link";
+import { getValuationServiceSchema } from "@/lib/seo";
+
+const POINTS = [
+  "Sin registro obligatorio",
+  "Datos confidenciales",
+  "Resultado inmediato",
+  "Basado en mercado real en España",
+] as const;
+
 export default function ValuationCTA() {
+  const schema = getValuationServiceSchema();
+
   return (
-    <section className="bg-[var(--brand-bg)] py-10 md:py-12 border-t border-[var(--brand-primary)]/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-8 md:gap-10 items-center">
-        <div>
-          <span className="inline-block mb-2 rounded-full bg-[var(--brand-bg-mint)] px-3 py-1 text-xs font-medium text-[var(--brand-primary)]">
-            Valoración gratuita
-          </span>
-          <h2 className="text-xl sm:text-2xl font-semibold text-[var(--brand-primary)]">
-            Valora tu empresa en minutos
-          </h2>
+    <section
+      id="valorar-empresa"
+      aria-labelledby="valoracion-heading"
+      className="py-12 md:py-16"
+    >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
 
-          <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed">
-            Estimación orientativa basada en facturación, rentabilidad, sector y ubicación. Sin registro obligatorio.
-          </p>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="overflow-hidden rounded-3xl bg-gradient-to-r from-[var(--brand-primary)] via-[#9B7BFF] to-[var(--brand-bg-mint)] p-8 md:p-10 lg:p-12">
+          <div className="grid items-center gap-8 md:grid-cols-2 md:gap-10">
+            <div className="text-white">
+              <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur">
+                Valoración gratuita
+              </span>
+              <h2
+                id="valoracion-heading"
+                className="mt-4 text-2xl font-bold sm:text-3xl"
+              >
+                Valora tu empresa en minutos
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-white/90 sm:text-base">
+                Obtén una valoración orientativa de tu pyme en España a partir de facturación,
+                EBITDA, sector y ubicación. Sin coste y sin registro obligatorio.
+              </p>
+              <p className="mt-4 text-xs text-white/75">
+                Más de 3.200 valoraciones realizadas en Diligenz
+              </p>
+            </div>
 
-          <a
-            href="/sell"
-            className="inline-block mt-5 rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-          >
-            Valorar mi empresa ahora →
-          </a>
-        </div>
-
-        <div className="rounded-xl border border-[var(--brand-primary)]/15 p-5 bg-white shadow-md">
-          <ul className="space-y-2 text-sm text-[var(--foreground)] opacity-90">
-            <li>✔ Sin registro obligatorio</li>
-            <li>✔ Datos confidenciales</li>
-            <li>✔ Resultado inmediato</li>
-            <li>✔ Basado en mercado real</li>
-          </ul>
+            <div className="rounded-2xl bg-white p-6 shadow-xl">
+              <p className="mb-4 text-sm font-semibold text-[var(--brand-dark)]">
+                Qué incluye
+              </p>
+              <ul className="space-y-3 text-sm text-[var(--foreground)]/80">
+                {POINTS.map((point) => (
+                  <li key={point} className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand-bg-mint)] text-xs font-bold text-[var(--brand-dark)]">
+                      ✓
+                    </span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/sell"
+                className="mt-6 block w-full rounded-2xl bg-[var(--brand-dark)] px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:opacity-95"
+              >
+                Valorar mi empresa ahora
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </section>

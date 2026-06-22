@@ -4,6 +4,8 @@ type Props = {
   emailVerified: boolean;
   ndaSigned: boolean;
   dniVerified: boolean;
+  /** Anverso y reverso subidos, aún sin validar por admin */
+  dniPendingReview?: boolean;
   profileComplete: boolean;
   profileVerifiedByAdmin?: boolean;
   userName?: string | null;
@@ -17,6 +19,7 @@ export default function ProfileStatus({
   emailVerified,
   ndaSigned,
   dniVerified,
+  dniPendingReview = false,
   profileComplete,
   profileVerifiedByAdmin = false,
   userName,
@@ -37,8 +40,24 @@ export default function ProfileStatus({
 
   const items = [
     { label: "Email verificado", ok: emailVerified },
-    { label: "NDA firmado", ok: ndaSigned, action: "/dashboard/nda" },
-    { label: "DNI validado", ok: dniVerified, action: "/dashboard/verification" },
+    {
+      label:
+        role === "SELLER" || role === "PROFESSIONAL"
+          ? "Mandato de venta firmado"
+          : "NDA firmado",
+      ok: ndaSigned,
+      action: "/dashboard/nda",
+    },
+    {
+      label: dniVerified
+        ? "DNI validado"
+        : dniPendingReview
+          ? "DNI — pendiente de verificar"
+          : "DNI validado",
+      ok: dniVerified,
+      pending: dniPendingReview,
+      action: "/dashboard/verification",
+    },
     {
       label: "Perfil completo (nombre y teléfono)",
       ok: profileComplete,
@@ -83,17 +102,18 @@ export default function ProfileStatus({
 
       <ul className="space-y-3 text-sm text-[var(--foreground)]">
         {items.map((item) => (
-          <li key={item.label} className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              {item.ok ? "✅" : "⬜"} {item.label}
+          <li key={item.label} className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2 min-w-0">
+              {item.ok ? "✅" : "pending" in item && item.pending ? "🟡" : "⬜"}{" "}
+              <span className="truncate">{item.label}</span>
             </span>
 
             {!item.ok && item.action && (
               <Link
                 href={item.action}
-                className="text-xs font-medium text-[var(--brand-primary)] hover:underline"
+                className="text-xs font-medium text-[var(--brand-primary)] hover:underline shrink-0"
               >
-                Completar
+                {"pending" in item && item.pending ? "Ver estado" : "Completar"}
               </Link>
             )}
           </li>

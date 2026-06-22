@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getDisplayName } from "@/lib/user-display";
+import { getUserDniPendingReview } from "@/lib/user-documents/dni-status";
 import { getSessionWithUser } from "@/lib/session";
 import DashboardShell from "@/components/layout/DashboardShell";
 import ProfileStatus from "@/components/dashboard/ProfileStatus";
@@ -18,6 +19,7 @@ export default async function MiInteresLayout({
     Boolean(user.phone?.trim() && user.name?.trim()) ||
     user.profileVerifiedByAdmin;
   const userDisplayName = getDisplayName(user.email);
+  const dniPendingReview = await getUserDniPendingReview(user.id, user.dniVerified);
 
   return (
     <DashboardShell role={user.role} userDisplayName={userDisplayName}>
@@ -27,6 +29,7 @@ export default async function MiInteresLayout({
           emailVerified={user.emailVerified}
           ndaSigned={user.ndaSigned}
           dniVerified={user.dniVerified}
+          dniPendingReview={dniPendingReview}
           profileComplete={profileComplete}
           profileVerifiedByAdmin={user.profileVerifiedByAdmin}
           userName={user.name}

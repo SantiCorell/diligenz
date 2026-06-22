@@ -2,15 +2,17 @@ import Link from "next/link";
 
 export default function TopBar() {
   return (
-    <div className="bg-orange-50 border-b border-orange-200 rounded-b-xl">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
-        <p className="text-orange-900 font-semibold text-center sm:text-left text-xs sm:text-sm">
+    <div className="bg-gradient-to-r from-[var(--brand-primary)]/10 to-[var(--brand-bg-mint)]/40">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-2.5 text-sm sm:flex-row sm:px-6">
+        <p className="text-center text-xs font-medium text-[var(--brand-dark)] sm:text-left sm:text-sm">
           <span className="sm:hidden">Valoración gratis · Sin registro</span>
-          <span className="hidden sm:inline">Valora tu empresa gratis en 2 minutos · Sin registro obligatorio</span>
+          <span className="hidden sm:inline">
+            Valora tu empresa gratis en 2 minutos · Sin registro obligatorio
+          </span>
         </p>
         <Link
           href="/sell"
-          className="rounded-lg bg-orange-500 px-4 py-2.5 sm:py-1.5 text-white text-sm font-semibold hover:bg-orange-600 transition shrink-0 min-h-[44px] sm:min-h-0 flex items-center justify-center touch-manipulation"
+          className="flex min-h-[40px] shrink-0 items-center justify-center rounded-xl bg-[var(--brand-primary)] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-95 sm:min-h-0 sm:text-sm"
         >
           Valorar ahora →
         </Link>

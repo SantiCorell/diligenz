@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserIdFromRequest } from "@/lib/session";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -105,7 +106,26 @@ export async function POST(req: Request, { params }: Params) {
   const absolutePath = path.join(baseDir, storageName);
 
   const bytes = await file.arrayBuffer();
-  await writeFile(absolutePath, Buffer.from(bytes));
+  const buffer = Buffer.from(bytes);
+  await writeFile(absolutePath, buffer);
+
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { name: true, ownerId: true },
+  });
+
+  try {
+    await syncDocumentToUserDrive({
+      userId: company?.ownerId ?? userId,
+      kind: "empresa",
+      originalFileName: file.name,
+      mimeType: file.type || "application/octet-stream",
+      content: buffer,
+      companyName: company?.name,
+    });
+  } catch (driveErr) {
+    console.error("[companies/files] drive sync:", driveErr);
+  }
 
   const isImage = (file.type || "").startsWith("image/");
   let sortOrder = 0;

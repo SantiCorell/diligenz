@@ -169,6 +169,28 @@ export const FAQ_ITEMS: { question: string; answer: string }[] = [
   },
 ];
 
+/** JSON-LD Service para la herramienta de valoración gratuita (home + /sell) */
+export function getValuationServiceSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Valoración gratuita de empresas en España",
+    description:
+      "Herramienta gratuita de valoración orientativa para empresas y pymes en España. Estima el valor de tu negocio en minutos a partir de facturación, EBITDA, sector y ubicación, con datos del mercado español de M&A.",
+    provider: getOrganizationSchema(),
+    areaServed: { "@type": "Country", name: "España", alternateName: "ES" },
+    serviceType: "Valoración orientativa de empresas",
+    url: `${SITE_URL}/sell`,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "EUR",
+      description: "Valoración orientativa gratuita en minutos, sin registro obligatorio",
+      availability: "https://schema.org/InStock",
+    },
+  };
+}
+
 /** JSON-LD FAQPage para aparecer en resultados enriquecidos de Google */
 export function getFAQSchema() {
   return {

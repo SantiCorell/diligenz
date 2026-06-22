@@ -22,6 +22,13 @@ export default async function DashboardRouter() {
     redirect("/login");
   }
 
+  if (
+    user.provider === "google" &&
+    (!user.oauthProfileComplete || !user.phone?.trim())
+  ) {
+    redirect("/register/elegir-perfil");
+  }
+
   // Redirección en servidor: una sola carga en lugar de "Redirigiendo..." + segunda navegación
   const target = ROLE_TARGET[user.role] ?? "/login";
   redirect(target);

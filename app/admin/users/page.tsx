@@ -9,6 +9,7 @@ import {
   ACCOUNT_STATUSES,
   accountStatusBadgeClass,
 } from "@/lib/user-admin-ui";
+import { dniStatusLabel, type DniVerificationStatus } from "@/lib/user-documents/dni-status";
 import { Search, SlidersHorizontal, UserPlus, Trash2, ChevronDown } from "lucide-react";
 
 type UserRow = {
@@ -26,10 +27,118 @@ type UserRow = {
   hasCompanyDocumentLinks: boolean;
   hasUserDriveFolder: boolean;
   documentsDriveFolderUrl: string | null;
+  dniHasFront?: boolean;
+  dniHasBack?: boolean;
+  dniDriveSynced?: boolean;
+  dniVerificationStatus?: DniVerificationStatus;
+  dniPendingReview?: boolean;
 };
 
 function profileCompleteEffective(u: UserRow) {
   return Boolean(u.phone?.trim()) || u.profileVerifiedByAdmin;
+}
+
+function UserDniReviewPanel({
+  user,
+  onMarkVerified,
+}: {
+  user: UserRow;
+  onMarkVerified: () => void;
+}) {
+  const status = user.dniVerificationStatus ?? "none";
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+
+  const markVerified = async () => {
+    setMsg(null);
+    setSaving(true);
+    try {
+      const res = await authFetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dniVerified: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg({ type: "error", text: (data as { error?: string }).error ?? "Error al guardar" });
+        return;
+      }
+      setMsg({ type: "ok", text: "DNI marcado como verificado." });
+      onMarkVerified();
+    } catch {
+      setMsg({ type: "error", text: "Error de conexión." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
+        Revisión DNI / NIE
+      </p>
+      <p className="text-xs text-slate-600 mb-3 max-w-2xl leading-relaxed">
+        Revisa las fotos en Google Drive (subcarpeta <strong>Identidad</strong> dentro de la carpeta
+        del cliente). Cuando confirmes que el documento es correcto, marca como verificado.
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <span
+          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+            status === "verified"
+              ? "bg-emerald-100 text-emerald-900"
+              : status === "pending"
+                ? "bg-amber-100 text-amber-900"
+                : status === "incomplete"
+                  ? "bg-sky-100 text-sky-900"
+                  : "bg-slate-100 text-slate-600"
+          }`}
+        >
+          {dniStatusLabel(status)}
+        </span>
+        <span className="text-xs text-slate-600">
+          Anverso: {user.dniHasFront ? "✓" : "—"} · Reverso: {user.dniHasBack ? "✓" : "—"}
+          {user.dniHasFront || user.dniHasBack
+            ? user.dniDriveSynced
+              ? " · En Drive"
+              : " · Falta copia Drive"
+            : ""}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        {user.documentsDriveFolderUrl ? (
+          <a
+            href={user.documentsDriveFolderUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-slate-800 text-white hover:opacity-95"
+          >
+            Abrir carpeta Drive (Identidad)
+          </a>
+        ) : (
+          <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            Sin carpeta Drive — configúrala arriba o espera al registro automático.
+          </span>
+        )}
+        {status === "pending" && !user.dniVerified && (
+          <button
+            type="button"
+            onClick={markVerified}
+            disabled={saving}
+            className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-600 text-white hover:opacity-95 disabled:opacity-50"
+          >
+            {saving ? "Guardando…" : "Marcar DNI verificado"}
+          </button>
+        )}
+      </div>
+      {msg && (
+        <p className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}>
+          {msg.text}
+        </p>
+      )}
+    </div>
+  );
 }
 
 function UserVerificationPanel({
@@ -398,6 +507,11 @@ function AdminUserMobileCard({
             Docs empresa
           </span>
         )}
+        {u.dniPendingReview && (
+          <span className="text-[10px] uppercase tracking-wide text-amber-900 font-semibold bg-amber-100 px-2.5 py-1.5 rounded-lg">
+            DNI pendiente
+          </span>
+        )}
         {u.hasUserDriveFolder ? (
           <span className="text-[10px] uppercase tracking-wide text-emerald-900 font-semibold bg-emerald-100 px-2.5 py-1.5 rounded-lg">
             Drive usuario
@@ -411,6 +525,7 @@ function AdminUserMobileCard({
 
       {isExpanded && (
         <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <UserDniReviewPanel user={u} onMarkVerified={onVerificationSaved} />
           <UserVerificationPanel user={u} onSaved={onVerificationSaved} />
           <UserDriveFolderPanel user={u} onSaved={onVerificationSaved} />
         </div>
@@ -429,6 +544,7 @@ export default function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [fEmail, setFEmail] = useState(false);
   const [fDni, setFDni] = useState(false);
+  const [fDniPending, setFDniPending] = useState(false);
   const [fNda, setFNda] = useState(false);
   const [fDocLinks, setFDocLinks] = useState(false);
 
@@ -449,6 +565,7 @@ export default function AdminUsersPage() {
     if (statusFilter) p.set("status", statusFilter);
     if (fEmail) p.set("emailVerified", "1");
     if (fDni) p.set("dniVerified", "1");
+    if (fDniPending) p.set("dniPending", "1");
     if (fNda) p.set("ndaSigned", "1");
     if (fDocLinks) p.set("documentLinks", "1");
 
@@ -469,6 +586,11 @@ export default function AdminUsersPage() {
               hasCompanyDocumentLinks: Boolean(u.hasCompanyDocumentLinks),
               hasUserDriveFolder: Boolean(u.hasUserDriveFolder ?? u.documentsDriveFolderUrl?.trim()),
               documentsDriveFolderUrl: u.documentsDriveFolderUrl ?? null,
+              dniHasFront: Boolean(u.dniHasFront),
+              dniHasBack: Boolean(u.dniHasBack),
+              dniDriveSynced: Boolean(u.dniDriveSynced),
+              dniVerificationStatus: u.dniVerificationStatus ?? "none",
+              dniPendingReview: Boolean(u.dniPendingReview),
             };
           })
         );
@@ -476,7 +598,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [q, roleFilter, statusFilter, fEmail, fDni, fNda, fDocLinks]);
+  }, [q, roleFilter, statusFilter, fEmail, fDni, fDniPending, fNda, fDocLinks]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -650,6 +772,15 @@ export default function AdminUsersPage() {
                 className="h-5 w-5 rounded border-slate-300 text-[var(--brand-primary)] shrink-0"
               />
               DNI verificado
+            </label>
+            <label className="inline-flex items-center gap-3 text-sm text-slate-800 cursor-pointer min-h-11 py-1 sm:py-0 -mx-1 px-1 rounded-lg sm:rounded-none sm:mx-0 sm:px-0 active:bg-slate-50 sm:active:bg-transparent">
+              <input
+                type="checkbox"
+                checked={fDniPending}
+                onChange={(e) => setFDniPending(e.target.checked)}
+                className="h-5 w-5 rounded border-slate-300 text-[var(--brand-primary)] shrink-0"
+              />
+              DNI pendiente de verificar
             </label>
             <label className="inline-flex items-center gap-3 text-sm text-slate-800 cursor-pointer min-h-11 py-1 sm:py-0 -mx-1 px-1 rounded-lg sm:rounded-none sm:mx-0 sm:px-0 active:bg-slate-50 sm:active:bg-transparent">
               <input
@@ -930,6 +1061,11 @@ export default function AdminUsersPage() {
                             >
                               {checksOk}/4 · {expandedUserId === u.id ? "Cerrar" : "Editar"}
                             </button>
+                            {u.dniPendingReview && (
+                              <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-800 font-semibold">
+                                DNI pend.
+                              </span>
+                            )}
                             {u.hasCompanyDocumentLinks && (
                               <span className="ml-2 text-[10px] uppercase tracking-wide text-emerald-800 font-semibold">
                                 Docs emp.
@@ -959,6 +1095,7 @@ export default function AdminUsersPage() {
                         {expandedUserId === u.id && (
                           <tr className="bg-slate-50/50">
                             <td colSpan={7} className="p-0">
+                              <UserDniReviewPanel user={u} onMarkVerified={loadUsers} />
                               <UserVerificationPanel user={u} onSaved={loadUsers} />
                               <UserDriveFolderPanel user={u} onSaved={loadUsers} />
                             </td>

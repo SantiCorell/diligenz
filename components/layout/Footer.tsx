@@ -60,7 +60,7 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="bg-[var(--brand-primary)] text-[var(--brand-bg)] py-8 md:py-12 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+    <footer className="bg-[var(--brand-dark)] text-white py-10 md:py-14 rounded-t-3xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Móvil: logo + descripción siempre visible; resto en acordeones */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-0 md:gap-8">

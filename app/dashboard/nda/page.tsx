@@ -1,20 +1,33 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSessionWithUser } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
+import MandatoSignWizard from "@/components/mandato/MandatoSignWizard";
 
-export default function DashboardNdaPage() {
+const ALLOWED = new Set(["SELLER", "PROFESSIONAL", "ADMIN"]);
+
+export default async function DashboardMandatoPage() {
+  const session = await getSessionWithUser();
+  if (!session) redirect("/login");
+
+  if (!ALLOWED.has(session.user.role)) {
+    redirect("/dashboard/buyer");
+  }
+
+  const mandate = await prisma.salesMandate.findUnique({
+    where: { userId: session.userId },
+    select: { signedAt: true, contactEmail: true },
+  });
+
   return (
-    <div className="max-w-2xl mx-auto rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-8 text-center">
-      <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)] mb-2">
-        Firma de NDA
-      </h1>
-      <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90 mb-6">
-        Esta funcionalidad estará disponible próximamente. Podrás firmar el acuerdo de confidencialidad desde aquí.
-      </p>
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-      >
-        Volver al panel
-      </Link>
-    </div>
+    <MandatoSignWizard
+      prefill={{
+        name: session.user.name,
+        email: session.user.email,
+        phone: session.user.phone,
+      }}
+      alreadySigned={session.user.ndaSigned || Boolean(mandate)}
+      signedAt={mandate?.signedAt?.toISOString() ?? null}
+      signedEmail={mandate?.contactEmail ?? session.user.email}
+    />
   );
 }

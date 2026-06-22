@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 import { createSession } from "@/lib/session";
 import { getClientIP, isValidEmail, isValidPhone } from "@/lib/security";
+import { sendWelcomeEmail } from "@/lib/emails/welcome";
+import type { WelcomeRole } from "@/lib/emails/welcome";
+import { ensureUserDriveFolder } from "@/lib/google-drive/user-drive";
 
 export async function POST(req: Request) {
   try {
@@ -30,12 +33,25 @@ export async function POST(req: Request) {
     }
     
     const body = await req.json().catch(() => ({}));
-    const { email, password, phone, role } = body;
+    const { email, password, phone, role, firstName, lastName } = body;
+
+    const firstNameTrim =
+      typeof firstName === "string" ? firstName.trim() : "";
+    const lastNameTrim =
+      typeof lastName === "string" ? lastName.trim() : "";
+    const fullName = [firstNameTrim, lastNameTrim].filter(Boolean).join(" ");
 
     // Validación mejorada
-    if (!email || !password || !phone || !role) {
+    if (!email || !password || !phone || !role || !firstNameTrim || !lastNameTrim) {
       return NextResponse.json(
         { error: "Todos los campos son obligatorios" },
+        { status: 400 }
+      );
+    }
+
+    if (firstNameTrim.length > 60 || lastNameTrim.length > 60 || fullName.length > 120) {
+      return NextResponse.json(
+        { error: "Nombre o apellidos demasiado largos" },
         { status: 400 }
       );
     }
@@ -117,6 +133,7 @@ export async function POST(req: Request) {
           email: normalizedEmail,
           passwordHash,
           phone: phone.trim(),
+          name: fullName,
           role,
         },
         select: { id: true, role: true },
@@ -135,6 +152,32 @@ export async function POST(req: Request) {
         { error: "Error al crear la cuenta. Inténtalo de nuevo." },
         { status: 500 }
       );
+    }
+
+    try {
+      const sent = await sendWelcomeEmail({
+        to: normalizedEmail,
+        name: fullName,
+        role: user.role as WelcomeRole,
+      });
+      if (sent) {
+        console.log("[register] welcome email enviado a", normalizedEmail);
+      } else {
+        console.warn("[register] welcome email no enviado (SMTP no configurado)");
+      }
+    } catch (emailError) {
+      console.error("[register] welcome email error:", emailError);
+    }
+
+    try {
+      await ensureUserDriveFolder({
+        userId: user.id,
+        role: user.role as WelcomeRole,
+        personName: fullName,
+        userEmail: normalizedEmail,
+      });
+    } catch (driveError) {
+      console.error("[register] google drive folder error:", driveError);
     }
 
     const token = await createSession(user.id);

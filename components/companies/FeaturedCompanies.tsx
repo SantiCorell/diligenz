@@ -1,41 +1,71 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import CompanyCard from "./CompanyCard";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
 
 export default function FeaturedCompanies() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const companies = MOCK_COMPANIES.slice(0, 6);
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = direction === "left" ? -el.clientWidth * 0.85 : el.clientWidth * 0.85;
+    el.scrollBy({ left: amount, behavior: "smooth" });
+  };
+
   return (
-    <section className="bg-[var(--brand-bg)] py-10 md:py-12 border-t border-[var(--brand-primary)]/10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <h2 className="text-center text-xl sm:text-2xl font-semibold text-[var(--brand-primary)]">
-          Empresas destacadas
-        </h2>
-        <p className="mt-2 text-center text-sm sm:text-base text-[var(--foreground)] opacity-85">
-          Oportunidades reales, verificadas y confidenciales
-        </p>
+    <section className="bg-[var(--brand-bg)] py-16 md:py-20">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-[var(--brand-dark)] sm:text-3xl">
+            Empresas destacadas
+          </h2>
+          <p className="mt-3 text-sm text-[var(--foreground)]/70 sm:text-base">
+            Oportunidades reales, verificadas y confidenciales
+          </p>
+        </div>
 
-        <p className="sm:hidden mt-6 text-center text-xs text-[var(--foreground)] opacity-70">
-          Desliza para ver empresas →
-        </p>
-
-        <div className="mt-6 sm:mt-8 md:mt-10 flex sm:grid overflow-x-auto sm:overflow-visible gap-4 sm:gap-6 pb-3 sm:pb-0 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid-cols-2 lg:grid-cols-3">
-          {MOCK_COMPANIES.slice(0, 3).map((company, i) => (
-            <div key={company.id} className="min-w-[280px] max-w-[280px] sm:min-w-0 sm:max-w-none shrink-0 snap-center sm:snap-align-none">
-              <CompanyCard
-                company={company}
-                isLoggedIn
-                compact
-                positionInGroup={i}
-              />
+        <div
+          ref={scrollRef}
+          className="mt-10 flex gap-5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {companies.map((company) => (
+            <div
+              key={company.id}
+              className="w-[min(100%,320px)] shrink-0 snap-center sm:w-[340px]"
+            >
+              <CompanyCard company={company} isLoggedIn compact />
             </div>
           ))}
+        </div>
+
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => scroll("left")}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--brand-primary)]/20 bg-white text-[var(--brand-primary)] shadow-sm transition hover:border-[var(--brand-primary)]/40 hover:bg-[var(--brand-surface)]"
+            aria-label="Ver empresas anteriores"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scroll("right")}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--brand-primary)]/20 bg-white text-[var(--brand-primary)] shadow-sm transition hover:border-[var(--brand-primary)]/40 hover:bg-[var(--brand-surface)]"
+            aria-label="Ver más empresas"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
 
         <p className="mt-8 text-center">
           <Link
             href="/companies"
-            className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[var(--brand-primary)] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:opacity-95"
           >
             Ver todas las empresas
             <span aria-hidden>→</span>

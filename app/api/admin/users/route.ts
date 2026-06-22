@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma, type UserAccountStatus, type UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { getSessionWithUserFromRequest } from "@/lib/session";
+import { getDniVerificationStatus, isDniPendingReview } from "@/lib/user-documents/dni-status";
 
 const ROLES: UserRole[] = ["ADMIN", "BUYER", "SELLER", "PROFESSIONAL"];
 const STATUSES: UserAccountStatus[] = ["PENDING", "IN_REVIEW", "ACTIVE", "REJECTED"];
@@ -41,6 +42,7 @@ export async function GET(req: Request) {
   const statusParam = searchParams.get("status") ?? "";
   const emailVerified = searchParams.get("emailVerified") === "1";
   const dniVerified = searchParams.get("dniVerified") === "1";
+  const dniPending = searchParams.get("dniPending") === "1";
   const ndaSigned = searchParams.get("ndaSigned") === "1";
   const documentLinks = searchParams.get("documentLinks") === "1";
 
@@ -65,6 +67,10 @@ export async function GET(req: Request) {
 
   if (emailVerified) where.emailVerified = true;
   if (dniVerified) where.dniVerified = true;
+  if (dniPending) {
+    where.dniVerified = false;
+    where.dniDocuments = { some: {} };
+  }
   if (ndaSigned) where.ndaSigned = true;
 
   if (documentLinks) {
@@ -99,12 +105,53 @@ export async function GET(req: Request) {
     orderBy: { createdAt: "desc" },
   });
 
+  const userIds = users.map((u) => u.id);
+  const dniDocs = userIds.length
+    ? await prisma.userDniDocument.findMany({
+        where: { userId: { in: userIds } },
+        select: { userId: true, side: true, driveSyncedAt: true },
+      })
+    : [];
+
+  const dniByUser = new Map<
+    string,
+    { hasFront: boolean; hasBack: boolean; driveSynced: boolean }
+  >();
+  for (const doc of dniDocs) {
+    const cur = dniByUser.get(doc.userId) ?? {
+      hasFront: false,
+      hasBack: false,
+      driveSynced: true,
+    };
+    if (doc.side === "FRONT") cur.hasFront = true;
+    if (doc.side === "BACK") cur.hasBack = true;
+    if (!doc.driveSyncedAt) cur.driveSynced = false;
+    dniByUser.set(doc.userId, cur);
+  }
+
   const docLinkOwners = new Set(await ownerIdsWithCompanyDocumentLinks());
-  const payload = users.map((u) => ({
-    ...u,
-    hasCompanyDocumentLinks: docLinkOwners.has(u.id),
-    hasUserDriveFolder: Boolean(u.documentsDriveFolderUrl?.trim()),
-  }));
+  const payload = users.map((u) => {
+    const dni = dniByUser.get(u.id) ?? { hasFront: false, hasBack: false, driveSynced: false };
+    const dniVerificationStatus = getDniVerificationStatus({
+      dniVerified: u.dniVerified,
+      hasFront: dni.hasFront,
+      hasBack: dni.hasBack,
+    });
+    return {
+      ...u,
+      hasCompanyDocumentLinks: docLinkOwners.has(u.id),
+      hasUserDriveFolder: Boolean(u.documentsDriveFolderUrl?.trim()),
+      dniHasFront: dni.hasFront,
+      dniHasBack: dni.hasBack,
+      dniDriveSynced: dni.driveSynced,
+      dniVerificationStatus,
+      dniPendingReview: isDniPendingReview({
+        dniVerified: u.dniVerified,
+        hasFront: dni.hasFront,
+        hasBack: dni.hasBack,
+      }),
+    };
+  });
 
   return NextResponse.json({ users: payload });
 }

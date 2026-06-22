@@ -16,7 +16,7 @@ export default function GlobalError({
         style={{
           margin: 0,
           minHeight: "100vh",
-          backgroundColor: "#F3F2EF",
+          backgroundColor: "#F9F9F7",//#Cambio santi
           color: "#2F265D",
           fontFamily: "system-ui, sans-serif",
           display: "flex",
@@ -43,7 +43,7 @@ export default function GlobalError({
             style={{
               borderRadius: "1rem",
               border: "1px solid rgba(137, 74, 246, 0.2)",
-              backgroundColor: "#F3F2EF",
+              backgroundColor: "#F9F9F7",//#Cambio santi
               padding: "2rem",
               boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
             }}

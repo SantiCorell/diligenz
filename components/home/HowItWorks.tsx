@@ -102,8 +102,8 @@ const FLOWS: Record<Role, { label: string; short: string; steps: Step[] }> = {
     ],
   },
   especialista: {
-    label: "Ganar visibilidad",
-    short: "Me dedico a vender empresas",
+    label: "Asesor/Inversor",
+    short: "Gestiono mandatos y operaciones M&A",
     steps: [
       {
         icon: UserPlus,
@@ -161,27 +161,26 @@ export default function HowItWorks() {
   }, [role, totalSteps]);
 
   return (
-    <section className="bg-[var(--brand-bg)] py-12 md:py-16 border-t border-[var(--brand-primary)]/10 overflow-hidden">
-      <div className="max-w-6xl mx-auto px-6">
-        <h2 className="text-xl sm:text-2xl font-semibold text-center text-[var(--brand-primary)]">
+    <section className="overflow-hidden bg-white py-16 md:py-20">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <h2 className="text-center text-2xl font-bold text-[var(--brand-dark)] sm:text-3xl">
           ¿Cómo funciona?
         </h2>
-        <p className="mt-2 text-center text-sm sm:text-base text-[var(--foreground)] opacity-85">
+        <p className="mt-3 text-center text-sm text-[var(--foreground)]/70 sm:text-base">
           Elige tu perfil y sigue el camino paso a paso
         </p>
 
-        {/* Tabs: 3 roles — en móvil se deslizan en horizontal */}
-        <div className="mt-8 flex overflow-x-auto justify-center gap-2 sm:gap-3 pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap snap-x snap-mandatory">
+        <div className="mt-8 flex justify-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:gap-3">
           {(Object.keys(FLOWS) as Role[]).map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => setRole(r)}
               className={`
-                relative rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-300 shrink-0 snap-center
+                relative shrink-0 rounded-2xl px-5 py-2.5 text-sm font-semibold transition-all duration-300
                 ${role === r
-                  ? "bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/25 scale-[1.02]"
-                  : "bg-[var(--brand-bg-lavender)] text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/20"
+                  ? "bg-[var(--brand-primary)] text-white shadow-md shadow-[var(--brand-primary)]/20"
+                  : "border border-[var(--brand-primary)]/15 bg-[var(--brand-surface)] text-[var(--brand-dark)] hover:border-[var(--brand-primary)]/30"
                 }
               `}
             >
@@ -207,7 +206,7 @@ export default function HowItWorks() {
 
           {/* Móvil: contenedor con scroll horizontal y snap */}
           <div
-            className="flex lg:grid overflow-x-auto overflow-y-visible gap-4 pb-3 lg:pb-0 lg:overflow-visible lg:grid-cols-6 lg:gap-4 relative snap-x snap-mandatory -mx-4 px-4 lg:mx-0 lg:px-0"
+            className="flex items-stretch lg:grid overflow-x-auto overflow-y-visible gap-4 pb-3 lg:pb-0 lg:overflow-visible lg:grid-cols-6 lg:gap-4 relative snap-x snap-mandatory -mx-4 px-4 lg:mx-0 lg:px-0"
             style={{ zIndex: 2, scrollbarWidth: "thin" }}
           >
             {flow.steps.map((step, i) => {
@@ -215,41 +214,50 @@ export default function HowItWorks() {
               return (
                 <div
                   key={`${role}-${i}`}
-                  className="flow-step-enter relative flex flex-col items-center min-w-[280px] max-w-[280px] lg:min-w-0 lg:max-w-none shrink-0 snap-center lg:snap-align-none"
+                  className="flow-step-enter relative flex flex-col h-full min-w-[280px] max-w-[280px] lg:min-w-0 lg:max-w-none shrink-0 snap-center lg:snap-align-none"
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
                   {/* Card */}
                   <div
                     className={`
-                      w-full rounded-2xl border border-[var(--brand-primary)]/15 bg-white p-5 text-center shadow-md
-                      transition-all duration-300 hover:shadow-lg hover:border-[var(--brand-primary)]/25
+                      relative flex h-full w-full flex-col rounded-2xl bg-[var(--brand-surface)] p-5 pt-8 text-center
+                      transition-all duration-300
                       ${i === activeStep
-                        ? "border-[var(--brand-primary)] shadow-lg flow-card-current scale-[1.02]"
-                        : "opacity-95"
+                        ? "ring-2 ring-[var(--brand-primary)]/30 shadow-md flow-card-current"
+                        : ""
                       }
                     `}
                   >
-                    <div
-                      className={`mx-auto w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors ${
-                        i === activeStep ? "bg-[var(--brand-primary)]/20 text-[var(--brand-primary)]" : "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]"
+                    <span
+                      className={`absolute -top-3 left-1/2 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full text-xs font-bold text-white ${
+                        i === activeStep ? "bg-[var(--brand-primary)]" : "bg-[var(--brand-primary)]/70"
                       }`}
                     >
-                      <Icon className="w-6 h-6" strokeWidth={2} />
-                    </div>
-                    <span className="text-xs font-semibold text-[var(--brand-primary)] opacity-90">
-                      Paso {i + 1}
+                      {i + 1}
                     </span>
-                    <h3 className="mt-1 text-base font-semibold text-[var(--brand-primary)]">
+                    <div
+                      className={`mx-auto mb-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${
+                        i === activeStep
+                          ? "bg-[var(--brand-primary)]/15 text-[var(--brand-primary)]"
+                          : "bg-white text-[var(--brand-primary)]"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" strokeWidth={2} />
+                    </div>
+                    <h3 className="flex min-h-[2.75rem] shrink-0 items-center justify-center text-base font-semibold leading-snug text-[var(--brand-dark)]">
                       {step.title}
                     </h3>
-                    <p className="mt-1.5 text-sm text-[var(--foreground)] opacity-85">
-                      {step.description}
-                    </p>
-                    {step.sub && (
-                      <p className="mt-1 text-xs font-medium text-[var(--brand-primary)]/90">
-                        {step.sub}
+                    <div className="mt-1.5 flex flex-1 flex-col">
+                      <p className="text-sm text-[var(--foreground)] opacity-85">
+                        {step.description}
                       </p>
-                    )}
+                      <p
+                        className={`mt-1 min-h-[1.25rem] text-xs font-medium text-[var(--brand-primary)]/90 ${step.sub ? "" : "invisible"}`}
+                        aria-hidden={!step.sub}
+                      >
+                        {step.sub ?? "\u00A0"}
+                      </p>
+                    </div>
                   </div>
 
                   {/* Flecha: solo en desktop entre pasos */}

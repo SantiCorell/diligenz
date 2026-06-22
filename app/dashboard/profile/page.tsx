@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getUserDniPendingReview } from "@/lib/user-documents/dni-status";
 import { getSessionWithUser } from "@/lib/session";
 import ProfileEditor from "@/components/dashboard/ProfileEditor";
 
@@ -11,6 +12,7 @@ export default async function DashboardProfilePage() {
   const profileComplete =
     Boolean(user.phone?.trim() && user.name?.trim()) || user.profileVerifiedByAdmin;
 
+  const dniPendingReview = await getUserDniPendingReview(user.id, user.dniVerified);
   const isBuyerLike = user.role === "BUYER" || user.role === "PROFESSIONAL";
   const isSellerLike = user.role === "SELLER" || user.role === "PROFESSIONAL";
 
@@ -31,7 +33,12 @@ export default async function DashboardProfilePage() {
         <ul className="space-y-3 text-sm text-[var(--foreground)]">
           <CheckRow ok={user.emailVerified} label="Email verificado" />
           <CheckRow ok={user.ndaSigned} label="NDA firmado" href="/dashboard/nda" />
-          <CheckRow ok={user.dniVerified} label="DNI validado" href="/dashboard/verification" />
+          <CheckRow
+            ok={user.dniVerified}
+            pending={dniPendingReview}
+            label={dniPendingReview ? "DNI — pendiente de verificar" : "DNI validado"}
+            href="/dashboard/verification"
+          />
           <CheckRow
             ok={profileComplete}
             label="Perfil completo (nombre y teléfono)"
@@ -142,24 +149,26 @@ export default async function DashboardProfilePage() {
 
 function CheckRow({
   ok,
+  pending,
   label,
   href,
 }: {
   ok: boolean;
+  pending?: boolean;
   label: string;
   href?: string;
 }) {
   return (
     <li className="flex items-center justify-between gap-3">
       <span className="flex items-center gap-2">
-        {ok ? "✅" : "⬜"} {label}
+        {ok ? "✅" : pending ? "🟡" : "⬜"} {label}
       </span>
       {!ok && href && (
         <Link
           href={href}
           className="text-xs font-semibold text-[var(--brand-primary)] hover:underline shrink-0"
         >
-          Completar
+          {pending ? "Ver estado" : "Completar"}
         </Link>
       )}
     </li>

@@ -5,15 +5,18 @@
 /* Paleta: #894af6 (principal), #C3B1E1, #F3F2EF (fondo LinkedIn), #D9ED92, #2F175F */
 /* ===================== */
 :root {
-  --background: #F3F2EF;
+  --background: #FAFAF8;
   --foreground: #2F175F;
-  --brand-primary: #894af6;
-  --brand-bg: #F3F2EF;
-  --brand-bg-lavender: #C3B1E1;
-  --brand-bg-mint: #D9ED92;
+  --brand-primary: #7B61FF;
+  --brand-bg: #FAFAF8;
+  --surface-card: #ffffff;
+  --surface-muted: #F0EFEB;
+  --brand-surface: #F3F0FF;
+  --brand-bg-lavender: #E8E0FF;
+  --brand-bg-mint: #D4F08C;
   --brand-dark: #2F175F;
-  --gradient-start: #894af6;
-  --gradient-end: #D9ED92;
+  --gradient-start: #7B61FF;
+  --gradient-end: #D4F08C;
 }
 
 @theme inline {
@@ -21,9 +24,12 @@
   --color-foreground: var(--foreground);
   --color-brand-primary: var(--brand-primary);
   --color-brand-bg: var(--brand-bg);
+  --color-surface-card: var(--surface-card);
+  --color-surface-muted: var(--surface-muted);
   --color-brand-bg-lavender: var(--brand-bg-lavender);
   --color-brand-bg-mint: var(--brand-bg-mint);
   --color-brand-dark: var(--brand-dark);
+  --color-brand-surface: var(--brand-surface);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -200,4 +206,19 @@ body {
 
 .flow-arrow-active-down {
   animation: flow-arrow-active-down 1.2s ease-in-out infinite;
+}
+
+/* Hero vídeo: halo suave tipo Deale */
+@keyframes hero-video-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.hero-video-glow {
+  animation: hero-video-float 6s ease-in-out infinite;
 }

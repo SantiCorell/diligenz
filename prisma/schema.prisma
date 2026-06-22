@@ -42,6 +42,8 @@ model User {
   providerId      String?  // ID del proveedor OAuth
   name            String?  // Nombre completo del usuario
   image           String?  // URL de la imagen de perfil
+  /// false hasta que el usuario elige rol (y teléfono) tras registro con Google
+  oauthProfileComplete Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -53,6 +55,64 @@ model User {
   accounts           Account[]
   sessions           Session[]
   companyFilesUploaded CompanyFile[]
+  salesMandate       SalesMandate?
+  dniDocuments       UserDniDocument[]
+}
+
+/// DNI / NIE del usuario (anverso y reverso). Admin marca dniVerified tras revisión.
+model UserDniDocument {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  side        DniDocumentSide
+  name        String
+  storagePath String
+  mimeType    String?  @default("application/octet-stream")
+  size        Int?
+  driveSyncedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, side])
+}
+
+enum DniDocumentSide {
+  FRONT
+  BACK
+}
+
+/// Mandato de venta firmado electrónicamente por el vendedor
+model SalesMandate {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  representativeName String
+  representativeDni  String
+  companyLegalName   String
+  companyCif         String
+  companyAddress     String
+  contactEmail       String
+  contactPhone       String?
+
+  companyTradeName     String?
+  companySector        String?
+  companyCnae          String?
+  companyFoundedYear   Int?
+  employeeCount        Int?
+  lastRevenueEur       Int?
+  lastEbitdaEur        Int?
+  expectedSalePriceEur Int?
+  saleReason           String? @db.Text
+
+  signaturePngBase64 String   @db.Text
+  signedAt           DateTime @default(now())
+  clientIp           String?
+  userAgent          String?
+  termsAccepted      Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // NextAuth.js models

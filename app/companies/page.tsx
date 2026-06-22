@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import ShellLayout from "@/components/layout/ShellLayout";
 import { getUserIdFromSession } from "@/lib/session";
 import CompaniesGrid from "@/components/companies/CompaniesGrid";
-import { getPublicCompanies, getDistinctLocations } from "@/lib/public-companies";
+import {
+  getPublicCompanies,
+  getDistinctLocations,
+  getPrimarySectorCounts,
+} from "@/lib/public-companies";
+import { PRIMARY_SECTOR_OPTIONS } from "@/lib/valuation-sectors";
 import { SITE_URL, SITE_NAME, getBreadcrumbSchema } from "@/lib/seo";
 import { catalogSectorLabelsRecord } from "@/lib/valuation-sectors";
 
@@ -45,16 +50,23 @@ export default async function CompaniesPage({ searchParams }: Props) {
   const location = params.location ?? "";
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
-  const [result, locations] = await Promise.all([
+  const pageSize = 12;
+
+  const [result, locations, sectorCountsResult] = await Promise.all([
     getPublicCompanies({
-      sector: sectorLabel ?? undefined,
+      sector: sectorSlug ?? undefined,
       location: location || undefined,
       page,
-      pageSize: 12,
+      pageSize,
     }),
     getDistinctLocations(),
+    getPrimarySectorCounts({ location: location || undefined }),
   ]);
   const { companies, useOnlyReal, total, totalPages } = result;
+  const { total: catalogTotal, bySector: sectorCounts } = sectorCountsResult;
+  const activeSectorLabel = sectorSlug
+    ? PRIMARY_SECTOR_OPTIONS.find((s) => s.value === sectorSlug)?.shortLabel ?? sectorLabel
+    : null;
 
   const userId = await getUserIdFromSession();
   const isLoggedIn = Boolean(userId);
@@ -74,22 +86,25 @@ export default async function CompaniesPage({ searchParams }: Props) {
       />
       <div className="min-h-screen bg-[var(--brand-bg)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8">
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
+          <header className="mb-6 md:mb-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">
+              Marketplace M&A
+            </p>
+            <h1 className="mt-1 text-2xl sm:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
               Empresas en venta
-              {sectorLabel && (
-                <span className="opacity-70"> · {sectorLabel}</span>
+              {activeSectorLabel && (
+                <span className="text-[var(--foreground)]/55 font-medium"> · {activeSectorLabel}</span>
               )}
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90 max-w-2xl">
-              Explora empresas disponibles y oportunidades activas de adquisición. Regístrate para ver la ficha completa y datos financieros.
+            <p className="mt-2 text-sm sm:text-base text-[var(--foreground)]/70 max-w-2xl leading-relaxed">
+              Oportunidades verificadas de adquisición en España. Filtra por sector y ubicación, y accede a la ficha completa al registrarte.
             </p>
             {useOnlyReal && (
-              <p className="mt-1 text-xs sm:text-sm text-[var(--foreground)] opacity-80">
-                Mostrando solo empresas reales publicadas en el marketplace.
+              <p className="mt-2 inline-flex items-center rounded-full border border-[var(--brand-primary)]/15 bg-[var(--brand-primary)]/[0.06] px-3 py-1 text-xs font-medium text-[var(--brand-primary)]">
+                Catálogo con empresas reales publicadas
               </p>
             )}
-          </div>
+          </header>
 
           <CompaniesGrid
             companies={companies}
@@ -99,7 +114,10 @@ export default async function CompaniesPage({ searchParams }: Props) {
             total={total}
             totalPages={totalPages}
             currentPage={page}
+            pageSize={pageSize}
             sectorSlugFromUrl={sectorSlug ?? undefined}
+            sectorCounts={sectorCounts}
+            catalogTotal={catalogTotal}
           />
         </div>
       </div>

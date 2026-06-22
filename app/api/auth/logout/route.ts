@@ -1,15 +1,31 @@
 import { NextResponse } from "next/server";
-import { destroySessionByToken, getSessionTokenFromRequest } from "@/lib/session";
+import { signOut } from "@/auth";
+import {
+  clearSessionCookieOnResponse,
+  destroySessionByToken,
+  getSessionTokenFromRequest,
+} from "@/lib/session";
 
-export async function GET(req: Request) {
+async function logout(req: Request) {
   const token = await getSessionTokenFromRequest(req);
   await destroySessionByToken(token ?? undefined);
-  const url = new URL(req.url);
-  return NextResponse.redirect(url.origin + "/");
+  try {
+    await signOut({ redirect: false });
+  } catch {
+    // NextAuth puede no tener sesión activa (login solo email/contraseña)
+  }
+}
+
+export async function GET(req: Request) {
+  await logout(req);
+  const res = NextResponse.redirect(new URL("/", req.url));
+  clearSessionCookieOnResponse(res);
+  return res;
 }
 
 export async function POST(req: Request) {
-  const token = await getSessionTokenFromRequest(req);
-  await destroySessionByToken(token ?? undefined);
-  return NextResponse.json({ success: true });
+  await logout(req);
+  const res = NextResponse.json({ success: true });
+  clearSessionCookieOnResponse(res);
+  return res;
 }

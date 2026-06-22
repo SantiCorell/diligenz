@@ -26,7 +26,7 @@ export const VALUATION_SECTOR_OPTIONS: SectorOption[] = [
 ];
 
 /** Valores legacy (datos antiguos + filtros catálogo). */
-const LEGACY_SECTOR_OPTIONS: SectorOption[] = [
+export const LEGACY_SECTOR_OPTIONS: SectorOption[] = [
   { value: "tecnologia", label: "Tecnología (histórico)" },
   { value: "salud", label: "Salud (histórico)" },
   { value: "industria", label: "Industria (histórico)" },
@@ -35,6 +35,40 @@ const LEGACY_SECTOR_OPTIONS: SectorOption[] = [
   { value: "servicios", label: "Servicios (histórico)" },
   { value: "energia", label: "Energía (histórico)" },
   { value: "logistica", label: "Logística (histórico)" },
+];
+
+/** Cinco sectores principales del catálogo (filtro hero en /companies). */
+export const PRIMARY_SECTOR_OPTIONS: (SectorOption & { shortLabel: string; description: string })[] = [
+  {
+    value: "tecnologia-software-saas",
+    label: "Tecnología / Software / SaaS",
+    shortLabel: "Tecnología",
+    description: "Software, SaaS y negocio digital",
+  },
+  {
+    value: "hosteleria-restauracion",
+    label: "Hostelería / Restauración",
+    shortLabel: "Hostelería",
+    description: "Restauración, bares y catering",
+  },
+  {
+    value: "retail-comercio",
+    label: "Retail / Comercio",
+    shortLabel: "Retail",
+    description: "Comercio, tiendas y distribución",
+  },
+  {
+    value: "industria-manufactura",
+    label: "Industria / Manufactura",
+    shortLabel: "Industria",
+    description: "Fabricación y producción",
+  },
+  {
+    value: "servicios-profesionales-b2b",
+    label: "Servicios profesionales / B2B",
+    shortLabel: "Servicios B2B",
+    description: "Consultoría y servicios a empresas",
+  },
 ];
 
 /** Filtro catálogo: nuevos + legacy sin duplicar el vacío. */

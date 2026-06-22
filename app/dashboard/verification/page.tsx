@@ -1,20 +1,16 @@
-import Link from "next/link";
+import DniUploadForm from "@/components/verification/DniUploadForm";
 
 export default function DashboardVerificationPage() {
   return (
-    <div className="max-w-2xl mx-auto rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-8 text-center">
-      <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)] mb-2">
-        Verificación de DNI
+    <div className="max-w-3xl mx-auto rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 sm:p-8">
+      <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)] mb-2 text-center">
+        Verificación de DNI / NIE
       </h1>
-      <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90 mb-6">
-        Esta funcionalidad estará disponible próximamente. Podrás verificar tu identidad desde aquí.
+      <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90 mb-8 text-center">
+        Sube tu documento de identidad para completar tu perfil. Los archivos se almacenan de forma
+        segura y se copian a tu carpeta de cliente en Diligenz.
       </p>
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-      >
-        Volver al panel
-      </Link>
+      <DniUploadForm />
     </div>
   );
 }

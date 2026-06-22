@@ -2,11 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionWithUser } from "@/lib/session";
 
-const DRIVE_URL = process.env.NEXT_PUBLIC_SELLER_DOCUMENTS_DRIVE_URL?.trim();
-
 export default async function SellerDocumentsPage() {
   const session = await getSessionWithUser();
   if (!session) redirect("/login");
+
+  const driveUrl =
+    session.user.documentsDriveFolderUrl?.trim() ||
+    process.env.NEXT_PUBLIC_SELLER_DOCUMENTS_DRIVE_URL?.trim() ||
+    "";
   if (
     session.user.role !== "SELLER" &&
     session.user.role !== "PROFESSIONAL" &&
@@ -31,13 +34,13 @@ export default async function SellerDocumentsPage() {
         <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-3">
           Google Drive (vendedor)
         </h2>
-        {DRIVE_URL ? (
+        {driveUrl ? (
           <>
             <p className="text-sm text-[var(--foreground)] opacity-90 mb-5">
               Abre la carpeta que Diligenz haya compartido contigo para subir o consultar archivos.
             </p>
             <a
-              href={DRIVE_URL}
+              href={driveUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"

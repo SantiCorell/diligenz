@@ -1,91 +1,93 @@
 import Link from "next/link";
-import Image from "next/image";
+import { HeartPulse, Cpu, Factory, ShoppingBag, ArrowRight } from "lucide-react";
 
 const sectors = [
   {
     name: "Salud",
     slug: "salud",
-    description:
-      "Clínicas, laboratorios y servicios sanitarios privados.",
-    stat: "+120 empresas activas en venta",
-    image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=600&q=80",
+    tag: "Salud",
+    description: "Clínicas, laboratorios y servicios sanitarios privados.",
+    icon: HeartPulse,
+    iconBg: "bg-rose-100 text-rose-600",
+    tagBg: "bg-rose-50 text-rose-700",
   },
   {
     name: "Tecnología",
     slug: "tecnologia",
-    description:
-      "SaaS, software B2B y negocios digitales escalables.",
-    stat: "Sector líder en inversión",
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80",
+    tag: "Tecnología",
+    description: "SaaS, software B2B y negocios digitales escalables.",
+    icon: Cpu,
+    iconBg: "bg-violet-100 text-violet-600",
+    tagBg: "bg-violet-50 text-violet-700",
   },
   {
     name: "Industria",
     slug: "industria",
-    description:
-      "Fabricación, logística e ingeniería especializada.",
-    stat: "Alta demanda internacional",
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&q=80",
+    tag: "Industria",
+    description: "Fabricación, logística e ingeniería especializada.",
+    icon: Factory,
+    iconBg: "bg-slate-100 text-slate-600",
+    tagBg: "bg-slate-50 text-slate-700",
   },
   {
     name: "Consumo",
     slug: "consumo",
-    description:
-      "Retail, marcas y e-commerce consolidados.",
-    stat: "Fuerte proceso de consolidación",
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80",
+    tag: "Consumo",
+    description: "Retail, marcas y e-commerce consolidados.",
+    icon: ShoppingBag,
+    iconBg: "bg-amber-100 text-amber-600",
+    tagBg: "bg-amber-50 text-amber-700",
   },
 ];
 
 export default function SpecializedSectors() {
   return (
-    <section className="bg-[var(--brand-bg)] py-10 md:py-12 border-t border-[var(--brand-primary)]/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
-          Sectores especializados
-        </h2>
-        <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-85 max-w-2xl">
-          Analizamos y acompañamos operaciones en sectores con alta actividad y demanda inversora.
-        </p>
+    <section className="bg-white py-16 md:py-20">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-[var(--brand-dark)] sm:text-3xl">
+            Sectores especializados
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-[var(--foreground)]/70 sm:text-base">
+            Analizamos y acompañamos operaciones en sectores con alta actividad y demanda
+            inversora.
+          </p>
+        </div>
 
-        <p className="md:hidden mt-6 text-center text-xs text-[var(--foreground)] opacity-70">
-          Desliza para ver sectores →
-        </p>
-
-        <div className="mt-6 md:mt-10 flex md:grid overflow-x-auto md:overflow-visible gap-4 md:gap-6 pb-3 md:pb-0 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 md:grid-cols-2 lg:grid-cols-4">
-          {sectors.map((sector) => (
-            <div
-              key={sector.slug}
-              className="bg-white rounded-xl overflow-hidden border border-[var(--brand-primary)]/10 shadow-md hover:shadow-lg transition min-w-[280px] max-w-[280px] md:min-w-0 md:max-w-none shrink-0 snap-center md:snap-align-none"
-            >
-              <div className="relative aspect-[4/3]">
-                <Image
-                  src={sector.image}
-                  alt={sector.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 25vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <h3 className="absolute bottom-3 left-3 right-3 text-base font-semibold text-white drop-shadow-sm">
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {sectors.map((sector) => {
+            const Icon = sector.icon;
+            return (
+              <div
+                key={sector.slug}
+                className="flex flex-col rounded-2xl border border-[var(--brand-primary)]/10 bg-[var(--brand-surface)] p-6 transition hover:border-[var(--brand-primary)]/25 hover:shadow-md"
+              >
+                <span
+                  className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium ${sector.tagBg}`}
+                >
+                  {sector.tag}
+                </span>
+                <div
+                  className={`mt-4 flex h-12 w-12 items-center justify-center rounded-full ${sector.iconBg}`}
+                >
+                  <Icon className="h-5 w-5" strokeWidth={2} />
+                </div>
+                <h3 className="mt-4 text-lg font-semibold text-[var(--brand-dark)]">
                   {sector.name}
                 </h3>
-              </div>
-              <div className="p-4 bg-white">
-                <p className="text-sm text-[var(--foreground)] opacity-90 leading-relaxed">
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--foreground)]/70">
                   {sector.description}
-                </p>
-                <p className="mt-1.5 text-xs text-[var(--foreground)] opacity-75">
-                  {sector.stat}
                 </p>
                 <Link
                   href={`/companies?sector=${sector.slug}`}
-                  className="inline-block mt-3 text-sm font-medium text-[var(--brand-primary)] hover:underline"
+                  className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--brand-primary)] hover:gap-2.5 transition-all"
                 >
-                  Ver empresas →
+                  Ver empresas
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

@@ -31,7 +31,7 @@ Si la URI de redirección no coincide exactamente (dominio, http/https, path), G
 
 ## 3. Comprobar
 
-- **Local:** `npm run dev` → Ir a `/login` → “Continuar con Google”. Debe abrir Google y luego volver a tu app.
+- **Local:** `npm run dev` → Ir a `/login` → “Continuar con Google”. Debe abrir Google y luego volver a tu app (vía `/api/auth/oauth/google`, no uses GET directo a `/api/auth/signin/google`).
 - **Producción:** Misma prueba en `https://tu-dominio.com/login`. Si falla, revisa que `NEXTAUTH_URL` sea esa URL y que en Google Console esté esa misma URI de redirección.
 
 ## 4. Errores típicos

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   FileText,
   ExternalLink,
@@ -16,8 +15,9 @@ import {
 } from "lucide-react";
 import RegisterModal from "@/components/auth/RegisterModal";
 import type { CompanyMock } from "@/lib/mock-companies";
-import { getDefaultCompanyImageUrl } from "@/lib/default-company-images";
 import { authFetch } from "@/lib/auth-client";
+import SectorVisual from "@/components/companies/SectorVisual";
+import { getSectorVisual } from "@/lib/sector-visual";
 
 type TabId = "informacion" | "descripcion" | "documentos";
 
@@ -129,56 +129,32 @@ export default function CompanyFicha({
     { id: "documentos", label: "Documentos" },
   ];
 
-  const defaultHero = getDefaultCompanyImageUrl(company);
-  const heroSrc = company.heroImageSrc ?? defaultHero;
+  const sectorVisual = getSectorVisual(company.sector);
   const salePriceLabel = formatSalePriceRange(company.valuationSaleMin, company.valuationSaleMax);
 
   return (
     <>
-      {/* Hero tipo Urbanitae: imagen + título + ubicación + panel lateral */}
-      <div className="mt-6 rounded-2xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)] overflow-hidden shadow-sm">
-        <div className="relative w-full aspect-[21/9] min-h-[180px] bg-[var(--brand-bg-lavender)]">
-          <Image
-            src={heroSrc}
-            alt=""
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 900px"
-            unoptimized={Boolean(company.heroImageSrc) || heroSrc.includes("unsplash.com")}
-          />
-        </div>
-        {company.galleryImageSrcs && company.galleryImageSrcs.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto border-t border-[var(--brand-primary)]/10 bg-[var(--foreground)]/5 px-3 py-2">
-            {company.galleryImageSrcs.map((src) => (
-              <div
-                key={src}
-                className="relative h-16 w-28 shrink-0 overflow-hidden rounded-lg border border-[var(--brand-primary)]/10"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" className="h-full w-full object-cover" />
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="mt-6 rounded-xl border border-black/[0.06] bg-[var(--surface-card)] overflow-hidden shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <SectorVisual sector={company.sector} variant="banner" />
         <div className="grid md:grid-cols-[1fr,280px] gap-0">
           <div className="p-6 md:p-8">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-lg bg-[var(--brand-primary)]/10 px-3 py-1 text-sm font-semibold text-[var(--brand-primary)]">
-                {company.sector}
+              <span className="rounded-md bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-medium text-[var(--foreground)]/65">
+                {sectorVisual.label}
               </span>
-              <span className="rounded-lg bg-[var(--brand-bg-lavender)] px-3 py-1 text-xs font-medium text-[var(--foreground)] opacity-80">
+              <span className="rounded-md border border-black/[0.05] px-2.5 py-1 text-[11px] font-normal text-[var(--foreground)]/45">
                 Confidencial
               </span>
             </div>
-            <h1 className="mt-4 text-2xl md:text-3xl font-bold text-[var(--foreground)]">
+            <h1 className="mt-4 text-2xl md:text-3xl font-semibold text-[var(--foreground)]">
               {company.name}
             </h1>
-            <p className="mt-2 flex items-center gap-2 text-[var(--foreground)] opacity-80">
-              <MapPin className="w-4 h-4 text-[var(--brand-primary)]/70" />
+            <p className="mt-2 flex items-center gap-2 text-sm text-[var(--foreground)]/55">
+              <MapPin className="w-3.5 h-3.5 opacity-60" />
               {company.location}
             </p>
           </div>
-          <div className="bg-[var(--foreground)]/5 border-t md:border-t-0 md:border-l border-[var(--brand-primary)]/10 p-6 flex flex-col justify-between gap-4">
+          <div className="bg-[var(--surface-muted)]/40 border-t md:border-t-0 md:border-l border-black/[0.05] p-6 flex flex-col justify-between gap-4">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <p className="text-xs text-[var(--foreground)] opacity-70">

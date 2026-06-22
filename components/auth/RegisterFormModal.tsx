@@ -18,6 +18,8 @@ type Props = {
 
 export default function RegisterFormModal({ open, onClose, onOpenLogin, onSuccess }: Props) {
   const router = useRouter();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -31,7 +33,7 @@ export default function RegisterFormModal({ open, onClose, onOpenLogin, onSucces
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!email || !password || !confirmPassword || !phone || !role) {
+    if (!firstName.trim() || !lastName.trim() || !email || !password || !confirmPassword || !phone || !role) {
       setError("Completa todos los campos.");
       return;
     }
@@ -48,7 +50,14 @@ export default function RegisterFormModal({ open, onClose, onOpenLogin, onSucces
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, phone, role }),
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email,
+          password,
+          phone,
+          role,
+        }),
         credentials: "include",
       });
       const data = await res.json();
@@ -112,6 +121,39 @@ export default function RegisterFormModal({ open, onClose, onOpenLogin, onSucces
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="reg-modal-first-name" className="block text-sm font-medium text-[var(--brand-primary)] mb-1">
+                  Nombre
+                </label>
+                <input
+                  id="reg-modal-first-name"
+                  type="text"
+                  required
+                  autoComplete="given-name"
+                  placeholder="Tu nombre"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full rounded-xl border-2 border-[var(--brand-primary)]/20 bg-white px-4 py-3 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition"
+                />
+              </div>
+              <div>
+                <label htmlFor="reg-modal-last-name" className="block text-sm font-medium text-[var(--brand-primary)] mb-1">
+                  Apellidos
+                </label>
+                <input
+                  id="reg-modal-last-name"
+                  type="text"
+                  required
+                  autoComplete="family-name"
+                  placeholder="Tus apellidos"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full rounded-xl border-2 border-[var(--brand-primary)]/20 bg-white px-4 py-3 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition"
+                />
+              </div>
+            </div>
+
             <div>
               <label htmlFor="reg-modal-email" className="block text-sm font-medium text-[var(--brand-primary)] mb-1">
                 Email

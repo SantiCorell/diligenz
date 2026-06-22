@@ -12,6 +12,8 @@ type Role = "SELLER" | "BUYER" | "PROFESSIONAL";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -25,7 +27,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!email || !password || !confirmPassword || !phone || !role) {
+    if (!firstName.trim() || !lastName.trim() || !email || !password || !confirmPassword || !phone || !role) {
       setError("Completa todos los campos.");
       return;
     }
@@ -42,7 +44,14 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, phone, role }),
+        body: JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email,
+          password,
+          phone,
+          role,
+        }),
         credentials: "include",
       });
       const data = await res.json();
@@ -155,6 +164,39 @@ export default function RegisterPage() {
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="reg-first-name" className="block text-sm font-medium text-[var(--brand-primary)] mb-1">
+                        Nombre
+                      </label>
+                      <input
+                        id="reg-first-name"
+                        type="text"
+                        required
+                        autoComplete="given-name"
+                        placeholder="Tu nombre"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="w-full rounded-xl border-2 border-[var(--brand-primary)]/20 bg-white px-4 py-3 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="reg-last-name" className="block text-sm font-medium text-[var(--brand-primary)] mb-1">
+                        Apellidos
+                      </label>
+                      <input
+                        id="reg-last-name"
+                        type="text"
+                        required
+                        autoComplete="family-name"
+                        placeholder="Tus apellidos"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className="w-full rounded-xl border-2 border-[var(--brand-primary)]/20 bg-white px-4 py-3 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition"
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <label htmlFor="reg-email" className="block text-sm font-medium text-[var(--brand-primary)] mb-1">
                       Email
@@ -294,7 +336,6 @@ export default function RegisterPage() {
                   </button>
                 </form>
 
-                {/* Login con Google deshabilitado (comentado para reactivar en el futuro)
                 <div className="mt-6">
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
@@ -308,12 +349,32 @@ export default function RegisterPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      window.location.href = "/api/auth/signin/google";
+                    disabled={!role}
+                    onClick={async () => {
+                      if (!role) {
+                        setError("Selecciona primero qué quieres hacer en Diligenz.");
+                        return;
+                      }
+                      setError(null);
+                      try {
+                        const res = await fetch("/api/auth/oauth-role-intent", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ role }),
+                        });
+                        if (!res.ok) {
+                          const data = await res.json().catch(() => ({}));
+                          setError(data.error || "No se pudo iniciar el registro con Google.");
+                          return;
+                        }
+                        window.location.href = "/api/auth/oauth/google";
+                      } catch {
+                        setError("Error al conectar con Google. Inténtalo de nuevo.");
+                      }
                     }}
-                    className="mt-4 w-full flex items-center justify-center gap-3 rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition shadow-sm"
+                    className="mt-4 w-full flex items-center justify-center gap-3 rounded-xl border-2 border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <svg className="h-5 w-5" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -321,8 +382,12 @@ export default function RegisterPage() {
                     </svg>
                     Continuar con Google
                   </button>
+                  {!role && (
+                    <p className="mt-2 text-center text-xs text-[var(--foreground)] opacity-70">
+                      Elige tu perfil arriba antes de continuar con Google.
+                    </p>
+                  )}
                 </div>
-                */}
 
                 <p className="mt-6 text-center text-sm text-[var(--foreground)] opacity-80">
                   ¿Ya tienes cuenta?{" "}

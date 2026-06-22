@@ -72,26 +72,27 @@ export default function Navbar() {
   }, [mobileMenuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[var(--brand-primary)] shadow-sm">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex h-12 sm:h-14 items-center justify-between">
+    <header className="sticky top-0 z-40 px-4 pt-2 sm:px-6">
+      <div className="relative mx-auto max-w-6xl rounded-2xl border border-[var(--brand-primary)]/8 bg-white/95 shadow-[0_8px_32px_rgba(47,23,95,0.08)] backdrop-blur-md">
+      <div className="px-4 sm:px-5">
+        <div className="flex h-14 items-center justify-between">
           <Link
               href="/"
               className="flex items-center shrink-0 hover:opacity-90 transition"
               onClick={() => setMobileMenuOpen(false)}
             >
               <Image
-                src="/logo-diligenz-claro.png"
+                src="/logo-diligenz-completo.png"
                 alt="Diligenz"
-                width={120}
-                height={36}
-                className="h-6 sm:h-8 w-auto object-contain"
+                width={140}
+                height={40}
+                className="h-7 sm:h-8 w-auto object-contain"
                 priority
               />
             </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-white">
+          <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-[var(--brand-dark)]">
             <div
               className="relative group"
               onMouseEnter={() => setInicioOpen(true)}
@@ -99,25 +100,25 @@ export default function Navbar() {
             >
               <button
                 type="button"
-                className="flex items-center gap-1 hover:opacity-90"
+                className="flex items-center gap-1 hover:text-[var(--brand-primary)]"
               >
                 Inicio
                 <span className="text-xs">▼</span>
               </button>
               {inicioOpen && (
                 <div className="absolute top-full left-0 pt-2">
-                  <div className="w-52 rounded-xl border border-white/20 bg-[var(--brand-primary)] py-1.5 shadow-xl overflow-hidden">
-                    <Link href="/" className="block px-4 py-2.5 text-white hover:bg-white/10">
+                  <div className="w-52 rounded-xl border border-[var(--brand-primary)]/10 bg-white py-1.5 shadow-xl overflow-hidden">
+                    <Link href="/" className="block px-4 py-2.5 text-[var(--brand-dark)] hover:bg-[var(--brand-surface)]">
                       Inicio
                     </Link>
-                    <Link href="/sobre-nosotros" className="block px-4 py-2.5 text-white hover:bg-white/10">
+                    <Link href="/sobre-nosotros" className="block px-4 py-2.5 text-[var(--brand-dark)] hover:bg-[var(--brand-surface)]">
                       Sobre nosotros
                     </Link>
                   </div>
                 </div>
               )}
             </div>
-            <Link href="/companies" className="hover:opacity-90">
+            <Link href="/companies" className="hover:text-[var(--brand-primary)]">
               Empresas
             </Link>
             <div
@@ -127,31 +128,31 @@ export default function Navbar() {
             >
               <button
                 type="button"
-                className="flex items-center gap-1 hover:opacity-90"
+                className="flex items-center gap-1 hover:text-[var(--brand-primary)]"
               >
                 Servicios
                 <span className="text-xs">▼</span>
               </button>
               {serviciosOpen && (
                 <div className="absolute top-full left-0 pt-2">
-                  <div className="w-52 rounded-xl border border-white/20 bg-[var(--brand-primary)] py-1.5 shadow-xl overflow-hidden">
-                    <Link href="/servicios" className="block px-4 py-2.5 text-white hover:bg-white/10">
+                  <div className="w-52 rounded-xl border border-[var(--brand-primary)]/10 bg-white py-1.5 shadow-xl overflow-hidden">
+                    <Link href="/servicios" className="block px-4 py-2.5 text-[var(--brand-dark)] hover:bg-[var(--brand-surface)]">
                       Ver servicios
                     </Link>
-                    <Link href="/servicios#pricing" className="block px-4 py-2.5 text-white hover:bg-white/10">
+                    <Link href="/servicios#pricing" className="block px-4 py-2.5 text-[var(--brand-dark)] hover:bg-[var(--brand-surface)]">
                       Precios
                     </Link>
                   </div>
                 </div>
               )}
             </div>
-            <Link href="/sell" className="hover:opacity-90">
+            <Link href="/sell" className="hover:text-[var(--brand-primary)]">
               Valorar / Vender
             </Link>
-            <Link href="/blog" className="hover:opacity-90">
+            <Link href="/blog" className="hover:text-[var(--brand-primary)]">
               Blog
             </Link>
-            <Link href="/contact" className="hover:opacity-90">
+            <Link href="/contact" className="hover:text-[var(--brand-primary)]">
               Contacto
             </Link>
           </nav>
@@ -165,7 +166,7 @@ export default function Navbar() {
               >
                 <button
                   type="button"
-                  className="flex items-center gap-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1.5 text-sm font-semibold text-white transition"
+                  className="flex items-center gap-2 rounded-xl border border-[var(--brand-primary)]/20 bg-[var(--brand-surface)] px-3 py-1.5 text-sm font-semibold text-[var(--brand-dark)] transition hover:border-[var(--brand-primary)]/35"
                   aria-expanded={userMenuOpen}
                   aria-haspopup="true"
                   aria-controls="user-menu-desktop"
@@ -176,21 +177,21 @@ export default function Navbar() {
                 </button>
                 {userMenuOpen && (
                   <div id="user-menu-desktop" role="menu" aria-labelledby="user-menu-button" className="absolute right-0 top-full pt-2 min-w-[14rem]">
-                    <div className="w-56 rounded-xl border border-white/20 bg-[var(--brand-primary)]/95 backdrop-blur py-1.5 shadow-xl shadow-black/20">
-                      <Link href={panelHref} prefetch={false} className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5 font-medium">
+                    <div className="w-56 rounded-xl border border-[var(--brand-primary)]/10 bg-white py-1.5 shadow-xl shadow-black/10">
+                      <Link href={panelHref} prefetch={false} className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-dark)] hover:bg-[var(--brand-surface)] transition rounded-lg mx-1.5 font-medium">
                         <LayoutDashboard className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Mi Panel</span>
                       </Link>
-                      <Link href={misEmpresasHref} prefetch={false} className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5">
+                      <Link href={misEmpresasHref} prefetch={false} className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-dark)] hover:bg-[var(--brand-surface)] transition rounded-lg mx-1.5">
                         <Star className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Mis empresas</span>
                       </Link>
-                      <div className="my-1.5 border-t border-white/15" role="separator" aria-hidden />
-                      <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5">
+                      <div className="my-1.5 border-t border-[var(--brand-primary)]/10" role="separator" aria-hidden />
+                      <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-dark)] hover:bg-[var(--brand-surface)] transition rounded-lg mx-1.5">
                         <Globe className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Volver a la web</span>
                       </Link>
-                      <button type="button" onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 text-white hover:bg-white/10 transition rounded-lg mx-1.5 w-full text-left">
+                      <button type="button" onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 text-[var(--brand-dark)] hover:bg-[var(--brand-surface)] transition rounded-lg mx-1.5 w-full text-left">
                         <LogOut className="w-4 h-4 shrink-0 opacity-90" />
                         <span>Cerrar sesión</span>
                       </button>
@@ -200,12 +201,12 @@ export default function Navbar() {
               </div>
             ) : (
               <>
-                <Link href="/login" className="text-sm font-medium text-white hover:opacity-90">
+                <Link href="/login" className="text-sm font-medium text-[var(--brand-dark)] hover:text-[var(--brand-primary)]">
                   Iniciar sesión
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-lg border border-white px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 transition"
+                  className="rounded-xl bg-[var(--brand-primary)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
                 >
                   Crear cuenta
                 </Link>
@@ -216,7 +217,7 @@ export default function Navbar() {
           {/* Hamburger: solo móvil */}
           <button
             type="button"
-            className="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-lg text-white hover:bg-white/10"
+            className="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-lg text-[var(--brand-dark)] hover:bg-[var(--brand-surface)]"
             onClick={() => setMobileMenuOpen((o) => !o)}
             aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={mobileMenuOpen}
@@ -228,15 +229,14 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Menú móvil: Inicio y Servicios desplegables; solo se ven las líneas principales + botones */}
+      {/* Menú móvil */}
       <div
-        className={`md:hidden absolute inset-x-0 top-full bg-[var(--brand-primary)] border-t border-white/10 shadow-xl overflow-y-auto transition-all duration-200 rounded-b-2xl ${
+        className={`md:hidden absolute inset-x-0 top-[calc(100%+0.5rem)] rounded-2xl border border-[var(--brand-primary)]/10 bg-white shadow-xl overflow-y-auto transition-all duration-200 ${
           mobileMenuOpen ? "max-h-[85vh] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
         }`}
       >
-        <nav className="px-6 py-4 pb-6 flex flex-col text-white">
-          {/* Inicio (desplegable) */}
-          <div className="border-b border-white/10">
+        <nav className="px-6 py-4 pb-6 flex flex-col text-[var(--brand-dark)]">
+          <div className="border-b border-[var(--brand-primary)]/10">
             <button
               type="button"
               onClick={() => setMobileInicioOpen((o) => !o)}
@@ -249,22 +249,22 @@ export default function Navbar() {
               </span>
             </button>
             <div className={`overflow-hidden transition-all duration-200 ${mobileInicioOpen ? "max-h-32 opacity-100" : "max-h-0 opacity-0"}`}>
-              <Link href="/" className="block py-2 pl-4 text-white/95 hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/" className="block py-2 pl-4 rounded-lg hover:bg-[var(--brand-surface)]" onClick={() => setMobileMenuOpen(false)}>
                 Inicio
               </Link>
-              <Link href="/sobre-nosotros" className="block py-2 pl-4 text-white/95 hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/sobre-nosotros" className="block py-2 pl-4 rounded-lg hover:bg-[var(--brand-surface)]" onClick={() => setMobileMenuOpen(false)}>
                 Sobre nosotros
               </Link>
             </div>
           </div>
 
           {/* Empresas */}
-          <Link href="/companies" className="py-3 font-medium border-b border-white/10 block" onClick={() => setMobileMenuOpen(false)}>
+          <Link href="/companies" className="py-3 font-medium border-b border-[var(--brand-primary)]/10 block" onClick={() => setMobileMenuOpen(false)}>
             Empresas
           </Link>
 
           {/* Servicios (desplegable) */}
-          <div className="border-b border-white/10">
+          <div className="border-b border-[var(--brand-primary)]/10">
             <button
               type="button"
               onClick={() => setMobileServiciosOpen((o) => !o)}
@@ -277,28 +277,28 @@ export default function Navbar() {
               </span>
             </button>
             <div className={`overflow-hidden transition-all duration-200 ${mobileServiciosOpen ? "max-h-32 opacity-100" : "max-h-0 opacity-0"}`}>
-              <Link href="/servicios" className="block py-2 pl-4 text-white/95 hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/servicios" className="block py-2 pl-4 rounded-lg hover:bg-[var(--brand-surface)]" onClick={() => setMobileMenuOpen(false)}>
                 Ver servicios
               </Link>
-              <Link href="/servicios#pricing" className="block py-2 pl-4 text-white/95 hover:bg-white/10 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/servicios#pricing" className="block py-2 pl-4 rounded-lg hover:bg-[var(--brand-surface)]" onClick={() => setMobileMenuOpen(false)}>
                 Precios
               </Link>
             </div>
           </div>
 
           {/* Valorar / Vender, Blog, Contacto */}
-          <Link href="/sell" className="py-3 font-medium border-b border-white/10 block" onClick={() => setMobileMenuOpen(false)}>
+          <Link href="/sell" className="py-3 font-medium border-b border-[var(--brand-primary)]/10 block" onClick={() => setMobileMenuOpen(false)}>
             Valorar / Vender
           </Link>
-          <Link href="/blog" className="py-3 font-medium border-b border-white/10 block" onClick={() => setMobileMenuOpen(false)}>
+          <Link href="/blog" className="py-3 font-medium border-b border-[var(--brand-primary)]/10 block" onClick={() => setMobileMenuOpen(false)}>
             Blog
           </Link>
-          <Link href="/contact" className="py-3 font-medium border-b border-white/10 block" onClick={() => setMobileMenuOpen(false)}>
+          <Link href="/contact" className="py-3 font-medium border-b border-[var(--brand-primary)]/10 block" onClick={() => setMobileMenuOpen(false)}>
             Contacto
           </Link>
 
           {/* Botones: Iniciar sesión / Crear cuenta o Mi Panel */}
-          <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/15">
+          <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-[var(--brand-primary)]/10">
             {loggedIn ? (
               <>
                 <span className="py-2 text-xs font-semibold uppercase tracking-wider opacity-80">
@@ -307,7 +307,7 @@ export default function Navbar() {
                 <Link
                   href={panelHref}
                   prefetch={false}
-                  className="flex items-center gap-3 py-2.5 pl-4 border-b border-white/10 font-medium"
+                  className="flex items-center gap-3 py-2.5 pl-4 border-b border-[var(--brand-primary)]/10 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <LayoutDashboard className="w-4 h-4 shrink-0 opacity-90" />
@@ -316,7 +316,7 @@ export default function Navbar() {
                 <Link
                   href={misEmpresasHref}
                   prefetch={false}
-                  className="flex items-center gap-3 py-2.5 pl-4 border-b border-white/10"
+                  className="flex items-center gap-3 py-2.5 pl-4 border-b border-[var(--brand-primary)]/10"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Star className="w-4 h-4 shrink-0 opacity-90" />
@@ -324,7 +324,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   href="/"
-                  className="flex items-center gap-3 py-2.5 pl-4 border-b border-white/10"
+                  className="flex items-center gap-3 py-2.5 pl-4 border-b border-[var(--brand-primary)]/10"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Globe className="w-4 h-4 shrink-0 opacity-90" />
@@ -333,7 +333,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
-                  className="flex items-center gap-3 py-3 pl-4 text-center rounded-xl border border-white/20 font-medium mt-2 w-full text-white"
+                  className="flex items-center gap-3 py-3 pl-4 text-center rounded-xl border border-[var(--brand-primary)]/20 font-medium mt-2 w-full"
                 >
                   <LogOut className="w-4 h-4 shrink-0 opacity-90" />
                   Cerrar sesión
@@ -343,14 +343,14 @@ export default function Navbar() {
               <>
                 <button
                   type="button"
-                  className="py-3 text-center rounded-xl border-2 border-white/30 font-medium w-full text-white"
+                  className="py-3 text-center rounded-xl border-2 border-[var(--brand-primary)]/25 font-medium w-full"
                   onClick={() => { setMobileMenuOpen(false); setLoginModalOpen(true); }}
                 >
                   Iniciar sesión
                 </button>
                 <button
                   type="button"
-                  className="py-3 text-center rounded-xl border-2 border-white text-white font-medium hover:bg-white/10 transition w-full"
+                  className="py-3 text-center rounded-xl bg-[var(--brand-primary)] text-white font-medium transition hover:opacity-95 w-full"
                   onClick={() => { setMobileMenuOpen(false); setRegisterModalOpen(true); }}
                 >
                   Crear cuenta
@@ -360,8 +360,9 @@ export default function Navbar() {
           </div>
         </nav>
       </div>
+      </div>
 
-      {/* Modales de login y registro (móvil: carta con logo y formulario) */}
+      {/* Modales de login y registro */}
       <LoginModal
         open={loginModalOpen}
         onClose={() => setLoginModalOpen(false)}
