@@ -118,27 +118,20 @@ export default function SellPage() {
 
   return (
     <ShellLayout>
-      <div className="min-h-screen bg-[var(--brand-bg)]">
-        {/* Hero: más compacto en móvil */}
-        <section className="border-b border-[var(--brand-primary)]/10 py-6 px-4 sm:py-8 sm:px-6 md:py-10">
-          <div className="max-w-2xl mx-auto">
-            <span className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-90 mb-2">
-              Valoración orientativa
-            </span>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[var(--brand-primary)] tracking-tight">
-              Valora tu empresa en minutos
-            </h1>
-            <p className="mt-2 sm:mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-85 leading-relaxed max-w-xl">
-              Rango orientativo afinado por sector y datos que indiques (banda más estrecha que una estimación
-              genérica). Confidencial y sin compromiso.
-            </p>
-          </div>
-        </section>
+      <section className="relative px-4 py-8 sm:px-6 md:py-12">
+        <div className="mx-auto max-w-2xl">
+          <span className="page-eyebrow">Valoración orientativa</span>
+          <h1 className="page-title mt-2">Valora tu empresa en minutos</h1>
+          <p className="mt-3 max-w-xl text-sm text-[var(--foreground)]/75 sm:text-base">
+            Rango orientativo afinado por sector y datos que indiques (banda más estrecha que una estimación
+            genérica). Confidencial y sin compromiso.
+          </p>
+        </div>
+      </section>
 
-        {/* Formulario: padding adaptado móvil/escritorio */}
-        <section className="py-4 px-4 sm:py-6 sm:px-6 md:py-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="rounded-xl sm:rounded-2xl border border-[var(--brand-primary)]/12 bg-white p-4 sm:p-6 md:p-8 shadow-sm">
+      <section className="pb-12 md:pb-16">
+        <div className="mx-auto max-w-2xl px-4 sm:px-6">
+          <div className="page-card page-card-padded">
               <p className="text-xs text-[var(--foreground)]/65 mb-5">
                 Los campos marcados con <span className="text-red-500 font-medium">*</span> son obligatorios.
               </p>
@@ -446,7 +439,7 @@ export default function SellPage() {
             </div>
 
             {result && (
-              <div className="mt-6 sm:mt-8 rounded-xl sm:rounded-2xl border border-[var(--brand-primary)]/15 bg-white p-4 sm:p-6 md:p-8 shadow-md shadow-[var(--brand-primary)]/5">
+              <div className="page-card page-card-padded mt-6 sm:mt-8">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="rounded-full bg-[var(--brand-primary)]/10 px-3 py-1 text-xs font-semibold text-[var(--brand-primary)]">
                     Resultado
@@ -485,7 +478,6 @@ export default function SellPage() {
             )}
           </div>
         </section>
-      </div>
     </ShellLayout>
   );
 }

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendCompanyInfoRequestEmail } from "@/lib/emails/company-info-request";
+import { resolveCompanyDisplayName } from "@/lib/emails/resolve-company-name";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 import { getClientIP } from "@/lib/security";
 import { getUserIdFromRequest } from "@/lib/session";
@@ -53,10 +55,14 @@ export async function POST(req: Request, { params }: Params) {
   
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { blocked: true, blockedUntil: true },
+    select: { blocked: true, blockedUntil: true, email: true, name: true },
   });
   
-  if (user?.blocked) {
+  if (!user) {
+    return NextResponse.json({ error: "Usuario no encontrado" }, { status: 401 });
+  }
+  
+  if (user.blocked) {
     const isStillBlocked = user.blockedUntil 
       ? new Date(user.blockedUntil) > new Date()
       : true;
@@ -133,6 +139,12 @@ export async function POST(req: Request, { params }: Params) {
     }
   }
   
+  const existing = await prisma.userCompanyInterest.findUnique({
+    where: {
+      userId_companyId_type: { userId, companyId, type },
+    },
+  });
+
   await prisma.userCompanyInterest.upsert({
     where: {
       userId_companyId_type: { userId, companyId, type },
@@ -140,6 +152,20 @@ export async function POST(req: Request, { params }: Params) {
     create: { userId, companyId, type },
     update: {},
   });
+
+  if (type === "REQUEST_INFO" && !existing) {
+    try {
+      const companyName = await resolveCompanyDisplayName(companyId);
+      await sendCompanyInfoRequestEmail({
+        to: user.email,
+        userName: user.name,
+        companyName,
+        companyId,
+      });
+    } catch (e) {
+      console.error("[interest] email solicitud info:", e);
+    }
+  }
   
   return NextResponse.json(
     { ok: true, type },

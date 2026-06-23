@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   UserPlus,
   FileSignature,
@@ -144,6 +144,7 @@ const STEP_DURATION_MS = 2500;
 export default function HowItWorks() {
   const [role, setRole] = useState<Role>("comprador");
   const [activeStep, setActiveStep] = useState(0);
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const flow = FLOWS[role];
   const totalSteps = flow.steps.length;
 
@@ -160,8 +161,14 @@ export default function HowItWorks() {
     return () => clearInterval(t);
   }, [role, totalSteps]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || window.matchMedia("(min-width: 1024px)").matches) return;
+    const el = stepRefs.current[activeStep];
+    el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [activeStep, role]);
+
   return (
-    <section className="overflow-hidden bg-white py-16 md:py-20">
+    <section className="relative py-14 md:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <h2 className="text-center text-2xl font-bold text-[var(--brand-dark)] sm:text-3xl">
           ¿Cómo funciona?
@@ -195,32 +202,33 @@ export default function HowItWorks() {
         </p>
 
         {/* Móvil: hint deslizar */}
-        <p className="lg:hidden mt-6 text-center text-xs text-[var(--foreground)] opacity-70">
+        <p className="mt-6 text-center text-xs text-[var(--foreground)]/60 lg:hidden">
           Desliza para ver todos los pasos →
         </p>
 
         {/* Diagrama de pasos: scroll horizontal en móvil, grid en escritorio */}
-        <div className="mt-6 lg:mt-10 relative">
+        <div className="relative mt-4 lg:mt-10">
           {/* Línea conectora horizontal (solo desktop) */}
-          <div className="hidden lg:block absolute top-[3.25rem] left-[8%] right-[8%] h-0.5 bg-[var(--brand-primary)]/20 rounded-full" style={{ zIndex: 0 }} />
+          <div className="absolute left-[8%] right-[8%] top-[3.25rem] hidden h-0.5 rounded-full bg-[var(--brand-primary)]/20 lg:block" style={{ zIndex: 0 }} />
 
-          {/* Móvil: contenedor con scroll horizontal y snap */}
           <div
-            className="flex items-stretch lg:grid overflow-x-auto overflow-y-visible gap-4 pb-3 lg:pb-0 lg:overflow-visible lg:grid-cols-6 lg:gap-4 relative snap-x snap-mandatory -mx-4 px-4 lg:mx-0 lg:px-0"
-            style={{ zIndex: 2, scrollbarWidth: "thin" }}
-          >
+          className="relative z-[2] -mx-4 flex items-stretch gap-3 overflow-x-auto overflow-y-visible scroll-px-4 px-4 pb-3 pt-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:grid lg:grid-cols-6 lg:gap-4 lg:overflow-visible lg:scroll-px-0 lg:px-0 lg:pb-0 lg:pt-0"
+        >
             {flow.steps.map((step, i) => {
               const Icon = step.icon;
               return (
                 <div
                   key={`${role}-${i}`}
-                  className="flow-step-enter relative flex flex-col h-full min-w-[280px] max-w-[280px] lg:min-w-0 lg:max-w-none shrink-0 snap-center lg:snap-align-none"
+                  ref={(el) => {
+                    stepRefs.current[i] = el;
+                  }}
+                  className="flow-step-enter relative flex h-full w-[min(82vw,272px)] shrink-0 snap-center flex-col lg:w-auto lg:min-w-0 lg:max-w-none lg:shrink lg:snap-align-none"
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
                   {/* Card */}
                   <div
                     className={`
-                      relative flex h-full w-full flex-col rounded-2xl bg-[var(--brand-surface)] p-5 pt-8 text-center
+                      relative flex h-full min-h-[220px] w-full flex-col rounded-2xl bg-white/45 p-5 pt-8 text-center shadow-[0_8px_32px_rgba(145,70,255,0.06)] backdrop-blur-md
                       transition-all duration-300
                       ${i === activeStep
                         ? "ring-2 ring-[var(--brand-primary)]/30 shadow-md flow-card-current"

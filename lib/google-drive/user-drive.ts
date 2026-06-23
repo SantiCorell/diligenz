@@ -14,12 +14,27 @@ import {
   uploadFileToFolder,
 } from "./client";
 
-async function shareClientFolderIfEnabled(folderId: string, email: string): Promise<void> {
-  if (process.env.GOOGLE_DRIVE_SHARE_WITH_CLIENT === "false") return;
-  try {
-    await shareFolderWithUser(folderId, email, "writer");
-  } catch (err) {
-    console.error("[google-drive] compartir carpeta con cliente:", err);
+function clientShareRole(): "reader" | "writer" {
+  const role = process.env.GOOGLE_DRIVE_CLIENT_SHARE_ROLE?.trim().toLowerCase();
+  return role === "writer" ? "writer" : "reader";
+}
+
+async function shareUserDriveFolder(folderId: string, clientEmail: string): Promise<void> {
+  if (process.env.GOOGLE_DRIVE_SHARE_WITH_CLIENT !== "false") {
+    try {
+      await shareFolderWithUser(folderId, clientEmail, clientShareRole());
+    } catch (err) {
+      console.error("[google-drive] compartir carpeta con cliente:", err);
+    }
+  }
+
+  const adminEmail = process.env.GOOGLE_DRIVE_ADMIN_EMAIL?.trim();
+  if (adminEmail && adminEmail.toLowerCase() !== clientEmail.toLowerCase()) {
+    try {
+      await shareFolderWithUser(folderId, adminEmail, "writer");
+    } catch (err) {
+      console.error("[google-drive] compartir carpeta con admin:", err);
+    }
   }
 }
 
@@ -59,7 +74,7 @@ export async function ensureUserDriveFolder(opts: {
       where: { id: opts.userId },
       data: { documentsDriveFolderUrl: url },
     });
-    await shareClientFolderIfEnabled(folderId, opts.userEmail ?? user.email);
+    await shareUserDriveFolder(folderId, opts.userEmail ?? user.email);
     return folderId;
   } catch (err) {
     console.error("[google-drive] crear carpeta cliente:", err);

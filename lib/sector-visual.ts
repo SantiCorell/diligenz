@@ -1,16 +1,16 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Building2,
-  Code2,
+  Cpu,
   Factory,
   GraduationCap,
   HardHat,
   HeartPulse,
   Layers,
   Leaf,
+  MonitorSmartphone,
   Plane,
   ShoppingBag,
-  Store,
   Truck,
   UtensilsCrossed,
   Wheat,
@@ -25,10 +25,28 @@ import {
 export type SectorVisualStyle = {
   icon: LucideIcon;
   label: string;
+  shortLabel: string;
   accent: string;
+  iconBgClass: string;
+  tagClass: string;
+  /** @deprecated Usar iconBgClass — mantenido para estilos inline legacy */
   iconBg: string;
+  /** @deprecated Usar iconBgClass — mantenido para estilos inline legacy */
   iconColor: string;
   surface: string;
+};
+
+export type HomepageFeaturedSector = {
+  slug: string;
+  name: string;
+  description: string;
+};
+
+type SectorStyleBase = {
+  icon: LucideIcon;
+  accent: string;
+  iconBgClass: string;
+  tagClass: string;
 };
 
 type SectorKey =
@@ -48,116 +66,142 @@ type SectorKey =
   | "construccion-infraestructuras"
   | "otro-abierto";
 
-const ICON_BG = "#F0EFEB";
+const SHORT_LABELS: Record<SectorKey, string> = {
+  "tecnologia-software-saas": "Tecnología",
+  "hosteleria-restauracion": "Hostelería",
+  "retail-comercio": "Consumo",
+  "industria-manufactura": "Industria",
+  "servicios-profesionales-b2b": "Servicios B2B",
+  "salud-bienestar": "Salud",
+  "educacion-formacion": "Educación",
+  "logistica-transporte": "Logística",
+  "inmobiliario-proptech": "Inmobiliario",
+  "medios-contenidos-ecommerce": "E-commerce",
+  "agrifood-agronegocio": "Agroalimentario",
+  "energia-sostenibilidad": "Energía",
+  "turismo-ocio": "Turismo",
+  "construccion-infraestructuras": "Construcción",
+  "otro-abierto": "Otros",
+};
+
 const SURFACE = "#ffffff";
 
-const SECTOR_STYLES: Record<SectorKey, Omit<SectorVisualStyle, "label">> = {
+const SECTOR_STYLES: Record<SectorKey, SectorStyleBase> = {
   "tecnologia-software-saas": {
-    icon: Code2,
-    accent: "#6B6FA8",
-    iconBg: ICON_BG,
-    iconColor: "#6B6FA8",
-    surface: SURFACE,
+    icon: Cpu,
+    accent: "#7c3aed",
+    iconBgClass: "bg-violet-100 text-violet-600",
+    tagClass: "bg-violet-50 text-violet-700",
   },
   "hosteleria-restauracion": {
     icon: UtensilsCrossed,
-    accent: "#9A7B5C",
-    iconBg: ICON_BG,
-    iconColor: "#9A7B5C",
-    surface: SURFACE,
+    accent: "#ea580c",
+    iconBgClass: "bg-orange-100 text-orange-600",
+    tagClass: "bg-orange-50 text-orange-700",
   },
   "retail-comercio": {
-    icon: Store,
-    accent: "#8A6B7A",
-    iconBg: ICON_BG,
-    iconColor: "#8A6B7A",
-    surface: SURFACE,
+    icon: ShoppingBag,
+    accent: "#d97706",
+    iconBgClass: "bg-amber-100 text-amber-600",
+    tagClass: "bg-amber-50 text-amber-700",
   },
   "industria-manufactura": {
     icon: Factory,
-    accent: "#6B7280",
-    iconBg: ICON_BG,
-    iconColor: "#6B7280",
-    surface: SURFACE,
+    accent: "#475569",
+    iconBgClass: "bg-slate-100 text-slate-600",
+    tagClass: "bg-slate-50 text-slate-700",
   },
   "servicios-profesionales-b2b": {
     icon: Building2,
-    accent: "#5C6B8A",
-    iconBg: ICON_BG,
-    iconColor: "#5C6B8A",
-    surface: SURFACE,
+    accent: "#2563eb",
+    iconBgClass: "bg-blue-100 text-blue-600",
+    tagClass: "bg-blue-50 text-blue-700",
   },
   "salud-bienestar": {
     icon: HeartPulse,
-    accent: "#5C8A82",
-    iconBg: ICON_BG,
-    iconColor: "#5C8A82",
-    surface: SURFACE,
+    accent: "#e11d48",
+    iconBgClass: "bg-rose-100 text-rose-600",
+    tagClass: "bg-rose-50 text-rose-700",
   },
   "educacion-formacion": {
     icon: GraduationCap,
-    accent: "#5C6FA8",
-    iconBg: ICON_BG,
-    iconColor: "#5C6FA8",
-    surface: SURFACE,
+    accent: "#4f46e5",
+    iconBgClass: "bg-indigo-100 text-indigo-600",
+    tagClass: "bg-indigo-50 text-indigo-700",
   },
   "logistica-transporte": {
     icon: Truck,
-    accent: "#8A6B55",
-    iconBg: ICON_BG,
-    iconColor: "#8A6B55",
-    surface: SURFACE,
+    accent: "#78716c",
+    iconBgClass: "bg-stone-100 text-stone-600",
+    tagClass: "bg-stone-50 text-stone-700",
   },
   "inmobiliario-proptech": {
     icon: Building2,
-    accent: "#78716C",
-    iconBg: ICON_BG,
-    iconColor: "#78716C",
-    surface: SURFACE,
+    accent: "#71717a",
+    iconBgClass: "bg-zinc-100 text-zinc-600",
+    tagClass: "bg-zinc-50 text-zinc-700",
   },
   "medios-contenidos-ecommerce": {
-    icon: ShoppingBag,
-    accent: "#7A6B9A",
-    iconBg: ICON_BG,
-    iconColor: "#7A6B9A",
-    surface: SURFACE,
+    icon: MonitorSmartphone,
+    accent: "#9333ea",
+    iconBgClass: "bg-purple-100 text-purple-600",
+    tagClass: "bg-purple-50 text-purple-700",
   },
   "agrifood-agronegocio": {
     icon: Wheat,
-    accent: "#6B8255",
-    iconBg: ICON_BG,
-    iconColor: "#6B8255",
-    surface: SURFACE,
+    accent: "#65a30d",
+    iconBgClass: "bg-lime-100 text-lime-700",
+    tagClass: "bg-lime-50 text-lime-800",
   },
   "energia-sostenibilidad": {
     icon: Leaf,
-    accent: "#5C8A65",
-    iconBg: ICON_BG,
-    iconColor: "#5C8A65",
-    surface: SURFACE,
+    accent: "#059669",
+    iconBgClass: "bg-emerald-100 text-emerald-600",
+    tagClass: "bg-emerald-50 text-emerald-700",
   },
   "turismo-ocio": {
     icon: Plane,
-    accent: "#5C7A9A",
-    iconBg: ICON_BG,
-    iconColor: "#5C7A9A",
-    surface: SURFACE,
+    accent: "#0284c7",
+    iconBgClass: "bg-sky-100 text-sky-600",
+    tagClass: "bg-sky-50 text-sky-700",
   },
   "construccion-infraestructuras": {
     icon: HardHat,
-    accent: "#8A7A55",
-    iconBg: ICON_BG,
-    iconColor: "#8A7A55",
-    surface: SURFACE,
+    accent: "#ca8a04",
+    iconBgClass: "bg-yellow-100 text-yellow-700",
+    tagClass: "bg-yellow-50 text-yellow-800",
   },
   "otro-abierto": {
     icon: Layers,
-    accent: "#7A6B9A",
-    iconBg: ICON_BG,
-    iconColor: "#7A6B9A",
-    surface: SURFACE,
+    accent: "#7c3aed",
+    iconBgClass: "bg-violet-100 text-violet-600",
+    tagClass: "bg-violet-50 text-violet-700",
   },
 };
+
+/** Cuatro sectores destacados en home — misma línea visual que CompanyCard */
+export const HOMEPAGE_FEATURED_SECTORS: HomepageFeaturedSector[] = [
+  {
+    slug: "salud",
+    name: "Salud",
+    description: "Clínicas, laboratorios y servicios sanitarios privados.",
+  },
+  {
+    slug: "tecnologia",
+    name: "Tecnología",
+    description: "SaaS, software B2B y negocios digitales escalables.",
+  },
+  {
+    slug: "industria",
+    name: "Industria",
+    description: "Fabricación, logística e ingeniería especializada.",
+  },
+  {
+    slug: "consumo",
+    name: "Consumo",
+    description: "Retail, marcas y e-commerce consolidados.",
+  },
+];
 
 const SLUG_ALIASES: Record<string, SectorKey> = {
   tecnologia: "tecnologia-software-saas",
@@ -252,5 +296,12 @@ export function getSectorVisual(sector: string): SectorVisualStyle {
       ? label.replace(" (histórico)", "")
       : sector.trim() || "Sector no indicado";
 
-  return { ...style, label: displayLabel };
+  return {
+    ...style,
+    label: displayLabel,
+    shortLabel: SHORT_LABELS[key],
+    iconBg: style.iconBgClass,
+    iconColor: style.accent,
+    surface: SURFACE,
+  };
 }

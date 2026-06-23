@@ -75,8 +75,8 @@ export default function RegisterPage() {
   return (
     <ShellLayout>
       {loading && <LoadingOverlay message="Creando tu cuenta…" />}
-      <div className="min-h-screen bg-gradient-to-br from-[var(--brand-bg)] via-white to-[var(--brand-primary)]/5">
-        <div className="max-w-7xl mx-auto px-6 py-8 md:py-10">
+      <div className="relative px-4 py-8 sm:px-6 md:py-12">
+        <div className="mx-auto max-w-7xl">
           {/* Logo centrado arriba */}
           <div className="flex justify-center mb-12">
             <Image
@@ -158,7 +158,7 @@ export default function RegisterPage() {
 
             {/* Columna derecha: Formulario */}
             <div className="w-full">
-              <div className="rounded-2xl border-2 border-[var(--brand-primary)]/20 bg-white/95 backdrop-blur-sm p-8 shadow-2xl">
+              <div className="page-card page-card-padded shadow-[0_12px_48px_rgba(145,70,255,0.1)]">
                 <h2 className="text-2xl font-bold text-[var(--brand-primary)] mb-6 text-center">
                   Crea tu cuenta
                 </h2>

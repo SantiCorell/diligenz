@@ -64,7 +64,7 @@ export default function SobreNosotrosPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
-      <div className="min-h-screen bg-[var(--brand-bg)]">
+      <div className="relative">
         {/* Hero con imagen de Valencia */}
         <header className="relative">
           <div className="relative h-[42vh] min-h-[280px] md:h-[50vh] md:min-h-[360px] w-full overflow-hidden">

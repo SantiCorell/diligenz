@@ -124,7 +124,7 @@ export default async function CompanyDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <div className="min-h-screen bg-[var(--brand-bg)]">
+      <div className="relative">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-8">
           <Link
             href="/companies"

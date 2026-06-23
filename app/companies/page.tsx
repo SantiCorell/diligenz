@@ -84,13 +84,11 @@ export default async function CompaniesPage({ searchParams }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <div className="min-h-screen bg-[var(--brand-bg)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8">
+      <div className="relative px-4 py-6 sm:px-6 md:py-8">
+        <div className="mx-auto max-w-7xl">
           <header className="mb-6 md:mb-8">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">
-              Marketplace M&A
-            </p>
-            <h1 className="mt-1 text-2xl sm:text-3xl font-semibold text-[var(--foreground)] tracking-tight">
+            <p className="page-eyebrow">Marketplace M&A</p>
+            <h1 className="page-title mt-1">
               Empresas en venta
               {activeSectorLabel && (
                 <span className="text-[var(--foreground)]/55 font-medium"> · {activeSectorLabel}</span>

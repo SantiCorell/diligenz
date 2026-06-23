@@ -27,28 +27,20 @@ export default async function BuyerDashboardPage() {
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
-      <div className="rounded-2xl bg-gradient-to-br from-[var(--brand-primary)]/12 via-white to-white border border-[var(--brand-primary)]/15 shadow-md p-6 md:p-8">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-primary)]/80">
-          Panel del inversor
-        </p>
-        <h1 className="mt-2 text-2xl sm:text-3xl font-bold text-[var(--brand-primary)]">
+      <div className="panel-hero">
+        <p className="page-eyebrow">Panel del inversor</p>
+        <h1 className="page-title mt-2">
           Hola{displayName ? `, ${displayName}` : ""}
         </h1>
-        <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90 max-w-2xl">
+        <p className="mt-2 max-w-2xl text-sm text-[var(--foreground)]/75 sm:text-base">
           Gestiona tu perfil, documentos y oportunidades desde un solo lugar. El marketplace público
           está a un clic cuando quieras explorar.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link
-            href="/"
-            className="inline-flex items-center rounded-xl px-5 py-2.5 text-sm font-semibold bg-white border-2 border-[var(--brand-primary)]/30 text-[var(--brand-primary)] shadow-sm hover:bg-[var(--brand-primary)]/5 transition"
-          >
+          <Link href="/" className="btn-secondary">
             Ir a la web
           </Link>
-          <Link
-            href="/companies"
-            className="inline-flex items-center rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-md hover:opacity-95 transition"
-          >
+          <Link href="/companies" className="btn-primary">
             Explorar empresas publicadas
           </Link>
         </div>
@@ -83,14 +75,14 @@ export default async function BuyerDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Link
           href="/dashboard/profile"
-          className="group rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 hover:shadow-lg hover:border-[var(--brand-primary)]/25 transition text-left"
+          className="group page-card page-card-padded page-card-interactive text-left"
         >
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)] group-hover:underline">
+          <h2 className="text-lg font-semibold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">
             Mi perfil y verificación
           </h2>
           <p className="mt-2 text-sm text-[var(--foreground)] opacity-85">
-            Email, NDA, DNI y datos de contacto. Completa los checks para desbloquear todo el
-            contenido.
+            Email, mandato de compra, DNI y datos de contacto. Completa los checks para desbloquear
+            todo el contenido.
           </p>
           <span className="mt-4 inline-block text-sm font-semibold text-[var(--brand-primary)]">
             Abrir →
@@ -99,9 +91,9 @@ export default async function BuyerDashboardPage() {
 
         <Link
           href="/dashboard/buyer/documents"
-          className="group rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 hover:shadow-lg hover:border-[var(--brand-primary)]/25 transition text-left"
+          className="group page-card page-card-padded page-card-interactive text-left"
         >
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)] group-hover:underline">
+          <h2 className="text-lg font-semibold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">
             Mis documentos y Drive
           </h2>
           <p className="mt-2 text-sm text-[var(--foreground)] opacity-85">
@@ -114,9 +106,9 @@ export default async function BuyerDashboardPage() {
 
         <Link
           href="/companies"
-          className="group rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 hover:shadow-lg hover:border-[var(--brand-primary)]/25 transition text-left"
+          className="group page-card page-card-padded page-card-interactive text-left"
         >
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)] group-hover:underline">
+          <h2 className="text-lg font-semibold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">
             Explorar empresas
           </h2>
           <p className="mt-2 text-sm text-[var(--foreground)] opacity-85">
@@ -129,9 +121,9 @@ export default async function BuyerDashboardPage() {
 
         <Link
           href="/dashboard/mis-empresas"
-          className="group rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 hover:shadow-lg hover:border-[var(--brand-primary)]/25 transition text-left"
+          className="group page-card page-card-padded page-card-interactive text-left"
         >
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)] group-hover:underline">
+          <h2 className="text-lg font-semibold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">
             Mis empresas
           </h2>
           <p className="mt-2 text-sm text-[var(--foreground)] opacity-85">
@@ -143,7 +135,7 @@ export default async function BuyerDashboardPage() {
         </Link>
       </div>
 
-      <div className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white/90 p-5 flex flex-wrap items-center justify-between gap-4">
+      <div className="page-card page-card-padded flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-[var(--brand-primary)]">¿Necesitas ayuda?</p>
           <p className="text-sm text-[var(--foreground)] opacity-80 mt-0.5">
@@ -182,10 +174,8 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border p-4 shadow-sm ${
-        highlight
-          ? "border-amber-200 bg-amber-50/80"
-          : "border-[var(--brand-primary)]/10 bg-white"
+      className={`page-card p-4 ${
+        highlight ? "border-amber-200/80 bg-amber-50/60" : ""
       }`}
     >
       <p className="text-xs font-medium text-[var(--foreground)] opacity-70">{label}</p>

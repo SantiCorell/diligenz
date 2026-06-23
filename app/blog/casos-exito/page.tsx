@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 export default function CasosExitoPage() {
   return (
     <ShellLayout>
-      <div className="min-h-screen bg-[var(--brand-bg)]">
+      <div className="relative">
         <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-8 md:py-10">
           <div className="max-w-4xl mx-auto px-6 text-center">
             <Link

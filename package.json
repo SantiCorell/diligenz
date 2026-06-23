@@ -20,6 +20,7 @@
     "email:test": "npx --yes dotenv-cli@7 -e .env.local -- node scripts/test-smtp.mjs",
     "email:test:welcome": "npx --yes dotenv-cli@7 -e .env.local -- node scripts/test-welcome-email.mjs",
     "drive:test": "npx --yes dotenv-cli@7 -e .env.local -- node scripts/test-google-drive.mjs",
+    "drive:oauth": "npx --yes dotenv-cli@7 -e .env.local -- node scripts/google-drive-oauth.mjs",
     "drive:sync-user": "npx --yes dotenv-cli@7 -e .env.local -- node scripts/sync-user-drive.mjs"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "@vercel/speed-insights": "^1.0.0",
     "bcryptjs": "^3.0.3",
     "googleapis": "^173.0.0",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.563.0",
     "next": "16.1.4",
     "next-auth": "^5.0.0-beta.25",

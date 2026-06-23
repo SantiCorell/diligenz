@@ -52,10 +52,10 @@ export const PRIMARY_SECTOR_OPTIONS: (SectorOption & { shortLabel: string; descr
     description: "Restauración, bares y catering",
   },
   {
-    value: "retail-comercio",
-    label: "Retail / Comercio",
-    shortLabel: "Retail",
-    description: "Comercio, tiendas y distribución",
+    value: "salud-bienestar",
+    label: "Salud / Bienestar",
+    shortLabel: "Salud",
+    description: "Clínicas, laboratorios y bienestar",
   },
   {
     value: "industria-manufactura",

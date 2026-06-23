@@ -61,16 +61,14 @@ export default async function BlogPage({ searchParams }: PageProps) {
 
   return (
     <ShellLayout>
-      <div className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-8 md:py-10">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-            <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)] tracking-tight">
-              Blog
-            </h1>
-            <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90 max-w-2xl mx-auto">
+      <div className="relative">
+        <section className="relative px-4 py-10 text-center sm:px-6 md:py-14">
+          <div className="mx-auto max-w-4xl">
+            <h1 className="page-title">Blog</h1>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-[var(--foreground)]/75 sm:text-base">
               Noticias, guías y casos reales sobre valoración, due diligence y compraventa de empresas.
             </p>
-            <p className="mt-0.5 text-xs sm:text-sm text-[var(--foreground)] opacity-80">
+            <p className="mt-1 text-xs text-[var(--foreground)]/65 sm:text-sm">
               Elige entre artículos de fondo o casos de éxito con Diligenz.
             </p>
           </div>
@@ -90,14 +88,14 @@ export default async function BlogPage({ searchParams }: PageProps) {
           </div>
         </section>
 
-        <section className="border-t border-[var(--brand-primary)]/10 py-6 bg-[var(--brand-bg-lavender)]/50">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-            <p className="text-[var(--foreground)] opacity-85">
+        <section className="relative py-10">
+          <div className="mx-auto max-w-4xl px-6 text-center">
+            <p className="text-[var(--foreground)]/75">
               ¿Quiere valorar su empresa o explorar una venta con criterio?
             </p>
             <a
               href="/servicios#pricing"
-              className="mt-3 inline-block rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
+              className="btn-primary mt-4 inline-block"
             >
               Ver servicios y precios
             </a>

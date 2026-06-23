@@ -47,14 +47,14 @@ async function SellerCompaniesList({ userId }: { userId: string }) {
           Aún no has añadido ninguna empresa
         </h2>
         <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
-          Empieza valorando tu empresa y recibe un rango orientativo en minutos.
+          Empieza subiendo tu empresa y recibe un rango orientativo en minutos.
         </p>
 
         <Link
           href="/sell"
           className="mt-6 inline-block rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
         >
-          Valorar mi empresa
+          Subir mi empresa
         </Link>
       </div>
     );
@@ -203,22 +203,18 @@ export default async function SellerDashboardPage() {
   return (
     <main className="max-w-6xl mx-auto">
       {/* Header: se pinta de inmediato (usa sesión cacheada del layout) */}
-      <div className="mb-8 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="panel-hero mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
-            Panel del vendedor
-          </h1>
-          <p className="mt-1 text-sm sm:text-base text-[var(--foreground)] opacity-90">
+          <p className="page-eyebrow">Panel del vendedor</p>
+          <h1 className="page-title mt-1">Mis empresas en venta</h1>
+          <p className="mt-2 text-sm text-[var(--foreground)]/75 sm:text-base">
             Gestiona tus empresas de forma confidencial. Una vez publicadas en la web, la ficha la
             actualiza solo Diligenz.
           </p>
         </div>
 
-        <Link
-          href="/sell"
-          className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition shrink-0"
-        >
-          Valorar nueva empresa
+        <Link href="/sell" className="btn-primary shrink-0">
+          Subir nueva empresa
         </Link>
       </div>
 

@@ -1,6 +1,8 @@
 import { readFile } from "fs/promises";
 import { prisma } from "@/lib/prisma";
 import { generateSignedMandatePdf } from "@/lib/mandato/generate-signed-pdf";
+import { generateSignedCompraDocuments } from "@/lib/mandato/generate-signed-compra-pdf";
+import { generateSignedColaboracionDocuments } from "@/lib/mandato/generate-signed-colaboracion-pdfs";
 import { dniAbsolutePath } from "@/lib/user-documents/dni";
 import { syncDocumentToUserDrive } from "./document-sync";
 import { ensureUserDriveFolder, syncUserDriveFolderName } from "./user-drive";
@@ -34,6 +36,8 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
       documentsDriveFolderUrl: true,
       dniDocuments: true,
       salesMandate: true,
+      purchaseMandate: true,
+      collaborationAgreement: true,
       companies: { select: { name: true }, take: 1, orderBy: { createdAt: "desc" } },
     },
   });
@@ -44,7 +48,11 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
 
   const personName = user.name?.trim() || user.email.split("@")[0];
   const companyName =
-    user.salesMandate?.companyLegalName ?? user.companies[0]?.name ?? null;
+    user.salesMandate?.companyLegalName ??
+    user.purchaseMandate?.buyerLegalName ??
+    user.collaborationAgreement?.professionalLegalName ??
+    user.companies[0]?.name ??
+    null;
 
   const folderId = await ensureUserDriveFolder({
     userId: user.id,
@@ -62,7 +70,11 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
   await syncUserDriveFolderName({
     userId: user.id,
     role: user.role,
-    personName: user.salesMandate?.representativeName ?? personName,
+    personName:
+      user.salesMandate?.representativeName ??
+      user.purchaseMandate?.representativeName ??
+      user.collaborationAgreement?.representativeName ??
+      personName,
     companyName,
   });
 
@@ -130,10 +142,84 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
         content: Buffer.from(pdfBytes),
         companyName: m.companyLegalName,
       });
-      if (ok) synced.push("mandato");
-      else errors.push("Mandato: no se subió");
+      if (ok) synced.push("mandato-venta");
+      else errors.push("Mandato venta: no se subió");
     } catch (e) {
-      errors.push(`Mandato: ${e instanceof Error ? e.message : "error"}`);
+      errors.push(`Mandato venta: ${e instanceof Error ? e.message : "error"}`);
+    }
+  }
+
+  if (user.purchaseMandate) {
+    try {
+      const m = user.purchaseMandate;
+      const docs = await generateSignedCompraDocuments({
+        buyerLegalName: m.buyerLegalName,
+        buyerNifCif: m.buyerNifCif,
+        buyerAddress: m.buyerAddress,
+        contactEmail: m.contactEmail,
+        contactPhone: m.contactPhone,
+        representativeName: m.representativeName,
+        representativeDni: m.representativeDni,
+        representativeRole: m.representativeRole,
+        signaturePngBase64: m.signaturePngBase64,
+        signedAt: m.signedAt,
+        clientIp: m.clientIp,
+        userAgent: m.userAgent,
+      });
+      for (const file of [
+        { name: docs.particularesFileName, content: Buffer.from(docs.particularesPdf) },
+        { name: docs.generalesFileName, content: Buffer.from(docs.generalesPdf) },
+      ]) {
+        const ok = await syncDocumentToUserDrive({
+          userId: user.id,
+          kind: "mandato",
+          originalFileName: file.name,
+          mimeType: "application/pdf",
+          content: file.content,
+          companyName: m.buyerLegalName,
+        });
+        if (ok) synced.push(file.name);
+        else errors.push(`${file.name}: no se subió`);
+      }
+    } catch (e) {
+      errors.push(`Mandato compra: ${e instanceof Error ? e.message : "error"}`);
+    }
+  }
+
+  if (user.collaborationAgreement) {
+    try {
+      const m = user.collaborationAgreement;
+      const docs = await generateSignedColaboracionDocuments({
+        professionalLegalName: m.professionalLegalName,
+        professionalNif: m.professionalNif,
+        professionalAddress: m.professionalAddress,
+        contactEmail: m.contactEmail,
+        contactPhone: m.contactPhone,
+        representativeName: m.representativeName,
+        representativeDni: m.representativeDni,
+        representativeRole: m.representativeRole,
+        signaturePngBase64: m.signaturePngBase64,
+        signedAt: m.signedAt,
+        clientIp: m.clientIp,
+        userAgent: m.userAgent,
+      });
+      for (const file of [
+        { name: docs.particularesFileName, content: Buffer.from(docs.particularesPdf) },
+        { name: docs.generalesFileName, content: Buffer.from(docs.generalesPdf) },
+      ]) {
+        const ok = await syncDocumentToUserDrive({
+          userId: user.id,
+          kind: "mandato",
+          originalFileName: file.name,
+          mimeType: "application/pdf",
+          content: file.content,
+          companyName: m.professionalLegalName,
+        });
+        if (ok) synced.push(file.name);
+        else errors.push(`${file.name}: no se subió`);
+      }
+    } catch (e) {
+      errors.push(`Acuerdo colaboración: ${e instanceof Error ? e.message : "error"}`);
     }
   }
 

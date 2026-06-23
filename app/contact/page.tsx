@@ -55,24 +55,19 @@ export default function ContactPage() {
 
   return (
     <ShellLayout>
-      <div className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-primary)]/10 py-8 md:py-10">
-          <div className="max-w-2xl mx-auto px-4 sm:px-6">
-            <span className="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-primary)] opacity-90 mb-2">
-              Hablemos
-            </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
-              Contacto
-            </h1>
-            <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
-              Escríbenos y te respondemos lo antes posible. Indica si eres particular o empresa y tus datos.
-            </p>
-          </div>
-        </section>
+      <div className="relative px-4 py-10 sm:px-6 md:py-14">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="page-eyebrow">Hablemos</span>
+          <h1 className="page-title mt-2">Contacto</h1>
+          <p className="mt-3 text-sm text-[var(--foreground)]/75 sm:text-base">
+            Escríbenos y te respondemos lo antes posible. Indica si eres particular o empresa y tus datos.
+          </p>
+        </div>
+      </div>
 
-        <section className="py-6 md:py-8">
-          <div className="max-w-2xl mx-auto px-4 sm:px-6">
-            <div className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 md:p-8 shadow-md">
+      <section className="pb-12 md:pb-16">
+        <div className="mx-auto max-w-2xl px-4 sm:px-6">
+          <div className="page-card page-card-padded">
               {sent ? (
                 <div className="text-center py-8">
                   <p className="text-base font-semibold text-[var(--brand-primary)]">
@@ -220,7 +215,6 @@ export default function ContactPage() {
             </div>
           </div>
         </section>
-      </div>
     </ShellLayout>
   );
 }

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import TopBar from "@/components/layout/TopBar";
-import Navbar from "@/components/layout/Navbar";
+import ShellLayout from "@/components/layout/ShellLayout";
 import Hero from "@/components/home/Hero";
 import WhatIsDiligenz from "@/components/home/WhatIsDiligenz";
 import StatsSection from "@/components/home/StatsSection";
@@ -8,7 +7,6 @@ import FeaturedCompanies from "@/components/companies/FeaturedCompanies";
 import ValuationCTA from "@/components/home/ValuationCTA";
 import HowItWorks from "@/components/home/HowItWorks";
 import FinalCTA from "@/components/home/FinalCTA";
-import Footer from "@/components/layout/Footer";
 import SpecializedSectors from "@/components/home/SpecializedSectors";
 import HomeFAQ from "@/components/home/HomeFAQ";
 import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, getFAQSchema } from "@/lib/seo";
@@ -37,25 +35,20 @@ export default function HomePage() {
   const faqSchema = getFAQSchema();
 
   return (
-    <>
+    <ShellLayout>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <TopBar />
-      <Navbar />
-      <main className="bg-[var(--brand-bg)]">
-        <Hero />
-        <WhatIsDiligenz />
-        <StatsSection />
-        <SpecializedSectors />
-        <FeaturedCompanies />
-        <ValuationCTA />
-        <HowItWorks />
-        <FinalCTA />
-        <HomeFAQ />
-      </main>
-      <Footer />
-    </>
+      <Hero />
+      <WhatIsDiligenz />
+      <StatsSection />
+      <SpecializedSectors />
+      <FeaturedCompanies />
+      <ValuationCTA />
+      <HowItWorks />
+      <FinalCTA />
+      <HomeFAQ />
+    </ShellLayout>
   );
 }

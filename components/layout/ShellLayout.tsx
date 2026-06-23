@@ -1,6 +1,6 @@
-import TopBar from "@/components/layout/TopBar";
-import Navbar from "@/components/layout/Navbar";
+import HomeTop from "@/components/home/HomeTop";
 import Footer from "@/components/layout/Footer";
+import PageAmbient from "@/components/layout/PageAmbient";
 
 export default function ShellLayout({
   children,
@@ -9,9 +9,13 @@ export default function ShellLayout({
 }) {
   return (
     <>
-      <TopBar />
-      <Navbar />
-      <main className="min-h-screen bg-[var(--brand-bg)]">{children}</main>
+      <main className="relative min-h-screen bg-white">
+        <PageAmbient />
+        <div className="relative z-10">
+          <HomeTop />
+          <div className="overflow-x-clip">{children}</div>
+        </div>
+      </main>
       <Footer />
     </>
   );

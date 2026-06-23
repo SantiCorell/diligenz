@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { authFetch, clearStoredToken } from "@/lib/auth-client";
+import PageAmbient from "@/components/layout/PageAmbient";
 
 /** Rutas de experiencia comprador: el admin debe ver el menú completo del comprador (no solo «Dashboard» → /admin). */
 function pathnameIsBuyerPanel(path: string): boolean {
@@ -60,26 +61,27 @@ export default function DashboardShell({
     const expanded = forMobile ? true : !collapsed;
     return (
     <>
-      <div className={`flex ${expanded ? "items-center justify-between gap-3 px-4 py-4" : "flex-col items-center gap-3 py-4 px-2"} border-b border-white/10`}>
+      <div className={`panel-sidebar-header flex ${expanded ? "items-center justify-between gap-3 px-4 py-4" : "flex-col items-center gap-3 py-4 px-2"}`}>
+        <div className="absolute inset-x-0 bottom-0 h-[3px] admin-card-bar" aria-hidden />
         <Link
           href="/dashboard"
           className={`flex min-w-0 items-center ${expanded ? "gap-2" : "justify-center"}`}
           onClick={() => setMobileSidebarOpen(false)}
         >
           <Image
-            src="/icon-diligenz-claro.png"
+            src="/logo-diligenz-completo.png"
             alt="Diligenz"
-            width={44}
-            height={44}
-            className={expanded ? "h-10 w-10 object-contain" : "h-9 w-9 object-contain"}
+            width={120}
+            height={36}
+            className={expanded ? "h-8 w-auto object-contain" : "h-7 w-auto object-contain"}
           />
           {expanded && (
-            <span className="text-sm font-semibold truncate text-white/90">Panel</span>
+            <span className="text-sm font-semibold truncate text-[var(--brand-dark)]">Panel</span>
           )}
         </Link>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="rounded-lg p-2.5 text-white/90 hover:bg-white/10 hover:text-white shrink-0 transition-colors md:block hidden"
+          className="rounded-lg p-2.5 text-[var(--brand-dark)]/70 hover:bg-[var(--brand-surface)] hover:text-[var(--brand-primary)] shrink-0 transition-colors md:block hidden"
           aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
           type="button"
         >
@@ -90,7 +92,7 @@ export default function DashboardShell({
         <button
           type="button"
           onClick={() => setMobileSidebarOpen(false)}
-          className="md:hidden rounded-lg p-2.5 text-white/90 hover:bg-white/10 shrink-0"
+          className="md:hidden rounded-lg p-2.5 text-[var(--brand-dark)]/70 hover:bg-[var(--brand-surface)] shrink-0"
           aria-label="Cerrar menú"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -108,9 +110,10 @@ export default function DashboardShell({
               onNavigate={() => setMobileSidebarOpen(false)}
             />
             {expanded && (
-              <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-wide text-white/45">
-                Como inversor
-              </p>
+              <>
+                <div className="panel-nav-divider" aria-hidden />
+                <p className="panel-nav-section-label">Como inversor</p>
+              </>
             )}
             <NavItem
               href="/dashboard/buyer"
@@ -145,9 +148,10 @@ export default function DashboardShell({
               onNavigate={() => setMobileSidebarOpen(false)}
             />
             {expanded && (
-              <p className="px-3 pt-3 text-[10px] font-semibold uppercase tracking-wide text-white/45">
-                Como vendedor
-              </p>
+              <>
+                <div className="panel-nav-divider" aria-hidden />
+                <p className="panel-nav-section-label">Como vendedor</p>
+              </>
             )}
             <NavItem
               href="/dashboard/seller"
@@ -168,7 +172,7 @@ export default function DashboardShell({
             />
             <NavItem
               href="/sell"
-              label="Valorar empresa"
+              label="Subir empresa"
               active={pathname.startsWith("/sell")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -251,7 +255,7 @@ export default function DashboardShell({
                 />
                 <NavItem
                   href="/sell"
-                  label="Valorar empresa"
+                  label="Subir empresa"
                   active={pathname.startsWith("/sell")}
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
@@ -261,14 +265,9 @@ export default function DashboardShell({
           </>
         )}
         {showAdminNavInUserPanel && (
-          <div
-            className={`${expanded ? "mt-3 pt-3 border-t border-white/10" : "mt-2 pt-2 border-t border-white/10"} space-y-1`}
-          >
-            {expanded && (
-              <p className="px-3 text-[10px] font-semibold uppercase tracking-wide text-white/45">
-                Administración
-              </p>
-            )}
+          <div className={`${expanded ? "mt-2" : "mt-1"} space-y-1`}>
+            <div className="panel-nav-divider" aria-hidden />
+            {expanded && <p className="panel-nav-section-label">Administración</p>}
             <NavItem
               href="/admin"
               label="Admin · Inicio"
@@ -308,11 +307,11 @@ export default function DashboardShell({
         )}
       </nav>
 
-      <div className={`${expanded ? "p-3" : "p-2"} border-t border-white/10`}>
+      <div className={`panel-sidebar-footer ${expanded ? "p-3" : "p-2"}`}>
         <button
           type="button"
           onClick={() => { setMobileSidebarOpen(false); goToWeb(); }}
-          className={`w-full flex items-center ${expanded ? "gap-3 px-3 py-2" : "justify-center px-2 py-2"} rounded-lg text-white/80 hover:bg-white/10 transition text-left`}
+          className={`panel-nav-link w-full ${expanded ? "gap-3 px-3 py-2" : "justify-center px-2 py-2"} text-[var(--brand-dark)]/75 hover:text-[var(--brand-primary)] text-left`}
           title={!expanded ? "Ir a la web" : undefined}
         >
           <span className={!expanded ? "text-lg" : ""}>←</span>
@@ -324,47 +323,45 @@ export default function DashboardShell({
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[var(--brand-bg)]">
-      {/* Sidebar móvil: overlay, siempre expandido */}
+    <div className="relative flex min-h-screen flex-col md:flex-row">
+      <PageAmbient />
       {mobileSidebarOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
             aria-hidden
             onClick={() => setMobileSidebarOpen(false)}
           />
-          <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-[var(--brand-primary)] text-white flex flex-col border-r border-white/10 md:hidden">
+          <aside className="panel-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col md:hidden">
             {renderSidebar(true)}
           </aside>
         </>
       )}
 
-      {/* Sidebar escritorio */}
       <aside
-        className={`hidden md:flex ${
+        className={`panel-sidebar relative z-20 hidden shrink-0 flex-col transition-all duration-200 md:flex ${
           collapsed ? "w-20" : "w-64"
-        } bg-[var(--brand-primary)] text-white transition-all duration-200 flex-col border-r border-white/10 shrink-0`}
+        }`}
       >
         {renderSidebar(false)}
       </aside>
 
-      {/* Main: en móvil ancho completo */}
-      <div className="flex-1 flex flex-col min-w-0 w-full">
-        <header className="flex items-center justify-between gap-4 bg-[var(--brand-primary)] text-white border-b border-white/10 px-4 sm:px-6 lg:px-8 py-4 shadow-sm">
-          <div className="flex items-center gap-3 min-w-0">
+      <div className="relative z-10 flex min-w-0 w-full flex-1 flex-col">
+        <header className="panel-header sticky top-0 z-30 flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
-              className="md:hidden rounded-lg p-2.5 text-white/90 hover:bg-white/10 shrink-0"
+              className="shrink-0 rounded-lg p-2.5 text-[var(--brand-dark)]/70 hover:bg-[var(--brand-surface)] md:hidden"
               aria-label="Abrir menú"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <span className="text-sm font-medium text-white truncate">
+            <span className="truncate text-sm font-medium text-[var(--brand-dark)]">
               {userDisplayName ? (
-                <>Hola, <span className="font-semibold">{userDisplayName}</span></>
+                <>Hola, <span className="font-semibold text-[var(--brand-primary)]">{userDisplayName}</span></>
               ) : (
                 <span className="opacity-80">Panel de usuario</span>
               )}
@@ -372,7 +369,7 @@ export default function DashboardShell({
             {role === "ADMIN" && effectiveRole !== "ADMIN" && (
               <Link
                 href="/admin"
-                className="text-xs font-medium text-white bg-white/10 px-2.5 py-1 rounded-lg hover:bg-white/20"
+                className="rounded-full bg-[var(--brand-surface)] px-2.5 py-1 text-xs font-medium text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10"
               >
                 Vista como {effectiveRole === "BUYER" ? "comprador" : "vendedor"} · Volver a Admin
               </Link>
@@ -381,14 +378,14 @@ export default function DashboardShell({
           <div className="flex items-center gap-3">
             <button
               onClick={logout}
-              className="text-sm font-medium text-white/90 hover:text-white hover:underline"
+              className="text-sm font-medium text-[var(--brand-dark)]/70 hover:text-[var(--brand-primary)]"
             >
               Cerrar sesión
             </button>
           </div>
         </header>
 
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 bg-[var(--brand-bg)]">{children}</main>
+        <main className="relative flex-1 px-4 py-8 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   );
@@ -411,14 +408,16 @@ function NavItem({
     <Link
       href={href}
       onClick={onNavigate}
-      className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-xl ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"} transition ${
+      className={`panel-nav-link ${collapsed ? "justify-center" : "gap-3"} ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"} ${
         active
-          ? "bg-white/15 text-white font-medium"
-          : "text-white/80 hover:bg-white/10"
+          ? "admin-nav-active text-[var(--brand-primary)] font-semibold"
+          : "text-[var(--brand-dark)]/70"
       }`}
       title={collapsed ? label : undefined}
     >
-      <span className={collapsed && active ? "text-lg" : ""}>{active ? "▸" : "◦"}</span>
+      <span className={`panel-nav-icon ${active ? "panel-nav-icon--active" : ""}`}>
+        {active ? "▸" : "◦"}
+      </span>
       {!collapsed && <span>{label}</span>}
     </Link>
   );

@@ -26,7 +26,8 @@ export default async function BuyerDocumentsPage() {
         </h1>
         <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
           Accede a tu espacio de documentación personal. Aquí podrás consultar material
-          confidencial que el equipo Diligenz comparta contigo (NDA, datas rooms, etc.).
+          confidencial que el equipo Diligenz comparta contigo (mandato de compra, datas rooms,
+          etc.).
         </p>
       </div>
 
@@ -53,7 +54,7 @@ export default async function BuyerDocumentsPage() {
           <div className="rounded-xl border border-dashed border-[var(--brand-primary)]/25 bg-[var(--brand-bg)]/60 px-4 py-5 text-sm text-[var(--foreground)] opacity-90">
             <p>
               Tu enlace personal a Drive se configurará cuando el equipo te lo asigne. Mientras
-              tanto, completa tu perfil y NDA para agilizar el proceso.
+              tanto, completa tu perfil y firma el mandato de compra para agilizar el proceso.
             </p>
             <Link
               href="/dashboard/profile"
@@ -68,12 +69,15 @@ export default async function BuyerDocumentsPage() {
       <div className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white/80 p-5 text-sm text-[var(--foreground)] opacity-85">
         <p className="font-medium text-[var(--brand-primary)] mb-1">Firma y verificación</p>
         <p>
-          Recuerda firmar el NDA y completar la verificación desde el panel si aún no lo has hecho;
-          así podremos compartir documentación sensible contigo.
+          Recuerda firmar el mandato de compra y completar la verificación desde el panel si aún
+          no lo has hecho; así podremos compartir documentación sensible contigo.
         </p>
         <div className="mt-3 flex flex-wrap gap-3">
-          <Link href="/dashboard/nda" className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">
-            Ir al NDA
+          <Link
+            href="/dashboard/nda"
+            className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
+          >
+            Ir al mandato de compra
           </Link>
           <Link
             href="/dashboard/verification"

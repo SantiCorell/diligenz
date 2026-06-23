@@ -107,7 +107,7 @@ export default function ElegirPerfilPage() {
       {(loading || submitting) && (
         <LoadingOverlay message={submitting ? "Guardando tu perfil…" : "Cargando…"} />
       )}
-      <div className="min-h-screen bg-[var(--brand-bg)] py-10">
+      <div className="relative py-10">
         <div className="max-w-lg mx-auto px-4 sm:px-6">
           <div className="flex justify-center mb-8">
             <Image

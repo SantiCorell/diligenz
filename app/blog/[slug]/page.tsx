@@ -131,7 +131,7 @@ export default async function BlogPostPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <article className="min-h-screen bg-[var(--brand-bg)]" itemScope itemType="https://schema.org/Article">
+      <article className="relative" itemScope itemType="https://schema.org/Article">
         <header className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)]">
           <div className="max-w-3xl mx-auto px-6 py-6">
             <Link href="/blog" className="text-sm font-medium text-[var(--brand-primary)] hover:underline">

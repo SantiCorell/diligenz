@@ -55,11 +55,9 @@ export default async function AdminDashboard({
 
   return (
     <main className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <span className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)]/80 mb-2">
-          Panel
-        </span>
-        <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
+      <div className="panel-hero mb-8">
+        <span className="page-eyebrow">Panel</span>
+        <h1 className="mt-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-[var(--brand-primary)] via-[#a855f7] to-[var(--brand-dark)] bg-clip-text text-transparent">
           Panel de administración
         </h1>
         <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
@@ -76,54 +74,51 @@ export default async function AdminDashboard({
           value={totalUsers}
           subtitle={`${buyers} compradores · ${sellers} vendedores · ${professionals} profesionales · ${admins} admin`}
           href="/admin/users"
-          accent="primary"
+          bar="primary"
         />
         <KpiCard
           title="Empresas totales"
           value={totalCompanies}
           href="/admin/companies"
-          accent="primary"
+          bar="primary"
         />
         <KpiCard
           title="Visibles en la web"
           value={publishedOnWeb}
           subtitle="Deals publicados en marketplace"
           href="/admin/companies?marketplace=1"
-          accent="green"
+          bar="mint"
         />
         <KpiCard
           title="En revisión"
           value={inProcess}
           subtitle="Estado interno"
           href="/admin/companies?status=IN_PROCESS"
-          accent="blue"
+          bar="lavender"
         />
         <KpiCard
           title="Acciones"
           value={actionsCount}
           subtitle="Solicitudes de información"
           href="/admin/actions"
-          accent="gray"
+          bar="soft"
         />
         <KpiCard
           title="Leads"
           value={leadsCount}
           subtitle="Valoraciones y contacto"
           href="/admin/leads"
-          accent="primary"
+          bar="primary"
         />
       </div>
 
       <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
-            Empresas por sector
-          </h2>
-          <ul className="mt-4 space-y-3">
+        <AdminSectionCard title="Empresas por sector">
+          <ul className="space-y-3">
             {bySector.map((item) => (
               <li
                 key={item.sector}
-                className="flex justify-between items-center text-sm text-[var(--foreground)]"
+                className="flex justify-between items-center text-sm text-[var(--foreground)] border-b border-[var(--brand-primary)]/5 pb-2 last:border-0 last:pb-0"
               >
                 <span>{item.sector}</span>
                 <span className="font-semibold text-[var(--brand-primary)]">
@@ -137,16 +132,13 @@ export default async function AdminDashboard({
               </li>
             )}
           </ul>
-        </section>
-        <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
-            Empresas por ubicación
-          </h2>
-          <ul className="mt-4 space-y-3">
+        </AdminSectionCard>
+        <AdminSectionCard title="Empresas por ubicación">
+          <ul className="space-y-3">
             {byLocation.map((item) => (
               <li
                 key={item.location}
-                className="flex justify-between items-center text-sm text-[var(--foreground)]"
+                className="flex justify-between items-center text-sm text-[var(--foreground)] border-b border-[var(--brand-primary)]/5 pb-2 last:border-0 last:pb-0"
               >
                 <span>{item.location}</span>
                 <span className="font-semibold text-[var(--brand-primary)]">
@@ -160,21 +152,18 @@ export default async function AdminDashboard({
               </li>
             )}
           </ul>
-        </section>
+        </AdminSectionCard>
       </div>
 
-      <div className="mt-10 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
-        <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
-          Acciones rápidas
-        </h2>
+      <AdminSectionCard title="Acciones rápidas" className="mt-10">
         {syncedCount !== undefined && (
-          <p className="mt-2 text-sm text-green-600">
+          <p className="mb-4 text-sm text-green-700 font-medium">
             {syncedCount === "0"
               ? "No había empresas con estado Publicado para sincronizar."
               : `${syncedCount} empresa(s) sincronizada(s): ya visible(s) en la web.`}
           </p>
         )}
-        <div className="mt-4 flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4">
           <form
             action="/api/admin/company/sync-published?redirect=1"
             method="POST"
@@ -182,79 +171,93 @@ export default async function AdminDashboard({
           >
             <button
               type="submit"
-              className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-green-600 text-white shadow-lg hover:opacity-95 transition"
+              className="rounded-full px-6 py-3.5 text-sm font-semibold text-[var(--brand-dark)] shadow-md transition hover:opacity-95"
+              style={{
+                background: "linear-gradient(135deg, var(--brand-accent) 0%, #c8e87a 100%)",
+              }}
             >
               Sincronizar publicadas con la web
             </button>
           </form>
-          <Link
-            href="/admin/companies"
-            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-          >
+          <Link href="/admin/companies" className="btn-primary">
             Gestionar empresas
           </Link>
-          <Link
-            href="/admin/users"
-            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-          >
+          <Link href="/admin/users" className="btn-primary">
             Crear usuarios / Admins
           </Link>
-          <Link
-            href="/companies"
-            className="rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] bg-white hover:bg-[var(--brand-primary)]/10 transition"
-          >
+          <Link href="/companies" className="btn-secondary">
             Ver listado público
           </Link>
-          <Link
-            href="/admin/actions"
-            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-          >
+          <Link href="/admin/actions" className="btn-primary">
             Ver solicitudes de información
           </Link>
-          <Link
-            href="/admin/leads"
-            className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-          >
+          <Link href="/admin/leads" className="btn-primary">
             Ver leads (valoraciones y contacto)
           </Link>
         </div>
-      </div>
+      </AdminSectionCard>
     </main>
   );
 }
+
+const BAR_CLASS = {
+  primary: "admin-card-bar",
+  mint: "admin-card-bar admin-card-bar--mint",
+  lavender: "admin-card-bar admin-card-bar--lavender",
+  soft: "admin-card-bar admin-card-bar--soft",
+} as const;
 
 function KpiCard({
   title,
   value,
   subtitle,
   href,
-  accent,
+  bar,
 }: {
   title: string;
   value: number;
   subtitle?: string;
   href?: string;
-  accent: "primary" | "green" | "blue" | "gray";
+  bar: keyof typeof BAR_CLASS;
 }) {
-  const styles = {
-    primary: "border-[var(--brand-primary)]/10 text-[var(--brand-primary)]",
-    green: "border-green-200 text-green-700",
-    blue: "border-blue-200 text-blue-700",
-    gray: "border-gray-200 text-gray-700",
-  };
   const content = (
-    <div
-      className={`rounded-2xl bg-white border p-6 shadow-md transition hover:shadow-lg ${href ? "cursor-pointer" : ""} ${styles[accent]}`}
-    >
-      <p className="text-sm font-medium opacity-90">{title}</p>
-      <p className="mt-2 text-2xl sm:text-3xl font-bold">{value}</p>
-      {subtitle && (
-        <p className="mt-1 text-xs sm:text-sm opacity-75">{subtitle}</p>
-      )}
+    <div className={`admin-card ${href ? "cursor-pointer" : ""}`}>
+      <div className={BAR_CLASS[bar]} aria-hidden />
+      <div className="admin-card-body">
+        <p className="text-sm font-medium text-[var(--brand-dark)]/75">{title}</p>
+        <p className="mt-2 text-2xl sm:text-3xl font-bold bg-gradient-to-br from-[var(--brand-primary)] to-[#6b21a8] bg-clip-text text-transparent">
+          {value}
+        </p>
+        {subtitle && (
+          <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-70 leading-relaxed">
+            {subtitle}
+          </p>
+        )}
+      </div>
     </div>
   );
   if (href) {
     return <Link href={href}>{content}</Link>;
   }
   return content;
+}
+
+function AdminSectionCard({
+  title,
+  children,
+  className = "",
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`admin-card ${className}`}>
+      <div className="admin-card-bar" aria-hidden />
+      <div className="admin-card-body">
+        <h2 className="text-lg font-semibold text-[var(--brand-primary)]">{title}</h2>
+        <div className="mt-4">{children}</div>
+      </div>
+    </section>
+  );
 }

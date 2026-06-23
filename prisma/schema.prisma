@@ -56,6 +56,8 @@ model User {
   sessions           Session[]
   companyFilesUploaded CompanyFile[]
   salesMandate       SalesMandate?
+  purchaseMandate       PurchaseMandate?
+  collaborationAgreement CollaborationAgreement?
   dniDocuments       UserDniDocument[]
 }
 
@@ -104,6 +106,56 @@ model SalesMandate {
   lastEbitdaEur        Int?
   expectedSalePriceEur Int?
   saleReason           String? @db.Text
+
+  signaturePngBase64 String   @db.Text
+  signedAt           DateTime @default(now())
+  clientIp           String?
+  userAgent          String?
+  termsAccepted      Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Mandato de compra firmado electrónicamente por el comprador / inversor
+model PurchaseMandate {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  buyerLegalName     String
+  buyerNifCif        String
+  buyerAddress       String
+  contactEmail       String
+  contactPhone       String?
+  representativeName String
+  representativeDni  String
+  representativeRole String?
+
+  signaturePngBase64 String   @db.Text
+  signedAt           DateTime @default(now())
+  clientIp           String?
+  userAgent            String?
+  termsAccepted        Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Acuerdo de colaboración firmado por profesionales (particulares + generales)
+model CollaborationAgreement {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  professionalLegalName String
+  professionalNif       String
+  professionalAddress   String
+  contactEmail          String
+  contactPhone          String?
+  representativeName    String
+  representativeDni     String
+  representativeRole    String?
 
   signaturePngBase64 String   @db.Text
   signedAt           DateTime @default(now())

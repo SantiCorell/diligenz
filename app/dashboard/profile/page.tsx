@@ -32,7 +32,17 @@ export default async function DashboardProfilePage() {
         </h2>
         <ul className="space-y-3 text-sm text-[var(--foreground)]">
           <CheckRow ok={user.emailVerified} label="Email verificado" />
-          <CheckRow ok={user.ndaSigned} label="NDA firmado" href="/dashboard/nda" />
+          <CheckRow
+            ok={user.ndaSigned}
+            label={
+              user.role === "PROFESSIONAL"
+                ? "Acuerdo de colaboración firmado"
+                : user.role === "SELLER"
+                  ? "Mandato de venta firmado"
+                  : "Mandato de compra firmado"
+            }
+            href="/dashboard/nda"
+          />
           <CheckRow
             ok={user.dniVerified}
             pending={dniPendingReview}
@@ -110,7 +120,7 @@ export default async function DashboardProfilePage() {
           href="/dashboard/nda"
           className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
         >
-          Ir a firmar NDA
+          Ir a firmar mandato
         </Link>
         <Link
           href="/dashboard/verification"

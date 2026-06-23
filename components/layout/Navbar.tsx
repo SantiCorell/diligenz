@@ -72,8 +72,8 @@ export default function Navbar() {
   }, [mobileMenuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 px-4 pt-2 sm:px-6">
-      <div className="relative mx-auto max-w-6xl rounded-2xl border border-[var(--brand-primary)]/8 bg-white/95 shadow-[0_8px_32px_rgba(47,23,95,0.08)] backdrop-blur-md">
+    <header className="relative px-4 sm:px-6">
+      <div className="site-navbar-shell relative mx-auto max-w-6xl rounded-full border backdrop-blur-xl">
       <div className="px-4 sm:px-5">
         <div className="flex h-14 items-center justify-between">
           <Link

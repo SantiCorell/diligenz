@@ -22,7 +22,7 @@ export async function sendWelcomeEmail(opts: {
   return sendEmail({
     to: opts.to,
     subject: WELCOME_EMAIL_SUBJECT,
-    text: buildWelcomeEmailText(baseUrl),
-    html: buildWelcomeEmailHtml(baseUrl),
+    text: buildWelcomeEmailText({ name: opts.name, baseUrl }),
+    html: buildWelcomeEmailHtml({ name: opts.name, baseUrl }),
   });
 }

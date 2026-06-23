@@ -32,7 +32,7 @@ export default function SignaturePad({ onChange, className = "" }: Props) {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = 2.2;
-    ctx.strokeStyle = "#2F175F";
+    ctx.strokeStyle = "#4D4D50";
   }, []);
 
   useEffect(() => {

@@ -19,7 +19,7 @@ function FooterAccordion({
   onToggle: () => void;
 }) {
   return (
-    <div className="border-b border-[var(--brand-bg)]/20 md:border-none">
+    <div className="border-b border-white/15 md:border-none">
       <button
         type="button"
         onClick={onToggle}
@@ -60,7 +60,7 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="bg-[var(--brand-dark)] text-white py-10 md:py-14 rounded-t-3xl">
+    <footer className="rounded-t-3xl bg-[var(--brand-primary)] py-10 text-white md:py-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Móvil: logo + descripción siempre visible; resto en acordeones */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-0 md:gap-8">
@@ -127,9 +127,9 @@ export default function Footer() {
           </FooterAccordion>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 md:mt-8 pt-6 border-t border-[var(--brand-bg)]/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="mx-auto mt-6 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-white/15 px-4 pt-6 sm:flex-row sm:px-6 md:mt-8">
         <p className="text-xs opacity-75">
-          © {new Date().getFullYear()} Diligenz. Todos los derechos reservados.
+          © Diligenz. Todos los derechos reservados.
         </p>
         <a
           href="https://metrio.es"

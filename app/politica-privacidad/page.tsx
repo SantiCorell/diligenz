@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function PoliticaPrivacidadPage() {
   return (
     <ShellLayout>
-      <div className="min-h-screen bg-[var(--brand-bg)]">
+      <div className="relative">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-8">
           <div className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 md:p-8 shadow-md">
             <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">

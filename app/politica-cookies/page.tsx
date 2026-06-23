@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function PoliticaCookiesPage() {
   return (
     <ShellLayout>
-      <div className="min-h-screen bg-[var(--brand-bg)]">
+      <div className="relative">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-10">
           <div className="rounded-2xl border border-[var(--brand-primary)]/10 bg-white p-6 md:p-10 shadow-md">
             <h1 className="text-2xl sm:text-3xl font-bold text-[var(--brand-primary)]">

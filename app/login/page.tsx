@@ -16,12 +16,13 @@ const ROLE_TARGET: Record<string, string> = {
 };
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
-  Configuration:
-    "No se pudo completar el inicio de sesión con Google. Suele deberse a un GOOGLE_CLIENT_SECRET incorrecto en .env.local — cópialo de nuevo desde Google Cloud Console y reinicia el servidor.",
   AccessDenied: "Acceso denegado. Tu cuenta no puede iniciar sesión en este momento.",
   OAuthAccountNotLinked:
     "Este email ya está registrado con otro método. Usa email y contraseña o contacta con soporte.",
 };
+
+const OAUTH_ERROR_FALLBACK =
+  "No se pudo iniciar sesión con Google. Inténtalo de nuevo o usa email y contraseña.";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,11 +32,15 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const resetOk = searchParams.get("reset") === "ok";
 
   useEffect(() => {
     const oauthError = searchParams.get("error");
     if (oauthError) {
-      setError(OAUTH_ERROR_MESSAGES[oauthError] ?? "No se pudo iniciar sesión con Google. Inténtalo de nuevo.");
+      setError(OAUTH_ERROR_MESSAGES[oauthError] ?? OAUTH_ERROR_FALLBACK);
+    }
+    if (searchParams.get("reset") === "ok") {
+      setError(null);
     }
   }, [searchParams]);
 
@@ -70,8 +75,8 @@ export default function LoginPage() {
   return (
     <ShellLayout>
       {loading && <LoadingOverlay message="Entrando al panel…" />}
-      <div className="min-h-screen bg-gradient-to-br from-[var(--brand-bg)] via-white to-[var(--brand-primary)]/5">
-        <div className="max-w-7xl mx-auto px-6 py-8 md:py-10">
+      <div className="relative px-4 py-8 md:py-12">
+        <div className="mx-auto max-w-7xl">
           {/* Logo centrado arriba */}
           <div className="flex justify-center mb-12">
             <Image
@@ -89,7 +94,7 @@ export default function LoginPage() {
             {/* Columna izquierda: Texto inspirador */}
             <div className="space-y-8">
               <div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--brand-primary)] mb-6 leading-tight">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--brand-dark)] mb-6 leading-tight">
                   Bienvenido de vuelta
                 </h1>
                 <p className="text-xl md:text-2xl text-[var(--foreground)] opacity-90 leading-relaxed mb-6">
@@ -153,7 +158,7 @@ export default function LoginPage() {
 
             {/* Columna derecha: Formulario */}
             <div className="w-full">
-              <div className="rounded-2xl border-2 border-[var(--brand-primary)]/20 bg-white/95 backdrop-blur-sm p-8 shadow-2xl">
+              <div className="page-card page-card-padded shadow-[0_12px_48px_rgba(145,70,255,0.1)]">
                 <h2 className="text-2xl font-bold text-[var(--brand-primary)] mb-6 text-center">
                   Inicia sesión
                 </h2>
@@ -199,7 +204,21 @@ export default function LoginPage() {
                         {showPassword ? "Ocultar" : "Ver"}
                       </button>
                     </div>
+                    <p className="mt-2 text-right">
+                      <Link
+                        href="/recuperar-contrasena"
+                        className="text-sm font-medium text-[var(--brand-primary)] hover:underline"
+                      >
+                        ¿Has olvidado tu contraseña?
+                      </Link>
+                    </p>
                   </div>
+
+                  {resetOk && (
+                    <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
+                      Contraseña actualizada correctamente. Ya puedes iniciar sesión.
+                    </div>
+                  )}
 
                   {error && (
                     <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">

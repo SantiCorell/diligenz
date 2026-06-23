@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export default function FinalCTA() {
   return (
-    <section className="py-12 md:py-16">
+    <section className="relative py-12 md:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="rounded-3xl bg-[var(--brand-bg-mint)] px-6 py-12 text-center md:px-12 md:py-14">
+        <div className="rounded-3xl bg-[var(--brand-bg-mint)]/75 px-6 py-12 text-center shadow-[0_16px_48px_rgba(212,240,140,0.25)] backdrop-blur-sm md:px-12 md:py-14">
           <h2 className="text-2xl font-bold text-[var(--brand-dark)] sm:text-3xl">
             Empieza hoy a comprar o vender empresas
           </h2>

@@ -57,12 +57,12 @@ export default function GlobalError({
                 }}
               >
                 <AlertCircle
-                  style={{ width: 40, height: 40, color: "#894af6" }}
+                  style={{ width: 40, height: 40, color: "#9146FF" }}
                   aria-hidden
                 />
               </span>
             </div>
-            <h1 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#894af6", margin: 0 }}>
+            <h1 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#9146FF", margin: 0 }}>
               Ups, ha habido un problema
             </h1>
             <p
@@ -90,7 +90,7 @@ export default function GlobalError({
                 style={{
                   fontSize: "0.75rem",
                   fontWeight: 600,
-                  color: "#894af6",
+                  color: "#9146FF",
                   margin: "0 0 0.5rem 0",
                 }}
               >
@@ -129,7 +129,7 @@ export default function GlobalError({
                   justifyContent: "center",
                   gap: "0.5rem",
                   borderRadius: "0.75rem",
-                  backgroundColor: "#894af6",
+                  backgroundColor: "#9146FF",
                   padding: "0.75rem 1.25rem",
                   fontSize: "0.875rem",
                   fontWeight: 600,
@@ -153,7 +153,7 @@ export default function GlobalError({
                   padding: "0.75rem 1.25rem",
                   fontSize: "0.875rem",
                   fontWeight: 500,
-                  color: "#894af6",
+                  color: "#9146FF",
                   backgroundColor: "transparent",
                   cursor: "pointer",
                 }}
@@ -165,7 +165,7 @@ export default function GlobalError({
 
             <p style={{ marginTop: "1.5rem" }}>
               {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-              <a href="/" style={{ fontSize: "0.875rem", color: "#894af6", textDecoration: "underline" }}>
+              <a href="/" style={{ fontSize: "0.875rem", color: "#9146FF", textDecoration: "underline" }}>
                 ← Volver al inicio
               </a>
             </p>

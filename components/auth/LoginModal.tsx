@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { X } from "lucide-react";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
@@ -139,6 +140,15 @@ export default function LoginModal({ open, onClose, onOpenRegister, onSuccess }:
                   {showPassword ? "Ocultar" : "Ver"}
                 </button>
               </div>
+              <p className="mt-2 text-right">
+                <Link
+                  href="/recuperar-contrasena"
+                  className="text-sm font-medium text-[var(--brand-primary)] hover:underline"
+                  onClick={onClose}
+                >
+                  ¿Has olvidado tu contraseña?
+                </Link>
+              </p>
             </div>
             {error && (
               <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">

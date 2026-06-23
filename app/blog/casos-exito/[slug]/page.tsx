@@ -155,7 +155,7 @@ export default async function CasoExitoDetailPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <article
-        className="min-h-screen bg-[var(--brand-bg)]"
+        className="relative"
         itemScope
         itemType="https://schema.org/Article"
       >

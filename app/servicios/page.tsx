@@ -124,20 +124,15 @@ export default function ServiciosPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(servicesSchema) }}
       />
-      <div className="min-h-screen bg-[var(--brand-bg)]">
+      <div className="relative">
         {/* Hero */}
-        <section className="border-b border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] py-8 md:py-10">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">
-              Servicios de M&A: compra y venta de empresas
-            </h1>
-            <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90">
+        <section className="relative px-4 py-10 text-center sm:px-6 md:py-14">
+          <div className="mx-auto max-w-4xl">
+            <h1 className="page-title">Servicios de M&A: compra y venta de empresas</h1>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-[var(--foreground)]/75 sm:text-base">
               Due diligence, valoración y asesoramiento para cerrar tu operación. Solicita presupuesto sin compromiso.
             </p>
-            <a
-              href="#pricing"
-              className="mt-5 inline-block rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-            >
+            <a href="#pricing" className="btn-primary mt-6 inline-block">
               Ver precios
             </a>
           </div>

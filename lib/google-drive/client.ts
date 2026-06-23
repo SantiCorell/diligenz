@@ -1,23 +1,11 @@
 import { google } from "googleapis";
 import { driveFolderUrl } from "./folder-name";
+import { getDriveAuth, getDriveAuthMode, isGoogleDriveConfigured } from "./auth";
 
-export function isGoogleDriveConfigured(): boolean {
-  return Boolean(
-    process.env.GOOGLE_DRIVE_CLIENT_EMAIL?.trim() &&
-      process.env.GOOGLE_DRIVE_PRIVATE_KEY?.trim() &&
-      process.env.GOOGLE_DRIVE_CLIENTS_FOLDER_ID?.trim()
-  );
-}
+export { isGoogleDriveConfigured, getDriveAuthMode };
 
 function getDriveClient() {
-  const email = process.env.GOOGLE_DRIVE_CLIENT_EMAIL!.trim();
-  const key = process.env.GOOGLE_DRIVE_PRIVATE_KEY!.replace(/\\n/g, "\n");
-  const auth = new google.auth.JWT({
-    email,
-    key,
-    scopes: ["https://www.googleapis.com/auth/drive"],
-  });
-  return google.drive({ version: "v3", auth });
+  return google.drive({ version: "v3", auth: getDriveAuth() });
 }
 
 async function createFolderInParent(parentId: string, folderName: string): Promise<string> {
@@ -59,7 +47,7 @@ export async function findOrCreateSubfolder(parentId: string, folderName: string
 export async function shareFolderWithUser(
   folderId: string,
   email: string,
-  role: "reader" | "writer" = "writer"
+  role: "reader" | "writer" = "reader"
 ): Promise<void> {
   const drive = getDriveClient();
   await drive.permissions.create({
@@ -93,22 +81,48 @@ export async function uploadFileToFolder(opts: {
   const { Readable } = await import("node:stream");
   const body = Readable.from(Buffer.from(opts.content));
 
-  const uploaded = await drive.files.create({
-    requestBody: {
-      name: opts.fileName,
-      parents: [opts.folderId],
-    },
-    media: {
-      mimeType: opts.mimeType,
-      body,
-    },
-    fields: "id, webViewLink",
+  try {
+    const uploaded = await drive.files.create({
+      requestBody: {
+        name: opts.fileName,
+        parents: [opts.folderId],
+      },
+      media: {
+        mimeType: opts.mimeType,
+        body,
+      },
+      fields: "id, webViewLink",
+      supportsAllDrives: true,
+    });
+
+    const id = uploaded.data.id;
+    if (!id) throw new Error("Drive no devolvió id de archivo");
+    return uploaded.data.webViewLink ?? `https://drive.google.com/file/d/${id}/view`;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (
+      msg.includes("storage quota") &&
+      getDriveAuthMode() === "service_account" &&
+      !process.env.GOOGLE_DRIVE_IMPERSONATE_EMAIL?.trim()
+    ) {
+      throw new Error(
+        "La cuenta de servicio no puede subir archivos a un Drive personal. " +
+          "Opciones: (1) Mover CLIENTES a una unidad compartida de Google Workspace y dar acceso Editor a la cuenta de servicio, " +
+          "o (2) Ejecutar npm run drive:oauth con la cuenta dueña de CLIENTES y guardar GOOGLE_DRIVE_REFRESH_TOKEN en .env.local."
+      );
+    }
+    throw err;
+  }
+}
+
+export async function getFolderMetadata(folderId: string) {
+  const drive = getDriveClient();
+  const res = await drive.files.get({
+    fileId: folderId,
+    fields: "id,name,driveId,owners,shared",
     supportsAllDrives: true,
   });
-
-  const id = uploaded.data.id;
-  if (!id) throw new Error("Drive no devolvió id de archivo");
-  return uploaded.data.webViewLink ?? `https://drive.google.com/file/d/${id}/view`;
+  return res.data;
 }
 
 export { driveFolderUrl };

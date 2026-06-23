@@ -9,7 +9,7 @@ export default function HomeFAQ() {
 
   return (
     <section
-      className="bg-white py-16 md:py-20"
+      className="relative py-14 md:py-20"
       aria-labelledby="faq-heading"
     >
       <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 md:grid-cols-[1fr_1.4fr] md:gap-14">
@@ -34,8 +34,8 @@ export default function HomeFAQ() {
                 key={index}
                 className={`overflow-hidden rounded-2xl border transition ${
                   isOpen
-                    ? "border-[var(--brand-primary)]/25 bg-[var(--brand-surface)]"
-                    : "border-[var(--brand-primary)]/10 bg-[var(--brand-bg)]"
+                    ? "border-[var(--brand-primary)]/20 bg-white/55 shadow-[0_8px_32px_rgba(145,70,255,0.08)] backdrop-blur-md"
+                    : "border-white/50 bg-white/35 backdrop-blur-sm hover:bg-white/45"
                 }`}
                 itemScope
                 itemProp="mainEntity"

@@ -1,6 +1,7 @@
 "use client";
 
 import { LayoutGrid } from "lucide-react";
+import SectorIcon from "@/components/companies/SectorIcon";
 import { PRIMARY_SECTOR_OPTIONS } from "@/lib/valuation-sectors";
 import { getSectorVisual } from "@/lib/sector-visual";
 
@@ -79,7 +80,6 @@ export default function PrimarySectorFilter({
 
         {PRIMARY_SECTOR_OPTIONS.map((sector) => {
           const visual = getSectorVisual(sector.value);
-          const Icon = visual.icon;
           const isActive = selectedSector === sector.value;
           const count = countsBySector[sector.value] ?? 0;
 
@@ -104,12 +104,7 @@ export default function PrimarySectorFilter({
                   : undefined
               }
             >
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-black/[0.06] bg-[var(--surface-card)] transition group-hover:scale-[1.03]"
-                style={{ color: visual.iconColor }}
-              >
-                <Icon className="h-5 w-5" strokeWidth={1.75} />
-              </div>
+              <SectorIcon sector={sector.value} size="xs" className="transition group-hover:scale-[1.03]" />
               <span className="mt-3 text-sm font-semibold text-[var(--foreground)] leading-tight">
                 {sector.shortLabel}
               </span>

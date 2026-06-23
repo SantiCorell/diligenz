@@ -139,7 +139,9 @@ export default function CompanyFicha({
         <div className="grid md:grid-cols-[1fr,280px] gap-0">
           <div className="p-6 md:p-8">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-medium text-[var(--foreground)]/65">
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-medium ${sectorVisual.tagClass}`}
+              >
                 {sectorVisual.label}
               </span>
               <span className="rounded-md border border-black/[0.05] px-2.5 py-1 text-[11px] font-normal text-[var(--foreground)]/45">
