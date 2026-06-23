@@ -35,7 +35,7 @@ export async function GET(req: Request) {
   const zipBytes = await zipCompraDocuments(docs);
   const zipFileName = compraZipFileName(mandate.signedAt);
 
-  return new NextResponse(zipBytes, {
+  return new NextResponse(new Uint8Array(zipBytes), {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${zipFileName}"`,

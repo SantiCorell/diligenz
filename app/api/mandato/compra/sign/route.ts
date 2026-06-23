@@ -166,7 +166,7 @@ export async function POST(req: Request) {
     }
   }
 
-  return new NextResponse(zipBytes, {
+  return new NextResponse(new Uint8Array(zipBytes), {
     status: 200,
     headers: {
       "Content-Type": "application/zip",

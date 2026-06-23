@@ -39,7 +39,7 @@ export async function GET(req: Request) {
     userAgent: mandate.userAgent,
   });
 
-  return new NextResponse(Buffer.from(pdfBytes), {
+  return new NextResponse(new Uint8Array(Buffer.from(pdfBytes)), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="mandato-venta-diligenz.pdf"`,

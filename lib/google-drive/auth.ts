@@ -1,4 +1,4 @@
-import type { OAuth2Client } from "google-auth-library";
+import type { AuthClient } from "google-auth-library";
 import { google } from "googleapis";
 
 export type DriveAuthMode = "oauth" | "service_account";
@@ -23,7 +23,7 @@ export function isGoogleDriveConfigured(): boolean {
   return getDriveAuthMode() !== null;
 }
 
-export function getDriveAuth(): OAuth2Client | InstanceType<typeof google.auth.JWT> {
+export function getDriveAuth(): AuthClient {
   const mode = getDriveAuthMode();
   if (!mode) {
     throw new Error(
@@ -39,7 +39,7 @@ export function getDriveAuth(): OAuth2Client | InstanceType<typeof google.auth.J
     oauth2.setCredentials({
       refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN!.trim(),
     });
-    return oauth2;
+    return oauth2 as unknown as AuthClient;
   }
 
   const subject = process.env.GOOGLE_DRIVE_IMPERSONATE_EMAIL?.trim();
@@ -48,5 +48,5 @@ export function getDriveAuth(): OAuth2Client | InstanceType<typeof google.auth.J
     key: process.env.GOOGLE_DRIVE_PRIVATE_KEY!.replace(/\\n/g, "\n"),
     scopes: ["https://www.googleapis.com/auth/drive"],
     ...(subject ? { subject } : {}),
-  });
+  }) as unknown as AuthClient;
 }

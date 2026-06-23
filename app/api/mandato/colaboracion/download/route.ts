@@ -38,7 +38,7 @@ export async function GET(req: Request) {
   const zipBytes = await zipColaboracionDocuments(docs);
   const zipFileName = colaboracionZipFileName(agreement.signedAt);
 
-  return new NextResponse(zipBytes, {
+  return new NextResponse(new Uint8Array(zipBytes), {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${zipFileName}"`,

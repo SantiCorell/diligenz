@@ -13,7 +13,7 @@ function diligenzAdapter(): Adapter {
       const created = await prisma.user.create({
         data: {
           email: user.email!,
-          emailVerified: user.emailVerified ?? false,
+          emailVerified: Boolean(user.emailVerified),
           name: user.name ?? null,
           image: user.image ?? null,
           role: "BUYER",
@@ -24,7 +24,7 @@ function diligenzAdapter(): Adapter {
       return {
         id: created.id,
         email: created.email,
-        emailVerified: created.emailVerified,
+        emailVerified: created.emailVerified ? new Date() : null,
         name: created.name,
         image: created.image,
       };

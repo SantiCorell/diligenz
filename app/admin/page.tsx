@@ -237,7 +237,11 @@ function KpiCard({
     </div>
   );
   if (href) {
-    return <Link href={href}>{content}</Link>;
+    return (
+      <Link href={href} className="block h-full no-underline">
+        {content}
+      </Link>
+    );
   }
   return content;
 }

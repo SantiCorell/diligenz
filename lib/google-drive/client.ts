@@ -5,7 +5,7 @@ import { getDriveAuth, getDriveAuthMode, isGoogleDriveConfigured } from "./auth"
 export { isGoogleDriveConfigured, getDriveAuthMode };
 
 function getDriveClient() {
-  return google.drive({ version: "v3", auth: getDriveAuth() });
+  return google.drive({ version: "v3", auth: getDriveAuth() as never });
 }
 
 async function createFolderInParent(parentId: string, folderName: string): Promise<string> {
