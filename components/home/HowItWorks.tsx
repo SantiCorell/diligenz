@@ -144,6 +144,7 @@ const STEP_DURATION_MS = 2500;
 export default function HowItWorks() {
   const [role, setRole] = useState<Role>("comprador");
   const [activeStep, setActiveStep] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const flow = FLOWS[role];
   const totalSteps = flow.steps.length;
@@ -161,10 +162,14 @@ export default function HowItWorks() {
     return () => clearInterval(t);
   }, [role, totalSteps]);
 
+  // Solo desplazar el carrusel horizontal; scrollIntoView mueve también la página en móvil.
   useEffect(() => {
     if (typeof window === "undefined" || window.matchMedia("(min-width: 1024px)").matches) return;
+    const container = scrollContainerRef.current;
     const el = stepRefs.current[activeStep];
-    el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    if (!container || !el) return;
+    const left = el.offsetLeft - (container.clientWidth - el.clientWidth) / 2;
+    container.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
   }, [activeStep, role]);
 
   return (
@@ -212,6 +217,7 @@ export default function HowItWorks() {
           <div className="absolute left-[8%] right-[8%] top-[3.25rem] hidden h-0.5 rounded-full bg-[var(--brand-primary)]/20 lg:block" style={{ zIndex: 0 }} />
 
           <div
+          ref={scrollContainerRef}
           className="relative z-[2] -mx-4 flex items-stretch gap-3 overflow-x-auto overflow-y-visible scroll-px-4 px-4 pb-3 pt-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:grid lg:grid-cols-6 lg:gap-4 lg:overflow-visible lg:scroll-px-0 lg:px-0 lg:pb-0 lg:pt-0"
         >
             {flow.steps.map((step, i) => {

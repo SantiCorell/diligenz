@@ -320,7 +320,7 @@ Comprar o invertir en una empresa que no da beneficios puede tener todo el senti
       "Checklist para adquirir una pyme rentable en España: due diligence, financiación, negociación y cierre. Fuentes de financiación y errores a evitar.",
     date: "2026-05-27",
     readTime: "7 min",
-    image: "https://images.unsplash.com/photo-1556761175-5973dc0b32e7?w=1200&q=80",
+    image: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&q=80",
     body: `
 Comprar una PYME en funcionamiento es una de las vías más directas para entrar en un negocio con clientes, equipo y flujo de caja desde el primer día. A diferencia de crear una empresa desde cero, adquieres activos, contratos y know-how. Pero el proceso exige rigor: una mala due diligence o una valoración inflada pueden convertir una buena oportunidad en un problema.
 
