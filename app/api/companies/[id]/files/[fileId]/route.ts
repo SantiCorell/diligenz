@@ -11,7 +11,7 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
   const [company, user] = await Promise.all([
     prisma.company.findUnique({
       where: { id: companyId },
-      select: { ownerId: true, attachmentsApproved: true, removedAt: true },
+      select: { ownerId: true, removedAt: true },
     }),
     prisma.user.findUnique({
       where: { id: userId },
@@ -23,7 +23,7 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
     return company.ownerId === userId || user.role === "ADMIN";
   }
   if (company.ownerId === userId || user.role === "ADMIN") return true;
-  return company.attachmentsApproved === true;
+  return false;
 }
 
 async function isPublishedCompanyImage(companyId: string, fileRecord: { kind: string }): Promise<boolean> {

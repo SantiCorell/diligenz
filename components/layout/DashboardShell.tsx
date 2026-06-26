@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { authFetch, clearStoredToken } from "@/lib/auth-client";
+import { SELL_DASHBOARD_PATH, SELLER_MIS_EMPRESAS_PATH, PROFESSIONAL_MIS_EMPRESAS_PATH } from "@/lib/companies-dashboard-path";
 import PageAmbient from "@/components/layout/PageAmbient";
 
 /** Rutas de experiencia comprador: el admin debe ver el menú completo del comprador (no solo «Dashboard» → /admin). */
@@ -29,7 +30,7 @@ export default function DashboardShell({
   const [collapsed, setCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Admin viendo como comprador/vendedor: simular ese rol. Profesional: menú dual (inversor + vendedor) en el nav.
+  // Admin viendo como comprador/vendedor: simular ese rol en el menú lateral.
   const effectiveRole: "BUYER" | "SELLER" | "ADMIN" =
     role === "ADMIN" && pathnameIsBuyerPanel(pathname)
       ? "BUYER"
@@ -52,16 +53,11 @@ export default function DashboardShell({
     router.refresh();
   };
 
-  const goToWeb = async () => {
-    await authFetch("/api/auth/session");
-    window.location.href = "/";
-  };
-
   const renderSidebar = (forMobile = false) => {
     const expanded = forMobile ? true : !collapsed;
     return (
     <>
-      <div className={`panel-sidebar-header flex ${expanded ? "items-center justify-between gap-3 px-4 py-4" : "flex-col items-center gap-3 py-4 px-2"}`}>
+      <div className={`panel-sidebar-header shrink-0 flex ${expanded ? "items-center justify-between gap-3 px-4 py-4" : "flex-col items-center gap-3 py-4 px-2"}`}>
         <div className="absolute inset-x-0 bottom-0 h-[3px] admin-card-bar" aria-hidden />
         <Link
           href="/dashboard"
@@ -99,9 +95,18 @@ export default function DashboardShell({
         </button>
       </div>
 
-      <nav className={`${expanded ? "mt-4 px-3" : "mt-2 px-2"} space-y-1 text-sm flex-1`}>
+      <nav
+        className={`${expanded ? "mt-4 px-3 pb-4" : "mt-2 px-2 pb-3"} min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain text-sm`}
+      >
         {role === "PROFESSIONAL" ? (
           <>
+            <NavItem
+              href="/dashboard/professional"
+              label="Dashboard"
+              active={pathname === "/dashboard/professional"}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
             <NavItem
               href="/dashboard/profile"
               label="Mi perfil"
@@ -109,71 +114,20 @@ export default function DashboardShell({
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
-            {expanded && (
-              <>
-                <div className="panel-nav-divider" aria-hidden />
-                <p className="panel-nav-section-label">Como inversor</p>
-              </>
-            )}
             <NavItem
-              href="/dashboard/buyer"
-              label="Panel inversor"
-              active={pathname === "/dashboard/buyer"}
-              collapsed={!expanded}
-              onNavigate={() => setMobileSidebarOpen(false)}
-            />
-            <NavItem
-              href="/dashboard/buyer/documents"
-              label="Documentos (inversor)"
-              active={pathname.startsWith("/dashboard/buyer/documents")}
-              collapsed={!expanded}
-              onNavigate={() => setMobileSidebarOpen(false)}
-            />
-            <NavItem
-              href="/companies"
-              label="Explorar empresas"
+              href={PROFESSIONAL_MIS_EMPRESAS_PATH}
+              label="Mis empresas"
               active={
-                pathname === "/companies" ||
-                (pathname.startsWith("/companies/") &&
-                  !pathname.startsWith("/companies/mi-interes"))
+                pathname.startsWith(PROFESSIONAL_MIS_EMPRESAS_PATH) ||
+                pathname.startsWith("/dashboard/seller/companies")
               }
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
             <NavItem
-              href="/dashboard/mis-empresas"
-              label="Solicitudes e intereses"
-              active={pathname.startsWith("/dashboard/mis-empresas")}
-              collapsed={!expanded}
-              onNavigate={() => setMobileSidebarOpen(false)}
-            />
-            {expanded && (
-              <>
-                <div className="panel-nav-divider" aria-hidden />
-                <p className="panel-nav-section-label">Como vendedor</p>
-              </>
-            )}
-            <NavItem
-              href="/dashboard/seller"
-              label="Mis empresas en venta"
-              active={
-                pathname.startsWith("/dashboard/seller") &&
-                !pathname.startsWith("/dashboard/seller/documents")
-              }
-              collapsed={!expanded}
-              onNavigate={() => setMobileSidebarOpen(false)}
-            />
-            <NavItem
-              href="/dashboard/seller/documents"
-              label="Documentos (vendedor)"
-              active={pathname.startsWith("/dashboard/seller/documents")}
-              collapsed={!expanded}
-              onNavigate={() => setMobileSidebarOpen(false)}
-            />
-            <NavItem
-              href="/sell"
+              href={SELL_DASHBOARD_PATH}
               label="Subir empresa"
-              active={pathname.startsWith("/sell")}
+              active={pathname.startsWith(SELL_DASHBOARD_PATH)}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
@@ -186,7 +140,9 @@ export default function DashboardShell({
               active={
                 effectiveRole === "ADMIN"
                   ? pathname.startsWith("/admin")
-                  : pathname === `/dashboard/${effectiveRole.toLowerCase()}`
+                  : effectiveRole === "SELLER"
+                    ? pathname === "/dashboard/seller"
+                    : pathname === `/dashboard/${effectiveRole.toLowerCase()}`
               }
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -201,9 +157,9 @@ export default function DashboardShell({
                   onNavigate={() => setMobileSidebarOpen(false)}
                 />
                 <NavItem
-                  href="/dashboard/buyer/documents"
-                  label="Mis documentos"
-                  active={pathname.startsWith("/dashboard/buyer/documents")}
+                  href="/dashboard/mis-empresas"
+                  label="Mis empresas"
+                  active={pathname.startsWith("/dashboard/mis-empresas")}
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
                 />
@@ -215,13 +171,6 @@ export default function DashboardShell({
                     (pathname.startsWith("/companies/") &&
                       !pathname.startsWith("/companies/mi-interes"))
                   }
-                  collapsed={!expanded}
-                  onNavigate={() => setMobileSidebarOpen(false)}
-                />
-                <NavItem
-                  href="/dashboard/mis-empresas"
-                  label="Mis empresas"
-                  active={pathname.startsWith("/dashboard/mis-empresas")}
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
                 />
@@ -237,26 +186,19 @@ export default function DashboardShell({
                   onNavigate={() => setMobileSidebarOpen(false)}
                 />
                 <NavItem
-                  href="/dashboard/seller/documents"
-                  label="Mis documentos"
-                  active={pathname.startsWith("/dashboard/seller/documents")}
-                  collapsed={!expanded}
-                  onNavigate={() => setMobileSidebarOpen(false)}
-                />
-                <NavItem
-                  href="/dashboard/seller"
+                  href={SELLER_MIS_EMPRESAS_PATH}
                   label="Mis empresas"
                   active={
-                    pathname.startsWith("/dashboard/seller") &&
-                    !pathname.startsWith("/dashboard/seller/documents")
+                    pathname.startsWith(SELLER_MIS_EMPRESAS_PATH) ||
+                    pathname.startsWith("/dashboard/seller/companies")
                   }
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
                 />
                 <NavItem
-                  href="/sell"
+                  href={SELL_DASHBOARD_PATH}
                   label="Subir empresa"
-                  active={pathname.startsWith("/sell")}
+                  active={pathname.startsWith(SELL_DASHBOARD_PATH)}
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
                 />
@@ -305,25 +247,16 @@ export default function DashboardShell({
             />
           </div>
         )}
-      </nav>
 
-      <div className={`panel-sidebar-footer ${expanded ? "p-3" : "p-2"}`}>
-        <button
-          type="button"
-          onClick={() => { setMobileSidebarOpen(false); goToWeb(); }}
-          className={`panel-nav-link w-full ${expanded ? "gap-3 px-3 py-2" : "justify-center px-2 py-2"} text-[var(--brand-dark)]/75 hover:text-[var(--brand-primary)] text-left`}
-          title={!expanded ? "Ir a la web" : undefined}
-        >
-          <span className={!expanded ? "text-lg" : ""}>←</span>
-          {expanded && <span>Ir a la web</span>}
-        </button>
-      </div>
+        <div className={`panel-nav-divider ${expanded ? "mt-3 mb-2" : "mt-2 mb-1.5"}`} aria-hidden />
+        <WebNavItem collapsed={!expanded} onNavigate={() => setMobileSidebarOpen(false)} />
+      </nav>
     </>
   );
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col md:flex-row">
+    <div className="relative flex min-h-screen flex-col md:flex-row md:items-start">
       <PageAmbient />
       {mobileSidebarOpen && (
         <>
@@ -332,14 +265,14 @@ export default function DashboardShell({
             aria-hidden
             onClick={() => setMobileSidebarOpen(false)}
           />
-          <aside className="panel-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col md:hidden">
+          <aside className="panel-sidebar fixed inset-y-0 left-0 z-50 flex h-[100dvh] max-h-[100dvh] w-64 flex-col overflow-hidden md:hidden">
             {renderSidebar(true)}
           </aside>
         </>
       )}
 
       <aside
-        className={`panel-sidebar relative z-20 hidden shrink-0 flex-col transition-all duration-200 md:flex ${
+        className={`panel-sidebar sticky top-0 z-20 hidden h-[100dvh] max-h-[100dvh] shrink-0 flex-col overflow-hidden transition-all duration-200 md:flex ${
           collapsed ? "w-20" : "w-64"
         }`}
       >
@@ -376,6 +309,13 @@ export default function DashboardShell({
             )}
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border-2 border-[var(--brand-primary)]/25 bg-[var(--brand-primary)]/5 px-3.5 py-1.5 text-sm font-semibold text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10 transition"
+            >
+              Ver web
+              <span aria-hidden>↗</span>
+            </Link>
             <button
               onClick={logout}
               className="text-sm font-medium text-[var(--brand-dark)]/70 hover:text-[var(--brand-primary)]"
@@ -388,6 +328,30 @@ export default function DashboardShell({
         <main className="relative flex-1 px-4 py-8 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
+  );
+}
+
+function WebNavItem({
+  collapsed,
+  onNavigate,
+}: {
+  collapsed: boolean;
+  onNavigate?: () => void;
+}) {
+  return (
+    <Link
+      href="/"
+      onClick={onNavigate}
+      className={`flex w-full shrink-0 items-center rounded-xl border-2 border-[var(--brand-primary)]/35 bg-[var(--brand-primary)]/8 font-semibold text-[var(--brand-primary)] shadow-sm transition hover:border-[var(--brand-primary)]/55 hover:bg-[var(--brand-primary)]/12 ${
+        collapsed ? "justify-center px-2 py-2.5" : "gap-2.5 px-3 py-2.5"
+      }`}
+      title={collapsed ? "Ver web" : undefined}
+    >
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-primary)]/15 text-sm">
+        ↗
+      </span>
+      {!collapsed && <span>Ver web</span>}
+    </Link>
   );
 }
 

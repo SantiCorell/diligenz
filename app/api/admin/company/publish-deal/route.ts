@@ -4,9 +4,7 @@ import { getSessionWithUserFromRequest } from "@/lib/session";
 import { isCompanyRemoved } from "@/lib/is-company-removed";
 
 /**
- * Publicar el deal en el marketplace (visible para usuarios).
- * Solo esta acción hace que la empresa aparezca en el listado público.
- * "Actualizar estado" a PUBLISHED no modifica Deal.published.
+ * Publicar el deal en el marketplace y marcar la empresa como publicada.
  */
 export async function POST(req: Request) {
   const session = await getSessionWithUserFromRequest(req);
@@ -38,12 +36,18 @@ export async function POST(req: Request) {
     );
   }
 
-  await prisma.deal.update({
-    where: { id: deal.id },
-    data: { published: true },
-  });
+  await prisma.$transaction([
+    prisma.deal.update({
+      where: { id: deal.id },
+      data: { published: true },
+    }),
+    prisma.company.update({
+      where: { id: companyId },
+      data: { status: "PUBLISHED" },
+    }),
+  ]);
 
   return NextResponse.redirect(
-    new URL(`/admin/companies/${companyId}?success=published_marketplace`, req.url)
+    new URL(`/admin/companies/${companyId}?success=status_updated`, req.url)
   );
 }

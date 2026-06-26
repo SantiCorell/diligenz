@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUserDniPendingReview } from "@/lib/user-documents/dni-status";
 import { getSessionWithUser } from "@/lib/session";
+import UserDrivePanel from "@/components/dashboard/UserDrivePanel";
 import ProfileEditor from "@/components/dashboard/ProfileEditor";
 
 export default async function DashboardProfilePage() {
@@ -13,8 +14,9 @@ export default async function DashboardProfilePage() {
     Boolean(user.phone?.trim() && user.name?.trim()) || user.profileVerifiedByAdmin;
 
   const dniPendingReview = await getUserDniPendingReview(user.id, user.dniVerified);
-  const isBuyerLike = user.role === "BUYER" || user.role === "PROFESSIONAL";
-  const isSellerLike = user.role === "SELLER" || user.role === "PROFESSIONAL";
+  const isBuyer = user.role === "BUYER" || user.role === "ADMIN";
+  const isSellerOnly = user.role === "SELLER";
+  const isProfessional = user.role === "PROFESSIONAL";
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -74,45 +76,67 @@ export default async function DashboardProfilePage() {
             <span className="font-medium">
               {user.role === "BUYER" && "Comprador / inversor"}
               {user.role === "SELLER" && "Vendedor"}
-              {user.role === "PROFESSIONAL" && "Profesional (inversor y vendedor)"}
+              {user.role === "PROFESSIONAL" && "Profesional"}
               {user.role === "ADMIN" && "Administrador"}
             </span>
           </p>
         </div>
       </div>
 
-      {isBuyerLike && user.role !== "SELLER" && (
+      {isProfessional && (
         <div className="rounded-2xl border border-dashed border-[var(--brand-primary)]/20 bg-[var(--brand-bg)]/40 p-6">
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
-            Documentación inversor
-          </h2>
+          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">Documentación</h2>
           <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
-            Accede a tu espacio de documentos y, si está configurado, a tu Google Drive personal.
+            Acuerdo de colaboración, verificación de identidad y documentos asociados a tu cuenta
+            profesional.
           </p>
-          <Link
-            href="/dashboard/buyer/documents"
-            className="mt-4 inline-flex rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white hover:opacity-95"
-          >
-            Mis documentos y Drive (inversor)
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/dashboard/nda"
+              className="inline-flex rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white hover:opacity-95"
+            >
+              Firmar acuerdo / mandato
+            </Link>
+            <Link
+              href="/dashboard/verification"
+              className="inline-flex rounded-xl px-5 py-2.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/25 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5"
+            >
+              Verificación DNI
+            </Link>
+          </div>
         </div>
       )}
 
-      {isSellerLike && user.role !== "BUYER" && (
-        <div className="rounded-2xl border border-dashed border-[var(--brand-primary)]/20 bg-[var(--brand-bg)]/40 p-6">
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
-            Documentación vendedor
-          </h2>
-          <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
-            Carpeta Drive del vendedor y seguimiento de documentos por proyecto.
-          </p>
-          <Link
-            href="/dashboard/seller/documents"
-            className="mt-4 inline-flex rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white hover:opacity-95"
-          >
-            Mis documentos y Drive (vendedor)
-          </Link>
-        </div>
+      {isSellerOnly && (
+        <UserDrivePanel
+          title="Google Drive (vendedor)"
+          driveUrl={
+            user.documentsDriveFolderUrl?.trim() ||
+            process.env.NEXT_PUBLIC_SELLER_DOCUMENTS_DRIVE_URL?.trim() ||
+            ""
+          }
+          description="Abre la carpeta que Diligenz haya compartido contigo para subir o consultar archivos. Cada empresa tiene además su propia subcarpeta de documentación."
+        />
+      )}
+
+      {isProfessional && (
+        <UserDrivePanel
+          title="Google Drive (profesional)"
+          driveUrl={user.documentsDriveFolderUrl?.trim() || ""}
+          description="Abre tu carpeta compartida con Diligenz. Cada empresa que subas tendrá su propia subcarpeta de documentos."
+        />
+      )}
+
+      {isBuyer && (
+        <UserDrivePanel
+          title="Google Drive (inversor)"
+          driveUrl={
+            user.documentsDriveFolderUrl?.trim() ||
+            process.env.NEXT_PUBLIC_BUYER_DOCUMENTS_DRIVE_URL?.trim() ||
+            ""
+          }
+          description="Abre tu carpeta personal en un entorno seguro. Aquí encontrarás documentación confidencial que el equipo Diligenz comparta contigo (mandato, datas rooms, etc.)."
+        />
       )}
 
       <div className="flex flex-wrap gap-4">
@@ -128,7 +152,7 @@ export default async function DashboardProfilePage() {
         >
           Verificación DNI
         </Link>
-        {isBuyerLike && (
+        {isBuyer && (
           <Link
             href="/dashboard/buyer"
             className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
@@ -136,7 +160,7 @@ export default async function DashboardProfilePage() {
             ← Volver al panel del inversor
           </Link>
         )}
-        {isSellerLike && (
+        {isSellerOnly && (
           <Link
             href="/dashboard/seller"
             className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
@@ -144,7 +168,15 @@ export default async function DashboardProfilePage() {
             ← Volver al panel del vendedor
           </Link>
         )}
-        {!isBuyerLike && !isSellerLike && (
+        {isProfessional && (
+          <Link
+            href="/dashboard/professional"
+            className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
+          >
+            ← Volver al dashboard
+          </Link>
+        )}
+        {!isBuyer && !isSellerOnly && !isProfessional && (
           <Link
             href="/dashboard"
             className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"

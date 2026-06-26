@@ -45,7 +45,7 @@ Para crear un usuario de prueba (email + contraseña) puedes usar el script:
    DATABASE_URL="postgresql://postgres.XXXXX:TU_PASSWORD@...pooler.supabase.com:6543/postgres?pgbouncer=true"
    DIRECT_URL="postgresql://postgres.XXXXX:TU_PASSWORD@...supabase.com:5432/postgres"
    ```
-5. Asegúrate de haber ejecutado el SQL de tablas en Supabase (ver [SUPABASE-EJECUTAR.md](./SUPABASE-EJECUTAR.md)).
+5. Si conectas a Supabase remoto, ejecuta el SQL idempotente (ver [SUPABASE.md](./SUPABASE.md)).
 6. Reinicia `npm run dev`.
 
 ---

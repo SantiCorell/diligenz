@@ -17,14 +17,18 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: "Estado no válido" }, { status: 400 });
   }
 
-  const updated = await prisma.userCompanyInterest.updateMany({
+  const interest = await prisma.userCompanyInterest.findFirst({
     where: { id, type: "REQUEST_INFO" },
-    data: { status: status as "PENDING" | "MANAGED" | "REJECTED" },
   });
 
-  if (updated.count === 0) {
+  if (!interest) {
     return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
   }
+
+  await prisma.userCompanyInterest.update({
+    where: { id },
+    data: { status: status as "PENDING" | "MANAGED" | "REJECTED" },
+  });
 
   return NextResponse.json({ ok: true, status });
 }

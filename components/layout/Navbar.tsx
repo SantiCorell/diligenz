@@ -48,7 +48,11 @@ export default function Navbar() {
 
   const panelHref = session.role === "ADMIN" ? "/admin" : "/dashboard";
   const misEmpresasHref =
-    session.role === "SELLER" ? "/dashboard/seller" : "/dashboard/mis-empresas";
+    session.role === "SELLER"
+      ? "/dashboard/seller/mis-empresas"
+      : session.role === "PROFESSIONAL"
+        ? "/dashboard/professional"
+        : "/dashboard/mis-empresas";
   const loggedIn = session.loggedIn;
 
   const handleLogout = async () => {

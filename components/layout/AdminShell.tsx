@@ -81,6 +81,13 @@ export default function AdminShell({ userDisplayName, children }: Props) {
             onNavigate={() => setMobileSidebarOpen(false)}
           />
           <AdminNavLink
+            href="/admin/sectors"
+            label="Sectores"
+            collapsed={!expanded}
+            active={pathname.startsWith("/admin/sectors")}
+            onNavigate={() => setMobileSidebarOpen(false)}
+          />
+          <AdminNavLink
             href="/admin/companies"
             label="Empresas"
             collapsed={!expanded}
@@ -134,13 +141,6 @@ export default function AdminShell({ userDisplayName, children }: Props) {
             label="Mi perfil"
             collapsed={!expanded}
             active={pathname.startsWith("/dashboard/profile")}
-            onNavigate={() => setMobileSidebarOpen(false)}
-          />
-          <AdminNavLink
-            href="/dashboard/buyer/documents"
-            label="Documentos comprador"
-            collapsed={!expanded}
-            active={pathname.startsWith("/dashboard/buyer/documents")}
             onNavigate={() => setMobileSidebarOpen(false)}
           />
           <AdminNavLink

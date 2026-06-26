@@ -2,13 +2,18 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
-import { formatCompactEuroRange } from "@/lib/format-financial";
 import { PRIMARY_SECTOR_OPTIONS } from "@/lib/valuation-sectors";
 import {
   matchesPrimarySector,
   resolveSectorKey,
   sectorDbValuesForFilter,
 } from "@/lib/sector-visual";
+import {
+  featuredCutoffDate,
+  sortCompaniesForListing,
+} from "@/lib/company-ranking";
+import { publicListingName } from "@/lib/company-display-names";
+import { backfillMissingCompanyReferencesIfNeeded } from "@/lib/company-reference";
 
 const THRESHOLD_REAL_ONLY = 10;
 
@@ -29,17 +34,17 @@ type DealWithCompany = Prisma.DealGetPayload<{
 function mapDealToMock(deal: DealWithCompany): CompanyMock {
   const c = deal.company;
   const val = c.valuations?.[0];
-  const revenueStr = val ? formatCompactEuroRange(val.minValue, val.maxValue) : "—";
   const ebitdaStr = c.ebitda ?? "—";
   const exerciseResultStr = (c as { exerciseResult?: string | null }).exerciseResult?.trim() || null;
   const heroFile = c.companyFiles?.[0];
   const heroImageSrc = heroFile ? `/api/companies/${c.id}/files/${heroFile.id}` : null;
   return {
     id: c.id,
-    name: c.name,
+    name: publicListingName(deal.title, c.name),
+    businessName: c.name,
     sector: c.sector,
     location: c.location,
-    revenue: revenueStr,
+    revenue: c.revenue?.trim() || "—",
     ebitda: ebitdaStr,
     exerciseResult: exerciseResultStr,
     gmv: (c as { gmv?: string | null }).gmv ?? null,
@@ -56,10 +61,34 @@ function mapDealToMock(deal: DealWithCompany): CompanyMock {
     heroImageSrc,
     valuationSaleMin: val?.salePriceMin ?? null,
     valuationSaleMax: val?.salePriceMax ?? null,
+    reference: (c as { reference?: string | null }).reference ?? null,
   };
 }
 
 const DEFAULT_PAGE_SIZE = 12;
+const FEATURED_HOME_LIMIT = 6;
+
+async function clearExpiredFeaturedCompanies(): Promise<void> {
+  await prisma.company.updateMany({
+    where: { featuredAt: { lt: featuredCutoffDate() } },
+    data: { featuredAt: null },
+  });
+}
+
+type RankableDeal = DealWithCompany & {
+  company: DealWithCompany["company"] & { featuredAt?: Date | null };
+};
+
+function sortDealsByRanking(deals: RankableDeal[]): RankableDeal[] {
+  return sortCompaniesForListing(
+    deals.map((deal) => ({
+      deal,
+      name: deal.company.name,
+      ebitda: deal.company.ebitda,
+      featuredAt: deal.company.featuredAt ?? null,
+    }))
+  ).map((row) => row.deal);
+}
 
 export type GetPublicCompaniesOpts = {
   /** Slug del sector principal (p. ej. tecnologia-software-saas). */
@@ -98,6 +127,9 @@ export async function getPublicCompanies(
   const skip = (Math.max(1, page) - 1) * pageSize;
 
   try {
+    await clearExpiredFeaturedCompanies();
+    await backfillMissingCompanyReferencesIfNeeded();
+
     const companyWhere = {
       ...(sector ? { sector: { in: sectorDbValuesForFilter(sector) } } : {}),
       ...(location ? { location } : {}),
@@ -113,18 +145,17 @@ export async function getPublicCompanies(
     const total = await prisma.deal.count({ where: baseWhere });
 
     if (total >= THRESHOLD_REAL_ONLY) {
-      const publishedDeals = await prisma.deal.findMany({
+      const allPublishedDeals = await prisma.deal.findMany({
         where: baseWhere,
         include: {
           company: {
             include: companyPublicInclude,
           },
         },
-        orderBy: { company: { name: "asc" } },
-        skip,
-        take: pageSize,
       });
-      const realCompanies: CompanyMock[] = publishedDeals.map((deal) => mapDealToMock(deal));
+      const sortedDeals = sortDealsByRanking(allPublishedDeals);
+      const pageDeals = sortedDeals.slice(skip, skip + pageSize);
+      const realCompanies: CompanyMock[] = pageDeals.map((deal) => mapDealToMock(deal));
       const totalPages = Math.max(1, Math.ceil(total / pageSize));
       return {
         companies: realCompanies,
@@ -143,15 +174,24 @@ export async function getPublicCompanies(
           include: companyPublicInclude,
         },
       },
-      orderBy: { company: { name: "asc" } },
     });
-    const realCompanies: CompanyMock[] = allDeals.map((deal) => mapDealToMock(deal));
+    const realCompanies: CompanyMock[] = sortDealsByRanking(allDeals).map((deal) =>
+      mapDealToMock(deal)
+    );
     // Pocas empresas reales: mezclar con mock, filtrar y paginar en memoria
     const combined = [...MOCK_COMPANIES, ...realCompanies];
     const filtered = combined.filter((c) => companyMatchesFilters(c, sector, location));
-    const totalMixed = filtered.length;
+    const sortedFiltered = sortCompaniesForListing(
+      filtered.map((company) => ({
+        company,
+        name: company.name,
+        ebitda: company.ebitda,
+        featuredAt: null,
+      }))
+    ).map((row) => row.company);
+    const totalMixed = sortedFiltered.length;
     const totalPagesMixed = Math.max(1, Math.ceil(totalMixed / pageSize));
-    const paginated = filtered.slice(skip, skip + pageSize);
+    const paginated = sortedFiltered.slice(skip, skip + pageSize);
     return {
       companies: paginated,
       useOnlyReal: false,
@@ -171,6 +211,68 @@ export async function getPublicCompanies(
       page: 1,
       pageSize,
     };
+  }
+}
+
+/** Empresas para el carrusel de la home: publicadas, orden por destacado + EBITDA. */
+export async function getFeaturedCompanies(
+  limit = FEATURED_HOME_LIMIT
+): Promise<CompanyMock[]> {
+  try {
+    await clearExpiredFeaturedCompanies();
+
+    const deals = await prisma.deal.findMany({
+      where: {
+        published: true,
+        company: { removedAt: null },
+      },
+      include: {
+        company: {
+          include: companyPublicInclude,
+        },
+      },
+    });
+
+    if (deals.length === 0) {
+      return sortCompaniesForListing(
+        MOCK_COMPANIES.map((company) => ({
+          company,
+          name: company.name,
+          ebitda: company.ebitda,
+          featuredAt: null,
+        }))
+      )
+        .map((row) => row.company)
+        .slice(0, limit);
+    }
+
+    if (deals.length < THRESHOLD_REAL_ONLY) {
+      const realCompanies = sortDealsByRanking(deals).map((deal) => mapDealToMock(deal));
+      const combined = sortCompaniesForListing(
+        [...MOCK_COMPANIES, ...realCompanies].map((company) => ({
+          company,
+          name: company.name,
+          ebitda: company.ebitda,
+          featuredAt: null,
+        }))
+      ).map((row) => row.company);
+      return combined.slice(0, limit);
+    }
+
+    return sortDealsByRanking(deals)
+      .slice(0, limit)
+      .map((deal) => mapDealToMock(deal));
+  } catch {
+    return sortCompaniesForListing(
+      MOCK_COMPANIES.map((company) => ({
+        company,
+        name: company.name,
+        ebitda: company.ebitda,
+        featuredAt: null,
+      }))
+    )
+      .map((row) => row.company)
+      .slice(0, limit);
   }
 }
 

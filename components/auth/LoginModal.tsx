@@ -12,7 +12,7 @@ const ROLE_TARGET: Record<string, string> = {
   ADMIN: "/admin",
   BUYER: "/dashboard/buyer",
   SELLER: "/dashboard/seller",
-  PROFESSIONAL: "/dashboard/buyer",
+  PROFESSIONAL: "/dashboard/professional",
 };
 
 type Props = {

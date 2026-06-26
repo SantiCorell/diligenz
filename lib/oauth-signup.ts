@@ -7,8 +7,4 @@ export function isOAuthSignupRole(value: string | null | undefined): value is OA
   return OAUTH_SIGNUP_ROLES.includes(value as OAuthSignupRole);
 }
 
-export function dashboardPathForRole(role: string): string {
-  if (role === "SELLER") return "/dashboard/seller";
-  if (role === "ADMIN") return "/admin";
-  return "/dashboard/buyer";
-}
+export { dashboardPathForRole } from "@/lib/dashboard-path";

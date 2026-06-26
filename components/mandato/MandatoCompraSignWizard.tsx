@@ -23,6 +23,7 @@ type Props = {
   alreadySigned?: boolean;
   signedAt?: string | null;
   signedEmail?: string;
+  panelHref?: string;
 };
 
 const STEPS = ["Tus datos", "Firma digital", "Confirmación"] as const;
@@ -32,6 +33,7 @@ export default function MandatoCompraSignWizard({
   alreadySigned,
   signedAt,
   signedEmail,
+  panelHref = "/dashboard/buyer",
 }: Props) {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -43,7 +45,7 @@ export default function MandatoCompraSignWizard({
   const [buyerAddress, setBuyerAddress] = useState("");
   const [contactEmail, setContactEmail] = useState(prefill.email);
   const [contactPhone, setContactPhone] = useState(prefill.phone ?? "");
-  const [representativeName, setRepresentativeName] = useState(prefill.name ?? "");
+  const [representativeName, setRepresentativeName] = useState("");
   const [representativeDni, setRepresentativeDni] = useState("");
   const [representativeRole, setRepresentativeRole] = useState("");
   const [signature, setSignature] = useState<string | null>(null);
@@ -53,10 +55,6 @@ export default function MandatoCompraSignWizard({
   const validateStep1 = () => {
     if (!buyerLegalName.trim() || !buyerNifCif.trim() || !buyerAddress.trim()) {
       setError("Completa nombre/razón social, NIF/CIF y domicilio del comprador.");
-      return false;
-    }
-    if (!representativeName.trim() || !representativeDni.trim()) {
-      setError("Indica nombre y DNI/NIF del representante legal.");
       return false;
     }
     if (!contactEmail.trim()) {
@@ -169,7 +167,7 @@ export default function MandatoCompraSignWizard({
             Descargar ZIP de nuevo
           </button>
           <Link
-            href="/dashboard/buyer"
+            href={panelHref}
             className="rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white shadow-lg hover:opacity-95"
           >
             Ir a mi panel
@@ -251,11 +249,11 @@ export default function MandatoCompraSignWizard({
               </h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
-                  label="Nombre y apellidos *"
+                  label="Nombre y apellidos (opcional)"
                   value={representativeName}
                   onChange={setRepresentativeName}
                 />
-                <Field label="DNI / NIF *" value={representativeDni} onChange={setRepresentativeDni} />
+                <Field label="DNI / NIF (opcional)" value={representativeDni} onChange={setRepresentativeDni} />
                 <Field
                   label="Cargo / apoderamiento"
                   value={representativeRole}

@@ -27,6 +27,8 @@ type UserRow = {
   hasCompanyDocumentLinks: boolean;
   hasUserDriveFolder: boolean;
   documentsDriveFolderUrl: string | null;
+  maxConcurrentInfoRequests?: number;
+  maxConcurrentCompanies?: number;
   dniHasFront?: boolean;
   dniHasBack?: boolean;
   dniDriveSynced?: boolean;
@@ -269,6 +271,181 @@ function UserVerificationPanel({
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+function UserProfessionalCompanyLimitPanel({
+  user,
+  onSaved,
+}: {
+  user: UserRow;
+  onSaved: () => void;
+}) {
+  const [limit, setLimit] = useState(String(user.maxConcurrentCompanies ?? 3));
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    setLimit(String(user.maxConcurrentCompanies ?? 3));
+    setMsg(null);
+  }, [user]);
+
+  if (user.role !== "PROFESSIONAL") return null;
+
+  const save = async () => {
+    setMsg(null);
+    const parsed = parseInt(limit, 10);
+    if (!Number.isFinite(parsed) || parsed < 1 || parsed > 50) {
+      setMsg({ type: "error", text: "Indica un número entre 1 y 50." });
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await authFetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maxConcurrentCompanies: parsed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg({ type: "error", text: (data as { error?: string }).error ?? "Error al guardar" });
+        setSaving(false);
+        return;
+      }
+      setMsg({ type: "ok", text: "Límite actualizado." });
+      onSaved();
+    } catch {
+      setMsg({ type: "error", text: "Error de conexión." });
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
+        Empresas subibles (profesional)
+      </p>
+      <p className="text-xs text-slate-600 mb-3 max-w-2xl leading-relaxed">
+        Número máximo de empresas que puede tener activas a la vez como profesional. Por defecto 3.
+        Aumenta este valor si necesita subir más proyectos simultáneos.
+      </p>
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 max-w-md">
+        <label className="flex-1 min-w-0">
+          <span className="block text-xs font-medium text-slate-600 mb-1">Máximo simultáneo</span>
+          <input
+            type="number"
+            min={1}
+            max={50}
+            value={limit}
+            onChange={(e) => setLimit(e.target.value)}
+            className="w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving}
+          className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold bg-slate-800 text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
+        >
+          {saving ? "Guardando…" : "Guardar límite"}
+        </button>
+      </div>
+      {msg && (
+        <p
+          className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}
+        >
+          {msg.text}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function UserInfoRequestLimitPanel({
+  user,
+  onSaved,
+}: {
+  user: UserRow;
+  onSaved: () => void;
+}) {
+  const [limit, setLimit] = useState(String(user.maxConcurrentInfoRequests ?? 4));
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    setLimit(String(user.maxConcurrentInfoRequests ?? 4));
+    setMsg(null);
+  }, [user]);
+
+  if (user.role !== "BUYER") return null;
+
+  const save = async () => {
+    setMsg(null);
+    const parsed = parseInt(limit, 10);
+    if (!Number.isFinite(parsed) || parsed < 1 || parsed > 50) {
+      setMsg({ type: "error", text: "Indica un número entre 1 y 50." });
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await authFetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maxConcurrentInfoRequests: parsed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg({ type: "error", text: (data as { error?: string }).error ?? "Error al guardar" });
+        setSaving(false);
+        return;
+      }
+      setMsg({ type: "ok", text: "Límite actualizado." });
+      onSaved();
+    } catch {
+      setMsg({ type: "error", text: "Error de conexión." });
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
+        Empresas visibles (solicitudes activas)
+      </p>
+      <p className="text-xs text-slate-600 mb-3 max-w-2xl leading-relaxed">
+        Número máximo de empresas a las que puede solicitar información a la vez (solicitudes en
+        revisión o en gestión). Por defecto 4. Aumenta este valor si el inversor necesita más
+        oportunidades.
+      </p>
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 max-w-md">
+        <label className="flex-1 min-w-0">
+          <span className="block text-xs font-medium text-slate-600 mb-1">Máximo simultáneo</span>
+          <input
+            type="number"
+            min={1}
+            max={50}
+            value={limit}
+            onChange={(e) => setLimit(e.target.value)}
+            className="w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving}
+          className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold bg-slate-800 text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
+        >
+          {saving ? "Guardando…" : "Guardar límite"}
+        </button>
+      </div>
+      {msg && (
+        <p
+          className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}
+        >
+          {msg.text}
+        </p>
+      )}
     </div>
   );
 }
@@ -528,6 +705,8 @@ function AdminUserMobileCard({
           <UserDniReviewPanel user={u} onMarkVerified={onVerificationSaved} />
           <UserVerificationPanel user={u} onSaved={onVerificationSaved} />
           <UserDriveFolderPanel user={u} onSaved={onVerificationSaved} />
+          <UserInfoRequestLimitPanel user={u} onSaved={onVerificationSaved} />
+          <UserProfessionalCompanyLimitPanel user={u} onSaved={onVerificationSaved} />
         </div>
       )}
     </article>
@@ -1098,6 +1277,8 @@ export default function AdminUsersPage() {
                               <UserDniReviewPanel user={u} onMarkVerified={loadUsers} />
                               <UserVerificationPanel user={u} onSaved={loadUsers} />
                               <UserDriveFolderPanel user={u} onSaved={loadUsers} />
+                              <UserInfoRequestLimitPanel user={u} onSaved={loadUsers} />
+                              <UserProfessionalCompanyLimitPanel user={u} onSaved={loadUsers} />
                             </td>
                           </tr>
                         )}

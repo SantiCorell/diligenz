@@ -2,38 +2,60 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionWithUser } from "@/lib/session";
+import { backfillMissingCompanyReferencesIfNeeded, companyReferenceFieldSupported } from "@/lib/company-reference";
 import AdminCreateCompanyForm from "@/components/admin/AdminCreateCompanyForm";
 import DeleteCompanyButton from "@/components/companies/DeleteCompanyButton";
+import { getFormSectorOptions } from "@/lib/sector-catalog";
+import { isFeaturedActive } from "@/lib/company-ranking";
+import { publicListingName } from "@/lib/company-display-names";
 
 export default async function AdminCompaniesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; docs?: string; marketplace?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; ref?: string; status?: string; docs?: string; marketplace?: string; error?: string }>;
 }) {
   const session = await getSessionWithUser();
   if (!session || session.user.role !== "ADMIN") redirect("/login");
 
   const params = await searchParams;
   const q = params.q;
+  const ref = params.ref;
   const status = params.status;
   const docs = params.docs;
   const marketplaceOnly = params.marketplace === "1";
 
-  const companies = await prisma.company.findMany({
-    where: {
-      removedAt: null,
-      ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
-      ...(status ? { status: status as "DRAFT" | "IN_PROCESS" | "PUBLISHED" | "SOLD" } : {}),
-      ...(marketplaceOnly ? { deals: { some: { published: true } } } : {}),
-    },
-    include: {
-      owner: true,
-      documents: true,
-      deals: true,
-      valuations: { orderBy: { createdAt: "desc" }, take: 1 },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  await backfillMissingCompanyReferencesIfNeeded();
+
+  const refField = companyReferenceFieldSupported();
+
+  const [companies, sectorOptions] = await Promise.all([
+    prisma.company.findMany({
+      where: {
+        removedAt: null,
+        ...(q
+          ? {
+              OR: [
+                { name: { contains: q, mode: "insensitive" } },
+                ...(refField
+                  ? [{ reference: { contains: q, mode: "insensitive" as const } }]
+                  : []),
+              ],
+            }
+          : {}),
+        ...(ref && refField ? { reference: { contains: ref.trim(), mode: "insensitive" } } : {}),
+        ...(status ? { status: status as "DRAFT" | "IN_PROCESS" | "PUBLISHED" | "SOLD" } : {}),
+        ...(marketplaceOnly ? { deals: { some: { published: true } } } : {}),
+      },
+      include: {
+        owner: true,
+        documents: true,
+        deals: true,
+        valuations: { orderBy: { createdAt: "desc" }, take: 1 },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    getFormSectorOptions(),
+  ]);
 
   const filteredCompanies =
     docs === "signed"
@@ -59,7 +81,7 @@ export default async function AdminCompaniesPage({
           Todas las empresas dadas de alta por vendedores. Entra en cada ficha para editar la información pública, cambiar el estado (borrador, en revisión, publicado) y publicar o despublicar en el marketplace.
         </p>
         <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
-          Usa los filtros para buscar por nombre, estado o documentación firmada. El filtro &quot;En marketplace&quot; muestra solo empresas con deal publicado en la web.
+          Usa los filtros para buscar por nombre, referencia, estado o documentación firmada.
         </p>
       </div>
 
@@ -78,18 +100,30 @@ export default async function AdminCompaniesPage({
           Indica una facturación anual numérica mayor que cero.
         </p>
       )}
-      <AdminCreateCompanyForm />
+      {params.error === "create_reference" && (
+        <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          Esa referencia ya está en uso. Elige otra distinta.
+        </p>
+      )}
+      <AdminCreateCompanyForm sectorOptions={sectorOptions} />
 
       <form
         method="GET"
-        className="mb-8 grid grid-cols-1 gap-4 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-5 sm:grid-cols-5"
+        className="mb-8 grid grid-cols-1 gap-4 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-5 sm:grid-cols-2 lg:grid-cols-6"
       >
         <input
           type="text"
           name="q"
-          placeholder="Buscar por nombre…"
+          placeholder="Nombre o referencia…"
           defaultValue={q}
-          className="rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-sm focus:border-[var(--brand-primary)] focus:outline-none"
+          className="rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-sm focus:border-[var(--brand-primary)] focus:outline-none lg:col-span-2"
+        />
+        <input
+          type="text"
+          name="ref"
+          placeholder="Ref. exacta (ej. DIL-2401)"
+          defaultValue={ref}
+          className="rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-sm font-mono focus:border-[var(--brand-primary)] focus:outline-none"
         />
         <select
           name="status"
@@ -149,7 +183,17 @@ export default async function AdminCompaniesPage({
               <div className="min-w-0">
                 <p className="font-semibold text-[var(--foreground)]">
                   {company.name}
+                  {company.reference ? (
+                    <span className="ml-2 font-mono text-xs font-bold text-[var(--brand-primary)]">
+                      · {company.reference}
+                    </span>
+                  ) : null}
                 </p>
+                {deal ? (
+                  <p className="mt-0.5 text-xs font-medium text-[var(--brand-primary)]">
+                    Ficha: {publicListingName(deal.title, company.name)}
+                  </p>
+                ) : null}
                 <p className="mt-1 text-sm text-[var(--foreground)] opacity-80">
                   {company.sector} · {company.location}
                 </p>
@@ -175,6 +219,11 @@ export default async function AdminCompaniesPage({
                 {deal?.published && (
                   <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
                     En la web
+                  </span>
+                )}
+                {deal?.published && isFeaturedActive(company.featuredAt) && (
+                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+                    ★ Destacada
                   </span>
                 )}
                 <Link

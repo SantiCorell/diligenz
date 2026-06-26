@@ -14,6 +14,7 @@ import {
   Lock,
 } from "lucide-react";
 import RegisterModal from "@/components/auth/RegisterModal";
+import RequestInfoModal from "@/components/companies/RequestInfoModal";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { authFetch } from "@/lib/auth-client";
 import SectorVisual from "@/components/companies/SectorVisual";
@@ -59,15 +60,17 @@ export default function CompanyFicha({
   isAdmin = false,
 }: Props) {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [requestModalSuccess, setRequestModalSuccess] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>("informacion");
   const [requestInfo, setRequestInfo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<CompanyFileItem[]>([]);
   const [uploading, setUploading] = useState(false);
-  const attachmentsApproved = Boolean(company.attachmentsApproved);
-  const canSeeDocuments = isOwner || isAdmin || (isLoggedIn && attachmentsApproved);
-  /** Enlaces a Drive / carpeta: solo propietario de la empresa y administradores */
-  const canSeeDriveLinks = isOwner || isAdmin;
+  const canSeeDocuments = isOwner || isAdmin;
+  const hasDriveLinks = Boolean(company.documentLinks?.length);
+  const hasBuyerTeaser = Boolean(company.buyerTeaserUrl?.trim());
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -89,16 +92,40 @@ export default function CompanyFicha({
 
   const handleRequestInfo = async () => {
     setLoading(true);
+    setRequestError(null);
     try {
       const res = await authFetch(`/api/companies/${company.id}/interest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "REQUEST_INFO" }),
       });
-      if (res.ok) setRequestInfo(true);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setRequestInfo(true);
+        setRequestModalSuccess(true);
+      } else {
+        setRequestError(
+          typeof data.error === "string"
+            ? data.error
+            : "No se pudo enviar la solicitud. Inténtalo de nuevo."
+        );
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const openRequestModal = () => {
+    setRequestModalSuccess(false);
+    setRequestError(null);
+    setRequestModalOpen(true);
+  };
+
+  const closeRequestModal = () => {
+    if (loading) return;
+    setRequestModalOpen(false);
+    setRequestModalSuccess(false);
+    setRequestError(null);
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,6 +174,11 @@ export default function CompanyFicha({
               <span className="rounded-md border border-black/[0.05] px-2.5 py-1 text-[11px] font-normal text-[var(--foreground)]/45">
                 Confidencial
               </span>
+              {company.reference ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--brand-primary)]/25 bg-[var(--brand-primary)]/5 px-2.5 py-1 font-mono text-[11px] font-bold text-[var(--brand-primary)]">
+                  Ref. {company.reference}
+                </span>
+              ) : null}
             </div>
             <h1 className="mt-4 text-2xl md:text-3xl font-semibold text-[var(--foreground)]">
               {company.name}
@@ -163,7 +195,7 @@ export default function CompanyFicha({
                   Facturación anual €
                 </p>
                 <p className="text-lg font-bold text-[var(--brand-primary)]">
-                  {company.gmv ?? company.revenue}
+                  {company.revenue?.trim() || company.gmv || "—"}
                 </p>
               </div>
               <div>
@@ -206,17 +238,21 @@ export default function CompanyFicha({
             {isLoggedIn ? (
               <div className="flex flex-col gap-2">
                 {requestInfo ? (
-                  <span className="inline-flex items-center justify-center rounded-xl bg-[var(--brand-primary)]/15 px-4 py-3 text-sm font-medium text-[var(--brand-primary)]">
-                    De mi interés
-                  </span>
+                  <div className="rounded-xl border border-[var(--brand-primary)]/20 bg-[var(--brand-primary)]/8 px-4 py-3 text-center">
+                    <p className="text-sm font-semibold text-[var(--brand-primary)]">
+                      Solicitud enviada
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-[var(--foreground)]/75">
+                      En breve un compañero se pondrá en contacto contigo.
+                    </p>
+                  </div>
                 ) : (
                   <button
                     type="button"
-                    onClick={handleRequestInfo}
-                    disabled={loading}
-                    className="w-full rounded-xl bg-[var(--brand-primary)] py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+                    onClick={openRequestModal}
+                    className="w-full rounded-xl bg-[var(--brand-primary)] py-3 text-sm font-semibold text-white hover:opacity-90"
                   >
-                    {loading ? "Enviando…" : "¿Estás interesado?"}
+                    ¿Estás interesado?
                   </button>
                 )}
               </div>
@@ -273,7 +309,7 @@ export default function CompanyFicha({
                     </span>
                   </div>
                   <p className="mt-1 font-bold text-[var(--brand-primary)]">
-                    {company.gmv ?? company.revenue}
+                    {company.revenue?.trim() || company.gmv || "—"}
                   </p>
                 </div>
                 <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
@@ -345,16 +381,17 @@ export default function CompanyFicha({
               </p>
             )}
             {isLoggedIn &&
-              canSeeDriveLinks &&
+              (isOwner || isAdmin) &&
+              hasDriveLinks &&
               company.documentLinks &&
               company.documentLinks.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-[var(--brand-primary)]/10">
                   <h3 className="text-sm font-semibold text-[var(--brand-primary)] opacity-90 flex items-center gap-2">
                     <ExternalLink className="w-4 h-4" />
-                    Archivos en Google Drive
+                    Carpeta de documentación (Google Drive)
                   </h3>
                   <p className="mt-1 text-xs text-[var(--foreground)] opacity-70">
-                    Solo el vendedor titular de esta ficha y los administradores de Diligenz pueden ver estos enlaces.
+                    Carpeta interna del proyecto. Los compradores no tienen acceso a estos archivos.
                   </p>
                   <ul className="mt-3 space-y-2">
                     {company.documentLinks.map((link, i) => (
@@ -373,6 +410,26 @@ export default function CompanyFicha({
                   </ul>
                 </div>
               )}
+            {isLoggedIn && !isOwner && !isAdmin && hasBuyerTeaser && company.buyerTeaserUrl && (
+              <div className="mt-6 pt-6 border-t border-[var(--brand-primary)]/10">
+                <h3 className="text-sm font-semibold text-[var(--brand-primary)] opacity-90 flex items-center gap-2">
+                  <ExternalLink className="w-4 h-4" />
+                  Documento / teaser
+                </h3>
+                <p className="mt-1 text-xs text-[var(--foreground)] opacity-70">
+                  Tu solicitud de información está validada. Solo tienes acceso a este documento.
+                </p>
+                <a
+                  href={company.buyerTeaserUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-2 text-[var(--brand-primary)] hover:underline font-medium"
+                >
+                  Descargar documento / teaser
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            )}
           </section>
         )}
 
@@ -398,7 +455,9 @@ export default function CompanyFicha({
               </div>
             ) : !canSeeDocuments ? (
               <p className="mt-4 text-[var(--foreground)] opacity-80">
-                Los documentos, enlaces y fotos solo son visibles cuando el administrador lo permita para esta empresa.
+                La subida de archivos en la web es solo para el vendedor y el equipo Diligenz. Si
+                solicitaste información y está validada, el documento / teaser está en la pestaña
+                Descripción.
               </p>
             ) : (
               <div className="mt-6 space-y-4">
@@ -454,6 +513,15 @@ export default function CompanyFicha({
       <RegisterModal
         open={registerModalOpen}
         onClose={() => setRegisterModalOpen(false)}
+      />
+      <RequestInfoModal
+        open={requestModalOpen}
+        companyName={company.name}
+        loading={loading}
+        success={requestModalSuccess}
+        error={requestError}
+        onClose={closeRequestModal}
+        onConfirm={handleRequestInfo}
       />
     </>
   );

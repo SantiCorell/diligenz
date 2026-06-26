@@ -1,24 +1,28 @@
 -- =============================================================================
--- DILIGENZ · Migración idempotente para Supabase (nueva web)
+-- DILIGENZ · Migración idempotente para Supabase
 -- =============================================================================
--- Qué hace:
---   • Crea tablas, enums, columnas, índices y FK que el código actual necesita.
---   • Solo añade lo que NO existe. Puedes ejecutarlo varias veces sin error.
+-- Ejecutar en: Supabase Dashboard → SQL Editor → pegar todo → Run
 --
--- Qué NO hace:
---   • No borra tablas ni datos.
---   • No hace INSERT, UPDATE ni DELETE (tus datos actuales no se tocan).
---   • No cambia RLS ni permisos de Supabase.
+-- Seguro:
+--   • Solo CREA/AÑADE enums, tablas, columnas, índices y FK que falten.
+--   • Puedes ejecutarlo varias veces sin error.
+--   • No borra tablas ni datos. No hace DELETE ni TRUNCATE.
+--   • No modifica RLS ni permisos.
 --
--- Dónde ejecutar:
---   Supabase Dashboard → SQL Editor → New query → pegar todo → Run
+-- Requisito: el proyecto ya tiene el esquema base (User, Company, Deal, etc.).
+-- Después: redeploy en Vercel con DATABASE_URL actualizado.
 --
--- Después:
---   1. Variables en Vercel: DATABASE_URL (+ credenciales Drive, SMTP, etc.)
---   2. Redeploy de la app
+-- ¿Hace falta ejecutarlo otra vez?
+--   • Cambios recientes (Drive unificado, teaser para compradores, estado ↔
+--     publicación en web, nombre visible en Deal.title): columna nueva
+--     buyerTeaserUrl (enlace único al teaser; comprador no ve carpeta Drive).
+--   • Solo vuelve a ejecutar si añadimos columnas/tablas nuevas al schema.prisma
+--     o si en Supabase aún faltan reference, featuredAt, documentLinks, etc.
 -- =============================================================================
 
--- ----- Enums -----
+-- -----------------------------------------------------------------------------
+-- Enums
+-- -----------------------------------------------------------------------------
 DO $$ BEGIN
   CREATE TYPE "UserAccountStatus" AS ENUM ('PENDING', 'IN_REVIEW', 'ACTIVE', 'REJECTED');
 EXCEPTION WHEN duplicate_object THEN NULL;
@@ -44,7 +48,9 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
--- ----- User -----
+-- -----------------------------------------------------------------------------
+-- User
+-- -----------------------------------------------------------------------------
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "profileVerifiedByAdmin" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "accountStatus" "UserAccountStatus" NOT NULL DEFAULT 'ACTIVE';
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMP(3);
@@ -59,19 +65,21 @@ ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "image" TEXT;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "oauthProfileComplete" BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "documentsDriveFolderUrl" TEXT;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "maxConcurrentCompanies" INTEGER NOT NULL DEFAULT 3;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "maxConcurrentInfoRequests" INTEGER NOT NULL DEFAULT 4;
 
--- OAuth: passwordHash opcional para usuarios Google
 DO $$
 BEGIN
   ALTER TABLE "User" ALTER COLUMN "passwordHash" DROP NOT NULL;
-EXCEPTION
-  WHEN others THEN NULL;
+EXCEPTION WHEN others THEN NULL;
 END $$;
 
 CREATE INDEX IF NOT EXISTS "User_deletedAt_idx" ON "User"("deletedAt");
 CREATE INDEX IF NOT EXISTS "User_accountStatus_idx" ON "User"("accountStatus");
 
--- ----- NextAuth (si no existían) -----
+-- -----------------------------------------------------------------------------
+-- NextAuth
+-- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "Account" (
   "id" TEXT NOT NULL,
   "userId" TEXT NOT NULL,
@@ -123,7 +131,9 @@ BEGIN
   END IF;
 END $$;
 
--- ----- DNI del usuario -----
+-- -----------------------------------------------------------------------------
+-- DNI usuario
+-- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "UserDniDocument" (
   "id" TEXT NOT NULL,
   "userId" TEXT NOT NULL,
@@ -149,7 +159,9 @@ BEGIN
   END IF;
 END $$;
 
--- ----- Mandato de venta (vendedor) -----
+-- -----------------------------------------------------------------------------
+-- Mandatos y acuerdos
+-- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "SalesMandate" (
   "id" TEXT NOT NULL,
   "userId" TEXT NOT NULL,
@@ -189,7 +201,6 @@ BEGIN
   END IF;
 END $$;
 
--- ----- Mandato de compra (comprador / inversor) -----
 CREATE TABLE IF NOT EXISTS "PurchaseMandate" (
   "id" TEXT NOT NULL,
   "userId" TEXT NOT NULL,
@@ -221,7 +232,6 @@ BEGIN
   END IF;
 END $$;
 
--- ----- Acuerdo de colaboración (profesional) -----
 CREATE TABLE IF NOT EXISTS "CollaborationAgreement" (
   "id" TEXT NOT NULL,
   "userId" TEXT NOT NULL,
@@ -253,16 +263,21 @@ BEGIN
   END IF;
 END $$;
 
--- ----- Company -----
+-- -----------------------------------------------------------------------------
+-- Company
+-- -----------------------------------------------------------------------------
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "gmv" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "sellerDescription" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "documentLinks" JSONB;
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "buyerTeaserUrl" TEXT;
+-- Si true + buyerTeaserUrl: comprador con solicitud MANAGED ve solo ese enlace (no la carpeta Drive).
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "attachmentsApproved" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "exerciseResult" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "removedAt" TIMESTAMP(3);
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "removedById" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "sellerDocumentsNote" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "sectorSubcategory" TEXT;
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "cnae" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "companyType" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "yearsOperating" INTEGER;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "revenueGrowthPercent" DOUBLE PRECISION;
@@ -272,6 +287,9 @@ ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "arr" INTEGER;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "breakevenExpectedYear" INTEGER;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "hasReceivedFunding" BOOLEAN;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "website" TEXT;
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "featuredAt" TIMESTAMP(3);
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "reference" TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS "Company_reference_key" ON "Company"("reference");
 
 DO $$
 BEGIN
@@ -283,7 +301,9 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS "Company_removedAt_idx" ON "Company"("removedAt");
 
--- ----- CompanyFile -----
+-- -----------------------------------------------------------------------------
+-- CompanyFile
+-- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "CompanyFile" (
   "id" TEXT NOT NULL,
   "companyId" TEXT NOT NULL,
@@ -315,13 +335,18 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS "CompanyFile_companyId_idx" ON "CompanyFile"("companyId");
 
--- ----- Valuation -----
+-- -----------------------------------------------------------------------------
+-- Valuation
+-- -----------------------------------------------------------------------------
 ALTER TABLE "Valuation" ADD COLUMN IF NOT EXISTS "salePriceMin" INTEGER;
 ALTER TABLE "Valuation" ADD COLUMN IF NOT EXISTS "salePriceMax" INTEGER;
 
--- ----- ValuationLead -----
+-- -----------------------------------------------------------------------------
+-- ValuationLead
+-- -----------------------------------------------------------------------------
 ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "exerciseResult" INTEGER;
 ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "sectorSubcategory" TEXT;
+ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "cnae" TEXT;
 ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "companyType" TEXT;
 ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "yearsOperating" INTEGER;
 ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "revenueGrowthPercent" DOUBLE PRECISION;
@@ -333,7 +358,9 @@ ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "hasReceivedFunding" BOOLEA
 ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "website" TEXT;
 ALTER TABLE "ValuationLead" ADD COLUMN IF NOT EXISTS "category" TEXT DEFAULT 'pendiente';
 
--- ----- ContactRequest -----
+-- -----------------------------------------------------------------------------
+-- ContactRequest
+-- -----------------------------------------------------------------------------
 ALTER TABLE "ContactRequest" ADD COLUMN IF NOT EXISTS "category" TEXT DEFAULT 'pendiente';
 
 DO $$
@@ -346,7 +373,29 @@ BEGIN
   END IF;
 END $$;
 
--- ----- UserCompanyInterest (por si faltaba) -----
+-- -----------------------------------------------------------------------------
+-- SectorCatalog (sectores personalizados admin)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS "SectorCatalog" (
+  "id" TEXT NOT NULL,
+  "slug" TEXT NOT NULL,
+  "label" TEXT NOT NULL,
+  "shortLabel" TEXT,
+  "iconKey" TEXT NOT NULL,
+  "colorKey" TEXT NOT NULL DEFAULT 'violet',
+  "sortOrder" INTEGER NOT NULL DEFAULT 0,
+  "active" BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "SectorCatalog_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "SectorCatalog_slug_key" ON "SectorCatalog"("slug");
+ALTER TABLE "SectorCatalog" ADD COLUMN IF NOT EXISTS "colorKey" TEXT NOT NULL DEFAULT 'violet';
+
+-- -----------------------------------------------------------------------------
+-- UserCompanyInterest
+-- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "UserCompanyInterest" (
   "id" TEXT NOT NULL,
   "companyId" TEXT NOT NULL,
@@ -368,7 +417,31 @@ BEGIN
   END IF;
 END $$;
 
+-- -----------------------------------------------------------------------------
+-- Sincronización opcional de datos (estado interno ↔ visible en web)
+-- Ejecutar solo si hubo desfase: publicaste en marketplace pero Company.status
+-- siguió en DRAFT/IN_PROCESS, o al revés. No modifica el esquema.
+-- -----------------------------------------------------------------------------
+-- UPDATE "Deal" d
+-- SET "published" = true
+-- FROM "Company" c
+-- WHERE d."companyId" = c.id
+--   AND c."status" = 'PUBLISHED'
+--   AND c."removedAt" IS NULL
+--   AND d."published" = false;
+--
+-- UPDATE "Company" c
+-- SET "status" = 'PUBLISHED'
+-- FROM "Deal" d
+-- WHERE d."companyId" = c.id
+--   AND d."published" = true
+--   AND c."status" <> 'PUBLISHED'
+--   AND c."removedAt" IS NULL;
+
 -- =============================================================================
--- Fin. Si todo fue bien verás "Success" en Supabase.
--- Puedes volver a ejecutar este script sin riesgo: solo añade lo que falte.
+-- Fin. Si ves "Success", la base está al día con el código actual.
+-- Puedes volver a ejecutar este script cuando haya nuevos cambios de esquema.
+--
+-- Local (PostgreSQL en .env.local): npm run db:push:local
+-- No hace falta tocar la BBDD local solo por los cambios de UI/Drive/estado.
 -- =============================================================================

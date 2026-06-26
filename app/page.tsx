@@ -35,12 +35,11 @@ export default function HomePage() {
   const faqSchema = getFAQSchema();
 
   return (
-    <ShellLayout>
+    <ShellLayout homeHero={<Hero />}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <Hero />
       <WhatIsDiligenz />
       <StatsSection />
       <SpecializedSectors />

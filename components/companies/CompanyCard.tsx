@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { Hash, MapPin } from "lucide-react";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { formatCompactAmountValue } from "@/lib/format-financial";
+import { ccaaLabel } from "@/lib/spain-ccaa";
 import { getSectorVisual } from "@/lib/sector-visual";
 import SectorIcon from "@/components/companies/SectorIcon";
 
@@ -18,18 +19,18 @@ type Props = {
 export default function CompanyCard({
   company,
   compact = false,
-  ctaLabel = "Solicitar información",
+  ctaLabel = "Más información",
 }: Props) {
   const sectorVisual = getSectorVisual(company.sector);
-  const descMax = compact ? 110 : 130;
+  const descMax = compact ? 120 : 140;
   const descriptionPreview =
     company.description.length > descMax
       ? company.description.slice(0, descMax) + "…"
       : company.description;
 
-  const annualRevenue = company.gmv ?? company.revenue;
+  const annualRevenue = company.revenue?.trim() || company.gmv?.trim() || "—";
   const metrics = [
-    { label: "Facturación anual €", value: annualRevenue || "—", isFinancial: true },
+    { label: "Facturación anual €", value: annualRevenue, isFinancial: true },
     { label: "EBITDA", value: company.ebitda || "—", isFinancial: true },
     { label: "Resultado ejercicio", value: company.exerciseResult || "—", isFinancial: true },
     {
@@ -40,14 +41,18 @@ export default function CompanyCard({
   ];
 
   return (
-    <article className="company-card-shell flex h-full min-h-[280px] flex-col rounded-2xl bg-white p-3 shadow-[0_8px_32px_rgba(0,0,0,0.06)] sm:min-h-[300px] sm:p-4">
-      <div className="grid h-full flex-1 grid-cols-2 gap-2 sm:gap-3">
+    <article
+      className={`company-card-shell flex h-full flex-col rounded-[1.75rem] bg-[var(--brand-bg-lavender)]/55 shadow-[0_8px_32px_rgba(145,70,255,0.12)] ${
+        compact ? "min-h-[300px] p-3.5 sm:min-h-[320px] sm:p-4" : "min-h-[300px] p-4 sm:min-h-[320px]"
+      }`}
+    >
+      <div className="grid h-full flex-1 grid-cols-2 gap-2.5 sm:gap-3">
         {/* Panel izquierdo — ficha blanca */}
-        <div className="flex min-w-0 flex-col rounded-xl border border-[var(--surface-muted)] bg-white p-3 sm:p-3.5">
-          <div className="flex items-start gap-2">
+        <div className="flex min-w-0 flex-col rounded-2xl border border-white/80 bg-white p-3.5 sm:p-4">
+          <div className="flex items-start gap-2.5">
             <p
-              className={`min-w-0 flex-1 leading-snug text-[var(--foreground)]/70 ${
-                compact ? "text-[11px] line-clamp-4" : "text-xs line-clamp-5"
+              className={`min-w-0 flex-1 leading-relaxed text-[var(--foreground)]/75 ${
+                compact ? "text-xs line-clamp-4 sm:text-[13px]" : "text-[13px] line-clamp-5 sm:text-sm"
               }`}
             >
               {descriptionPreview}
@@ -55,13 +60,14 @@ export default function CompanyCard({
             <SectorIcon sector={company.sector} size="sm" />
           </div>
 
-          <div className="mt-auto space-y-1.5 pt-3 sm:space-y-2 sm:pt-4">
+          <div className="mt-auto space-y-2 pt-4 sm:space-y-2.5 sm:pt-5">
             {metrics.map(({ label, value, isFinancial }) => (
-              <div key={label} className="flex items-center justify-between gap-1">
-                <span className="text-[9px] leading-tight text-[var(--foreground)]/55 sm:text-[10px]">
+              <div key={label} className="flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-1.5 text-[11px] leading-tight text-[var(--foreground)]/60 sm:text-xs">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-primary)]" aria-hidden />
                   {label}
                 </span>
-                <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[var(--brand-dark)] sm:text-[11px]">
+                <span className="shrink-0 rounded-full bg-[var(--surface-muted)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--brand-dark)] sm:text-xs">
                   {isFinancial ? formatFinancialText(value) : value}
                 </span>
               </div>
@@ -70,32 +76,41 @@ export default function CompanyCard({
         </div>
 
         {/* Panel derecho — tags, nombre y CTA */}
-        <div className="flex min-w-0 flex-col justify-between rounded-xl bg-[var(--brand-bg-lavender)]/55 p-3 py-0.5 sm:py-1">
+        <div className="flex min-w-0 flex-col justify-between rounded-2xl p-3 sm:p-3.5">
           <div>
-            <div className="flex flex-wrap items-start justify-between gap-1.5">
+            <div className="flex flex-wrap items-start justify-between gap-2">
               <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold sm:text-xs ${sectorVisual.tagClass}`}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${sectorVisual.tagClass}`}
               >
                 {sectorVisual.shortLabel}
               </span>
-              <span className="inline-flex max-w-[55%] items-center gap-0.5 rounded-full bg-white/75 px-2 py-0.5 text-[10px] font-medium text-[var(--brand-dark)]/70 sm:text-xs">
+              <span className="inline-flex max-w-[58%] items-center gap-1 rounded-full border border-[var(--brand-primary)]/15 bg-white/90 px-2.5 py-1 text-[11px] font-medium text-[var(--brand-dark)]/75 sm:text-xs">
                 <MapPin className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
-                <span className="truncate">{company.location}</span>
+                <span className="truncate">{ccaaLabel(company.location)}</span>
               </span>
             </div>
             <h3
-              className={`mt-3 font-bold leading-tight text-[var(--brand-dark)] ${
-                compact ? "text-base sm:text-lg" : "text-lg sm:text-xl"
+              className={`mt-4 font-bold leading-tight text-[var(--brand-dark)] ${
+                compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"
               }`}
             >
               {company.name}
             </h3>
+            {company.reference ? (
+              <p
+                className="mt-2 inline-flex items-center gap-1 rounded-full border border-[var(--brand-primary)]/20 bg-white/90 px-2.5 py-1 font-mono text-[11px] font-bold tracking-wide text-[var(--brand-primary)] sm:text-xs"
+                title="Referencia para solicitar información"
+              >
+                <Hash className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
+                {company.reference}
+              </p>
+            ) : null}
           </div>
 
           <Link
             href={`/companies/${company.id}`}
-            className={`mt-3 flex w-full items-center justify-center rounded-xl bg-[var(--brand-primary)] font-semibold text-white shadow-md shadow-[var(--brand-primary)]/25 transition hover:opacity-95 ${
-              compact ? "py-2.5 text-xs sm:text-sm" : "py-3 text-sm"
+            className={`mt-4 flex w-full items-center justify-center rounded-full bg-[var(--brand-primary)] font-semibold text-white shadow-md shadow-[var(--brand-primary)]/25 transition hover:opacity-95 ${
+              compact ? "py-3 text-sm" : "py-3.5 text-sm sm:text-base"
             }`}
           >
             {ctaLabel}

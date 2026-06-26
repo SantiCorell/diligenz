@@ -7,6 +7,20 @@ export type ValuationUpsertInput = {
   salePriceMax: number | null;
 };
 
+function parseSingleSalePrice(
+  raw: string | undefined
+): { salePriceMin: number | null; salePriceMax: number | null } | { error: string } {
+  const trimmed = (raw ?? "").trim().replace(/\s/g, "");
+  if (!trimmed) {
+    return { salePriceMin: null, salePriceMax: null };
+  }
+  const value = parseInt(trimmed, 10);
+  if (Number.isNaN(value) || value < 0) {
+    return { error: "Precio de venta no válido." };
+  }
+  return { salePriceMin: value, salePriceMax: value };
+}
+
 function parseSalePriceRange(
   minRaw: string | undefined,
   maxRaw: string | undefined
@@ -38,12 +52,11 @@ function parseSalePriceRange(
   return { salePriceMin, salePriceMax };
 }
 
-export function parseValuationFormData(formData: FormData): ValuationUpsertInput | { error: string } {
+function parseValuationRange(
+  formData: FormData
+): { minValue: number; maxValue: number } | { error: string } {
   const minRaw = formData.get("minValue")?.toString();
   const maxRaw = formData.get("maxValue")?.toString();
-  const saleMinRaw = formData.get("salePriceMin")?.toString();
-  const saleMaxRaw = formData.get("salePriceMax")?.toString();
-
   if (!minRaw || !maxRaw) {
     return { error: "Faltan mínimo o máximo de valoración." };
   }
@@ -52,13 +65,36 @@ export function parseValuationFormData(formData: FormData): ValuationUpsertInput
   if (Number.isNaN(minValue) || Number.isNaN(maxValue) || minValue < 0 || maxValue < minValue) {
     return { error: "Valoración orientativa no válida." };
   }
+  return { minValue, maxValue };
+}
 
-  const sale = parseSalePriceRange(saleMinRaw, saleMaxRaw);
+/** Formulario del vendedor: solo rango de valoración (el precio de venta lo fija admin). */
+export function parseOwnerValuationFormData(
+  formData: FormData
+): Pick<ValuationUpsertInput, "minValue" | "maxValue"> | { error: string } {
+  const range = parseValuationRange(formData);
+  if ("error" in range) return { error: range.error };
+  return range;
+}
+
+/** Formulario admin: valoración + un único precio de venta. */
+export function parseValuationFormData(formData: FormData): ValuationUpsertInput | { error: string } {
+  const range = parseValuationRange(formData);
+  if ("error" in range) return { error: range.error };
+
+  const salePriceRaw = formData.get("salePrice")?.toString();
+  const sale =
+    salePriceRaw !== undefined && salePriceRaw !== null
+      ? parseSingleSalePrice(salePriceRaw)
+      : parseSalePriceRange(
+          formData.get("salePriceMin")?.toString(),
+          formData.get("salePriceMax")?.toString()
+        );
   if ("error" in sale) return sale;
 
   return {
-    minValue,
-    maxValue,
+    minValue: range.minValue,
+    maxValue: range.maxValue,
     salePriceMin: sale.salePriceMin,
     salePriceMax: sale.salePriceMax,
   };
@@ -75,6 +111,34 @@ export async function upsertCompanyValuation(companyId: string, input: Valuation
     maxValue: input.maxValue,
     salePriceMin: input.salePriceMin,
     salePriceMax: input.salePriceMax,
+  };
+
+  if (latest) {
+    await prisma.valuation.update({
+      where: { id: latest.id },
+      data,
+    });
+  } else {
+    await prisma.valuation.create({
+      data: { ...data, companyId },
+    });
+  }
+}
+
+export async function upsertOwnerCompanyValuation(
+  companyId: string,
+  input: Pick<ValuationUpsertInput, "minValue" | "maxValue">
+) {
+  const latest = await prisma.valuation.findFirst({
+    where: { companyId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const data = {
+    minValue: input.minValue,
+    maxValue: input.maxValue,
+    salePriceMin: latest?.salePriceMin ?? null,
+    salePriceMax: latest?.salePriceMax ?? null,
   };
 
   if (latest) {

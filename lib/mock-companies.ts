@@ -15,9 +15,11 @@ export type CompanyMock = {
   description: string;
   /** Descripción amplia del vendedor; solo visible para usuarios registrados */
   sellerDescription?: string | null;
-  /** Enlaces a documentación (Drive, etc.); solo visible si registrado y admin ha permitido */
+  /** Carpeta Drive interna; solo vendedor y admin */
   documentLinks?: DocumentLink[] | null;
-  /** Si true, usuarios registrados pueden ver documentación, enlaces y fotos subidas */
+  /** Enlace único al teaser/documento para compradores con solicitud validada */
+  buyerTeaserUrl?: string | null;
+  /** Si true y hay buyerTeaserUrl: comprador MANAGED puede ver el enlace del teaser */
   attachmentsApproved?: boolean;
   /** Tipo: EMPRESA | AUTONOMO; histórico STARTUP/MARKETPLACE */
   companyType?: string | null;
@@ -31,6 +33,10 @@ export type CompanyMock = {
   /** Precio de venta pedido (€), desde valoración */
   valuationSaleMin?: number | null;
   valuationSaleMax?: number | null;
+  /** Referencia pública para citar la empresa (teléfono, email). */
+  reference?: string | null;
+  /** Nombre real del negocio (solo admin / propietario). */
+  businessName?: string | null;
 };
 
 export const MOCK_COMPANIES: CompanyMock[] = [
@@ -46,6 +52,7 @@ export const MOCK_COMPANIES: CompanyMock[] = [
     employees: 24,
     description:
       "Clínica privada con más de 12 años de trayectoria. Especializada en medicina general y chequeos. Cartera estable de pacientes recurrentes y convenios con empresas.",
+    reference: "DIL-1001",
   },
   {
     id: "mock-2",
@@ -108,3 +115,7 @@ export const MOCK_COMPANIES: CompanyMock[] = [
       "Cadena de retail especializada en producto local. Varias tiendas en Andalucía. Marca reconocida y crecimiento orgánico sostenido.",
   },
 ];
+
+export function isMockCompanyId(companyId: string): boolean {
+  return MOCK_COMPANIES.some((c) => c.id === companyId);
+}

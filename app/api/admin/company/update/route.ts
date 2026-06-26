@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { isCompanyRemoved } from "@/lib/is-company-removed";
+import { parseCompanyReferenceInput } from "@/lib/company-reference";
 
 function parseDocumentLinks(raw: string | null): { label: string; url: string }[] | null {
   if (!raw || !raw.trim()) return null;
@@ -39,6 +40,36 @@ export async function POST(req: Request) {
     );
   }
 
+  const partial = formData.get("partial")?.toString();
+  const documentLinksRaw = formData.get("documentLinks")?.toString();
+  const attachmentsApproved = formData.get("attachmentsApproved") === "on";
+  const hasReceivedFundingRaw = formData.get("hasReceivedFunding")?.toString();
+  const documentLinks = parseDocumentLinks(documentLinksRaw ?? null);
+
+  if (partial === "visibility") {
+    const buyerTeaserUrlRaw = formData.get("buyerTeaserUrl")?.toString();
+    const buyerTeaserUrl = buyerTeaserUrlRaw?.trim() || null;
+    await prisma.company.update({
+      where: { id: companyId },
+      data: { attachmentsApproved, buyerTeaserUrl },
+    });
+    return NextResponse.redirect(
+      new URL(`/admin/companies/${companyId}?success=visibility`, url.origin)
+    );
+  }
+
+  if (partial === "drive") {
+    await prisma.company.update({
+      where: { id: companyId },
+      data: {
+        documentLinks: documentLinks ?? Prisma.JsonNull,
+      },
+    });
+    return NextResponse.redirect(
+      new URL(`/admin/companies/${companyId}?success=drive`, url.origin)
+    );
+  }
+
   const name = formData.get("name")?.toString();
   const sector = formData.get("sector")?.toString()?.trim();
   const location = formData.get("location")?.toString()?.trim();
@@ -47,21 +78,21 @@ export async function POST(req: Request) {
   const exerciseResultRaw = formData.get("exerciseResult")?.toString();
   const description = formData.get("description")?.toString();
   const sellerDescription = formData.get("sellerDescription")?.toString();
-  const documentLinksRaw = formData.get("documentLinks")?.toString();
   const employeesRaw = formData.get("employees")?.toString();
-  const attachmentsApproved = formData.get("attachmentsApproved") === "on";
   const companyTypeRaw = formData.get("companyType")?.toString();
   const yearsOperatingRaw = formData.get("yearsOperating")?.toString();
   const revenueGrowthPercentRaw = formData.get("revenueGrowthPercent")?.toString();
   const stageRaw = formData.get("stage")?.toString();
   const takeRatePercentRaw = formData.get("takeRatePercent")?.toString();
   const arrRaw = formData.get("arr")?.toString();
-  const hasReceivedFundingRaw = formData.get("hasReceivedFunding")?.toString();
   const websiteRaw = formData.get("website")?.toString();
+  const cnaeRaw = formData.get("cnae")?.toString();
+  const referenceRaw = formData.get("reference")?.toString();
   const ownerIdRaw = formData.get("ownerId")?.toString()?.trim();
   const breakevenExpectedYearRaw = formData.get("breakevenExpectedYear")?.toString();
+  const dealId = formData.get("dealId")?.toString()?.trim();
+  const dealTitle = formData.get("dealTitle")?.toString()?.trim();
 
-  const documentLinks = parseDocumentLinks(documentLinksRaw ?? null);
   const employees =
     employeesRaw != null && employeesRaw.trim() !== ""
       ? parseInt(employeesRaw.trim(), 10)
@@ -129,32 +160,48 @@ export async function POST(req: Request) {
   const exerciseResultTrim = (exerciseResultRaw ?? "").trim();
   const exerciseResultValue = exerciseResultTrim === "" ? null : exerciseResultTrim;
 
-  await prisma.company.update({
-    where: { id: companyId },
-    data: {
-      ...(name != null && name !== "" && { name }),
-      ...(sector != null && sector !== "" && { sector }),
-      ...(location != null && location !== "" && { location }),
-      ...(revenue != null && revenue !== "" && { revenue, gmv: null }),
-      ebitda: ebitdaValue,
-      exerciseResult: exerciseResultValue,
-      description: (description ?? "").trim() || null,
-      sellerDescription: (sellerDescription ?? "").trim() || null,
-      documentLinks: documentLinks ?? Prisma.JsonNull,
-      employees: employeesValue,
-      attachmentsApproved,
-      companyType: companyTypeValue,
-      yearsOperating: yearsOperatingValue,
-      revenueGrowthPercent: revenueGrowthPercentValue,
-      stage: stageValue,
-      takeRatePercent: takeRatePercentValue,
-      arr: arrValue,
-      breakevenExpectedYear: breakevenExpectedYearValue,
-      ...(hasReceivedFundingValue !== undefined && { hasReceivedFunding: hasReceivedFundingValue }),
-      website: (websiteRaw ?? "").trim() || null,
-      ...ownerIdUpdate,
-    },
-  });
+  const referenceValue =
+    referenceRaw !== undefined ? parseCompanyReferenceInput(referenceRaw) : undefined;
+
+  try {
+    await prisma.company.update({
+      where: { id: companyId },
+      data: {
+        ...(name != null && name !== "" && { name }),
+        ...(sector != null && sector !== "" && { sector }),
+        ...(location != null && location !== "" && { location }),
+        ...(revenue != null && revenue !== "" && { revenue, gmv: null }),
+        ebitda: ebitdaValue,
+        exerciseResult: exerciseResultValue,
+        description: (description ?? "").trim() || null,
+        sellerDescription: (sellerDescription ?? "").trim() || null,
+        employees: employeesValue,
+        companyType: companyTypeValue,
+        yearsOperating: yearsOperatingValue,
+        revenueGrowthPercent: revenueGrowthPercentValue,
+        stage: stageValue,
+        takeRatePercent: takeRatePercentValue,
+        arr: arrValue,
+        breakevenExpectedYear: breakevenExpectedYearValue,
+        ...(hasReceivedFundingValue !== undefined && { hasReceivedFunding: hasReceivedFundingValue }),
+        website: (websiteRaw ?? "").trim() || null,
+        cnae: (cnaeRaw ?? "").trim().replace(/\s/g, "").slice(0, 10) || null,
+        ...(referenceRaw !== undefined && { reference: referenceValue }),
+        ...ownerIdUpdate,
+      },
+    });
+  } catch {
+    return NextResponse.redirect(
+      new URL(`/admin/companies/${companyId}?error=reference_duplicate`, url.origin)
+    );
+  }
+
+  if (dealId && dealTitle) {
+    await prisma.deal.updateMany({
+      where: { id: dealId, companyId },
+      data: { title: dealTitle },
+    });
+  }
 
   return NextResponse.redirect(new URL(`/admin/companies/${companyId}?success=company_updated`, url.origin));
 }

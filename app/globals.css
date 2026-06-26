@@ -226,7 +226,56 @@ body {
     #ffffff 82%,
     #ffffff 100%
   );
-  box-shadow: 0 24px 64px rgb(145 70 255 / 0.14);
+}
+
+/* En inicio: morado largo hasta mitad del vídeo hero */
+.home-purple-backdrop.hero-panel {
+  background: linear-gradient(
+    180deg,
+    #9146ff 0%,
+    #9f5cff 14%,
+    #b88aff 30%,
+    #c8b4ff 46%,
+    #d9c9ff 58%,
+    #e8dcff 70%,
+    #f3eeff 82%,
+    #faf8ff 92%,
+    #ffffff 100%
+  );
+  height: max(68rem, 112vh);
+  min-height: 68rem;
+}
+
+@media (min-width: 768px) {
+  .home-purple-backdrop.hero-panel {
+    height: max(76rem, 118vh);
+    min-height: 76rem;
+  }
+}
+
+/* En inicio: morado detrás del header sin envolverlo (no rompe sticky) */
+.home-purple-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Header: barra «Valora» + navbar sticky en toda la página */
+.site-header-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  padding-bottom: 0.35rem;
+  background: transparent;
+}
+
+.site-navbar-sticky {
+  width: 100%;
+  padding: 0.35rem 0 0.65rem;
 }
 
 .hero-panel-video {
@@ -259,25 +308,10 @@ body {
   padding-bottom: 0.25rem;
 }
 
-/* Navbar público: solo la barra de navegación queda fija al scroll */
-.site-navbar-sticky {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  width: 100%;
-  padding: 0.35rem 0 0.65rem;
-  background: transparent;
-  pointer-events: none;
-}
-
-.site-navbar-sticky > * {
-  pointer-events: auto;
-}
-
 .site-navbar-shell {
-  border-color: rgb(255 255 255 / 0.35);
-  background: rgb(255 255 255 / 0.52);
-  box-shadow: 0 8px 32px rgb(var(--brand-shadow) / 0.07);
+  border-color: rgb(255 255 255 / 0.45);
+  background: rgb(255 255 255 / 0.9);
+  box-shadow: 0 8px 32px rgb(var(--brand-shadow) / 0.1);
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
 }

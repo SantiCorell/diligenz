@@ -54,7 +54,8 @@ export default function Footer() {
     authFetch("/api/auth/session")
       .then((r) => r.json())
       .then((d: { role?: string }) => {
-        if (d.role === "SELLER") setMisEmpresasHref("/dashboard/seller");
+        if (d.role === "SELLER") setMisEmpresasHref("/dashboard/seller/mis-empresas");
+        else if (d.role === "PROFESSIONAL") setMisEmpresasHref("/dashboard/professional/mis-empresas");
       })
       .catch(() => {});
   }, []);

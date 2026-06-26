@@ -45,6 +45,12 @@ model User {
   /// false hasta que el usuario elige rol (y teléfono) tras registro con Google
   oauthProfileComplete Boolean @default(true)
 
+  /// Máximo de solicitudes de información activas a la vez (PENDING/MANAGED). Admins sin límite.
+  maxConcurrentInfoRequests Int @default(4)
+
+  /// Máximo de empresas activas que puede subir un profesional a la vez.
+  maxConcurrentCompanies Int @default(3)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -244,6 +250,8 @@ model Company {
   sector      String
   /// Subcategoría o nicho (texto libre, ej. “ERP B2B”, “clínicas dentales”).
   sectorSubcategory String?
+  /// Código CNAE (Clasificación Nacional de Actividades Económicas).
+  cnae        String?
   location    String
   revenue     String
   ebitda      String?       // Puede ser negativo, ej. "-50000"
@@ -252,8 +260,9 @@ model Company {
   employees   Int?
   description String?       // Resumen breve para listados y tarjetas
   sellerDescription String?  @db.Text  // Descripción amplia del vendedor (solo usuarios registrados)
-  documentLinks       Json?    // [{ label, url }] Google Drive; solo propietario + ADMIN en ficha pública
-  attachmentsApproved Boolean  @default(false) // Si true, usuarios registrados pueden ver docs/enlaces/fotos
+  documentLinks       Json?    // [{ label, url }] carpeta Drive interna (solo vendedor/admin)
+  buyerTeaserUrl      String?  // Enlace único al documento/teaser para compradores validados
+  attachmentsApproved Boolean  @default(false) // Si true + solicitud MANAGED: comprador ve buyerTeaserUrl
   status      CompanyStatus @default(DRAFT)
   createdAt   DateTime      @default(now())
   removedAt   DateTime?
@@ -270,6 +279,10 @@ model Company {
   breakevenExpectedYear Int?    // Año esperado de breakeven (opcional)
   hasReceivedFunding  Boolean?  // Startup: si ha recibido financiación
   website             String?  // URL de la página web
+  /// Si está dentro de las 2 semanas desde esta fecha, la empresa aparece primero en listados.
+  featuredAt          DateTime?
+  /// Referencia pública para que el comprador cite la empresa (ej. DIL-2401).
+  reference           String?   @unique
   /// Comentario libre del vendedor sobre documentación (visible para él y admin)
   sellerDocumentsNote String?  @db.Text
 
@@ -432,6 +445,20 @@ model ContactRequest {
   category      String   @default("pendiente") // pendiente | gestionado | rechazado
 }
 
+/// Sectores personalizados creados por admin (formularios y fichas).
+model SectorCatalog {
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  label      String
+  shortLabel String?
+  iconKey    String
+  colorKey   String   @default("violet")
+  sortOrder  Int      @default(0)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
 /// Leads del formulario "Valora tu empresa": datos de contacto + datos empresa + valoración orientativa (CRM).
 model ValuationLead {
   id          String   @id @default(cuid())
@@ -440,6 +467,7 @@ model ValuationLead {
   companyName String?
   sector      String
   sectorSubcategory String?
+  cnae        String?
   location    String
   revenue     Int      // facturación anual €
   ebitda      Int?     // EBITDA € (puede ser negativo)

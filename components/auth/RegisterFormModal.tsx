@@ -6,6 +6,7 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { setStoredToken } from "@/lib/auth-client";
+import { dashboardPathForRole } from "@/lib/dashboard-path";
 
 type Role = "SELLER" | "BUYER" | "PROFESSIONAL";
 
@@ -68,8 +69,7 @@ export default function RegisterFormModal({ open, onClose, onOpenLogin, onSucces
       }
       if (data.token) setStoredToken(data.token);
       onSuccess?.();
-      const target =
-        data.role === "SELLER" ? "/dashboard/seller" : "/dashboard/buyer";
+      const target = dashboardPathForRole(data.role ?? "BUYER");
       router.push(target);
       window.setTimeout(() => {
         onClose();

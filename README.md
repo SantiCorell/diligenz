@@ -50,7 +50,7 @@ Marketplace privado y seguro para comprar, vender y valorar empresas en España.
    Edita `.env` con `DATABASE_URL`, `DIRECT_URL` (Supabase), `AUTH_SECRET`, `NEXTAUTH_URL` y opcionalmente Google OAuth. Ver `.env.example`.
 
 4. **Base de datos**
-   - Si usas Supabase: ejecuta en SQL Editor el script **`prisma/SUPABASE-EJECUTAR-TODO.sql`** (instrucciones en [SUPABASE-EJECUTAR.md](./SUPABASE-EJECUTAR.md)).
+   - Si usas Supabase: ejecuta en SQL Editor **`prisma/SUPABASE-MIGRACION-IDEMPOTENTE.sql`** (ver [SUPABASE.md](./SUPABASE.md)).
    - Si usas migraciones locales: `npx prisma migrate dev` y `npx prisma generate`.
 
 5. **Iniciar servidor de desarrollo**
@@ -83,11 +83,11 @@ diligenz/
 ├── prisma/
 │   ├── schema.prisma       # Schema de base de datos
 │   ├── migrations/         # Historial de migraciones
-│   └── SUPABASE-EJECUTAR-TODO.sql   # Script SQL único para Supabase (estructura actual)
+│   └── SUPABASE-MIGRACION-IDEMPOTENTE.sql   # SQL idempotente para Supabase (producción)
 └── public/                 # Logos e iconos
 ```
 
-**Base de datos:** La estructura actual para Supabase está en **`prisma/SUPABASE-EJECUTAR-TODO.sql`**. Cómo ejecutarla: [SUPABASE-EJECUTAR.md](./SUPABASE-EJECUTAR.md).
+**Base de datos:** Para Supabase usa **`prisma/SUPABASE-MIGRACION-IDEMPOTENTE.sql`**. Instrucciones: [SUPABASE.md](./SUPABASE.md).
 
 ## 🔐 Seguridad
 
@@ -107,7 +107,7 @@ Ver [README-SEGURIDAD.md](./README-SEGURIDAD.md) para más detalles.
 | Archivo | Contenido |
 |---------|-----------|
 | [DEPLOY.md](./DEPLOY.md) | Despliegue en Vercel (Git, variables, checklist) |
-| [SUPABASE-EJECUTAR.md](./SUPABASE-EJECUTAR.md) | Cómo ejecutar el SQL en Supabase y conectar la app |
+| [SUPABASE.md](./SUPABASE.md) | Cómo actualizar el esquema en Supabase sin perder datos |
 | [GOOGLE-LOGIN.md](./GOOGLE-LOGIN.md) | Inicio de sesión con Google (variables y Google Console) |
 | [README-SEGURIDAD.md](./README-SEGURIDAD.md) | Seguridad (rate limiting, validación, cookies, bloqueo) |
 
@@ -128,7 +128,7 @@ npm run lint         # Ejecutar linter
 
 ## 📝 Notas
 
-- **Producción**: Usa PostgreSQL (p. ej. Supabase). Ejecuta `prisma/SUPABASE-EJECUTAR-TODO.sql` una vez.
+- **Producción**: Usa PostgreSQL (p. ej. Supabase). Ejecuta `prisma/SUPABASE-MIGRACION-IDEMPOTENTE.sql` en el SQL Editor.
 - **Variables de entorno**: Ver `.env.example`. No subas `.env` a Git.
 - **Google OAuth**: Ver [GOOGLE-LOGIN.md](./GOOGLE-LOGIN.md).
 

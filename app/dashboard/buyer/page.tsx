@@ -3,24 +3,31 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getDisplayName } from "@/lib/user-display";
 import { getSessionWithUser } from "@/lib/session";
+import {
+  countActiveInfoRequests,
+  getMaxConcurrentInfoRequests,
+} from "@/lib/buyer-info-request-limit";
 
 export default async function BuyerDashboardPage() {
   const session = await getSessionWithUser();
   if (!session) redirect("/login");
-  if (
-    session.user.role !== "BUYER" &&
-    session.user.role !== "PROFESSIONAL" &&
-    session.user.role !== "ADMIN"
-  ) {
-    redirect("/dashboard");
-  }
+  if (session.user.role === "PROFESSIONAL") redirect("/dashboard/professional");
 
   const userId = session.user.id;
-  const [pendingInfo, requestsCount] = await Promise.all([
+  const dbUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { maxConcurrentInfoRequests: true, role: true },
+  });
+  const maxSlots = getMaxConcurrentInfoRequests(
+    session.user.role,
+    dbUser?.maxConcurrentInfoRequests
+  );
+
+  const [pendingInfo, activeInfo] = await Promise.all([
     prisma.userCompanyInterest.count({
       where: { userId, type: "REQUEST_INFO", status: "PENDING" },
     }),
-    prisma.userCompanyInterest.count({ where: { userId, type: "REQUEST_INFO" } }),
+    countActiveInfoRequests(userId),
   ]);
 
   const displayName = getDisplayName(session.user.email);
@@ -33,8 +40,8 @@ export default async function BuyerDashboardPage() {
           Hola{displayName ? `, ${displayName}` : ""}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-[var(--foreground)]/75 sm:text-base">
-          Gestiona tu perfil, documentos y oportunidades desde un solo lugar. El marketplace público
-          está a un clic cuando quieras explorar.
+          Gestiona tu perfil y oportunidades desde un solo lugar. El marketplace público está a un
+          clic cuando quieras explorar.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link href="/" className="btn-secondary">
@@ -62,16 +69,6 @@ export default async function BuyerDashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-        <StatCard label="Solicitudes" value={requestsCount} />
-        <StatCard
-          label="En revisión"
-          value={pendingInfo}
-          highlight={pendingInfo > 0}
-        />
-        <StatCard label="Acceso web" value="Activo" isText />
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Link
           href="/dashboard/profile"
@@ -81,8 +78,7 @@ export default async function BuyerDashboardPage() {
             Mi perfil y verificación
           </h2>
           <p className="mt-2 text-sm text-[var(--foreground)] opacity-85">
-            Email, mandato de compra, DNI y datos de contacto. Completa los checks para desbloquear
-            todo el contenido.
+            Email, mandato de compra, DNI, datos de contacto y acceso a tu Google Drive.
           </p>
           <span className="mt-4 inline-block text-sm font-semibold text-[var(--brand-primary)]">
             Abrir →
@@ -90,17 +86,17 @@ export default async function BuyerDashboardPage() {
         </Link>
 
         <Link
-          href="/dashboard/buyer/documents"
+          href="/dashboard/mis-empresas"
           className="group page-card page-card-padded page-card-interactive text-left"
         >
           <h2 className="text-lg font-semibold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">
-            Mis documentos y Drive
+            Mis empresas
           </h2>
           <p className="mt-2 text-sm text-[var(--foreground)] opacity-85">
-            Enlace a tu carpeta personal y recordatorios de documentación confidencial.
+            Solicitudes de información y el estado de cada gestión.
           </p>
           <span className="mt-4 inline-block text-sm font-semibold text-[var(--brand-primary)]">
-            Abrir →
+            Ver listado →
           </span>
         </Link>
 
@@ -121,16 +117,42 @@ export default async function BuyerDashboardPage() {
 
         <Link
           href="/dashboard/mis-empresas"
-          className="group page-card page-card-padded page-card-interactive text-left"
+          className={`group page-card page-card-padded page-card-interactive text-left ${
+            pendingInfo > 0 ? "border-amber-200/80 bg-amber-50/40" : ""
+          }`}
         >
           <h2 className="text-lg font-semibold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">
-            Mis empresas
+            Solicitudes de información
           </h2>
           <p className="mt-2 text-sm text-[var(--foreground)] opacity-85">
-            Solicitudes de información y el estado de cada gestión.
+            {maxSlots != null ? (
+              <>
+                Tienes{" "}
+                <span className="font-bold text-[var(--brand-primary)]">
+                  {activeInfo}/{maxSlots}
+                </span>{" "}
+                solicitudes activas
+                {pendingInfo > 0 && (
+                  <>
+                    {" "}
+                    ·{" "}
+                    <span className="font-semibold text-amber-950">
+                      {pendingInfo} en revisión
+                    </span>
+                  </>
+                )}
+                .
+              </>
+            ) : (
+              <>
+                Tienes{" "}
+                <span className="font-bold text-[var(--brand-primary)]">{activeInfo}</span>{" "}
+                solicitudes activas.
+              </>
+            )}
           </p>
           <span className="mt-4 inline-block text-sm font-semibold text-[var(--brand-primary)]">
-            Ver listado →
+            Ver mis empresas →
           </span>
         </Link>
       </div>
@@ -157,35 +179,6 @@ export default async function BuyerDashboardPage() {
           </Link>
         </div>
       </div>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  highlight,
-  isText,
-}: {
-  label: string;
-  value: number | string;
-  highlight?: boolean;
-  isText?: boolean;
-}) {
-  return (
-    <div
-      className={`page-card p-4 ${
-        highlight ? "border-amber-200/80 bg-amber-50/60" : ""
-      }`}
-    >
-      <p className="text-xs font-medium text-[var(--foreground)] opacity-70">{label}</p>
-      <p
-        className={`mt-1 font-bold ${
-          highlight ? "text-amber-950" : "text-[var(--brand-primary)]"
-        } ${isText ? "text-base" : "text-xl"}`}
-      >
-        {value}
-      </p>
     </div>
   );
 }

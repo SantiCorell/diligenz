@@ -8,7 +8,9 @@ import { getUserIdFromSession } from "@/lib/session";
 import CompanyFicha from "./CompanyFicha";
 import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
 import { SITE_URL, SITE_NAME, getBreadcrumbSchema } from "@/lib/seo";
-import { formatCompactEuroRange } from "@/lib/format-financial";
+import { publicListingName } from "@/lib/company-display-names";
+import { ensureCompanyReference } from "@/lib/company-reference";
+import { buyerCanDownloadCompanyTeaser } from "@/lib/company-drive-access";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -31,8 +33,11 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
   });
   if (!company || company.removedAt || company.deals.length === 0) return null;
 
+  const reference =
+    company.reference ?? (await ensureCompanyReference(company.id));
+
+  const deal = company.deals[0];
   const val = company.valuations[0];
-  const revenueStr = val ? formatCompactEuroRange(val.minValue, val.maxValue) : "—";
   const docLinks = company.documentLinks as DocumentLink[] | null | undefined;
   const imgFiles = company.companyFiles;
   const heroFile = imgFiles[0];
@@ -42,10 +47,11 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
       : [];
   return {
     id: company.id,
-    name: company.name,
+    name: publicListingName(deal.title, company.name),
+    businessName: company.name,
     sector: company.sector,
     location: company.location,
-    revenue: revenueStr,
+    revenue: company.revenue?.trim() || "—",
     ebitda: company.ebitda ?? "—",
     exerciseResult: company.exerciseResult?.trim() || null,
     gmv: company.gmv ?? null,
@@ -53,11 +59,13 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     description: company.description ?? "Sin descripción.",
     sellerDescription: company.sellerDescription ?? null,
     documentLinks: Array.isArray(docLinks) ? docLinks : null,
+    buyerTeaserUrl: company.buyerTeaserUrl?.trim() || null,
     attachmentsApproved: company.attachmentsApproved ?? false,
     heroImageSrc: heroFile ? `/api/companies/${company.id}/files/${heroFile.id}` : null,
     galleryImageSrcs,
     valuationSaleMin: val?.salePriceMin ?? null,
     valuationSaleMax: val?.salePriceMax ?? null,
+    reference,
   };
 }
 
@@ -97,13 +105,23 @@ export default async function CompanyDetailPage({ params }: Props) {
 
   let isOwner = false;
   let isAdmin = false;
+  let buyerDriveAccess = false;
   if (userId && !MOCK_COMPANIES.some((c) => c.id === id)) {
-    const [companyRow, user] = await Promise.all([
+    const [companyRow, user, infoRequest] = await Promise.all([
       prisma.company.findUnique({ where: { id }, select: { ownerId: true } }),
       prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
+      prisma.userCompanyInterest.findFirst({
+        where: { userId, companyId: id, type: "REQUEST_INFO" },
+        select: { status: true },
+      }),
     ]);
     isOwner = companyRow?.ownerId === userId;
     isAdmin = user?.role === "ADMIN";
+    buyerDriveAccess = buyerCanDownloadCompanyTeaser({
+      requestStatus: infoRequest?.status,
+      attachmentsApproved: company.attachmentsApproved ?? false,
+      buyerTeaserUrl: company.buyerTeaserUrl,
+    });
   }
 
   const breadcrumbSchema = getBreadcrumbSchema([
@@ -112,10 +130,10 @@ export default async function CompanyDetailPage({ params }: Props) {
     { name: company.name, url: `${SITE_URL}/companies/${id}` },
   ]);
 
-  const canSeeDriveLinks = isOwner || isAdmin;
   const companyForFicha: CompanyMock = {
     ...company,
-    documentLinks: canSeeDriveLinks ? company.documentLinks : null,
+    documentLinks: isOwner || isAdmin ? company.documentLinks : null,
+    buyerTeaserUrl: buyerDriveAccess ? company.buyerTeaserUrl : null,
   };
 
   return (

@@ -24,6 +24,7 @@ import {
   normalizeLeadCategory,
   type LeadCategory,
 } from "@/lib/lead-category";
+import { ccaaLabel } from "@/lib/spain-ccaa";
 import { sectorLabel } from "@/lib/valuation-sectors";
 
 type LeadRow =
@@ -269,8 +270,12 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
           </span>
         </div>
         <div className="flex items-center gap-3 min-h-[40px]">
+          <span className="text-[var(--foreground)] opacity-70 shrink-0">CNAE:</span>
+          <span>{lead.cnae ?? "—"}</span>
+        </div>
+        <div className="flex items-center gap-3 min-h-[40px]">
           <span className="text-[var(--foreground)] opacity-70 shrink-0">Ubicación:</span>
-          <span>{lead.location}</span>
+          <span>{ccaaLabel(lead.location)}</span>
         </div>
         <div className="flex items-center gap-3 min-h-[40px]">
           <BarChart3 className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/50" />

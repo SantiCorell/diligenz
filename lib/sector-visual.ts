@@ -15,12 +15,31 @@ import {
   UtensilsCrossed,
   Wheat,
 } from "lucide-react";
+import { PharmacyCross } from "@/components/icons/PharmacyCross";
 import {
   LEGACY_SECTOR_OPTIONS,
   PRIMARY_SECTOR_OPTIONS,
   VALUATION_SECTOR_OPTIONS,
   sectorLabel,
 } from "@/lib/valuation-sectors";
+import { getSectorIconPreset } from "@/lib/sector-icon-presets";
+import {
+  DEFAULT_SECTOR_COLOR_KEY,
+  getSectorColorPreset,
+} from "@/lib/sector-color-presets";
+
+type CustomSectorVisual = {
+  label: string;
+  shortLabel: string;
+  iconKey: string;
+  colorKey: string;
+};
+
+let customSectorVisuals: Record<string, CustomSectorVisual> = {};
+
+export function setCustomSectorVisuals(map: Record<string, CustomSectorVisual>) {
+  customSectorVisuals = map;
+}
 
 export type SectorVisualStyle = {
   icon: LucideIcon;
@@ -56,6 +75,7 @@ type SectorKey =
   | "industria-manufactura"
   | "servicios-profesionales-b2b"
   | "salud-bienestar"
+  | "farma"
   | "educacion-formacion"
   | "logistica-transporte"
   | "inmobiliario-proptech"
@@ -73,6 +93,7 @@ const SHORT_LABELS: Record<SectorKey, string> = {
   "industria-manufactura": "Industria",
   "servicios-profesionales-b2b": "Servicios B2B",
   "salud-bienestar": "Salud",
+  farma: "Farma",
   "educacion-formacion": "Educación",
   "logistica-transporte": "Logística",
   "inmobiliario-proptech": "Inmobiliario",
@@ -122,6 +143,12 @@ const SECTOR_STYLES: Record<SectorKey, SectorStyleBase> = {
     accent: "#e11d48",
     iconBgClass: "bg-rose-100 text-rose-600",
     tagClass: "bg-rose-50 text-rose-700",
+  },
+  farma: {
+    icon: PharmacyCross,
+    accent: "#16a34a",
+    iconBgClass: "bg-green-100 text-green-600",
+    tagClass: "bg-green-50 text-green-700",
   },
   "educacion-formacion": {
     icon: GraduationCap,
@@ -182,9 +209,9 @@ const SECTOR_STYLES: Record<SectorKey, SectorStyleBase> = {
 /** Cuatro sectores destacados en home — misma línea visual que CompanyCard */
 export const HOMEPAGE_FEATURED_SECTORS: HomepageFeaturedSector[] = [
   {
-    slug: "salud",
-    name: "Salud",
-    description: "Clínicas, laboratorios y servicios sanitarios privados.",
+    slug: "farma",
+    name: "Farma",
+    description: "Farmacias, distribución farmacéutica y laboratorios especializados.",
   },
   {
     slug: "tecnologia",
@@ -206,6 +233,7 @@ export const HOMEPAGE_FEATURED_SECTORS: HomepageFeaturedSector[] = [
 const SLUG_ALIASES: Record<string, SectorKey> = {
   tecnologia: "tecnologia-software-saas",
   salud: "salud-bienestar",
+  farma: "farma",
   industria: "industria-manufactura",
   consumo: "retail-comercio",
   hosteleria: "hosteleria-restauracion",
@@ -224,6 +252,7 @@ const KEYWORD_RULES: { keywords: string[]; key: SectorKey }[] = [
   { keywords: ["industr", "manufact", "fabric"], key: "industria-manufactura" },
   { keywords: ["servicio", "b2b", "profesional", "consult"], key: "servicios-profesionales-b2b" },
   { keywords: ["salud", "bienestar", "clinic", "sanit"], key: "salud-bienestar" },
+  { keywords: ["farma", "farmaceut", "pharma"], key: "farma" },
   { keywords: ["educac", "formacion", "academ"], key: "educacion-formacion" },
   { keywords: ["logist", "transport", "distribuc"], key: "logistica-transporte" },
   { keywords: ["inmobil", "proptech", "real estate"], key: "inmobiliario-proptech" },
@@ -288,6 +317,28 @@ export function sectorDbValuesForFilter(primarySlug: string): string[] {
 }
 
 export function getSectorVisual(sector: string): SectorVisualStyle {
+  const normalized = normalizeKey(sector);
+  const custom = customSectorVisuals[sector] ?? customSectorVisuals[normalized];
+  if (custom) {
+    const iconPreset = getSectorIconPreset(custom.iconKey);
+    const colorPreset =
+      getSectorColorPreset(custom.colorKey) ??
+      getSectorColorPreset(DEFAULT_SECTOR_COLOR_KEY);
+    if (iconPreset && colorPreset) {
+      return {
+        icon: iconPreset.icon,
+        label: custom.label,
+        shortLabel: custom.shortLabel,
+        accent: colorPreset.accent,
+        iconBgClass: colorPreset.iconBgClass,
+        tagClass: colorPreset.tagClass,
+        iconBg: colorPreset.iconBgClass,
+        iconColor: colorPreset.accent,
+        surface: SURFACE,
+      };
+    }
+  }
+
   const key = resolveSectorKey(sector);
   const style = SECTOR_STYLES[key];
   const label = sectorLabel(sector);

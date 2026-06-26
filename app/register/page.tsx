@@ -7,6 +7,7 @@ import Image from "next/image";
 import ShellLayout from "@/components/layout/ShellLayout";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { setStoredToken } from "@/lib/auth-client";
+import { dashboardPathForRole } from "@/lib/dashboard-path";
 
 type Role = "SELLER" | "BUYER" | "PROFESSIONAL";
 
@@ -63,8 +64,7 @@ export default function RegisterPage() {
       if (data.token) {
         setStoredToken(data.token);
       }
-      const target =
-        data.role === "SELLER" ? "/dashboard/seller" : "/dashboard/buyer";
+      const target = dashboardPathForRole(data.role ?? "BUYER");
       router.push(target);
     } catch {
       setError("Error inesperado. Inténtalo de nuevo.");

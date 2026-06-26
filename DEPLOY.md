@@ -26,7 +26,7 @@ git push -u origin main
 ## 3. Base de datos (Supabase)
 
 1. Crea un proyecto en [Supabase](https://supabase.com).
-2. En **SQL Editor** ejecuta todo el contenido de **`prisma/SUPABASE-EJECUTAR-TODO.sql`** (ver [SUPABASE-EJECUTAR.md](./SUPABASE-EJECUTAR.md)).
+2. En **SQL Editor** ejecuta todo el contenido de **`prisma/SUPABASE-MIGRACION-IDEMPOTENTE.sql`** (ver [SUPABASE.md](./SUPABASE.md)).
 3. En Supabase → **Project Settings** → **Database** copia:
    - **Session mode** (puerto 6543) → `DATABASE_URL` (añade `?pgbouncer=true` si no viene).
    - **Direct connection** (puerto 5432) → `DIRECT_URL`.
@@ -51,7 +51,7 @@ Haz **Redeploy** o un nuevo commit y push; Vercel desplegará automáticamente.
 ## 6. Checklist rápido
 
 - [ ] Repo en Git y conectado a Vercel
-- [ ] SQL de Supabase ejecutado (`prisma/SUPABASE-EJECUTAR-TODO.sql`)
+- [ ] SQL de Supabase ejecutado (`prisma/SUPABASE-MIGRACION-IDEMPOTENTE.sql`)
 - [ ] `DATABASE_URL` y `DIRECT_URL` en Vercel
 - [ ] `AUTH_SECRET` y `NEXTAUTH_URL` en Vercel
 - [ ] (Opcional) Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y URI de redirección en Google Console

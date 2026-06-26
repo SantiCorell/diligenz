@@ -4,7 +4,7 @@ import SectorIcon from "@/components/companies/SectorIcon";
 import { HOMEPAGE_FEATURED_SECTORS, getSectorVisual } from "@/lib/sector-visual";
 
 const MOBILE_CAROUSEL =
-  "-mx-4 flex gap-4 overflow-x-auto scroll-px-4 px-4 snap-x snap-mandatory pb-2 pt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:scroll-px-0 sm:px-0 sm:pb-0 sm:pt-0 lg:grid-cols-4";
+  "-mx-4 flex gap-4 overflow-x-auto scroll-px-4 px-4 snap-x snap-mandatory pb-4 pt-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:scroll-px-0 sm:px-0 sm:pb-2 sm:pt-2 lg:grid-cols-4";
 
 const MOBILE_CARD =
   "w-[min(82vw,300px)] shrink-0 snap-center sm:w-auto sm:shrink sm:snap-align-none";
@@ -22,7 +22,7 @@ function SectorCard({
 
   return (
     <div
-      className={`flex flex-col rounded-2xl bg-[var(--surface-muted)] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition hover:shadow-[0_8px_32px_rgba(145,70,255,0.08)] ${MOBILE_CARD}`}
+      className={`sector-card flex flex-col rounded-2xl bg-[#edeaf3] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-[#e8e4f0] hover:shadow-[0_14px_40px_rgba(145,70,255,0.12)] motion-reduce:hover:scale-100 ${MOBILE_CARD}`}
     >
       <SectorIcon sector={slug} size="md" />
       <span

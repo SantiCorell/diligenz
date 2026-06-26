@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 import UserOwnerSearch from "./UserOwnerSearch";
+import SectorSelect from "@/components/forms/SectorSelect";
+import CcaaSelect from "@/components/forms/CcaaSelect";
+import type { SectorOption } from "@/lib/valuation-sectors";
 
-export default function AdminCreateCompanyForm() {
+type Props = {
+  sectorOptions: SectorOption[];
+};
+
+export default function AdminCreateCompanyForm({ sectorOptions }: Props) {
   const [ownerError, setOwnerError] = useState(false);
 
   return (
@@ -39,7 +46,7 @@ export default function AdminCreateCompanyForm() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-semibold text-[var(--brand-primary)]">
-              Nombre empresa
+              Nombre empresa (real)
             </label>
             <input
               required
@@ -48,27 +55,23 @@ export default function AdminCreateCompanyForm() {
               className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
             />
           </div>
+          <div className="sm:col-span-2 rounded-xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg-lavender)]/40 px-4 py-3">
+            <p className="text-sm text-[var(--foreground)]">
+              <span className="font-semibold text-[var(--brand-primary)]">Referencia automática: </span>
+              <span className="font-mono">DIL-1001</span>, <span className="font-mono">DIL-1002</span>… Se asigna sola al crear la empresa.
+            </p>
+          </div>
           <div>
             <label className="block text-sm font-semibold text-[var(--brand-primary)]">
               Sector
             </label>
-            <input
-              required
-              type="text"
-              name="sector"
-              className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
-            />
+            <SectorSelect required options={sectorOptions} />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[var(--brand-primary)]">
-              Ubicación
+              Comunidad autónoma
             </label>
-            <input
-              required
-              type="text"
-              name="location"
-              className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
-            />
+            <CcaaSelect required />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[var(--brand-primary)]">
@@ -80,6 +83,18 @@ export default function AdminCreateCompanyForm() {
               name="revenue"
               placeholder="ej. 500000 o 1,2M"
               className="mt-2 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">
+              CNAE (opcional)
+            </label>
+            <input
+              type="text"
+              name="cnae"
+              maxLength={10}
+              placeholder="Ej. 6201"
+              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
             />
           </div>
           <div className="sm:col-span-2">

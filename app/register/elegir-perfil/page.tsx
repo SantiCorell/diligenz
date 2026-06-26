@@ -7,6 +7,7 @@ import Image from "next/image";
 import ShellLayout from "@/components/layout/ShellLayout";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { authFetch } from "@/lib/auth-client";
+import { dashboardPathForRole } from "@/lib/dashboard-path";
 
 type Role = "SELLER" | "BUYER" | "PROFESSIONAL";
 
@@ -45,9 +46,7 @@ export default function ElegirPerfilPage() {
         const needsPhone = !data.phone?.trim();
 
         if (!needsRole && !needsPhone) {
-          router.replace(
-            data.role === "SELLER" ? "/dashboard/seller" : "/dashboard/buyer"
-          );
+          router.replace(dashboardPathForRole(data.role ?? "BUYER"));
           return;
         }
 

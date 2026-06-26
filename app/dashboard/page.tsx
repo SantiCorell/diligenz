@@ -5,7 +5,7 @@ const ROLE_TARGET: Record<string, string> = {
   SELLER: "/dashboard/seller",
   BUYER: "/dashboard/buyer",
   ADMIN: "/admin",
-  PROFESSIONAL: "/dashboard/buyer",
+  PROFESSIONAL: "/dashboard/professional",
 };
 
 export default async function DashboardRouter() {

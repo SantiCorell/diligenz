@@ -55,8 +55,6 @@ export async function POST(req: Request) {
     !professionalNif?.trim() ||
     !professionalAddress?.trim() ||
     !contactEmail?.trim() ||
-    !representativeName?.trim() ||
-    !representativeDni?.trim() ||
     !signaturePngBase64 ||
     !termsAccepted
   ) {
@@ -76,8 +74,8 @@ export async function POST(req: Request) {
     professionalAddress: String(professionalAddress).trim(),
     contactEmail: String(contactEmail).trim(),
     contactPhone: contactPhone ? String(contactPhone).trim() : null,
-    representativeName: String(representativeName).trim(),
-    representativeDni: String(representativeDni).trim(),
+    representativeName: representativeName != null ? String(representativeName).trim() : "",
+    representativeDni: representativeDni != null ? String(representativeDni).trim() : "",
     representativeRole: representativeRole ? String(representativeRole).trim() : null,
     signaturePngBase64: String(signaturePngBase64),
     signedAt,
@@ -93,7 +91,7 @@ export async function POST(req: Request) {
     await syncUserDriveFolderName({
       userId: session.userId,
       role: session.user.role,
-      personName: payload.representativeName,
+      personName: payload.representativeName || payload.professionalLegalName,
       companyName: payload.professionalLegalName,
     });
     for (const file of [
@@ -158,7 +156,7 @@ export async function POST(req: Request) {
     await sendEmail({
       to: emailTo,
       subject: "Copia de tu Acuerdo de Colaboración firmado — Diligenz",
-      text: `Hola ${payload.representativeName},\n\nAdjuntamos copia del Acuerdo de Colaboración (Condiciones Particulares y Condiciones Generales) que has firmado electrónicamente en Diligenz el ${signedAtLabel}.\n\nConserva estos documentos para tu registro.\n\nDILIGENZ`,
+      text: `Hola ${payload.representativeName || payload.professionalLegalName},\n\nAdjuntamos copia del Acuerdo de Colaboración (Condiciones Particulares y Condiciones Generales) que has firmado electrónicamente en Diligenz el ${signedAtLabel}.\n\nConserva estos documentos para tu registro.\n\nDILIGENZ`,
       attachments,
     });
   } catch (e) {
@@ -170,7 +168,7 @@ export async function POST(req: Request) {
       await sendEmail({
         to: diligenzNotifyEmail,
         subject: `Nuevo acuerdo de colaboración firmado — ${payload.professionalLegalName}`,
-        text: `Se ha firmado un nuevo Acuerdo de Colaboración en Diligenz.\n\nProfesional: ${payload.professionalLegalName} (${payload.professionalNif})\nRepresentante: ${payload.representativeName} (${payload.representativeDni})\nEmail contacto: ${payload.contactEmail}\nTeléfono: ${payload.contactPhone ?? "—"}\nFecha de firma: ${signedAtLabel}\n\nAdjuntos: Condiciones Particulares, Condiciones Generales y ZIP.`,
+        text: `Se ha firmado un nuevo Acuerdo de Colaboración en Diligenz.\n\nProfesional: ${payload.professionalLegalName} (${payload.professionalNif})\nRepresentante: ${payload.representativeName || payload.representativeDni ? `${payload.representativeName || "—"} (${payload.representativeDni || "—"})` : "No indicado"}\nEmail contacto: ${payload.contactEmail}\nTeléfono: ${payload.contactPhone ?? "—"}\nFecha de firma: ${signedAtLabel}\n\nAdjuntos: Condiciones Particulares, Condiciones Generales y ZIP.`,
         attachments,
       });
     } catch (e) {

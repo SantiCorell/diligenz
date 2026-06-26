@@ -3,7 +3,7 @@
  * Los `value` se guardan en Company.sector y ValuationLead.sector.
  */
 
-export type SectorOption = { value: string; label: string };
+export type SectorOption = { value: string; label: string; shortLabel?: string; iconKey?: string; custom?: boolean };
 
 /** Opciones del desplegable en /sell (orden de la UI). */
 export const VALUATION_SECTOR_OPTIONS: SectorOption[] = [
@@ -14,6 +14,7 @@ export const VALUATION_SECTOR_OPTIONS: SectorOption[] = [
   { value: "industria-manufactura", label: "Industria / Manufactura" },
   { value: "servicios-profesionales-b2b", label: "Servicios profesionales / B2B" },
   { value: "salud-bienestar", label: "Salud / Bienestar" },
+  { value: "farma", label: "FARMA" },
   { value: "educacion-formacion", label: "Educación / Formación" },
   { value: "logistica-transporte", label: "Logística / Transporte" },
   { value: "inmobiliario-proptech", label: "Inmobiliario / Proptech" },
@@ -78,8 +79,8 @@ export const CATALOG_SECTOR_OPTIONS: SectorOption[] = [
   ...LEGACY_SECTOR_OPTIONS,
 ];
 
-export function sectorLabel(value: string): string {
-  const all = [...VALUATION_SECTOR_OPTIONS, ...LEGACY_SECTOR_OPTIONS];
+export function sectorLabel(value: string, extra?: SectorOption[]): string {
+  const all = [...VALUATION_SECTOR_OPTIONS, ...LEGACY_SECTOR_OPTIONS, ...(extra ?? [])];
   return all.find((o) => o.value === value)?.label ?? value;
 }
 

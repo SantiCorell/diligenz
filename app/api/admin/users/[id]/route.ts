@@ -23,6 +23,8 @@ type PatchBody = {
   accountStatus?: unknown;
   role?: unknown;
   documentsDriveFolderUrl?: unknown;
+  maxConcurrentInfoRequests?: unknown;
+  maxConcurrentCompanies?: unknown;
 };
 
 /**
@@ -49,6 +51,8 @@ export async function PATCH(req: Request, { params }: Params) {
     accountStatus?: UserAccountStatus;
     role?: UserRole;
     documentsDriveFolderUrl?: string | null;
+    maxConcurrentInfoRequests?: number;
+    maxConcurrentCompanies?: number;
   } = {};
 
   if (typeof body.emailVerified === "boolean") data.emailVerified = body.emailVerified;
@@ -83,6 +87,28 @@ export async function PATCH(req: Request, { params }: Params) {
       }
     }
     data.role = newRole;
+  }
+
+  if (body.maxConcurrentCompanies !== undefined) {
+    const raw = body.maxConcurrentCompanies;
+    if (typeof raw !== "number" || !Number.isInteger(raw) || raw < 1 || raw > 50) {
+      return NextResponse.json(
+        { error: "maxConcurrentCompanies debe ser un entero entre 1 y 50." },
+        { status: 400 }
+      );
+    }
+    data.maxConcurrentCompanies = raw;
+  }
+
+  if (body.maxConcurrentInfoRequests !== undefined) {
+    const raw = body.maxConcurrentInfoRequests;
+    if (typeof raw !== "number" || !Number.isInteger(raw) || raw < 1 || raw > 50) {
+      return NextResponse.json(
+        { error: "maxConcurrentInfoRequests debe ser un entero entre 1 y 50." },
+        { status: 400 }
+      );
+    }
+    data.maxConcurrentInfoRequests = raw;
   }
 
   if (body.documentsDriveFolderUrl !== undefined) {
@@ -132,7 +158,7 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json(
       {
         error:
-          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, accountStatus, role, documentsDriveFolderUrl",
+          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, accountStatus, role, documentsDriveFolderUrl, maxConcurrentInfoRequests, maxConcurrentCompanies",
       },
       { status: 400 }
     );
@@ -161,6 +187,8 @@ export async function PATCH(req: Request, { params }: Params) {
         accountStatus: true,
         role: true,
         documentsDriveFolderUrl: true,
+        maxConcurrentInfoRequests: true,
+        maxConcurrentCompanies: true,
       },
     });
     return NextResponse.json({ user });

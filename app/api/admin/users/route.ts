@@ -101,6 +101,8 @@ export async function GET(req: Request) {
       dniVerified: true,
       profileVerifiedByAdmin: true,
       documentsDriveFolderUrl: true,
+      maxConcurrentInfoRequests: true,
+      maxConcurrentCompanies: true,
     },
     orderBy: { createdAt: "desc" },
   });

@@ -5,7 +5,12 @@ import { resolveCompanyDisplayName } from "@/lib/emails/resolve-company-name";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 import { getClientIP } from "@/lib/security";
 import { getUserIdFromRequest } from "@/lib/session";
+import { isMockCompanyId } from "@/lib/mock-companies";
 import { isCompanyRemoved } from "@/lib/is-company-removed";
+import {
+  getUserInfoRequestQuota,
+  infoRequestLimitMessage,
+} from "@/lib/buyer-info-request-limit";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -42,9 +47,14 @@ export async function GET(req: Request, { params }: Params) {
   const interests = await prisma.userCompanyInterest.findMany({
     where: { userId, companyId },
   });
-  const requestInfo = interests.some((i) => i.type === "REQUEST_INFO");
+  const requestInterest = interests.find((i) => i.type === "REQUEST_INFO");
+  const requestInfo = Boolean(requestInterest);
   const favorite = interests.some((i) => i.type === "FAVORITE");
-  return NextResponse.json({ requestInfo, favorite });
+  return NextResponse.json({
+    requestInfo,
+    requestInfoStatus: requestInterest?.status ?? null,
+    favorite,
+  });
 }
 
 export async function POST(req: Request, { params }: Params) {
@@ -55,7 +65,14 @@ export async function POST(req: Request, { params }: Params) {
   
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { blocked: true, blockedUntil: true, email: true, name: true },
+    select: {
+      blocked: true,
+      blockedUntil: true,
+      email: true,
+      name: true,
+      role: true,
+      maxConcurrentInfoRequests: true,
+    },
   });
   
   if (!user) {
@@ -81,7 +98,7 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: "ID de empresa inválido" }, { status: 400 });
   }
 
-  if (await isCompanyRemoved(companyId)) {
+  if (!isMockCompanyId(companyId) && (await isCompanyRemoved(companyId))) {
     return NextResponse.json({ error: "Empresa no disponible" }, { status: 404 });
   }
 
@@ -144,6 +161,20 @@ export async function POST(req: Request, { params }: Params) {
       userId_companyId_type: { userId, companyId, type },
     },
   });
+
+  if (type === "REQUEST_INFO" && !existing) {
+    const quota = await getUserInfoRequestQuota({
+      id: userId,
+      role: user.role,
+      maxConcurrentInfoRequests: user.maxConcurrentInfoRequests,
+    });
+    if (!quota.canRequestMore && quota.max != null) {
+      return NextResponse.json(
+        { error: infoRequestLimitMessage(quota.max) },
+        { status: 403 }
+      );
+    }
+  }
 
   await prisma.userCompanyInterest.upsert({
     where: {

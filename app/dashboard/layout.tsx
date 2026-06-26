@@ -19,7 +19,8 @@ export default async function DashboardLayout({
     Boolean(user.phone?.trim() && user.name?.trim()) ||
     user.profileVerifiedByAdmin;
   const dniPendingReview = await getUserDniPendingReview(user.id, user.dniVerified);
-  const userDisplayName = getDisplayName(user.email);
+  const userDisplayName =
+    user.name?.trim() || getDisplayName(user.email);
 
   return (
     <DashboardShell role={user.role} userDisplayName={userDisplayName}>

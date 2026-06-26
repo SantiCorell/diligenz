@@ -52,8 +52,6 @@ export async function POST(req: Request) {
   } = body;
 
   if (
-    !representativeName?.trim() ||
-    !representativeDni?.trim() ||
     !companyLegalName?.trim() ||
     !companyCif?.trim() ||
     !companyAddress?.trim() ||
@@ -69,8 +67,8 @@ export async function POST(req: Request) {
   const userAgent = req.headers.get("user-agent");
 
   const payload = {
-    representativeName: String(representativeName).trim(),
-    representativeDni: String(representativeDni).trim(),
+    representativeName: representativeName != null ? String(representativeName).trim() : "",
+    representativeDni: representativeDni != null ? String(representativeDni).trim() : "",
     companyLegalName: String(companyLegalName).trim(),
     companyCif: String(companyCif).trim(),
     companyAddress: String(companyAddress).trim(),
@@ -98,7 +96,7 @@ export async function POST(req: Request) {
     await syncUserDriveFolderName({
       userId: session.userId,
       role: session.user.role,
-      personName: payload.representativeName,
+      personName: payload.representativeName || payload.companyLegalName,
       companyName: payload.companyLegalName,
     });
     await syncDocumentToUserDrive({
@@ -162,7 +160,7 @@ export async function POST(req: Request) {
     userEmailSent = await sendEmail({
       to: emailTo,
       subject: "Copia de tu Mandato de Venta firmado — Diligenz",
-      text: `Hola ${payload.representativeName},\n\nAdjuntamos copia del Mandato de Venta que has firmado electrónicamente en Diligenz el ${signedAtLabel}.\n\nConserva este documento para tu registro.\n\nDILIGENZ`,
+      text: `Hola ${payload.representativeName || payload.companyLegalName},\n\nAdjuntamos copia del Mandato de Venta que has firmado electrónicamente en Diligenz el ${signedAtLabel}.\n\nConserva este documento para tu registro.\n\nDILIGENZ`,
       attachments: [pdfAttachment],
     });
   } catch (e) {
@@ -174,7 +172,7 @@ export async function POST(req: Request) {
       internalEmailSent = await sendEmail({
         to: diligenzNotifyEmail,
         subject: `Nuevo mandato firmado — ${payload.companyLegalName}`,
-        text: `Se ha firmado un nuevo Mandato de Venta en Diligenz.\n\nEmpresa: ${payload.companyLegalName} (${payload.companyCif})\nRepresentante: ${payload.representativeName} (${payload.representativeDni})\nEmail contacto: ${payload.contactEmail}\nTeléfono: ${payload.contactPhone ?? "—"}\nFecha de firma: ${signedAtLabel}\n\nAdjunto el PDF firmado.`,
+        text: `Se ha firmado un nuevo Mandato de Venta en Diligenz.\n\nEmpresa: ${payload.companyLegalName} (${payload.companyCif})\nRepresentante: ${payload.representativeName || payload.representativeDni ? `${payload.representativeName || "—"} (${payload.representativeDni || "—"})` : "No indicado"}\nEmail contacto: ${payload.contactEmail}\nTeléfono: ${payload.contactPhone ?? "—"}\nFecha de firma: ${signedAtLabel}\n\nAdjunto el PDF firmado.`,
         attachments: [pdfAttachment],
       });
     } catch (e) {

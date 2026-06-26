@@ -12,7 +12,7 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
   const [company, user] = await Promise.all([
     prisma.company.findUnique({
       where: { id: companyId },
-      select: { ownerId: true, attachmentsApproved: true, removedAt: true },
+      select: { ownerId: true, removedAt: true },
     }),
     prisma.user.findUnique({
       where: { id: userId },
@@ -24,10 +24,10 @@ async function canAccessCompanyFiles(companyId: string, userId: string): Promise
     return company.ownerId === userId || user.role === "ADMIN";
   }
   if (company.ownerId === userId || user.role === "ADMIN") return true;
-  return company.attachmentsApproved === true;
+  return false;
 }
 
-/** Lista de archivos (admin, dueño o cualquier usuario registrado si attachmentsApproved) */
+/** Lista de archivos (admin o dueño de la empresa) */
 export async function GET(req: Request, { params }: Params) {
   const userId = await getUserIdFromRequest(req);
   if (!userId) {

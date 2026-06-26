@@ -1,0 +1,555 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Mail, Phone, Building2, MapPin, BarChart3, Users, FileText, Globe, ChevronDown, ChevronUp, TrendingUp, Hash } from "lucide-react";
+import { authFetch } from "@/lib/auth-client";
+import { SPAIN_CCAA_OPTIONS } from "@/lib/spain-ccaa";
+import { VALUATION_SECTOR_OPTIONS, type SectorOption } from "@/lib/valuation-sectors";
+
+type ValuationResult = {
+  minValue: number;
+  maxValue: number;
+};
+
+const COMPANY_TYPES = [
+  { value: "", label: "No especificado" },
+  { value: "EMPRESA", label: "Empresa" },
+  { value: "AUTONOMO", label: "Profesional / Autónomo" },
+];
+
+type Props = {
+  variant?: "public" | "dashboard";
+  initialEmail?: string;
+  initialPhone?: string;
+  backHref?: string;
+  eyebrow?: string;
+  title?: string;
+};
+
+export default function SellValuationForm({
+  variant = "public",
+  initialEmail = "",
+  initialPhone = "",
+  backHref,
+  eyebrow = "Valoración orientativa",
+  title = "Valora tu empresa en minutos",
+}: Props) {
+  const [email, setEmail] = useState(initialEmail);
+  const [phone, setPhone] = useState(initialPhone);
+  const [companyName, setCompanyName] = useState("");
+  const [sector, setSector] = useState("");
+  const [sectorSubcategory, setSectorSubcategory] = useState("");
+  const [location, setLocation] = useState("");
+  const [revenue, setRevenue] = useState<string>("");
+  const [ebitda, setEbitda] = useState<string>("");
+  const [exerciseResult, setExerciseResult] = useState<string>("");
+  const [employees, setEmployees] = useState<string>("");
+  const [companyType, setCompanyType] = useState<string>("");
+  const [yearsOperating, setYearsOperating] = useState<string>("");
+  const [revenueGrowthPercent, setRevenueGrowthPercent] = useState<string>("");
+  const [arr, setArr] = useState<string>("");
+  const [website, setWebsite] = useState<string>("");
+  const [cnae, setCnae] = useState("");
+  const [description, setDescription] = useState("");
+  const [showOptional, setShowOptional] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<ValuationResult | null>(null);
+  const [sectorOptions, setSectorOptions] = useState<SectorOption[]>(VALUATION_SECTOR_OPTIONS);
+
+  useEffect(() => {
+    fetch("/api/sectors")
+      .then((r) => r.json())
+      .then((d: { options?: SectorOption[] }) => {
+        if (d.options?.length) setSectorOptions(d.options);
+      })
+      .catch(() => {});
+  }, []);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setResult(null);
+
+    const emailTrim = email.trim();
+    const phoneTrim = phone.trim();
+
+    if (!emailTrim) {
+      setError("El correo electrónico es obligatorio para recibir la valoración.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
+      setError("Indica un correo electrónico válido.");
+      return;
+    }
+    if (!phoneTrim) {
+      setError("El teléfono es obligatorio para recibir la valoración.");
+      return;
+    }
+    if (phoneTrim.replace(/\D/g, "").length < 9) {
+      setError("Indica un teléfono válido (mínimo 9 dígitos).");
+      return;
+    }
+    if (!sector || !location || !revenue || Number(revenue) <= 0) {
+      setError("Completa al menos sector, ubicación y facturación anual.");
+      return;
+    }
+    if (exerciseResult !== "" && !Number.isFinite(Number(exerciseResult))) {
+      setError("Indica un resultado del ejercicio numérico válido o déjalo vacío.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await authFetch("/api/valuation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: emailTrim,
+          phone: phoneTrim,
+          companyName: companyName.trim() || undefined,
+          description: description.trim() || undefined,
+          sector,
+          sectorSubcategory: sectorSubcategory.trim() || undefined,
+          location,
+          revenue: Number(revenue),
+          ebitda: ebitda === "" ? null : Number(ebitda),
+          exerciseResult: exerciseResult === "" ? null : Number(exerciseResult),
+          employees: employees === "" ? null : Number(employees),
+          companyType: companyType || undefined,
+          yearsOperating: yearsOperating === "" ? undefined : Number(yearsOperating),
+          revenueGrowthPercent: revenueGrowthPercent === "" ? undefined : Number(revenueGrowthPercent),
+          arr: arr === "" ? undefined : Number(arr),
+          website: website.trim() || undefined,
+          cnae: cnae.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "No se pudo calcular la valoración.");
+        return;
+      }
+      setResult(data);
+    } catch {
+      setError("Error inesperado. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputClass =
+    "mt-1.5 w-full rounded-xl border-2 border-[var(--brand-primary)]/15 bg-white px-4 py-3 text-[var(--foreground)] placeholder:opacity-50 focus:border-[var(--brand-primary)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition placeholder:text-[var(--foreground)]/40";
+  const labelClass = "block text-sm font-semibold text-[var(--brand-primary)]";
+  const sectionTitleClass = "text-base font-bold text-[var(--brand-primary)] flex items-center gap-2";
+  const optionalBadge = <span className="text-xs font-normal text-[var(--foreground)]/60 normal-case">(opcional)</span>;
+
+  const isDashboard = variant === "dashboard";
+
+  return (
+    <>
+      <section className={`relative ${isDashboard ? "py-0" : "px-4 py-8 sm:px-6 md:py-12"}`}>
+        <div className={`mx-auto max-w-2xl ${isDashboard ? "" : ""}`}>
+          {backHref && (
+            <Link
+              href={backHref}
+              className="mb-4 inline-block text-sm font-medium text-[var(--brand-primary)] hover:underline opacity-90"
+            >
+              ← Volver a mis empresas
+            </Link>
+          )}
+          <span className="page-eyebrow">{eyebrow}</span>
+          <h1 className="page-title mt-2">{title}</h1>
+          <p className="mt-3 max-w-xl text-sm text-[var(--foreground)]/75 sm:text-base">
+            Rango orientativo afinado por sector y datos que indiques (banda más estrecha que una estimación
+            genérica). Confidencial y sin compromiso.
+          </p>
+        </div>
+      </section>
+
+      <section className={isDashboard ? "pb-8" : "pb-12 md:pb-16"}>
+        <div className={`mx-auto max-w-2xl ${isDashboard ? "" : "px-4 sm:px-6"}`}>
+          <div className="page-card page-card-padded">
+              <p className="text-xs text-[var(--foreground)]/65 mb-5">
+                Los campos marcados con <span className="text-red-500 font-medium">*</span> son obligatorios.
+              </p>
+              <form onSubmit={submit} className="space-y-0">
+                {/* Contacto — bloque blanco */}
+                <div className="pb-6 mb-6 border-b border-[var(--brand-primary)]/10">
+                  <h2 className={`${sectionTitleClass} text-[var(--brand-dark)]`}>
+                    <Mail className="w-4 h-4 shrink-0 text-[var(--brand-primary)]" />
+                    Datos de contacto
+                  </h2>
+                  <p className="text-sm text-[var(--foreground)]/70 mt-1 mb-4">
+                    Para enviarte el resultado por correo.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="email" className={labelClass}>
+                        Correo electrónico <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--brand-primary)]/50" />
+                        <input
+                          id="email"
+                          type="email"
+                          autoComplete="email"
+                          className={`${inputClass} pl-10`}
+                          placeholder="tu@email.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="phone" className={labelClass}>
+                        Teléfono <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--brand-primary)]/50" />
+                        <input
+                          id="phone"
+                          type="tel"
+                          autoComplete="tel"
+                          className={`${inputClass} pl-10`}
+                          placeholder="600 000 000"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Datos de la empresa — bloque blanco */}
+                <div className="pb-6 mb-6 border-b border-[var(--brand-primary)]/10">
+                  <h2 className={`${sectionTitleClass} text-[var(--brand-dark)]`}>
+                    <Building2 className="w-4 h-4 shrink-0 text-[var(--brand-primary)]" />
+                    Datos de la empresa
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div className="sm:col-span-2">
+                      <label htmlFor="companyName" className={labelClass}>
+                        Nombre real de la empresa {optionalBadge}
+                      </label>
+                      <p className="mt-1 text-xs text-[var(--foreground)]/60">
+                        Confidencial: en la web la ficha usará un nombre de proyecto generado automáticamente.
+                      </p>
+                      <input
+                        id="companyName"
+                        type="text"
+                        className={inputClass}
+                        placeholder="Ej. Mi Empresa S.L."
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label htmlFor="website" className={labelClass}>Página web {optionalBadge}</label>
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--brand-primary)]/50" />
+                        <input
+                          id="website"
+                          type="url"
+                          className={`${inputClass} pl-10`}
+                          placeholder="https://www.ejemplo.com"
+                          value={website}
+                          onChange={(e) => setWebsite(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="cnae" className={labelClass}>CNAE {optionalBadge}</label>
+                      <div className="relative">
+                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--brand-primary)]/50" />
+                        <input
+                          id="cnae"
+                          type="text"
+                          className={`${inputClass} pl-10`}
+                          maxLength={10}
+                          placeholder="Ej. 6201"
+                          value={cnae}
+                          onChange={(e) => setCnae(e.target.value)}
+                        />
+                      </div>
+                      <p className="mt-1 text-xs text-[var(--foreground)]/60">
+                        Código de actividad económica (4 dígitos habitualmente).
+                      </p>
+                    </div>
+                    <div>
+                      <label htmlFor="companyType" className={labelClass}>Tipo de entidad {optionalBadge}</label>
+                      <select
+                        id="companyType"
+                        className={inputClass}
+                        value={companyType}
+                        onChange={(e) => setCompanyType(e.target.value)}
+                      >
+                        {COMPANY_TYPES.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="sector" className={labelClass}>Sector <span className="text-red-500">*</span></label>
+                      <select
+                        id="sector"
+                        className={inputClass}
+                        value={sector}
+                        onChange={(e) => setSector(e.target.value)}
+                        required
+                      >
+                        {sectorOptions.map((s) => (
+                          <option key={s.value || "empty"} value={s.value} disabled={s.value === ""}>
+                            {s.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="sectorSubcategory" className={labelClass}>
+                        Subcategoría o nicho {optionalBadge}
+                      </label>
+                      <input
+                        id="sectorSubcategory"
+                        type="text"
+                        className={inputClass}
+                        maxLength={280}
+                        placeholder="Ej. software dental, franquicias de cafetería, logística frigorífica…"
+                        value={sectorSubcategory}
+                        onChange={(e) => setSectorSubcategory(e.target.value)}
+                      />
+                      <p className="mt-1 text-xs text-[var(--foreground)]/60">
+                        Texto libre para precisar el segmento; ayuda al equipo a contextualizar el proyecto.
+                      </p>
+                    </div>
+                    <div>
+                      <label htmlFor="location" className={labelClass}>Comunidad autónoma <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--brand-primary)]/50 pointer-events-none z-10" />
+                        <select
+                          id="location"
+                          required
+                          className={`${inputClass} pl-10 appearance-none`}
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                        >
+                          {SPAIN_CCAA_OPTIONS.map((opt) => (
+                            <option key={opt.value || "empty"} value={opt.value} disabled={opt.value === ""}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="revenue" className={labelClass}>Facturación anual (€) <span className="text-red-500">*</span></label>
+                      <div className="relative">
+                        <BarChart3 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--brand-primary)]/50" />
+                        <input
+                          id="revenue"
+                          type="number"
+                          min={1}
+                          className={`${inputClass} pl-10`}
+                          placeholder="Ej. 500 000"
+                          value={revenue}
+                          onChange={(e) => setRevenue(e.target.value)}
+                        />
+                      </div>
+                      <p className="mt-1 text-xs text-[var(--foreground)]/60">Ingresos del último ejercicio.</p>
+                    </div>
+                    <div>
+                      <label htmlFor="ebitda" className={labelClass}>EBITDA (€) {optionalBadge}</label>
+                      <input
+                        id="ebitda"
+                        type="number"
+                        className={inputClass}
+                        placeholder="Ej. 80 000 o -20 000"
+                        value={ebitda}
+                        onChange={(e) => setEbitda(e.target.value)}
+                      />
+                      <p className="mt-1 text-xs text-[var(--foreground)]/60">Puede ser negativo.</p>
+                    </div>
+                    <div>
+                      <label htmlFor="exerciseResult" className={labelClass}>
+                        Resultado del ejercicio (€) {optionalBadge}
+                      </label>
+                      <input
+                        id="exerciseResult"
+                        type="number"
+                        className={inputClass}
+                        placeholder="Ej. 45 000 o -12 000"
+                        value={exerciseResult}
+                        onChange={(e) => setExerciseResult(e.target.value)}
+                      />
+                      <p className="mt-1 text-xs text-[var(--foreground)]/60">
+                        Beneficio neto contable del último ejercicio. Puede ser negativo.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bloque opcional colapsable — botón estilo Dili */}
+                <div className="rounded-xl overflow-hidden border-2 border-[var(--brand-primary)]/20 bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setShowOptional(!showOptional)}
+                    className="w-full flex items-center justify-between gap-2 px-5 py-4 text-left text-[var(--brand-primary)] bg-white hover:bg-[var(--brand-primary)]/5 border-b border-[var(--brand-primary)]/10 transition font-semibold"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--brand-primary)]/10">
+                        <FileText className="w-4 h-4 text-[var(--brand-primary)]" />
+                      </span>
+                      Más datos para afinar la valoración
+                      <span className="text-xs font-normal text-[var(--foreground)]/60 normal-case">(opcional)</span>
+                    </span>
+                    <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--brand-primary)]/10 shrink-0">
+                      {showOptional ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </span>
+                  </button>
+                  {showOptional && (
+                    <div className="p-5 pt-4 bg-white grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="yearsOperating" className={labelClass}>Años operando</label>
+                        <input
+                          id="yearsOperating"
+                          type="number"
+                          min={0}
+                          className={inputClass}
+                          placeholder="Ej. 5"
+                          value={yearsOperating}
+                          onChange={(e) => setYearsOperating(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="revenueGrowthPercent" className={labelClass}>Crecimiento facturación (%)</label>
+                        <input
+                          id="revenueGrowthPercent"
+                          type="number"
+                          className={inputClass}
+                          placeholder="Ej. 50"
+                          value={revenueGrowthPercent}
+                          onChange={(e) => setRevenueGrowthPercent(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="arr" className={labelClass}>ARR (€)</label>
+                        <input
+                          id="arr"
+                          type="number"
+                          min={0}
+                          className={inputClass}
+                          placeholder="Ingresos recurrentes anuales"
+                          value={arr}
+                          onChange={(e) => setArr(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="employees" className={labelClass}>Empleados</label>
+                        <div className="relative">
+                          <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--brand-primary)]/50" />
+                          <input
+                            id="employees"
+                            type="number"
+                            min={0}
+                            className={`${inputClass} pl-10`}
+                            placeholder="Ej. 10"
+                            value={employees}
+                            onChange={(e) => setEmployees(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label htmlFor="description" className={`${labelClass} flex items-center gap-2`}>
+                          <FileText className="w-4 h-4" />
+                          Descripción de la actividad
+                        </label>
+                        <textarea
+                          id="description"
+                          rows={3}
+                          className={inputClass}
+                          placeholder="Actividad, puntos fuertes y motivo de venta."
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 flex items-start gap-2 mt-6" role="alert">
+                    <span className="shrink-0 mt-0.5">⚠</span>
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <div className="mt-6 sm:mt-8 pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-xl py-4 min-h-[48px] sm:min-h-[52px] text-base font-bold bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/25 hover:shadow-xl hover:shadow-[var(--brand-primary)]/30 hover:opacity-95 disabled:opacity-60 transition flex items-center justify-center gap-2.5 touch-manipulation"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="inline-block w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden />
+                        Calculando valoración…
+                      </>
+                    ) : (
+                      <>
+                        <TrendingUp className="w-5 h-5 shrink-0" />
+                        Ver valoración orientativa
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {result && (
+              <div className="page-card page-card-padded mt-6 sm:mt-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="rounded-full bg-[var(--brand-primary)]/10 px-3 py-1 text-xs font-semibold text-[var(--brand-primary)]">
+                    Resultado
+                  </span>
+                </div>
+                <h2 className="text-xl font-bold text-[var(--brand-primary)]">
+                  Valoración orientativa
+                </h2>
+                <p className="mt-2 text-[var(--foreground)]/80 text-sm">
+                  Banda relativamente estrecha según sector y cifras aportadas (menos dispersión que un rango
+                  genérico amplio). Es <strong>orientativa</strong> y no sustituye una valoración profesional.
+                </p>
+                <div className="mt-4 sm:mt-6 rounded-xl bg-white border-2 border-[var(--brand-primary)]/15 p-4 sm:p-6">
+                  <p className="text-sm font-semibold text-[var(--brand-primary)]/90 mb-1">
+                    Rango estimado
+                  </p>
+                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--brand-primary)] tracking-tight break-all">
+                    {result.minValue.toLocaleString("es-ES")} € – {result.maxValue.toLocaleString("es-ES")} €
+                  </p>
+                </div>
+                <p className="mt-4 text-xs text-[var(--foreground)] opacity-70">
+                  La valoración definitiva depende de due diligence, documentación y condiciones de mercado.
+                </p>
+                <div className="mt-6 pt-6 border-t border-[var(--brand-primary)]/15 flex flex-wrap gap-3">
+                  {backHref && (
+                    <Link
+                      href={backHref}
+                      className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/25 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5 transition"
+                    >
+                      Ver mis empresas →
+                    </Link>
+                  )}
+                  <Link
+                    href="/servicios#pricing"
+                    className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
+                  >
+                    Ver servicios y precios →
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+    </>
+  );
+}

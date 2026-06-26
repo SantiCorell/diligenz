@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { MOCK_COMPANIES } from "@/lib/mock-companies";
 import { formatCompactEuroRange } from "@/lib/format-financial";
+import { publicListingName } from "@/lib/company-display-names";
 
 export type ResolvedBuyerCompany = {
   company: CompanyMock | null;
@@ -38,6 +39,7 @@ export async function resolveCompanyForBuyerInterest(
       return { company: null, published: false, fallbackName: null };
     }
     const published = company.deals.length > 0;
+    const deal = company.deals[0];
     const val = company.valuations[0];
     const revenueStr = val ? formatCompactEuroRange(val.minValue, val.maxValue) : "—";
     const imgFiles = company.companyFiles;
@@ -48,7 +50,8 @@ export async function resolveCompanyForBuyerInterest(
         : [];
     const cm: CompanyMock = {
       id: company.id,
-      name: company.name,
+      name: publicListingName(deal?.title, company.name),
+      businessName: company.name,
       sector: company.sector,
       location: company.location,
       revenue: revenueStr,
@@ -64,6 +67,7 @@ export async function resolveCompanyForBuyerInterest(
       galleryImageSrcs,
       valuationSaleMin: val?.salePriceMin ?? null,
       valuationSaleMax: val?.salePriceMax ?? null,
+      reference: company.reference ?? null,
     };
     return {
       company: cm,

@@ -9,23 +9,17 @@ export default function WhatIsDiligenz() {
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid items-center gap-8 md:grid-cols-2 md:gap-10 lg:gap-14">
-          {/* Columna izquierda: bloque verde + logo */}
-          <div className="relative mx-auto flex min-h-[16.5rem] w-full max-w-[24rem] items-center justify-start sm:min-h-[18.5rem] md:mx-0 md:max-w-none md:min-h-[20.5rem] lg:min-h-[22rem]">
-            <div
-              className="absolute left-0 top-1/2 h-[86%] w-[78%] -translate-y-1/2 rounded-[2.25rem] bg-[var(--brand-bg-mint)] sm:w-[80%] md:h-[88%] md:w-[82%] lg:rounded-[2.5rem]"
-              aria-hidden
-            />
+          <div className="relative mx-auto aspect-square w-full max-w-[18rem] overflow-hidden rounded-[2.5rem] sm:max-w-[20rem] md:mx-0 md:max-w-[22rem] lg:max-w-[24rem] lg:rounded-[2.75rem]">
             <Image
-              src="/brand/logo-diligenz-3d.png"
+              src="/logo-dili.png"
               alt="Logo Diligenz"
-              width={707}
-              height={686}
-              className="relative z-10 ml-[6%] h-[13.5rem] w-auto max-w-[115%] object-contain object-left drop-shadow-[0_20px_40px_rgb(145_70_255/14%)] sm:h-[14.5rem] md:ml-[4%] md:h-[15.5rem] lg:h-[16.75rem]"
-              priority={false}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 288px, (max-width: 1024px) 352px, 384px"
+              priority
             />
           </div>
 
-          {/* Columna derecha: texto sobre fondo de página */}
           <div className="md:py-2">
             <h2 className="text-[1.65rem] font-bold tracking-tight text-[var(--brand-dark)] sm:text-[1.85rem] lg:text-[2rem]">
               Qué es Diligenz

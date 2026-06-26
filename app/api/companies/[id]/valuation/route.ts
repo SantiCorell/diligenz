@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { canOwnerEditCompanyListing } from "@/lib/company-owner-edit";
-import { parseValuationFormData, upsertCompanyValuation } from "@/lib/update-company-valuation";
+import { parseOwnerValuationFormData, upsertOwnerCompanyValuation } from "@/lib/update-company-valuation";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -45,13 +45,13 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   const formData = await req.formData();
-  const parsed = parseValuationFormData(formData);
+  const parsed = parseOwnerValuationFormData(formData);
   if ("error" in parsed) {
     const origin = new URL(req.url).origin;
     return NextResponse.redirect(new URL(`/dashboard/seller/companies/${companyId}?error=valuation`, origin));
   }
 
-  await upsertCompanyValuation(companyId, parsed);
+  await upsertOwnerCompanyValuation(companyId, parsed);
 
   const origin = new URL(req.url).origin;
   return NextResponse.redirect(new URL(`/dashboard/seller/companies/${companyId}?success=valuation`, origin));

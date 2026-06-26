@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { generateDealTitle } from "@/lib/dealCode";
+import { resolveReferenceForNewCompany } from "@/lib/company-reference";
 import { computeValuationRange } from "@/lib/compute-valuation-range";
 
 export async function POST(req: Request) {
@@ -19,6 +20,8 @@ export async function POST(req: Request) {
   const revenueRaw = formData.get("revenue")?.toString()?.trim();
   const ebitdaRaw = formData.get("ebitda")?.toString()?.trim();
   const exerciseResultRaw = formData.get("exerciseResult")?.toString()?.trim();
+  const cnaeRaw = formData.get("cnae")?.toString();
+  const referenceRaw = formData.get("reference")?.toString();
 
   if (!ownerId || !name || !sector || !location || !revenueRaw) {
     return NextResponse.redirect(new URL("/admin/companies?error=create_missing", origin));
@@ -49,19 +52,27 @@ export async function POST(req: Request) {
     companyType: "EMPRESA",
   });
 
-  const company = await prisma.company.create({
-    data: {
-      name,
-      sector,
-      location,
-      revenue: revenueRaw,
-      ebitda: numEbitda != null ? String(numEbitda) : null,
-      exerciseResult: exerciseResultRaw && exerciseResultRaw !== "" ? exerciseResultRaw : null,
-      ownerId,
-      status: "DRAFT",
-      companyType: "EMPRESA",
-    },
-  });
+  let company;
+  try {
+    const reference = await resolveReferenceForNewCompany(referenceRaw);
+    company = await prisma.company.create({
+      data: {
+        name,
+        sector,
+        location,
+        revenue: revenueRaw,
+        ebitda: numEbitda != null ? String(numEbitda) : null,
+        exerciseResult: exerciseResultRaw && exerciseResultRaw !== "" ? exerciseResultRaw : null,
+        cnae: cnaeRaw?.trim().replace(/\s/g, "").slice(0, 10) || null,
+        reference,
+        ownerId,
+        status: "DRAFT",
+        companyType: "EMPRESA",
+      },
+    });
+  } catch {
+    return NextResponse.redirect(new URL("/admin/companies?error=create_reference", origin));
+  }
 
   await prisma.valuation.create({
     data: { minValue, maxValue, companyId: company.id },

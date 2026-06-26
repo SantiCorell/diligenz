@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { ensureCompanyDriveFolder } from "@/lib/google-drive/company-drive";
 import { getUserIdFromRequest } from "@/lib/session";
 import { generateDealTitle } from "@/lib/dealCode";
 import { computeValuationRange } from "@/lib/compute-valuation-range";
+import { ensureCompanyReference } from "@/lib/company-reference";
 import { sanitizeLongText, sanitizeString } from "@/lib/security";
+import {
+  getProfessionalCompanyQuota,
+  professionalCompanyLimitMessage,
+} from "@/lib/professional-company-limit";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -40,6 +46,7 @@ export async function POST(req: Request) {
       hasReceivedFunding,
       website,
       sectorSubcategory,
+      cnae,
     } = body;
 
     const emailStr = email != null ? String(email).trim() : "";
@@ -113,6 +120,10 @@ export async function POST(req: Request) {
       sectorSubcategory != null && String(sectorSubcategory).trim() !== ""
         ? sanitizeString(sectorSubcategory).slice(0, 280) || null
         : null;
+    const cnaeStr =
+      cnae != null && String(cnae).trim() !== ""
+        ? sanitizeString(cnae).replace(/\s/g, "").slice(0, 10) || null
+        : null;
 
     const { minValue, maxValue } = computeValuationRange({
       sector,
@@ -132,6 +143,7 @@ export async function POST(req: Request) {
         companyName: name !== "Empresa sin nombre" ? name : null,
         sector,
         sectorSubcategory: sectorSubcategoryStr,
+        cnae: cnaeStr,
         location: String(location),
         revenue: numRevenue,
         ebitda: numEbitda ?? null,
@@ -156,11 +168,30 @@ export async function POST(req: Request) {
     const userId = await getUserIdFromRequest(req);
 
     if (userId) {
+      const owner = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true, maxConcurrentCompanies: true },
+      });
+      if (owner) {
+        const quota = await getProfessionalCompanyQuota({
+          id: userId,
+          role: owner.role,
+          maxConcurrentCompanies: owner.maxConcurrentCompanies,
+        });
+        if (!quota.canAddMore && quota.max != null) {
+          return NextResponse.json(
+            { error: professionalCompanyLimitMessage(quota.max) },
+            { status: 403 }
+          );
+        }
+      }
+
       const company = await prisma.company.create({
         data: {
           name,
           sector,
           sectorSubcategory: sectorSubcategoryStr,
+          cnae: cnaeStr,
           location: String(location),
           revenue: String(numRevenue),
           ebitda: numEbitda != null ? String(numEbitda) : null,
@@ -179,6 +210,7 @@ export async function POST(req: Request) {
           website: websiteStr,
         },
       });
+      await ensureCompanyReference(company.id);
       await prisma.valuation.create({
         data: { minValue, maxValue, companyId: company.id },
       });
@@ -194,6 +226,15 @@ export async function POST(req: Request) {
           companyId: company.id,
         },
       });
+      try {
+        await ensureCompanyDriveFolder({
+          companyId: company.id,
+          ownerId: userId,
+          companyName: name,
+        });
+      } catch (driveErr) {
+        console.error("[valuation] company drive folder:", driveErr);
+      }
     }
 
     return NextResponse.json({ minValue, maxValue });

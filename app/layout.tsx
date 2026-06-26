@@ -14,6 +14,7 @@ import {
 import "./globals.css";
 import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
 import ConditionalSpeedInsights from "@/components/consent/ConditionalSpeedInsights";
+import SectorCatalogHydrator from "@/components/sectors/SectorCatalogHydrator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -150,6 +151,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {children}
+        <SectorCatalogHydrator />
         <CookieConsentBanner />
         <ConditionalSpeedInsights />
       </body>

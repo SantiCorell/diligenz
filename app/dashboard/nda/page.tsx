@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionWithUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { dashboardPathForRole } from "@/lib/dashboard-path";
 import MandatoSignWizard from "@/components/mandato/MandatoSignWizard";
 import MandatoCompraSignWizard from "@/components/mandato/MandatoCompraSignWizard";
 import MandatoColaboracionSignWizard from "@/components/mandato/MandatoColaboracionSignWizard";
@@ -14,6 +15,7 @@ export default async function DashboardMandatoPage() {
   if (!session) redirect("/login");
 
   const role = session.user.role;
+  const panelHref = dashboardPathForRole(role);
   const prefill = {
     name: session.user.name,
     email: session.user.email,
@@ -32,6 +34,7 @@ export default async function DashboardMandatoPage() {
         alreadySigned={session.user.ndaSigned || Boolean(agreement)}
         signedAt={agreement?.signedAt?.toISOString() ?? null}
         signedEmail={agreement?.contactEmail ?? session.user.email}
+        panelHref={panelHref}
       />
     );
   }
@@ -48,6 +51,7 @@ export default async function DashboardMandatoPage() {
         alreadySigned={session.user.ndaSigned || Boolean(mandate)}
         signedAt={mandate?.signedAt?.toISOString() ?? null}
         signedEmail={mandate?.contactEmail ?? session.user.email}
+        panelHref={panelHref}
       />
     );
   }
@@ -67,6 +71,7 @@ export default async function DashboardMandatoPage() {
       alreadySigned={session.user.ndaSigned || Boolean(mandate)}
       signedAt={mandate?.signedAt?.toISOString() ?? null}
       signedEmail={mandate?.contactEmail ?? session.user.email}
+      panelHref={panelHref}
     />
   );
 }
