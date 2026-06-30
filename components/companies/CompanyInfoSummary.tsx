@@ -92,7 +92,7 @@ export default function CompanyInfoSummary({ company }: Props) {
         )}
         {company.arr != null && (
           <p>
-            <strong>ARR (€):</strong> {company.arr.toLocaleString("es-ES")} €
+            <strong>ARR (€):</strong> {formatCompanyMoney(String(company.arr))}
           </p>
         )}
         {company.owner && (

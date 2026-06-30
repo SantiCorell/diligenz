@@ -4,13 +4,15 @@ import Link from "next/link";
 import { getSessionWithUser } from "@/lib/session";
 import UserOwnerSearch from "@/components/admin/UserOwnerSearch";
 import AdminCompanyDriveSection from "@/components/admin/AdminCompanyDriveSection";
+import AdminCompanyFavoritesSection from "@/components/admin/AdminCompanyFavoritesSection";
 import SectorSelect from "@/components/forms/SectorSelect";
 import CcaaSelect from "@/components/forms/CcaaSelect";
 import { getFormSectorOptions } from "@/lib/sector-catalog";
 import { ccaaLabel } from "@/lib/spain-ccaa";
 import { isFeaturedActive, FEATURED_DURATION_MS } from "@/lib/company-ranking";
 import { publicListingName } from "@/lib/company-display-names";
-import { getCompanyDocumentsDriveUrl } from "@/lib/company-display";
+import { getCompanyDocumentsDriveUrl, displaySalePrice, formatCompanyMoney } from "@/lib/company-display";
+import { formatCompactEuroRange } from "@/lib/format-financial";
 import { ensureCompanyDriveFolder } from "@/lib/google-drive/company-drive";
 import { ensureCompanyReference } from "@/lib/company-reference";
 import type { DocumentType } from "@prisma/client";
@@ -110,6 +112,24 @@ export default async function AdminCompanyDetail({
         <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
           {company.sector} · {ccaaLabel(company.location)}
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <span className="rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-950">
+            Facturación: {formatCompanyMoney(company.revenue)}
+          </span>
+          <span className="rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-950">
+            EBITDA: {formatCompanyMoney(company.ebitda)}
+          </span>
+          {valuation ? (
+            <span className="rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-950">
+              Valoración: {formatCompactEuroRange(valuation.minValue, valuation.maxValue)}
+            </span>
+          ) : null}
+          {valuation && displaySalePrice(valuation) ? (
+            <span className="rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-950">
+              Precio venta: {displaySalePrice(valuation)}
+            </span>
+          ) : null}
+        </div>
         {company.removedAt && (
           <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
             Empresa archivada el{" "}
@@ -702,6 +722,8 @@ export default async function AdminCompanyDetail({
           </p>
         )}
       </section>
+
+      <AdminCompanyFavoritesSection companyId={company.id} />
     </main>
   );
 }

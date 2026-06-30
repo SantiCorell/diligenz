@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Mail, Phone, Building2, MapPin, BarChart3, Users, FileText, Globe, ChevronDown, ChevronUp, TrendingUp, Hash } from "lucide-react";
 import { authFetch } from "@/lib/auth-client";
+import { formatCompactEuroRange } from "@/lib/format-financial";
 import { SPAIN_CCAA_OPTIONS } from "@/lib/spain-ccaa";
 import { VALUATION_SECTOR_OPTIONS, type SectorOption } from "@/lib/valuation-sectors";
 
@@ -524,7 +525,7 @@ export default function SellValuationForm({
                     Rango estimado
                   </p>
                   <p className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--brand-primary)] tracking-tight break-all">
-                    {result.minValue.toLocaleString("es-ES")} € – {result.maxValue.toLocaleString("es-ES")} €
+                    {formatCompactEuroRange(result.minValue, result.maxValue)}
                   </p>
                 </div>
                 <p className="mt-4 text-xs text-[var(--foreground)] opacity-70">

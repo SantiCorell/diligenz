@@ -20,6 +20,7 @@
   --gradient-start: #9146ff;
   --gradient-end: #dbeda8;
   --brand-shadow: 145 70 255;
+  --site-topbar-height: 4.5rem;
 }
 
 @theme inline {
@@ -228,28 +229,31 @@ body {
   );
 }
 
-/* En inicio: morado largo hasta mitad del vídeo hero */
+/* En inicio: morado sólido hasta mitad del vídeo; degradado más abajo */
 .home-purple-backdrop.hero-panel {
   background: linear-gradient(
     180deg,
     #9146ff 0%,
-    #9f5cff 14%,
-    #b88aff 30%,
-    #c8b4ff 46%,
-    #d9c9ff 58%,
-    #e8dcff 70%,
-    #f3eeff 82%,
-    #faf8ff 92%,
+    #9146ff 36%,
+    #9f5cff 44%,
+    #a86fff 52%,
+    #b88aff 58%,
+    #c8b4ff 68%,
+    #d9c9ff 76%,
+    #e8dcff 84%,
+    #f0eaff 90%,
+    #f7f3ff 95%,
+    #faf8ff 98%,
     #ffffff 100%
   );
-  height: max(68rem, 112vh);
-  min-height: 68rem;
+  height: max(74rem, 120vh);
+  min-height: 74rem;
 }
 
 @media (min-width: 768px) {
   .home-purple-backdrop.hero-panel {
-    height: max(76rem, 118vh);
-    min-height: 76rem;
+    height: max(82rem, 128vh);
+    min-height: 82rem;
   }
 }
 
@@ -263,17 +267,25 @@ body {
   pointer-events: none;
 }
 
-/* Header: barra «Valora» + navbar sticky en toda la página */
-.site-header-sticky {
-  position: sticky;
+/* Header: barra «Valora» fixed; navbar sticky justo debajo en todo el scroll */
+.site-topbar-fixed {
+  position: fixed;
   top: 0;
-  z-index: 50;
+  left: 0;
+  right: 0;
+  z-index: 60;
   width: 100%;
-  padding-bottom: 0.35rem;
-  background: transparent;
+}
+
+.site-topbar-spacer {
+  height: var(--site-topbar-height);
+  pointer-events: none;
 }
 
 .site-navbar-sticky {
+  position: sticky;
+  top: var(--site-topbar-height);
+  z-index: 55;
   width: 100%;
   padding: 0.35rem 0 0.65rem;
 }
@@ -757,11 +769,20 @@ body {
   );
 }
 
-.company-card-shell {
-  box-shadow: 0 8px 32px rgb(var(--brand-shadow) / 0.1);
-  transition: box-shadow 0.2s, transform 0.2s;
+.company-card-hover-wrap {
+  padding: 0.875rem 0.25rem;
 }
 
-.company-card-shell:hover {
-  box-shadow: 0 12px 40px rgb(var(--brand-shadow) / 0.16);
+.company-card-shell {
+  box-shadow: 0 8px 32px rgb(var(--brand-shadow) / 0.1);
+  transition:
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.company-card-hover-wrap:hover .company-card-shell {
+  transform: translateY(-10px);
+  box-shadow:
+    0 24px 48px rgb(var(--brand-shadow) / 0.24),
+    0 10px 20px rgb(0 0 0 / 0.07);
 }

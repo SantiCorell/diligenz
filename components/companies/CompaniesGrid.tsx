@@ -1,114 +1,215 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import CompanyCard from "./CompanyCard";
-import CompaniesFilters from "./CompaniesFilters";
+import CompaniesFilters, { type CompaniesDetailFilters } from "./CompaniesFilters";
 import PrimarySectorFilter from "./PrimarySectorFilter";
 import CompaniesResultsBar from "./CompaniesResultsBar";
+import {
+  CLEARED_COMPANIES_DETAIL_FILTERS,
+} from "@/lib/companies-filter-defaults";
+import { reconcileFinancialRange } from "@/lib/financial-range-options";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+
+const RANGE_KEYS = ["revenueMin", "revenueMax", "ebitdaMin", "ebitdaMax"] as const;
+type RangeKey = (typeof RANGE_KEYS)[number];
+
+function pickRange(filters: CompaniesDetailFilters) {
+  return {
+    revenueMin: filters.revenueMin,
+    revenueMax: filters.revenueMax,
+    ebitdaMin: filters.ebitdaMin,
+    ebitdaMax: filters.ebitdaMax,
+  };
+}
+
+function rangesEqual(a: CompaniesDetailFilters, b: CompaniesDetailFilters) {
+  return RANGE_KEYS.every((key) => a[key] === b[key]);
+}
 
 type Props = {
   companies: CompanyMock[];
   isLoggedIn: boolean;
-  locationFromUrl?: string;
-  locations: string[];
+  favoriteCompanyIds?: string[];
+  filtersFromUrl: CompaniesDetailFilters;
+  sectorOptions: { value: string; label: string }[];
   total: number;
   totalPages: number;
   currentPage: number;
   pageSize: number;
-  sectorSlugFromUrl?: string | null;
   sectorCounts: Record<string, number>;
   catalogTotal: number;
 };
 
-function buildQuery(sector: string, location: string, page: number): string {
+export type CompaniesQueryState = CompaniesDetailFilters & {
+  page: number;
+};
+
+function buildQuery(state: CompaniesQueryState): string {
   const p = new URLSearchParams();
-  if (sector) p.set("sector", sector);
-  if (location) p.set("location", location);
-  if (page > 1) p.set("page", String(page));
+  if (state.sector) p.set("sector", state.sector);
+  if (state.location) p.set("location", state.location);
+  if (state.revenueMin) p.set("revenueMin", state.revenueMin);
+  if (state.revenueMax) p.set("revenueMax", state.revenueMax);
+  if (state.ebitdaMin) p.set("ebitdaMin", state.ebitdaMin);
+  if (state.ebitdaMax) p.set("ebitdaMax", state.ebitdaMax);
+  if (state.page > 1) p.set("page", String(state.page));
   const q = p.toString();
   return q ? `?${q}` : "";
 }
 
+const EMPTY_FILTERS = CLEARED_COMPANIES_DETAIL_FILTERS;
+
 export default function CompaniesGrid({
   companies,
   isLoggedIn,
-  locationFromUrl = "",
-  locations,
+  favoriteCompanyIds = [],
+  filtersFromUrl,
+  sectorOptions,
   total,
   totalPages,
   currentPage,
   pageSize,
-  sectorSlugFromUrl = "",
   sectorCounts,
   catalogTotal,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const [sector, setSector] = useState(sectorSlugFromUrl ?? "");
-  const [location, setLocation] = useState(locationFromUrl ?? "");
+  const [filters, setFilters] = useState<CompaniesDetailFilters>(filtersFromUrl);
+  const [rangeDraft, setRangeDraft] = useState(pickRange(filtersFromUrl));
+  const rangeCommitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipRangeDebounce = useRef(false);
 
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- reflejar sector/ubicación de la URL en los filtros */
-    setSector(sectorSlugFromUrl ?? "");
-    setLocation(locationFromUrl ?? "");
+    /* eslint-disable react-hooks/set-state-in-effect -- reflejar filtros de la URL */
+    setFilters(filtersFromUrl);
+    setRangeDraft(pickRange(filtersFromUrl));
+    skipRangeDebounce.current = true;
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [sectorSlugFromUrl, locationFromUrl]);
+  }, [filtersFromUrl]);
 
-  const navigate = (nextSector: string, nextLocation: string, page: number) => {
-    router.push(pathname + buildQuery(nextSector, nextLocation, page));
+  const navigate = useCallback(
+    (next: CompaniesDetailFilters, page: number) => {
+      router.replace(pathname + buildQuery({ ...next, page }), { scroll: false });
+    },
+    [pathname, router]
+  );
+
+  const commitRangeDraft = useCallback(
+    (draft: ReturnType<typeof pickRange>) => {
+      const next = { ...filters, ...draft };
+      if (rangesEqual(filters, next)) return;
+      setFilters(next);
+      navigate(next, 1);
+    },
+    [filters, navigate]
+  );
+
+  useEffect(() => {
+    if (skipRangeDebounce.current) {
+      skipRangeDebounce.current = false;
+      return;
+    }
+
+    if (rangeCommitTimer.current) clearTimeout(rangeCommitTimer.current);
+    rangeCommitTimer.current = setTimeout(() => {
+      commitRangeDraft(rangeDraft);
+    }, 700);
+
+    return () => {
+      if (rangeCommitTimer.current) clearTimeout(rangeCommitTimer.current);
+    };
+  }, [rangeDraft, commitRangeDraft]);
+
+  const favoriteSet = new Set(favoriteCompanyIds);
+
+  const updateFilter = <K extends keyof CompaniesDetailFilters>(key: K, value: CompaniesDetailFilters[K]) => {
+    const next = { ...filters, [key]: value };
+    setFilters(next);
+    navigate(next, 1);
   };
 
-  const handleSectorChange = (value: string) => {
-    setSector(value);
-    navigate(value, location, 1);
-  };
-  const handleLocationChange = (value: string) => {
-    setLocation(value);
-    navigate(sector, value, 1);
-  };
-  const clearLocation = () => {
-    setLocation("");
-    navigate(sector, "", currentPage);
-  };
-  const clearSector = () => {
-    setSector("");
-    navigate("", location, 1);
+  const updateRangeField = (key: RangeKey, value: string) => {
+    const changed = key.endsWith("Min") ? "min" : "max";
+    let { revenueMin, revenueMax, ebitdaMin, ebitdaMax } = rangeDraft;
+
+    if (key === "revenueMin" || key === "revenueMax") {
+      const pair = reconcileFinancialRange(
+        key === "revenueMin" ? value : revenueMin,
+        key === "revenueMax" ? value : revenueMax,
+        changed
+      );
+      revenueMin = pair.min;
+      revenueMax = pair.max;
+    } else {
+      const pair = reconcileFinancialRange(
+        key === "ebitdaMin" ? value : ebitdaMin,
+        key === "ebitdaMax" ? value : ebitdaMax,
+        changed
+      );
+      ebitdaMin = pair.min;
+      ebitdaMax = pair.max;
+    }
+
+    const nextDraft = { revenueMin, revenueMax, ebitdaMin, ebitdaMax };
+    setRangeDraft(nextDraft);
+    skipRangeDebounce.current = true;
+    commitRangeDraft(nextDraft);
   };
 
-  const locationOptions = ["", ...locations];
+  const clearAllFilters = () => {
+    setFilters(EMPTY_FILTERS);
+    setRangeDraft(pickRange(EMPTY_FILTERS));
+    skipRangeDebounce.current = true;
+    navigate(EMPTY_FILTERS, 1);
+  };
+
+  const clearLocation = () => updateFilter("location", "");
+  const clearSector = () => updateFilter("sector", "");
 
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
     (p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2
   );
 
+  const hasAnyFilter = Object.values(filters).some(Boolean);
+
   return (
     <div className="space-y-5">
       <PrimarySectorFilter
-        selectedSector={sector}
-        onSectorChange={handleSectorChange}
+        selectedSector={filters.sector}
+        onSectorChange={(value) => updateFilter("sector", value)}
         countsBySector={sectorCounts}
         totalCount={catalogTotal}
       />
 
       <CompaniesResultsBar
         total={total}
-        sectorSlug={sector}
-        location={location}
+        sectorSlug={filters.sector}
+        location={filters.location}
         currentPage={currentPage}
         totalPages={totalPages}
         pageSize={pageSize}
-        onClearSector={sector ? clearSector : undefined}
-        onClearLocation={location ? clearLocation : undefined}
+        onClearSector={filters.sector ? clearSector : undefined}
+        onClearLocation={filters.location ? clearLocation : undefined}
       />
 
       <CompaniesFilters
-        location={location}
-        onLocationChange={handleLocationChange}
-        onClearFilters={clearLocation}
-        locations={locationOptions}
+        sector={filters.sector}
+        location={filters.location}
+        revenueMin={rangeDraft.revenueMin}
+        revenueMax={rangeDraft.revenueMax}
+        ebitdaMin={rangeDraft.ebitdaMin}
+        ebitdaMax={rangeDraft.ebitdaMax}
+        sectorOptions={sectorOptions}
+        onSectorChange={(value) => updateFilter("sector", value)}
+        onLocationChange={(value) => updateFilter("location", value)}
+        onRevenueMinChange={(value) => updateRangeField("revenueMin", value)}
+        onRevenueMaxChange={(value) => updateRangeField("revenueMax", value)}
+        onEbitdaMinChange={(value) => updateRangeField("ebitdaMin", value)}
+        onEbitdaMaxChange={(value) => updateRangeField("ebitdaMax", value)}
+        onClearFilters={clearAllFilters}
       />
 
       {companies.length > 0 ? (
@@ -118,6 +219,7 @@ export default function CompaniesGrid({
               key={company.id}
               company={company}
               isLoggedIn={isLoggedIn}
+              isFavorite={favoriteSet.has(company.id)}
               ctaLabel="Más información"
             />
           ))}
@@ -128,16 +230,12 @@ export default function CompaniesGrid({
             No hay empresas con estos filtros
           </p>
           <p className="mt-2 text-sm text-[var(--foreground)]/60 max-w-md mx-auto">
-            Prueba otro sector principal o amplía la ubicación. También puedes ver todo el catálogo sin filtros.
+            Prueba otro sector, amplía la ubicación o ajusta los rangos de facturación y EBITDA.
           </p>
-          {(sector || location) && (
+          {hasAnyFilter && (
             <button
               type="button"
-              onClick={() => {
-                setSector("");
-                setLocation("");
-                navigate("", "", 1);
-              }}
+              onClick={clearAllFilters}
               className="mt-5 inline-flex items-center rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-95 transition"
             >
               Ver todas las empresas
@@ -159,17 +257,19 @@ export default function CompaniesGrid({
           <div className="flex flex-wrap items-center justify-center gap-1.5 order-1 sm:order-2">
             <PaginationButton
               disabled={currentPage <= 1}
-              onClick={() => navigate(sector, location, 1)}
-              href={currentPage <= 1 ? undefined : pathname + buildQuery(sector, location, 1)}
+              onClick={() => navigate(filters, 1)}
+              href={currentPage <= 1 ? undefined : pathname + buildQuery({ ...filters, page: 1 })}
               label="Primera página"
             >
               <ChevronsLeft className="h-4 w-4" />
             </PaginationButton>
             <PaginationButton
               disabled={currentPage <= 1}
-              onClick={() => navigate(sector, location, currentPage - 1)}
+              onClick={() => navigate(filters, currentPage - 1)}
               href={
-                currentPage <= 1 ? undefined : pathname + buildQuery(sector, location, currentPage - 1)
+                currentPage <= 1
+                  ? undefined
+                  : pathname + buildQuery({ ...filters, page: currentPage - 1 })
               }
               label="Página anterior"
             >
@@ -188,10 +288,10 @@ export default function CompaniesGrid({
                   </span>
                 ) : (
                   <a
-                    href={pathname + buildQuery(sector, location, p)}
+                    href={pathname + buildQuery({ ...filters, page: p })}
                     onClick={(e) => {
                       e.preventDefault();
-                      navigate(sector, location, p);
+                      navigate(filters, p);
                     }}
                     className="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg text-sm font-medium text-[var(--foreground)] hover:bg-[var(--brand-primary)]/10 transition"
                   >
@@ -203,11 +303,11 @@ export default function CompaniesGrid({
 
             <PaginationButton
               disabled={currentPage >= totalPages}
-              onClick={() => navigate(sector, location, currentPage + 1)}
+              onClick={() => navigate(filters, currentPage + 1)}
               href={
                 currentPage >= totalPages
                   ? undefined
-                  : pathname + buildQuery(sector, location, currentPage + 1)
+                  : pathname + buildQuery({ ...filters, page: currentPage + 1 })
               }
               label="Página siguiente"
             >
@@ -216,9 +316,11 @@ export default function CompaniesGrid({
             </PaginationButton>
             <PaginationButton
               disabled={currentPage >= totalPages}
-              onClick={() => navigate(sector, location, totalPages)}
+              onClick={() => navigate(filters, totalPages)}
               href={
-                currentPage >= totalPages ? undefined : pathname + buildQuery(sector, location, totalPages)
+                currentPage >= totalPages
+                  ? undefined
+                  : pathname + buildQuery({ ...filters, page: totalPages })
               }
               label="Última página"
             >

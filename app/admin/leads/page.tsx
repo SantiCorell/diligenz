@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { getSessionWithUser } from "@/lib/session";
 import Link from "next/link";
+import { formatCompactEuroRange, formatEuroAmount } from "@/lib/format-financial";
 import {
   Mail,
   Phone,
@@ -210,7 +211,7 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
               Rango estimado
             </p>
             <p className="text-lg sm:text-xl font-bold text-[var(--brand-primary)] truncate">
-              {lead.minValue.toLocaleString("es-ES")} – {lead.maxValue.toLocaleString("es-ES")} €
+              {formatCompactEuroRange(lead.minValue, lead.maxValue)}
             </p>
           </div>
         </div>
@@ -279,16 +280,14 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
         </div>
         <div className="flex items-center gap-3 min-h-[40px]">
           <BarChart3 className="w-4 h-4 shrink-0 text-[var(--brand-primary)]/50" />
-          <span>Facturación: {lead.revenue.toLocaleString("es-ES")} €</span>
+          <span>Facturación: {formatEuroAmount(lead.revenue)}</span>
         </div>
         <div className="flex items-start sm:items-center gap-2 min-h-[40px] flex-wrap">
           <span className="text-[var(--foreground)] opacity-70">EBITDA: </span>
-          <span>{lead.ebitda != null ? `${lead.ebitda.toLocaleString("es-ES")} €` : "—"}</span>
+          <span>{lead.ebitda != null ? formatEuroAmount(lead.ebitda) : "—"}</span>
           <span className="text-[var(--foreground)] opacity-70">· Resultado ejercicio: </span>
           <span>
-            {lead.exerciseResult != null
-              ? `${lead.exerciseResult.toLocaleString("es-ES")} €`
-              : "—"}
+            {lead.exerciseResult != null ? formatEuroAmount(lead.exerciseResult) : "—"}
           </span>
           {lead.employees != null && (
             <>
@@ -304,7 +303,7 @@ function ValuationLeadCard({ lead }: { lead: ValuationLead }) {
             {lead.revenueGrowthPercent != null && <span><strong>Crecimiento:</strong> {lead.revenueGrowthPercent}%</span>}
             {lead.stage && <span><strong>Etapa:</strong> {lead.stage}</span>}
             {lead.hasReceivedFunding === true && <span><strong>Financiación:</strong> Sí</span>}
-            {lead.arr != null && <span><strong>ARR:</strong> {lead.arr.toLocaleString("es-ES")} €</span>}
+            {lead.arr != null && <span><strong>ARR:</strong> {formatEuroAmount(lead.arr)}</span>}
           </div>
         )}
       </div>

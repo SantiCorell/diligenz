@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { displaySalePrice, getCompanyDocumentsDriveUrl } from "@/lib/company-display";
+import { formatCompactEuroRange } from "@/lib/format-financial";
 import { companiesDashboardPath } from "@/lib/companies-dashboard-path";
 import { ensureCompanyDriveFolder } from "@/lib/google-drive/company-drive";
 import { getSessionWithUser } from "@/lib/session";
@@ -116,8 +117,7 @@ export default async function SellerCompanyEditPage({
             <>
               <p>
                 <span className="font-semibold text-[var(--brand-primary)]">Valoración: </span>
-                {valuation.minValue.toLocaleString("es-ES")} € –{" "}
-                {valuation.maxValue.toLocaleString("es-ES")} €
+                {formatCompactEuroRange(valuation.minValue, valuation.maxValue)}
               </p>
               <p>
                 <span className="font-semibold text-[var(--brand-primary)]">

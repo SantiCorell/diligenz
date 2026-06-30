@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { SELL_DASHBOARD_PATH } from "@/lib/companies-dashboard-path";
 import Link from "next/link";
 import DeleteCompanyButton from "@/components/companies/DeleteCompanyButton";
+import { displaySalePrice } from "@/lib/company-display";
+import { formatCompactEuroRange } from "@/lib/format-financial";
 
 export function OwnerCompaniesListSkeleton() {
   return (
@@ -79,19 +81,13 @@ export async function OwnerCompaniesList({ userId, dashboardPath }: Props) {
                 </p>
                 {valuation && (
                   <p className="mt-3 text-lg font-medium text-[var(--brand-primary)]">
-                    Valoración: {valuation.minValue.toLocaleString("es-ES")} € –{" "}
-                    {valuation.maxValue.toLocaleString("es-ES")} €
+                    Valoración: {formatCompactEuroRange(valuation.minValue, valuation.maxValue)}
                   </p>
                 )}
                 {valuation &&
                   (valuation.salePriceMin != null || valuation.salePriceMax != null) && (
                     <p className="mt-1 text-sm font-medium text-[var(--foreground)] opacity-90">
-                      Precio de venta:{" "}
-                      {valuation.salePriceMin != null &&
-                      valuation.salePriceMax != null &&
-                      valuation.salePriceMin === valuation.salePriceMax
-                        ? `${valuation.salePriceMin.toLocaleString("es-ES")} €`
-                        : `${(valuation.salePriceMin ?? valuation.salePriceMax)!.toLocaleString("es-ES")} € – ${(valuation.salePriceMax ?? valuation.salePriceMin)!.toLocaleString("es-ES")} €`}
+                      Precio de venta: {displaySalePrice(valuation)}
                     </p>
                   )}
               </div>

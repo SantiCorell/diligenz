@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ShellLayout from "@/components/layout/ShellLayout";
-import { MOCK_COMPANIES } from "@/lib/mock-companies";
+import { isMockCompanyId } from "@/lib/mock-companies";
 import { prisma } from "@/lib/prisma";
 import { getUserIdFromSession } from "@/lib/session";
 import CompanyFicha from "./CompanyFicha";
@@ -15,8 +15,7 @@ import { buyerCanDownloadCompanyTeaser } from "@/lib/company-drive-access";
 type Props = { params: Promise<{ id: string }> };
 
 async function getCompanyById(id: string): Promise<CompanyMock | null> {
-  const mock = MOCK_COMPANIES.find((c) => c.id === id);
-  if (mock) return mock;
+  if (isMockCompanyId(id)) return null;
 
   const company = await prisma.company.findUnique({
     where: { id },
@@ -106,7 +105,7 @@ export default async function CompanyDetailPage({ params }: Props) {
   let isOwner = false;
   let isAdmin = false;
   let buyerDriveAccess = false;
-  if (userId && !MOCK_COMPANIES.some((c) => c.id === id)) {
+  if (userId && !isMockCompanyId(id)) {
     const [companyRow, user, infoRequest] = await Promise.all([
       prisma.company.findUnique({ where: { id }, select: { ownerId: true } }),
       prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),

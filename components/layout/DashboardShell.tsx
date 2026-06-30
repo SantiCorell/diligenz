@@ -12,6 +12,7 @@ import PageAmbient from "@/components/layout/PageAmbient";
 function pathnameIsBuyerPanel(path: string): boolean {
   if (path.startsWith("/dashboard/buyer")) return true;
   if (path.startsWith("/dashboard/mis-empresas")) return true;
+  if (path.startsWith("/dashboard/favorites")) return true;
   if (path.startsWith("/dashboard/profile")) return true;
   return false;
 }
@@ -160,6 +161,13 @@ export default function DashboardShell({
                   href="/dashboard/mis-empresas"
                   label="Mis empresas"
                   active={pathname.startsWith("/dashboard/mis-empresas")}
+                  collapsed={!expanded}
+                  onNavigate={() => setMobileSidebarOpen(false)}
+                />
+                <NavItem
+                  href="/dashboard/favorites"
+                  label="Mis favoritos"
+                  active={pathname.startsWith("/dashboard/favorites")}
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
                 />

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
+import { logUserActivity } from "@/lib/user-activity";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -25,10 +26,25 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: "Solicitud no encontrada" }, { status: 404 });
   }
 
+  const previousStatus = interest.status ?? "PENDING";
+
   await prisma.userCompanyInterest.update({
     where: { id },
     data: { status: status as "PENDING" | "MANAGED" | "REJECTED" },
   });
+
+  if (previousStatus !== status) {
+    await logUserActivity({
+      userId: interest.userId,
+      type: "INFO_REQUEST_STATUS_CHANGED",
+      companyId: interest.companyId,
+      metadata: {
+        from: previousStatus,
+        to: status,
+        adminId: session.userId,
+      },
+    });
+  }
 
   return NextResponse.json({ ok: true, status });
 }

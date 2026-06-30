@@ -11,14 +11,13 @@ const MOBILE_CARD =
 
 function SectorCard({
   slug,
-  name,
   description,
 }: {
   slug: string;
-  name: string;
   description: string;
 }) {
   const visual = getSectorVisual(slug);
+  const displayName = visual.shortLabel;
 
   return (
     <div
@@ -28,9 +27,9 @@ function SectorCard({
       <span
         className={`mt-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium ${visual.tagClass}`}
       >
-        {name}
+        {displayName}
       </span>
-      <h3 className="mt-3 text-lg font-semibold text-[var(--brand-dark)]">{name}</h3>
+      <h3 className="mt-3 text-lg font-semibold text-[var(--brand-dark)]">{displayName}</h3>
       <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--foreground)]/70">
         {description}
       </p>
@@ -68,7 +67,6 @@ export default function SpecializedSectors() {
             <SectorCard
               key={sector.slug}
               slug={sector.slug}
-              name={sector.name}
               description={sector.description}
             />
           ))}

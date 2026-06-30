@@ -50,7 +50,7 @@ export default function FeaturedCompaniesCarousel({ companies }: Props) {
 
   return (
     <div className="mt-10">
-      <div className="overflow-hidden">
+      <div className="overflow-x-hidden px-1 py-2">
         <div
           ref={scrollRef}
           className="flex snap-x snap-mandatory overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"

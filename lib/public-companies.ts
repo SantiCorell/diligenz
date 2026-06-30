@@ -1,11 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import type { CompanyMock } from "@/lib/mock-companies";
-import { MOCK_COMPANIES } from "@/lib/mock-companies";
 import { PRIMARY_SECTOR_OPTIONS } from "@/lib/valuation-sectors";
 import {
   matchesPrimarySector,
-  resolveSectorKey,
   sectorDbValuesForFilter,
 } from "@/lib/sector-visual";
 import {
@@ -14,8 +12,11 @@ import {
 } from "@/lib/company-ranking";
 import { publicListingName } from "@/lib/company-display-names";
 import { backfillMissingCompanyReferencesIfNeeded } from "@/lib/company-reference";
-
-const THRESHOLD_REAL_ONLY = 10;
+import {
+  matchesNumericRange,
+  parseFinancialAmount,
+  type NumericRangeFilter,
+} from "@/lib/parse-financial-amount";
 
 const companyPublicInclude = {
   valuations: { orderBy: { createdAt: "desc" as const }, take: 1 },
@@ -51,7 +52,6 @@ function mapDealToMock(deal: DealWithCompany): CompanyMock {
     employees: c.employees ?? null,
     description: c.description ?? "Sin descripción.",
     sellerDescription: (c as { sellerDescription?: string | null }).sellerDescription ?? null,
-    // Enlaces Drive: solo en ficha /companies/[id] y solo para propietario o admin (no en listado).
     documentLinks: null,
     attachmentsApproved: (c as { attachmentsApproved?: boolean }).attachmentsApproved ?? false,
     companyType: (c as { companyType?: string | null }).companyType ?? null,
@@ -94,24 +94,47 @@ export type GetPublicCompaniesOpts = {
   /** Slug del sector principal (p. ej. tecnologia-software-saas). */
   sector?: string;
   location?: string;
+  revenue?: NumericRangeFilter;
+  ebitda?: NumericRangeFilter;
   page?: number;
   pageSize?: number;
 };
 
-function companyMatchesFilters(
-  company: CompanyMock,
-  sector?: string,
-  location?: string
-): boolean {
+function companyMatchesFilters(company: CompanyMock, opts: GetPublicCompaniesOpts): boolean {
+  const { sector, location, revenue, ebitda } = opts;
+
   if (sector && !matchesPrimarySector(company.sector, sector)) return false;
   if (location && company.location !== location) return false;
+
+  const revenueValue =
+    parseFinancialAmount(company.revenue) ?? parseFinancialAmount(company.gmv ?? null);
+  if (!matchesNumericRange(revenueValue, revenue)) return false;
+
+  const ebitdaValue = parseFinancialAmount(company.ebitda);
+  if (!matchesNumericRange(ebitdaValue, ebitda)) return false;
+
   return true;
+}
+
+function buildPublishedDealsWhere(opts: Pick<GetPublicCompaniesOpts, "sector" | "location">) {
+  const { sector, location } = opts;
+  const companyWhere = {
+    ...(sector ? { sector: { in: sectorDbValuesForFilter(sector) } } : {}),
+    ...(location ? { location } : {}),
+  };
+
+  return {
+    published: true,
+    company: {
+      removedAt: null,
+      ...(Object.keys(companyWhere).length ? companyWhere : {}),
+    },
+  };
 }
 
 /**
  * Empresas publicadas en el marketplace (Deal.published = true).
- * Si hay >= THRESHOLD_REAL_ONLY, solo se devuelven reales con paginación; si no, se mezclan con mock.
- * Si la DB no está disponible, devuelve solo mock (sin paginación).
+ * Solo datos reales; sin empresas de demostración.
  */
 export async function getPublicCompanies(
   opts: GetPublicCompaniesOpts = {}
@@ -123,51 +146,24 @@ export async function getPublicCompanies(
   page: number;
   pageSize: number;
 }> {
-  const { sector, location, page = 1, pageSize = DEFAULT_PAGE_SIZE } = opts;
+  const { sector, location, revenue, ebitda, page = 1, pageSize = DEFAULT_PAGE_SIZE } = opts;
   const skip = (Math.max(1, page) - 1) * pageSize;
+  const filterOpts: GetPublicCompaniesOpts = { sector, location, revenue, ebitda };
+  const emptyResult = {
+    companies: [] as CompanyMock[],
+    useOnlyReal: false,
+    total: 0,
+    totalPages: 1,
+    page: Math.max(1, page),
+    pageSize,
+  };
 
   try {
     await clearExpiredFeaturedCompanies();
     await backfillMissingCompanyReferencesIfNeeded();
 
-    const companyWhere = {
-      ...(sector ? { sector: { in: sectorDbValuesForFilter(sector) } } : {}),
-      ...(location ? { location } : {}),
-    };
-    const baseWhere = {
-      published: true,
-      company: {
-        removedAt: null,
-        ...(Object.keys(companyWhere).length ? companyWhere : {}),
-      },
-    };
-
-    const total = await prisma.deal.count({ where: baseWhere });
-
-    if (total >= THRESHOLD_REAL_ONLY) {
-      const allPublishedDeals = await prisma.deal.findMany({
-        where: baseWhere,
-        include: {
-          company: {
-            include: companyPublicInclude,
-          },
-        },
-      });
-      const sortedDeals = sortDealsByRanking(allPublishedDeals);
-      const pageDeals = sortedDeals.slice(skip, skip + pageSize);
-      const realCompanies: CompanyMock[] = pageDeals.map((deal) => mapDealToMock(deal));
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
-      return {
-        companies: realCompanies,
-        useOnlyReal: true,
-        total,
-        totalPages,
-        page: Math.max(1, page),
-        pageSize,
-      };
-    }
-
-    const allDeals = await prisma.deal.findMany({
+    const baseWhere = buildPublishedDealsWhere({ sector, location });
+    const allPublishedDeals = await prisma.deal.findMany({
       where: baseWhere,
       include: {
         company: {
@@ -175,42 +171,24 @@ export async function getPublicCompanies(
         },
       },
     });
-    const realCompanies: CompanyMock[] = sortDealsByRanking(allDeals).map((deal) =>
-      mapDealToMock(deal)
+
+    const sortedDeals = sortDealsByRanking(allPublishedDeals);
+    const filteredDeals = sortedDeals.filter((deal) =>
+      companyMatchesFilters(mapDealToMock(deal), filterOpts)
     );
-    // Pocas empresas reales: mezclar con mock, filtrar y paginar en memoria
-    const combined = [...MOCK_COMPANIES, ...realCompanies];
-    const filtered = combined.filter((c) => companyMatchesFilters(c, sector, location));
-    const sortedFiltered = sortCompaniesForListing(
-      filtered.map((company) => ({
-        company,
-        name: company.name,
-        ebitda: company.ebitda,
-        featuredAt: null,
-      }))
-    ).map((row) => row.company);
-    const totalMixed = sortedFiltered.length;
-    const totalPagesMixed = Math.max(1, Math.ceil(totalMixed / pageSize));
-    const paginated = sortedFiltered.slice(skip, skip + pageSize);
+    const totalFiltered = filteredDeals.length;
+    const pageDeals = filteredDeals.slice(skip, skip + pageSize);
+
     return {
-      companies: paginated,
-      useOnlyReal: false,
-      total: totalMixed,
-      totalPages: totalPagesMixed,
+      companies: pageDeals.map((deal) => mapDealToMock(deal)),
+      useOnlyReal: totalFiltered > 0,
+      total: totalFiltered,
+      totalPages: Math.max(1, Math.ceil(totalFiltered / pageSize)),
       page: Math.max(1, page),
       pageSize,
     };
   } catch {
-    const total = MOCK_COMPANIES.length;
-    const totalPages = 1;
-    return {
-      companies: MOCK_COMPANIES,
-      useOnlyReal: false,
-      total,
-      totalPages,
-      page: 1,
-      pageSize,
-    };
+    return emptyResult;
   }
 }
 
@@ -233,46 +211,13 @@ export async function getFeaturedCompanies(
       },
     });
 
-    if (deals.length === 0) {
-      return sortCompaniesForListing(
-        MOCK_COMPANIES.map((company) => ({
-          company,
-          name: company.name,
-          ebitda: company.ebitda,
-          featuredAt: null,
-        }))
-      )
-        .map((row) => row.company)
-        .slice(0, limit);
-    }
-
-    if (deals.length < THRESHOLD_REAL_ONLY) {
-      const realCompanies = sortDealsByRanking(deals).map((deal) => mapDealToMock(deal));
-      const combined = sortCompaniesForListing(
-        [...MOCK_COMPANIES, ...realCompanies].map((company) => ({
-          company,
-          name: company.name,
-          ebitda: company.ebitda,
-          featuredAt: null,
-        }))
-      ).map((row) => row.company);
-      return combined.slice(0, limit);
-    }
+    if (deals.length === 0) return [];
 
     return sortDealsByRanking(deals)
       .slice(0, limit)
       .map((deal) => mapDealToMock(deal));
   } catch {
-    return sortCompaniesForListing(
-      MOCK_COMPANIES.map((company) => ({
-        company,
-        name: company.name,
-        ebitda: company.ebitda,
-        featuredAt: null,
-      }))
-    )
-      .map((row) => row.company)
-      .slice(0, limit);
+    return [];
   }
 }
 
@@ -284,9 +229,12 @@ function countByPrimarySector(pool: { sector: string }[]): {
   for (const s of PRIMARY_SECTOR_OPTIONS) bySector[s.value] = 0;
 
   for (const item of pool) {
-    const key = resolveSectorKey(item.sector);
-    const primary = PRIMARY_SECTOR_OPTIONS.find((s) => s.value === key);
-    if (primary) bySector[primary.value] += 1;
+    for (const primary of PRIMARY_SECTOR_OPTIONS) {
+      if (matchesPrimarySector(item.sector, primary.value)) {
+        bySector[primary.value] += 1;
+        break;
+      }
+    }
   }
 
   return { total: pool.length, bySector };
@@ -297,6 +245,9 @@ export async function getPrimarySectorCounts(
   opts: { location?: string } = {}
 ): Promise<{ total: number; bySector: Record<string, number> }> {
   const { location } = opts;
+  const emptyCounts = Object.fromEntries(
+    PRIMARY_SECTOR_OPTIONS.map((sector) => [sector.value, 0])
+  ) as Record<string, number>;
 
   try {
     const rows = await prisma.company.findMany({
@@ -305,27 +256,12 @@ export async function getPrimarySectorCounts(
         ...(location ? { location } : {}),
         deals: { some: { published: true } },
       },
-      select: { sector: true, location: true },
+      select: { sector: true },
     });
 
-    if (rows.length >= THRESHOLD_REAL_ONLY) {
-      return countByPrimarySector(rows);
-    }
-
-    const realMocks: CompanyMock[] = rows.map((r, i) => ({
-      ...MOCK_COMPANIES[0],
-      id: `real-count-${i}`,
-      sector: r.sector,
-      location: r.location,
-    }));
-    const pool = [
-      ...MOCK_COMPANIES.filter((c) => !location || c.location === location),
-      ...realMocks.filter((c) => !location || c.location === location),
-    ];
-    return countByPrimarySector(pool);
+    return countByPrimarySector(rows);
   } catch {
-    const pool = MOCK_COMPANIES.filter((c) => !location || c.location === location);
-    return countByPrimarySector(pool);
+    return { total: 0, bySector: emptyCounts };
   }
 }
 
@@ -340,7 +276,6 @@ export async function getDistinctLocations(): Promise<string[]> {
     });
     return rows.map((r) => r.location).filter(Boolean);
   } catch {
-    const set = new Set(MOCK_COMPANIES.map((c) => c.location).filter(Boolean));
-    return Array.from(set).sort();
+    return [];
   }
 }

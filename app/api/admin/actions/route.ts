@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { MOCK_COMPANIES } from "@/lib/mock-companies";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 
 export async function GET(req: Request) {
@@ -27,13 +26,12 @@ export async function GET(req: Request) {
     select: { id: true, name: true },
   });
   const companyById = new Map(realCompanies.map((c) => [c.id, c.name]));
-  const mockById = new Map(MOCK_COMPANIES.map((c) => [c.id, c.name]));
 
   const list = interests.map((i) => ({
     id: i.id,
     userEmail: i.user.email,
     companyId: i.companyId,
-    companyName: companyById.get(i.companyId) ?? mockById.get(i.companyId) ?? i.companyId,
+    companyName: companyById.get(i.companyId) ?? i.companyId,
     status: i.status ?? "PENDING",
     createdAt: i.createdAt,
   }));

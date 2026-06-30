@@ -35,7 +35,7 @@ export const SECTOR_ICON_PRESETS: SectorIconPreset[] = [
   { key: "GraduationCap", label: "Educación", icon: GraduationCap },
   { key: "Truck", label: "Logística", icon: Truck },
   { key: "MonitorSmartphone", label: "E-commerce / medios", icon: MonitorSmartphone },
-  { key: "Wheat", label: "Agroalimentario", icon: Wheat },
+  { key: "Wheat", label: "Alimentación", icon: Wheat },
   { key: "Leaf", label: "Energía / sostenibilidad", icon: Leaf },
   { key: "Plane", label: "Turismo", icon: Plane },
   { key: "HardHat", label: "Construcción", icon: HardHat },

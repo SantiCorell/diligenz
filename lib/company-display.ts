@@ -1,3 +1,5 @@
+import { formatEuroAmountFromString, formatEuroRange } from "@/lib/format-financial";
+
 export function entityTypeLabel(t: string | null | undefined): string {
   if (t === "EMPRESA") return "Empresa";
   if (t === "AUTONOMO") return "Profesional / Autónomo";
@@ -7,16 +9,7 @@ export function entityTypeLabel(t: string | null | undefined): string {
 }
 
 export function formatCompanyMoney(value: string | number | null | undefined): string {
-  if (value == null || value === "") return "—";
-  if (typeof value === "number") return `${value.toLocaleString("es-ES")} €`;
-  const trimmed = String(value).trim();
-  if (!trimmed) return "—";
-  const digits = trimmed.replace(/\s/g, "");
-  if (/^-?\d+([.,]\d+)?$/.test(digits)) {
-    const n = Number(digits.replace(",", "."));
-    if (Number.isFinite(n)) return `${n.toLocaleString("es-ES")} €`;
-  }
-  return trimmed.includes("€") ? trimmed : `${trimmed} €`;
+  return formatEuroAmountFromString(value);
 }
 
 export function displaySalePrice(valuation: {
@@ -24,18 +17,7 @@ export function displaySalePrice(valuation: {
   salePriceMax: number | null;
 } | null | undefined): string | null {
   if (!valuation) return null;
-  const { salePriceMin, salePriceMax } = valuation;
-  if (salePriceMin == null && salePriceMax == null) return null;
-  if (
-    salePriceMin != null &&
-    salePriceMax != null &&
-    salePriceMin === salePriceMax
-  ) {
-    return `${salePriceMin.toLocaleString("es-ES")} €`;
-  }
-  const lo = salePriceMin ?? salePriceMax!;
-  const hi = salePriceMax ?? salePriceMin!;
-  return `${lo.toLocaleString("es-ES")} € – ${hi.toLocaleString("es-ES")} €`;
+  return formatEuroRange(valuation.salePriceMin, valuation.salePriceMax);
 }
 
 export type DocumentLink = { label: string; url: string };

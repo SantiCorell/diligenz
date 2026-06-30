@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, Fragment } from "react";
-import type { UserAccountStatus, UserRole } from "@prisma/client";
+import Link from "next/link";
+import type { RequestStatus, UserAccountStatus, UserRole } from "@prisma/client";
 import { authFetch } from "@/lib/auth-client";
 import {
   ADMIN_ROLE_LABELS,
@@ -450,6 +451,171 @@ function UserInfoRequestLimitPanel({
   );
 }
 
+const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
+  PENDING: "Pendiente",
+  MANAGED: "Gestionada",
+  REJECTED: "Rechazada",
+};
+
+function requestStatusBadgeClass(status: string): string {
+  if (status === "MANAGED") return "border-green-200 bg-green-50 text-green-800";
+  if (status === "REJECTED") return "border-red-200 bg-red-50 text-red-800";
+  if (status === "CANCELLED") return "border-slate-200 bg-slate-100 text-slate-600";
+  return "border-amber-200 bg-amber-50 text-amber-800";
+}
+
+type ActivityStats = {
+  totalInfoRequests: number;
+  activeInfoRequests: number;
+  managedInfoRequests: number;
+  rejectedInfoRequests: number;
+};
+
+type ActivityEventRow = {
+  id: string;
+  interestId: string | null;
+  companyId: string;
+  companyName: string;
+  status: string;
+  createdAt: string;
+};
+
+function UserActivityPanel({ user }: { user: UserRow }) {
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<ActivityStats | null>(null);
+  const [events, setEvents] = useState<ActivityEventRow[]>([]);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const loadActivity = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await authFetch(`/api/admin/users/${user.id}/activity?limit=40`);
+      const data = await res.json();
+      if (data.stats) setStats(data.stats as ActivityStats);
+      setEvents((data.events ?? []) as ActivityEventRow[]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user.id]);
+
+  useEffect(() => {
+    void loadActivity();
+  }, [loadActivity]);
+
+  const updateRequestStatus = async (interestId: string, status: RequestStatus) => {
+    setUpdatingId(interestId);
+    try {
+      const res = await authFetch(`/api/admin/actions/${interestId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) await loadActivity();
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  return (
+    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
+        Historial de actividad
+      </p>
+      <p className="text-xs text-slate-600 mb-4 max-w-2xl leading-relaxed">
+        Una línea por empresa. Cambia el estado desde la etiqueta sin salir de esta ficha.
+      </p>
+
+      {loading ? (
+        <p className="text-sm text-slate-500">Cargando historial…</p>
+      ) : (
+        <>
+          {stats && (
+            <div className="mb-4 flex flex-wrap gap-2">
+              <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-800">
+                Total solicitudes: {stats.totalInfoRequests}
+              </span>
+              <span className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900">
+                Activas: {stats.activeInfoRequests}
+              </span>
+              <span className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-900">
+                Gestionadas: {stats.managedInfoRequests}
+              </span>
+              <span className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-900">
+                Rechazadas: {stats.rejectedInfoRequests}
+              </span>
+            </div>
+          )}
+
+          {events.length === 0 ? (
+            <p className="text-sm text-slate-500">Sin actividad registrada.</p>
+          ) : (
+            <ul className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {events.map((event) => (
+                <li
+                  key={event.id}
+                  className="rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-sm"
+                >
+                  <div className="flex flex-wrap items-center gap-2 gap-y-1">
+                    {event.interestId ? (
+                      <div className="relative inline-flex shrink-0">
+                        <select
+                          value={event.status}
+                          disabled={updatingId === event.interestId}
+                          onChange={(e) =>
+                            void updateRequestStatus(
+                              event.interestId!,
+                              e.target.value as RequestStatus
+                            )
+                          }
+                          className={`appearance-none cursor-pointer rounded-full border pl-3 pr-8 py-1 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/25 disabled:opacity-60 ${requestStatusBadgeClass(event.status)}`}
+                          aria-label={`Estado de solicitud para ${event.companyName}`}
+                        >
+                          <option value="PENDING">{REQUEST_STATUS_LABELS.PENDING}</option>
+                          <option value="MANAGED">{REQUEST_STATUS_LABELS.MANAGED}</option>
+                          <option value="REJECTED">{REQUEST_STATUS_LABELS.REJECTED}</option>
+                        </select>
+                        <ChevronDown
+                          className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 opacity-50"
+                          aria-hidden
+                        />
+                      </div>
+                    ) : (
+                      <span
+                        className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${requestStatusBadgeClass(event.status)}`}
+                      >
+                        Cancelada
+                      </span>
+                    )}
+                    {event.companyId.startsWith("mock-") ? (
+                      <span className="font-medium text-slate-800">{event.companyName}</span>
+                    ) : (
+                      <Link
+                        href={`/admin/companies/${event.companyId}`}
+                        className="font-medium text-[var(--brand-primary)] hover:underline"
+                      >
+                        {event.companyName}
+                      </Link>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {new Date(event.createdAt).toLocaleDateString("es-ES", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function UserDriveFolderPanel({
   user,
   onSaved,
@@ -582,130 +748,133 @@ function AdminUserMobileCard({
   const phoneRaw = u.phone?.trim();
 
   return (
-    <article className="p-4 sm:p-5 space-y-4 border-b border-slate-100 last:border-b-0 bg-white">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-slate-900 leading-snug">{displayName}</h3>
-          <a
-            href={`mailto:${u.email}`}
-            className="mt-1 block text-[15px] font-medium text-[var(--brand-dark)] underline-offset-2 hover:underline break-words [overflow-wrap:anywhere]"
+    <article className="border-b border-slate-100 last:border-b-0 bg-white">
+      <div className={`p-4 sm:p-5 ${isExpanded ? "bg-violet-50/40" : ""}`}>
+        <div className="flex items-start justify-between gap-3">
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            aria-expanded={isExpanded}
+            className="min-w-0 flex-1 text-left rounded-lg -m-1 p-1 hover:bg-white/60 transition-colors"
           >
-            {u.email}
-          </a>
-          <p className="mt-3 text-sm text-slate-800 leading-relaxed">
-            <span className="text-slate-600 font-medium">Teléfono </span>
-            {phoneRaw ? (
-              <a
-                href={`tel:${phoneRaw.replace(/\s/g, "")}`}
-                className="text-[var(--brand-dark)] font-semibold underline-offset-2 hover:underline"
+            <div className="flex items-center gap-2">
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-[var(--brand-primary)] transition-transform ${
+                  isExpanded ? "rotate-180" : ""
+                }`}
+                aria-hidden
+              />
+              <h3 className="text-base font-semibold text-slate-900 leading-snug">{displayName}</h3>
+            </div>
+            <span className="mt-1 block text-[15px] font-medium text-[var(--brand-dark)] break-words [overflow-wrap:anywhere]">
+              {u.email}
+            </span>
+            <p className="mt-3 text-sm text-slate-800 leading-relaxed">
+              <span className="text-slate-600 font-medium">Teléfono </span>
+              {phoneRaw ? phoneRaw : <span className="text-slate-400 font-normal">—</span>}
+            </p>
+            <p className="mt-2 text-[11px] text-slate-500">
+              {isExpanded ? "Pulsa para cerrar" : "Pulsa para ver detalle completo"}
+            </p>
+          </button>
+          <button
+            type="button"
+            onClick={() => onDelete(u)}
+            className="shrink-0 inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-3 min-h-11 min-w-11 text-red-800 hover:bg-red-50 transition"
+            aria-label={`Eliminar usuario ${displayName}`}
+          >
+            <Trash2 className="w-4 h-4" aria-hidden />
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <span className="block text-xs font-medium text-slate-500 mb-1.5" id={`m-role-lbl-${u.id}`}>
+              Rol
+            </span>
+            <div className="relative">
+              <select
+                value={u.role}
+                onChange={(e) => onUpdateRole(u.id, e.target.value as UserRole)}
+                className={`appearance-none cursor-pointer w-full min-h-11 rounded-xl pl-3 pr-10 py-2.5 text-sm font-semibold border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/25 ${
+                  u.role === "ADMIN"
+                    ? "bg-violet-100 text-violet-900"
+                    : u.role === "PROFESSIONAL"
+                      ? "bg-indigo-100 text-indigo-900"
+                      : "bg-slate-100 text-slate-800"
+                }`}
+                aria-labelledby={`m-role-lbl-${u.id}`}
               >
-                {phoneRaw}
-              </a>
-            ) : (
-              <span className="text-slate-400 font-normal">—</span>
-            )}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => onDelete(u)}
-          className="shrink-0 inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-3 min-h-11 min-w-11 text-red-800 hover:bg-red-50 transition"
-          aria-label={`Eliminar usuario ${displayName}`}
-        >
-          <Trash2 className="w-4 h-4" aria-hidden />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
-        <div>
-          <span className="block text-xs font-medium text-slate-500 mb-1.5" id={`m-role-lbl-${u.id}`}>
-            Rol
-          </span>
-          <div className="relative">
-            <select
-              value={u.role}
-              onChange={(e) => onUpdateRole(u.id, e.target.value as UserRole)}
-              className={`appearance-none cursor-pointer w-full min-h-11 rounded-xl pl-3 pr-10 py-2.5 text-sm font-semibold border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/25 ${
-                u.role === "ADMIN"
-                  ? "bg-violet-100 text-violet-900"
-                  : u.role === "PROFESSIONAL"
-                    ? "bg-indigo-100 text-indigo-900"
-                    : "bg-slate-100 text-slate-800"
-              }`}
-              aria-labelledby={`m-role-lbl-${u.id}`}
-            >
-              {ROLES.map((r) => (
-                <option key={r} value={r}>
-                  {ADMIN_ROLE_LABELS[r]}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50"
-              aria-hidden
-            />
+                {ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {ADMIN_ROLE_LABELS[r]}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50"
+                aria-hidden
+              />
+            </div>
+          </div>
+          <div>
+            <span className="block text-xs font-medium text-slate-500 mb-1.5" id={`m-st-lbl-${u.id}`}>
+              Estado
+            </span>
+            <div className="relative">
+              <select
+                value={u.accountStatus}
+                onChange={(e) => onUpdateStatus(u.id, e.target.value as UserAccountStatus)}
+                className={`appearance-none cursor-pointer w-full min-h-11 rounded-xl pl-3 pr-10 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/25 ${accountStatusBadgeClass(u.accountStatus)}`}
+                aria-labelledby={`m-st-lbl-${u.id}`}
+              >
+                {ACCOUNT_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {ADMIN_ACCOUNT_STATUS_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50"
+                aria-hidden
+              />
+            </div>
           </div>
         </div>
-        <div>
-          <span className="block text-xs font-medium text-slate-500 mb-1.5" id={`m-st-lbl-${u.id}`}>
-            Estado
-          </span>
-          <div className="relative">
-            <select
-              value={u.accountStatus}
-              onChange={(e) => onUpdateStatus(u.id, e.target.value as UserAccountStatus)}
-              className={`appearance-none cursor-pointer w-full min-h-11 rounded-xl pl-3 pr-10 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/25 ${accountStatusBadgeClass(u.accountStatus)}`}
-              aria-labelledby={`m-st-lbl-${u.id}`}
-            >
-              {ACCOUNT_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {ADMIN_ACCOUNT_STATUS_LABELS[s]}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50"
-              aria-hidden
-            />
-          </div>
-        </div>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={onToggleExpand}
-          className="min-h-11 px-4 rounded-xl text-sm font-semibold text-[var(--brand-dark)] bg-violet-100 hover:bg-violet-200/80 transition"
-        >
-          {checksOk}/4 · {isExpanded ? "Cerrar verificación" : "Editar verificación"}
-        </button>
-        {u.hasCompanyDocumentLinks && (
-          <span className="text-[10px] uppercase tracking-wide text-emerald-900 font-semibold bg-emerald-100 px-2.5 py-1.5 rounded-lg">
-            Docs empresa
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="rounded-lg bg-violet-100 px-2.5 py-1 text-xs font-semibold text-[var(--brand-dark)]">
+            {checksOk}/4 verificación
           </span>
-        )}
-        {u.dniPendingReview && (
-          <span className="text-[10px] uppercase tracking-wide text-amber-900 font-semibold bg-amber-100 px-2.5 py-1.5 rounded-lg">
-            DNI pendiente
-          </span>
-        )}
-        {u.hasUserDriveFolder ? (
-          <span className="text-[10px] uppercase tracking-wide text-emerald-900 font-semibold bg-emerald-100 px-2.5 py-1.5 rounded-lg">
-            Drive usuario
-          </span>
-        ) : (
-          <span className="text-[10px] uppercase tracking-wide text-amber-900 font-semibold bg-amber-100 px-2.5 py-1.5 rounded-lg">
-            Falta Drive
-          </span>
-        )}
+          {u.hasCompanyDocumentLinks && (
+            <span className="text-[10px] uppercase tracking-wide text-emerald-900 font-semibold bg-emerald-100 px-2.5 py-1.5 rounded-lg">
+              Docs empresa
+            </span>
+          )}
+          {u.dniPendingReview && (
+            <span className="text-[10px] uppercase tracking-wide text-amber-900 font-semibold bg-amber-100 px-2.5 py-1.5 rounded-lg">
+              DNI pendiente
+            </span>
+          )}
+          {u.hasUserDriveFolder ? (
+            <span className="text-[10px] uppercase tracking-wide text-emerald-900 font-semibold bg-emerald-100 px-2.5 py-1.5 rounded-lg">
+              Drive usuario
+            </span>
+          ) : (
+            <span className="text-[10px] uppercase tracking-wide text-amber-900 font-semibold bg-amber-100 px-2.5 py-1.5 rounded-lg">
+              Falta Drive
+            </span>
+          )}
+        </div>
       </div>
 
       {isExpanded && (
-        <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="border-t border-slate-200/80">
           <UserDniReviewPanel user={u} onMarkVerified={onVerificationSaved} />
           <UserVerificationPanel user={u} onSaved={onVerificationSaved} />
           <UserDriveFolderPanel user={u} onSaved={onVerificationSaved} />
           <UserInfoRequestLimitPanel user={u} onSaved={onVerificationSaved} />
+          <UserActivityPanel user={u} />
           <UserProfessionalCompanyLimitPanel user={u} onSaved={onVerificationSaved} />
         </div>
       )}
@@ -1095,6 +1264,9 @@ export default function AdminUsersPage() {
       <section className="rounded-2xl border border-slate-200/90 bg-white shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3 bg-slate-50/60">
           <h2 className="text-sm font-semibold text-slate-800">Listado</h2>
+          <p className="text-xs text-slate-500 hidden sm:block">
+            Pulsa en un usuario para ver y editar su ficha
+          </p>
           {loading && (
             <span className="text-xs text-slate-500 animate-pulse">Actualizando…</span>
           )}
@@ -1161,16 +1333,43 @@ export default function AdminUsersPage() {
 
                     return (
                       <Fragment key={u.id}>
-                        <tr className="hover:bg-slate-50/80 transition-colors">
+                        <tr
+                          role="button"
+                          tabIndex={0}
+                          onClick={() =>
+                            setExpandedUserId((id) => (id === u.id ? null : u.id))
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setExpandedUserId((id) => (id === u.id ? null : u.id));
+                            }
+                          }}
+                          aria-expanded={expandedUserId === u.id}
+                          className={`cursor-pointer transition-colors hover:bg-slate-50/80 ${
+                            expandedUserId === u.id ? "bg-violet-50/50" : ""
+                          }`}
+                        >
                           <td
-                            className="px-4 py-3.5 text-slate-900 font-medium max-w-[12rem] truncate"
+                            className="px-4 py-3.5 text-slate-900 font-medium max-w-[14rem]"
                             title={displayName}
                           >
-                            {displayName}
+                            <span className="flex min-w-0 items-center gap-2">
+                              <ChevronDown
+                                className={`h-4 w-4 shrink-0 text-[var(--brand-primary)]/70 transition-transform ${
+                                  expandedUserId === u.id ? "rotate-180" : ""
+                                }`}
+                                aria-hidden
+                              />
+                              <span className="truncate group-hover:text-[var(--brand-primary)]">
+                                {displayName}
+                              </span>
+                            </span>
                           </td>
                           <td className="px-4 py-3.5 max-w-[18rem]">
                             <a
                               href={`mailto:${u.email}`}
+                              onClick={(e) => e.stopPropagation()}
                               className="text-[var(--brand-dark)] font-medium underline-offset-2 hover:underline [overflow-wrap:anywhere] leading-snug"
                             >
                               {u.email}
@@ -1180,6 +1379,7 @@ export default function AdminUsersPage() {
                             {phoneRaw ? (
                               <a
                                 href={`tel:${phoneRaw.replace(/\s/g, "")}`}
+                                onClick={(e) => e.stopPropagation()}
                                 className="text-[var(--brand-dark)] font-medium underline-offset-2 hover:underline"
                               >
                                 {phoneRaw}
@@ -1188,7 +1388,7 @@ export default function AdminUsersPage() {
                               <span className="text-slate-400">—</span>
                             )}
                           </td>
-                          <td className="px-4 py-3.5">
+                          <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                             <div className="relative inline-flex items-center min-w-[10.5rem]">
                               <select
                                 value={u.role}
@@ -1211,7 +1411,7 @@ export default function AdminUsersPage() {
                               <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-50" aria-hidden />
                             </div>
                           </td>
-                          <td className="px-4 py-3.5">
+                          <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                             <div className="relative inline-flex items-center">
                               <select
                                 value={u.accountStatus}
@@ -1233,13 +1433,9 @@ export default function AdminUsersPage() {
                             </div>
                           </td>
                           <td className="px-4 py-3.5">
-                            <button
-                              type="button"
-                              onClick={() => setExpandedUserId((id) => (id === u.id ? null : u.id))}
-                              className="text-xs font-semibold text-[var(--brand-dark)] underline-offset-2 hover:underline"
-                            >
-                              {checksOk}/4 · {expandedUserId === u.id ? "Cerrar" : "Editar"}
-                            </button>
+                            <span className="text-xs font-semibold text-slate-700">
+                              {checksOk}/4
+                            </span>
                             {u.dniPendingReview && (
                               <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-800 font-semibold">
                                 DNI pend.
@@ -1260,7 +1456,7 @@ export default function AdminUsersPage() {
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3.5 text-right">
+                          <td className="px-4 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                             <button
                               type="button"
                               onClick={() => deleteUser(u)}
@@ -1278,6 +1474,7 @@ export default function AdminUsersPage() {
                               <UserVerificationPanel user={u} onSaved={loadUsers} />
                               <UserDriveFolderPanel user={u} onSaved={loadUsers} />
                               <UserInfoRequestLimitPanel user={u} onSaved={loadUsers} />
+                              <UserActivityPanel user={u} />
                               <UserProfessionalCompanyLimitPanel user={u} onSaved={loadUsers} />
                             </td>
                           </tr>

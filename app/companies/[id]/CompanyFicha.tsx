@@ -15,10 +15,12 @@ import {
 } from "lucide-react";
 import RegisterModal from "@/components/auth/RegisterModal";
 import RequestInfoModal from "@/components/companies/RequestInfoModal";
+import CompanyFavoriteButton from "@/components/companies/CompanyFavoriteButton";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { authFetch } from "@/lib/auth-client";
 import SectorVisual from "@/components/companies/SectorVisual";
 import { getSectorVisual } from "@/lib/sector-visual";
+import { formatEuroAmountFromString, formatEuroRange } from "@/lib/format-financial";
 
 type TabId = "informacion" | "descripcion" | "documentos";
 
@@ -31,20 +33,6 @@ type CompanyFileItem = {
   sortOrder?: number;
   createdAt: string;
 };
-
-function formatSalePriceRange(
-  min: number | null | undefined,
-  max: number | null | undefined
-): string | null {
-  if (min == null && max == null) return null;
-  const fmt = (n: number) => n.toLocaleString("es-ES");
-  if (min != null && max != null) {
-    if (min === max) return `${fmt(min)} €`;
-    return `${fmt(min)} – ${fmt(max)} €`;
-  }
-  const n = min ?? max!;
-  return `${fmt(n)} €`;
-}
 
 type Props = {
   company: CompanyMock;
@@ -65,6 +53,7 @@ export default function CompanyFicha({
   const [requestError, setRequestError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>("informacion");
   const [requestInfo, setRequestInfo] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<CompanyFileItem[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -78,6 +67,7 @@ export default function CompanyFicha({
       .then((r) => r.json())
       .then((d) => {
         setRequestInfo(d.requestInfo ?? false);
+        setIsFavorite(d.favorite ?? false);
       })
       .catch(() => {});
   }, [company.id, isLoggedIn]);
@@ -157,7 +147,12 @@ export default function CompanyFicha({
   ];
 
   const sectorVisual = getSectorVisual(company.sector);
-  const salePriceLabel = formatSalePriceRange(company.valuationSaleMin, company.valuationSaleMax);
+  const annualRevenue = formatEuroAmountFromString(
+    company.revenue?.trim() || company.gmv || null
+  );
+  const ebitdaLabel = formatEuroAmountFromString(company.ebitda);
+  const exerciseResultLabel = formatEuroAmountFromString(company.exerciseResult);
+  const salePriceLabel = formatEuroRange(company.valuationSaleMin, company.valuationSaleMax);
 
   return (
     <>
@@ -195,7 +190,7 @@ export default function CompanyFicha({
                   Facturación anual €
                 </p>
                 <p className="text-lg font-bold text-[var(--brand-primary)]">
-                  {company.revenue?.trim() || company.gmv || "—"}
+                  {annualRevenue}
                 </p>
               </div>
               <div>
@@ -203,7 +198,7 @@ export default function CompanyFicha({
                   EBITDA
                 </p>
                 <p className="text-lg font-bold text-[var(--brand-primary)]">
-                  {company.ebitda}
+                  {ebitdaLabel}
                 </p>
               </div>
               {company.exerciseResult ? (
@@ -212,7 +207,7 @@ export default function CompanyFicha({
                     Resultado del ejercicio
                   </p>
                   <p className="text-lg font-bold text-[var(--brand-primary)]">
-                    {company.exerciseResult}
+                    {exerciseResultLabel}
                   </p>
                 </div>
               ) : null}
@@ -255,6 +250,11 @@ export default function CompanyFicha({
                     ¿Estás interesado?
                   </button>
                 )}
+                <CompanyFavoriteButton
+                  companyId={company.id}
+                  initialFavorite={isFavorite}
+                  onChange={setIsFavorite}
+                />
               </div>
             ) : (
               <button
@@ -309,20 +309,20 @@ export default function CompanyFicha({
                     </span>
                   </div>
                   <p className="mt-1 font-bold text-[var(--brand-primary)]">
-                    {company.revenue?.trim() || company.gmv || "—"}
+                    {annualRevenue}
                   </p>
                 </div>
                 <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
                   <span className="text-xs font-medium opacity-75">EBITDA</span>
                   <p className="mt-1 font-bold text-[var(--brand-primary)]">
-                    {company.ebitda}
+                    {ebitdaLabel}
                   </p>
                 </div>
                 {company.exerciseResult ? (
                   <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
                     <span className="text-xs font-medium opacity-75">Resultado del ejercicio</span>
                     <p className="mt-1 font-bold text-[var(--brand-primary)]">
-                      {company.exerciseResult}
+                      {exerciseResultLabel}
                     </p>
                   </div>
                 ) : null}

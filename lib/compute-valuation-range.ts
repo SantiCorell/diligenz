@@ -35,6 +35,10 @@ const SECTOR_MULTS: { keys: string[]; m: Mults }[] = [
     m: { ebitdaMin: 3.9, ebitdaMax: 5.0, revenueMin: 0.5, revenueMax: 0.64 },
   },
   {
+    keys: ["farma", "farmacia"],
+    m: { ebitdaMin: 4.4, ebitdaMax: 5.6, revenueMin: 0.55, revenueMax: 0.72 },
+  },
+  {
     keys: ["salud-bienestar", "salud"],
     m: { ebitdaMin: 4.2, ebitdaMax: 5.4, revenueMin: 0.54, revenueMax: 0.7 },
   },
@@ -55,7 +59,7 @@ const SECTOR_MULTS: { keys: string[]; m: Mults }[] = [
     m: { ebitdaMin: 3.6, ebitdaMax: 4.7, revenueMin: 0.46, revenueMax: 0.6 },
   },
   {
-    keys: ["agrifood-agronegocio", "agro", "agrifood"],
+    keys: ["agrifood-agronegocio", "agro", "agrifood", "alimentacion"],
     m: { ebitdaMin: 3.4, ebitdaMax: 4.4, revenueMin: 0.44, revenueMax: 0.56 },
   },
   {

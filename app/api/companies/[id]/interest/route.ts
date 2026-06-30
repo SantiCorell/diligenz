@@ -11,6 +11,7 @@ import {
   getUserInfoRequestQuota,
   infoRequestLimitMessage,
 } from "@/lib/buyer-info-request-limit";
+import { logUserActivity } from "@/lib/user-activity";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -139,15 +140,15 @@ export async function POST(req: Request, { params }: Params) {
   if (type === "REQUEST_INFO") {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    const todayRequests = await prisma.userCompanyInterest.count({
+
+    const todayRequests = await prisma.userActivityEvent.count({
       where: {
         userId,
-        type: "REQUEST_INFO",
+        type: "INFO_REQUEST_CREATED",
         createdAt: { gte: today },
       },
     });
-    
+
     if (todayRequests >= 20) {
       return NextResponse.json(
         { error: "Has alcanzado el límite diario de solicitudes de información (20 por día)" },
@@ -162,29 +163,69 @@ export async function POST(req: Request, { params }: Params) {
     },
   });
 
-  if (type === "REQUEST_INFO" && !existing) {
-    const quota = await getUserInfoRequestQuota({
-      id: userId,
-      role: user.role,
-      maxConcurrentInfoRequests: user.maxConcurrentInfoRequests,
-    });
-    if (!quota.canRequestMore && quota.max != null) {
-      return NextResponse.json(
-        { error: infoRequestLimitMessage(quota.max) },
-        { status: 403 }
-      );
+  let createdNewInfoRequest = false;
+
+  if (type === "REQUEST_INFO") {
+    if (!existing) {
+      const quota = await getUserInfoRequestQuota({
+        id: userId,
+        role: user.role,
+        maxConcurrentInfoRequests: user.maxConcurrentInfoRequests,
+      });
+      if (!quota.canRequestMore && quota.max != null) {
+        return NextResponse.json(
+          { error: infoRequestLimitMessage(quota.max) },
+          { status: 403 }
+        );
+      }
+
+      await prisma.userCompanyInterest.create({
+        data: { userId, companyId, type, status: "PENDING" },
+      });
+      await logUserActivity({
+        userId,
+        type: "INFO_REQUEST_CREATED",
+        companyId,
+        metadata: { status: "PENDING" },
+      });
+      createdNewInfoRequest = true;
+    } else if (existing.status === "REJECTED") {
+      const quota = await getUserInfoRequestQuota({
+        id: userId,
+        role: user.role,
+        maxConcurrentInfoRequests: user.maxConcurrentInfoRequests,
+      });
+      if (!quota.canRequestMore && quota.max != null) {
+        return NextResponse.json(
+          { error: infoRequestLimitMessage(quota.max) },
+          { status: 403 }
+        );
+      }
+
+      await prisma.userCompanyInterest.update({
+        where: { id: existing.id },
+        data: { status: "PENDING" },
+      });
+      await logUserActivity({
+        userId,
+        type: "INFO_REQUEST_CREATED",
+        companyId,
+        metadata: { status: "PENDING", revived: true },
+      });
+      createdNewInfoRequest = true;
     }
+  } else if (!existing) {
+    await prisma.userCompanyInterest.create({
+      data: { userId, companyId, type },
+    });
+    await logUserActivity({
+      userId,
+      type: "FAVORITE_ADDED",
+      companyId,
+    });
   }
 
-  await prisma.userCompanyInterest.upsert({
-    where: {
-      userId_companyId_type: { userId, companyId, type },
-    },
-    create: { userId, companyId, type },
-    update: {},
-  });
-
-  if (type === "REQUEST_INFO" && !existing) {
+  if (type === "REQUEST_INFO" && createdNewInfoRequest) {
     try {
       const companyName = await resolveCompanyDisplayName(companyId);
       await sendCompanyInfoRequestEmail({
@@ -218,8 +259,22 @@ export async function DELETE(req: Request, { params }: Params) {
   const { id: companyId } = await params;
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type") === "FAVORITE" ? "FAVORITE" : "REQUEST_INFO";
+
+  const existing = await prisma.userCompanyInterest.findFirst({
+    where: { userId, companyId, type },
+  });
+
   await prisma.userCompanyInterest.deleteMany({
     where: { userId, companyId, type },
   });
+
+  if (existing) {
+    await logUserActivity({
+      userId,
+      type: type === "FAVORITE" ? "FAVORITE_REMOVED" : "INFO_REQUEST_CANCELLED",
+      companyId,
+    });
+  }
+
   return NextResponse.json({ ok: true });
 }

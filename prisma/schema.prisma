@@ -65,6 +65,7 @@ model User {
   purchaseMandate       PurchaseMandate?
   collaborationAgreement CollaborationAgreement?
   dniDocuments       UserDniDocument[]
+  activityEvents     UserActivityEvent[]
 }
 
 /// DNI / NIE del usuario (anverso y reverso). Admin marca dniVerified tras revisión.
@@ -225,6 +226,27 @@ model UserCompanyInterest {
   user   User   @relation(fields: [userId], references: [id])
 
   @@unique([userId, companyId, type])
+}
+
+/// Historial append-only de acciones del usuario (visible para admins).
+model UserActivityEvent {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      UserActivityType
+  companyId String?
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+enum UserActivityType {
+  INFO_REQUEST_CREATED
+  INFO_REQUEST_STATUS_CHANGED
+  INFO_REQUEST_CANCELLED
+  FAVORITE_ADDED
+  FAVORITE_REMOVED
 }
 
 enum CompanyInterestType {

@@ -8,6 +8,8 @@ import DeleteCompanyButton from "@/components/companies/DeleteCompanyButton";
 import { getFormSectorOptions } from "@/lib/sector-catalog";
 import { isFeaturedActive } from "@/lib/company-ranking";
 import { publicListingName } from "@/lib/company-display-names";
+import { getFavoriteCountsByCompanyIds } from "@/lib/company-favorites";
+import { formatCompactEuroRange } from "@/lib/format-financial";
 
 export default async function AdminCompaniesPage({
   searchParams,
@@ -67,6 +69,10 @@ export default async function AdminCompaniesPage({
       : docs === "unsigned"
       ? companies.filter((c) => c.documents.some((d) => !d.signed))
       : companies;
+
+  const favoriteCounts = await getFavoriteCountsByCompanyIds(
+    filteredCompanies.map((company) => company.id)
+  );
 
   return (
     <main className="max-w-5xl mx-auto">
@@ -199,8 +205,13 @@ export default async function AdminCompaniesPage({
                 </p>
                 {valuation && (
                   <p className="mt-2 text-sm font-medium text-[var(--brand-primary)]">
-                    {valuation.minValue.toLocaleString("es-ES")} € –{" "}
-                    {valuation.maxValue.toLocaleString("es-ES")} €
+                    {formatCompactEuroRange(valuation.minValue, valuation.maxValue)}
+                  </p>
+                )}
+                {(favoriteCounts[company.id] ?? 0) > 0 && (
+                  <p className="mt-2 text-xs font-semibold text-rose-700">
+                    ♥ {favoriteCounts[company.id]} favorito
+                    {favoriteCounts[company.id] === 1 ? "" : "s"}
                   </p>
                 )}
               </div>

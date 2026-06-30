@@ -98,7 +98,7 @@ const SHORT_LABELS: Record<SectorKey, string> = {
   "logistica-transporte": "Logística",
   "inmobiliario-proptech": "Inmobiliario",
   "medios-contenidos-ecommerce": "E-commerce",
-  "agrifood-agronegocio": "Agroalimentario",
+  "agrifood-agronegocio": "Alimentación",
   "energia-sostenibilidad": "Energía",
   "turismo-ocio": "Turismo",
   "construccion-infraestructuras": "Construcción",
@@ -234,6 +234,7 @@ const SLUG_ALIASES: Record<string, SectorKey> = {
   tecnologia: "tecnologia-software-saas",
   salud: "salud-bienestar",
   farma: "farma",
+  farmacia: "farma",
   industria: "industria-manufactura",
   consumo: "retail-comercio",
   hosteleria: "hosteleria-restauracion",
@@ -252,7 +253,7 @@ const KEYWORD_RULES: { keywords: string[]; key: SectorKey }[] = [
   { keywords: ["industr", "manufact", "fabric"], key: "industria-manufactura" },
   { keywords: ["servicio", "b2b", "profesional", "consult"], key: "servicios-profesionales-b2b" },
   { keywords: ["salud", "bienestar", "clinic", "sanit"], key: "salud-bienestar" },
-  { keywords: ["farma", "farmaceut", "pharma"], key: "farma" },
+  { keywords: ["farma", "farmaceut", "pharma", "farmacia"], key: "farma" },
   { keywords: ["educac", "formacion", "academ"], key: "educacion-formacion" },
   { keywords: ["logist", "transport", "distribuc"], key: "logistica-transporte" },
   { keywords: ["inmobil", "proptech", "real estate"], key: "inmobiliario-proptech" },
@@ -275,8 +276,8 @@ export function resolveSectorKey(rawSector: string): SectorKey {
   const normalized = normalizeKey(rawSector);
   if (!normalized) return "otro-abierto";
 
-  if (normalized in SECTOR_STYLES) return normalized as SectorKey;
   if (normalized in SLUG_ALIASES) return SLUG_ALIASES[normalized]!;
+  if (normalized in SECTOR_STYLES) return normalized as SectorKey;
 
   for (const { keywords, key } of KEYWORD_RULES) {
     if (keywords.some((kw) => normalized.includes(kw))) return key;
@@ -287,7 +288,11 @@ export function resolveSectorKey(rawSector: string): SectorKey {
 
 export function matchesPrimarySector(rawSector: string, primarySlug: string): boolean {
   if (!primarySlug) return true;
-  return resolveSectorKey(rawSector) === resolveSectorKey(primarySlug);
+  const companyKey = resolveSectorKey(rawSector);
+  const primaryKey = resolveSectorKey(primarySlug);
+  if (companyKey === primaryKey) return true;
+  if (primaryKey === "farma" && companyKey === "salud-bienestar") return true;
+  return false;
 }
 
 /** Valores posibles en BD que corresponden a un sector principal (slug). */
@@ -311,6 +316,13 @@ export function sectorDbValuesForFilter(primarySlug: string): string[] {
       values.add(alias);
       values.add(sectorLabel(alias));
     }
+  }
+
+  if (targetKey === "farma") {
+    values.add("salud-bienestar");
+    values.add("Salud / Bienestar");
+    values.add("salud");
+    values.add("Salud");
   }
 
   return Array.from(values).filter(Boolean);

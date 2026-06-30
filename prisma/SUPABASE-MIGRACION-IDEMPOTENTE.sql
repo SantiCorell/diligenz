@@ -1,23 +1,26 @@
 -- =============================================================================
--- DILIGENZ · Migración idempotente para Supabase
+-- DILIGENZ · Migración idempotente para Supabase (producción)
 -- =============================================================================
--- Ejecutar en: Supabase Dashboard → SQL Editor → pegar todo → Run
+-- Ejecutar en: Supabase Dashboard → SQL Editor → pegar TODO → Run
 --
 -- Seguro:
 --   • Solo CREA/AÑADE enums, tablas, columnas, índices y FK que falten.
 --   • Puedes ejecutarlo varias veces sin error.
 --   • No borra tablas ni datos. No hace DELETE ni TRUNCATE.
 --   • No modifica RLS ni permisos.
+--   • Los INSERT de backfill usan ON CONFLICT DO NOTHING (no duplican historial).
 --
 -- Requisito: el proyecto ya tiene el esquema base (User, Company, Deal, etc.).
--- Después: redeploy en Vercel con DATABASE_URL actualizado.
+-- Después: redeploy en Vercel con DATABASE_URL apuntando a Supabase.
 --
--- ¿Hace falta ejecutarlo otra vez?
---   • Cambios recientes (Drive unificado, teaser para compradores, estado ↔
---     publicación en web, nombre visible en Deal.title): columna nueva
---     buyerTeaserUrl (enlace único al teaser; comprador no ve carpeta Drive).
---   • Solo vuelve a ejecutar si añadimos columnas/tablas nuevas al schema.prisma
---     o si en Supabase aún faltan reference, featuredAt, documentLinks, etc.
+-- Última revisión (schema.prisma al día):
+--   • UserActivityEvent + enum UserActivityType (historial admin: solicitudes,
+--     cambios de estado, favoritos).
+--   • UserCompanyInterest: solicitudes (REQUEST_INFO) y favoritos (FAVORITE).
+--   • User.maxConcurrentInfoRequests / maxConcurrentCompanies.
+--   • Company.buyerTeaserUrl, attachmentsApproved, reference, featuredAt, etc.
+--
+-- Local: npm run db:push:local   (usa .env.local, no este script)
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -48,9 +51,21 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+DO $$ BEGIN
+  CREATE TYPE "UserActivityType" AS ENUM (
+    'INFO_REQUEST_CREATED',
+    'INFO_REQUEST_STATUS_CHANGED',
+    'INFO_REQUEST_CANCELLED',
+    'FAVORITE_ADDED',
+    'FAVORITE_REMOVED'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 -- -----------------------------------------------------------------------------
 -- User
 -- -----------------------------------------------------------------------------
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerified" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "profileVerifiedByAdmin" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "accountStatus" "UserAccountStatus" NOT NULL DEFAULT 'ACTIVE';
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMP(3);
@@ -394,7 +409,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "SectorCatalog_slug_key" ON "SectorCatalog"("s
 ALTER TABLE "SectorCatalog" ADD COLUMN IF NOT EXISTS "colorKey" TEXT NOT NULL DEFAULT 'violet';
 
 -- -----------------------------------------------------------------------------
--- UserCompanyInterest
+-- UserCompanyInterest (solicitudes de info + favoritos)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "UserCompanyInterest" (
   "id" TEXT NOT NULL,
@@ -406,8 +421,18 @@ CREATE TABLE IF NOT EXISTS "UserCompanyInterest" (
   CONSTRAINT "UserCompanyInterest_pkey" PRIMARY KEY ("id")
 );
 
+-- Si la tabla ya existía sin status (migraciones antiguas)
+ALTER TABLE "UserCompanyInterest" ADD COLUMN IF NOT EXISTS "status" "RequestStatus" DEFAULT 'PENDING';
+ALTER TABLE "UserCompanyInterest" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
 CREATE UNIQUE INDEX IF NOT EXISTS "UserCompanyInterest_userId_companyId_type_key"
   ON "UserCompanyInterest"("userId", "companyId", "type");
+
+-- Consultas admin: favoritos por empresa, solicitudes por usuario
+CREATE INDEX IF NOT EXISTS "UserCompanyInterest_companyId_type_idx"
+  ON "UserCompanyInterest"("companyId", "type");
+CREATE INDEX IF NOT EXISTS "UserCompanyInterest_userId_type_idx"
+  ON "UserCompanyInterest"("userId", "type");
 
 DO $$
 BEGIN
@@ -416,6 +441,65 @@ BEGIN
       FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
   END IF;
 END $$;
+
+-- -----------------------------------------------------------------------------
+-- UserActivityEvent (historial append-only visible en panel admin)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS "UserActivityEvent" (
+  "id" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "type" "UserActivityType" NOT NULL,
+  "companyId" TEXT,
+  "metadata" JSONB,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "UserActivityEvent_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX IF NOT EXISTS "UserActivityEvent_userId_createdAt_idx"
+  ON "UserActivityEvent"("userId", "createdAt" DESC);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'UserActivityEvent_userId_fkey') THEN
+    ALTER TABLE "UserActivityEvent" ADD CONSTRAINT "UserActivityEvent_userId_fkey"
+      FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
+
+-- Backfill historial desde solicitudes existentes (idempotente)
+INSERT INTO "UserActivityEvent" ("id", "userId", "type", "companyId", "metadata", "createdAt")
+SELECT
+  'backfill_req_' || uci."id",
+  uci."userId",
+  'INFO_REQUEST_CREATED'::"UserActivityType",
+  uci."companyId",
+  jsonb_build_object('status', COALESCE(uci."status"::text, 'PENDING'), 'backfill', true),
+  uci."createdAt"
+FROM "UserCompanyInterest" uci
+WHERE uci."type" = 'REQUEST_INFO'
+  AND NOT EXISTS (
+    SELECT 1 FROM "UserActivityEvent" e
+    WHERE e."id" IN ('backfill_' || uci."id", 'backfill_req_' || uci."id")
+  )
+ON CONFLICT ("id") DO NOTHING;
+
+-- Backfill favoritos ya guardados (idempotente)
+INSERT INTO "UserActivityEvent" ("id", "userId", "type", "companyId", "metadata", "createdAt")
+SELECT
+  'backfill_fav_' || uci."id",
+  uci."userId",
+  'FAVORITE_ADDED'::"UserActivityType",
+  uci."companyId",
+  jsonb_build_object('backfill', true),
+  uci."createdAt"
+FROM "UserCompanyInterest" uci
+WHERE uci."type" = 'FAVORITE'
+  AND NOT EXISTS (
+    SELECT 1 FROM "UserActivityEvent" e
+    WHERE e."id" IN ('backfill_fav_' || uci."id")
+       OR (e."userId" = uci."userId" AND e."companyId" = uci."companyId" AND e."type" = 'FAVORITE_ADDED')
+  )
+ON CONFLICT ("id") DO NOTHING;
 
 -- -----------------------------------------------------------------------------
 -- Sincronización opcional de datos (estado interno ↔ visible en web)
@@ -439,9 +523,18 @@ END $$;
 --   AND c."removedAt" IS NULL;
 
 -- =============================================================================
+-- Comprobación opcional (debe devolver filas; no modifica datos)
+-- =============================================================================
+-- SELECT 'UserActivityEvent' AS tabla, COUNT(*)::text AS filas FROM "UserActivityEvent"
+-- UNION ALL
+-- SELECT 'UserCompanyInterest', COUNT(*)::text FROM "UserCompanyInterest"
+-- UNION ALL
+-- SELECT 'favoritos', COUNT(*)::text FROM "UserCompanyInterest" WHERE "type" = 'FAVORITE';
+
+-- =============================================================================
 -- Fin. Si ves "Success", la base está al día con el código actual.
 -- Puedes volver a ejecutar este script cuando haya nuevos cambios de esquema.
 --
--- Local (PostgreSQL en .env.local): npm run db:push:local
--- No hace falta tocar la BBDD local solo por los cambios de UI/Drive/estado.
+-- Producción: Supabase SQL Editor → pegar todo → Run → redeploy Vercel
+-- Local:      npm run db:push:local  (lee .env.local; no uses migrate deploy a pelo)
 -- =============================================================================

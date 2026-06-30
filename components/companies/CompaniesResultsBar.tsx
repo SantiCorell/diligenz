@@ -2,6 +2,7 @@
 
 import { Building2, MapPin, X } from "lucide-react";
 import { PRIMARY_SECTOR_OPTIONS } from "@/lib/valuation-sectors";
+import { ccaaLabel } from "@/lib/spain-ccaa";
 
 type Props = {
   total: number;
@@ -77,7 +78,7 @@ export default function CompaniesResultsBar({
               className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.08] bg-[var(--surface-muted)]/60 px-3 py-1 text-xs font-medium text-[var(--foreground)]/70 hover:bg-[var(--surface-muted)] transition"
             >
               <MapPin className="h-3 w-3 opacity-60" />
-              {location}
+              {ccaaLabel(location)}
               <X className="h-3 w-3" />
             </button>
           )}
