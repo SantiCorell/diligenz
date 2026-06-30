@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { unstable_noStore as noStore } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { PRIMARY_SECTOR_OPTIONS } from "@/lib/valuation-sectors";
@@ -204,6 +205,8 @@ export type FeaturedCompaniesResult = {
 export async function getFeaturedCompanies(
   limit = FEATURED_HOME_LIMIT
 ): Promise<FeaturedCompaniesResult> {
+  noStore();
+
   const empty: FeaturedCompaniesResult = { companies: [], hasManualFeatured: false };
 
   try {
@@ -215,8 +218,8 @@ export async function getFeaturedCompanies(
 
     const deals = await prisma.deal.findMany({
       where: {
-        published: true,
         company: { removedAt: null },
+        OR: [{ published: true }, { company: { status: "PUBLISHED" } }],
       },
       include: {
         company: {
@@ -227,7 +230,12 @@ export async function getFeaturedCompanies(
 
     if (deals.length === 0) return empty;
 
-    const rankable = deals.map((deal) => ({
+    const visibleDeals = deals.filter(
+      (deal) => deal.published || deal.company.status === "PUBLISHED"
+    );
+    if (visibleDeals.length === 0) return empty;
+
+    const rankable = visibleDeals.map((deal) => ({
       id: deal.company.id,
       deal,
       name: deal.company.name,

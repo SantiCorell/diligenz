@@ -11,6 +11,9 @@ import SpecializedSectors from "@/components/home/SpecializedSectors";
 import HomeFAQ from "@/components/home/HomeFAQ";
 import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, getFAQSchema } from "@/lib/seo";
 
+/** Empresas destacadas y datos del marketplace deben leerse en cada visita, no en el build. */
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: `${SITE_NAME} | Marketplace líder en España para comprar y vender empresas`,
   description: DEFAULT_DESCRIPTION,

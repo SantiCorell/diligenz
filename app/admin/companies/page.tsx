@@ -201,7 +201,10 @@ export default async function AdminCompaniesPage({
           const allDocsSigned =
             company.documents.length > 0 &&
             company.documents.every((d) => d.signed);
-          const deal = company.deals[0];
+          const deal =
+            company.deals.find((d) => d.published) ?? company.deals[0];
+          const isOnWeb = Boolean(deal?.published);
+          const featuredActive = isFeaturedActive(company.featuredAt);
           const valuation = company.valuations[0];
 
           return (
@@ -239,43 +242,59 @@ export default async function AdminCompaniesPage({
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 shrink-0">
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                    allDocsSigned ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-                  }`}
-                >
-                  {allDocsSigned ? "Docs OK" : "Docs pend."}
-                </span>
-                <span className="rounded-full bg-[var(--brand-primary)]/10 px-2.5 py-1 text-xs font-medium text-[var(--brand-primary)]">
-                  {company.status}
-                </span>
-                {deal?.published && (
-                  <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
-                    En la web
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                      allDocsSigned ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {allDocsSigned ? "Docs OK" : "Docs pend."}
+                  </span>
+                  <span className="rounded-full bg-[var(--brand-primary)]/10 px-2.5 py-1 text-xs font-medium text-[var(--brand-primary)]">
+                    {company.status}
+                  </span>
+                  {isOnWeb && (
+                    <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
+                      En la web
+                    </span>
+                  )}
+                  {isOnWeb && featuredActive && (
+                    <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+                      ★ Destacada
+                    </span>
+                  )}
+                </div>
+
+                {isOnWeb ? (
+                  <AdminFeatureCompanyButton
+                    companyId={company.id}
+                    published
+                    featuredActive={featuredActive}
+                    className="block w-full sm:w-auto"
+                  />
+                ) : (
+                  <span
+                    className="inline-block rounded-xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg-lavender)]/50 px-4 py-2.5 text-center text-xs font-medium text-[var(--foreground)]/60 sm:text-right"
+                    title="Publica la empresa en el marketplace para poder destacarla"
+                  >
+                    Destacar (publica antes)
                   </span>
                 )}
-                {deal?.published && isFeaturedActive(company.featuredAt) && (
-                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
-                    ★ Destacada
-                  </span>
-                )}
-                <AdminFeatureCompanyButton
-                  companyId={company.id}
-                  published={Boolean(deal?.published)}
-                  featuredActive={isFeaturedActive(company.featuredAt)}
-                />
-                <Link
-                  href={`/admin/companies/${company.id}`}
-                  className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-                >
-                  Editar / Ver
-                </Link>
-                <DeleteCompanyButton
-                  companyId={company.id}
-                  companyName={company.name}
-                  redirectTo="/admin/companies"
-                />
+
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                  <Link
+                    href={`/admin/companies/${company.id}`}
+                    className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
+                  >
+                    Editar / Ver
+                  </Link>
+                  <DeleteCompanyButton
+                    companyId={company.id}
+                    companyName={company.name}
+                    redirectTo="/admin/companies"
+                  />
+                </div>
               </div>
             </div>
           );
