@@ -57,14 +57,11 @@ export default async function AdminDashboard({
     <main className="max-w-6xl mx-auto">
       <div className="panel-hero mb-8">
         <span className="page-eyebrow">Panel</span>
-        <h1 className="mt-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-[var(--brand-primary)] via-[#a855f7] to-[var(--brand-dark)] bg-clip-text text-transparent">
+        <h1 className="page-title mt-2">
           Panel de administración
         </h1>
-        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
-          Visión global del marketplace: usuarios, empresas, leads y solicitudes de información. Desde aquí puedes publicar empresas en la web, sincronizar el listado y acceder a cada sección del panel.
-        </p>
-        <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
-          Las empresas solo son visibles en el marketplace cuando las publicas desde su ficha en Empresas.
+        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)]/80 leading-relaxed max-w-2xl">
+          Visión global del marketplace: usuarios, empresas, leads y solicitudes.
         </p>
       </div>
 
@@ -74,41 +71,41 @@ export default async function AdminDashboard({
           value={totalUsers}
           subtitle={`${buyers} compradores · ${sellers} vendedores · ${professionals} profesionales · ${admins} admin`}
           href="/admin/users"
-          bar="primary"
+          tone="primary"
         />
         <KpiCard
           title="Empresas totales"
           value={totalCompanies}
           href="/admin/companies"
-          bar="primary"
+          tone="indigo"
         />
         <KpiCard
           title="Visibles en la web"
           value={publishedOnWeb}
           subtitle="Deals publicados en marketplace"
           href="/admin/companies?marketplace=1"
-          bar="mint"
+          tone="success"
         />
         <KpiCard
           title="En revisión"
           value={inProcess}
           subtitle="Estado interno"
           href="/admin/companies?status=IN_PROCESS"
-          bar="lavender"
+          tone="warning"
         />
         <KpiCard
           title="Acciones"
           value={actionsCount}
           subtitle="Solicitudes de información"
           href="/admin/actions"
-          bar="soft"
+          tone="rose"
         />
         <KpiCard
           title="Leads"
           value={leadsCount}
           subtitle="Valoraciones y contacto"
           href="/admin/leads"
-          bar="primary"
+          tone="primary"
         />
       </div>
 
@@ -200,11 +197,12 @@ export default async function AdminDashboard({
   );
 }
 
-const BAR_CLASS = {
-  primary: "admin-card-bar",
-  mint: "admin-card-bar admin-card-bar--mint",
-  lavender: "admin-card-bar admin-card-bar--lavender",
-  soft: "admin-card-bar admin-card-bar--soft",
+const KPI_TONE_CLASS = {
+  primary: "admin-kpi admin-kpi--primary",
+  success: "admin-kpi admin-kpi--success",
+  warning: "admin-kpi admin-kpi--warning",
+  rose: "admin-kpi admin-kpi--rose",
+  indigo: "admin-kpi admin-kpi--indigo",
 } as const;
 
 function KpiCard({
@@ -212,27 +210,20 @@ function KpiCard({
   value,
   subtitle,
   href,
-  bar,
+  tone,
 }: {
   title: string;
   value: number;
   subtitle?: string;
   href?: string;
-  bar: keyof typeof BAR_CLASS;
+  tone: keyof typeof KPI_TONE_CLASS;
 }) {
   const content = (
-    <div className={`admin-card ${href ? "cursor-pointer" : ""}`}>
-      <div className={BAR_CLASS[bar]} aria-hidden />
-      <div className="admin-card-body">
-        <p className="text-sm font-medium text-[var(--brand-dark)]/75">{title}</p>
-        <p className="mt-2 text-2xl sm:text-3xl font-bold bg-gradient-to-br from-[var(--brand-primary)] to-[#6b21a8] bg-clip-text text-transparent">
-          {value}
-        </p>
-        {subtitle && (
-          <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-70 leading-relaxed">
-            {subtitle}
-          </p>
-        )}
+    <div className={`${KPI_TONE_CLASS[tone]} ${href ? "cursor-pointer" : ""}`}>
+      <div className="admin-kpi-body">
+        <p className="admin-kpi-label">{title}</p>
+        <p className="admin-kpi-value">{value}</p>
+        {subtitle && <p className="admin-kpi-sub">{subtitle}</p>}
       </div>
     </div>
   );
@@ -256,12 +247,9 @@ function AdminSectionCard({
   className?: string;
 }) {
   return (
-    <section className={`admin-card ${className}`}>
-      <div className="admin-card-bar" aria-hidden />
-      <div className="admin-card-body">
-        <h2 className="text-lg font-semibold text-[var(--brand-primary)]">{title}</h2>
-        <div className="mt-4">{children}</div>
-      </div>
+    <section className={`admin-section ${className}`}>
+      <h2 className="admin-section-title">{title}</h2>
+      <div className="mt-4">{children}</div>
     </section>
   );
 }

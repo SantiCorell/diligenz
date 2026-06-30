@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { authFetch, clearStoredToken } from "@/lib/auth-client";
-import PageAmbient from "@/components/layout/PageAmbient";
+import AdminAmbient from "@/components/layout/AdminAmbient";
 
 type Props = {
   userDisplayName: string;
@@ -31,10 +31,6 @@ export default function AdminShell({ userDisplayName, children }: Props) {
     return (
     <>
         <div className={`panel-sidebar-header flex ${expanded ? "items-center justify-between gap-3 px-4 py-4" : "flex-col items-center gap-3 py-4 px-2"}`}>
-          <div
-            className="absolute inset-x-0 bottom-0 h-[3px] admin-card-bar"
-            aria-hidden
-          />
           <Link
             href="/admin"
             className={`flex min-w-0 items-center ${expanded ? "gap-2" : "justify-center"}`}
@@ -180,8 +176,8 @@ export default function AdminShell({ userDisplayName, children }: Props) {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col md:flex-row">
-      <PageAmbient />
+    <div className="admin-shell relative flex min-h-screen flex-col md:flex-row">
+      <AdminAmbient />
       {mobileSidebarOpen && (
         <>
           <div
@@ -272,7 +268,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           </div>
         </header>
 
-        <main className="relative flex-1 px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+        <main className="admin-canvas relative flex-1 px-4 py-8 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   );

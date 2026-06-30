@@ -8,6 +8,7 @@ import DeleteCompanyButton from "@/components/companies/DeleteCompanyButton";
 import { getFormSectorOptions } from "@/lib/sector-catalog";
 import { isFeaturedActive, FEATURED_DURATION_MS } from "@/lib/company-ranking";
 import AdminFeatureCompanyButton from "@/components/admin/AdminFeatureCompanyButton";
+import AdminStatusChip from "@/components/admin/AdminStatusChip";
 import { publicListingName } from "@/lib/company-display-names";
 import { getFavoriteCountsByCompanyIds } from "@/lib/company-favorites";
 import { formatCompactEuroRange } from "@/lib/format-financial";
@@ -138,7 +139,7 @@ export default async function AdminCompaniesPage({
 
       <form
         method="GET"
-        className="mb-8 grid grid-cols-1 gap-4 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-5 sm:grid-cols-2 lg:grid-cols-6"
+        className="admin-filter-bar mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6"
       >
         <input
           type="text"
@@ -192,7 +193,7 @@ export default async function AdminCompaniesPage({
 
       <div className="space-y-4">
         {filteredCompanies.length === 0 && (
-          <p className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-8 text-center text-sm sm:text-base text-[var(--foreground)] opacity-90">
+          <p className="rounded-2xl admin-list-card p-8 text-center text-sm sm:text-base text-[var(--foreground)] opacity-90">
             No hay empresas que coincidan con los filtros.
           </p>
         )}
@@ -210,7 +211,7 @@ export default async function AdminCompaniesPage({
           return (
             <div
               key={company.id}
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 transition hover:shadow-lg"
+              className="admin-list-card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
             >
               <div className="min-w-0">
                 <p className="font-semibold text-[var(--foreground)]">
@@ -244,25 +245,13 @@ export default async function AdminCompaniesPage({
 
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
                 <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                      allDocsSigned ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
-                    }`}
-                  >
+                  <AdminStatusChip tone={allDocsSigned ? "success" : "warning"}>
                     {allDocsSigned ? "Docs OK" : "Docs pend."}
-                  </span>
-                  <span className="rounded-full bg-[var(--brand-primary)]/10 px-2.5 py-1 text-xs font-medium text-[var(--brand-primary)]">
-                    {company.status}
-                  </span>
-                  {isOnWeb && (
-                    <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
-                      En la web
-                    </span>
-                  )}
+                  </AdminStatusChip>
+                  <AdminStatusChip tone="primary">{company.status}</AdminStatusChip>
+                  {isOnWeb && <AdminStatusChip tone="success">En la web</AdminStatusChip>}
                   {isOnWeb && featuredActive && (
-                    <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
-                      ★ Destacada
-                    </span>
+                    <AdminStatusChip tone="featured">★ Destacada</AdminStatusChip>
                   )}
                 </div>
 

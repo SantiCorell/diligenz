@@ -11,6 +11,7 @@ import { getFormSectorOptions } from "@/lib/sector-catalog";
 import { ccaaLabel } from "@/lib/spain-ccaa";
 import { isFeaturedActive, FEATURED_DURATION_MS } from "@/lib/company-ranking";
 import AdminFeatureCompanyButton from "@/components/admin/AdminFeatureCompanyButton";
+import AdminStatusChip from "@/components/admin/AdminStatusChip";
 import { publicListingName } from "@/lib/company-display-names";
 import { getCompanyDocumentsDriveUrl, displaySalePrice, formatCompanyMoney } from "@/lib/company-display";
 import { formatCompactEuroRange } from "@/lib/format-financial";
@@ -86,51 +87,86 @@ export default async function AdminCompanyDetail({
     company.documents.every((d) => d.signed);
 
   return (
-    <main className="max-w-3xl mx-auto space-y-8">
-      <div>
-        <Link
-          href="/admin/companies"
-          className="text-sm font-medium text-[var(--brand-primary)] hover:underline opacity-90"
-        >
-          ← Volver a Empresas
-        </Link>
-        <span className="inline-block text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--brand-primary)]/80 mt-4 mb-2">
-          Ficha de empresa
-        </span>
-        <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">
-          {company.name}
-        </h1>
-        {deal ? (
-          <p className="mt-1 text-sm font-medium text-[var(--brand-dark)]">
-            Ficha pública:{" "}
-            <span className="text-[var(--brand-primary)]">{publicListingName(deal.title, company.name)}</span>
-          </p>
-        ) : null}
-        <p className="mt-1 text-sm text-[var(--foreground)] opacity-90">
-          Referencia:{" "}
-          <span className="font-mono font-semibold text-[var(--brand-primary)]">{companyReference}</span>
-        </p>
-        <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
-          {company.sector} · {ccaaLabel(company.location)}
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <span className="rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-950">
-            Facturación: {formatCompanyMoney(company.revenue)}
-          </span>
-          <span className="rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-950">
-            EBITDA: {formatCompanyMoney(company.ebitda)}
-          </span>
+    <main className="max-w-5xl mx-auto space-y-8">
+      <div className="panel-hero">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <Link
+              href="/admin/companies"
+              className="text-sm font-medium text-[var(--brand-primary)] hover:underline"
+            >
+              ← Volver a Empresas
+            </Link>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <AdminStatusChip tone="primary">
+                <span className="font-mono">{companyReference}</span>
+              </AdminStatusChip>
+              <AdminStatusChip tone={deal?.published ? "success" : "neutral"}>
+                {company.status}
+              </AdminStatusChip>
+              {featuredActive && <AdminStatusChip tone="featured">★ Destacada</AdminStatusChip>}
+              {allDocsSigned ? (
+                <AdminStatusChip tone="success">Docs OK</AdminStatusChip>
+              ) : (
+                <AdminStatusChip tone="warning">Docs pend.</AdminStatusChip>
+              )}
+            </div>
+            <p className="page-eyebrow mt-4">Ficha de empresa</p>
+            <h1 className="page-title mt-1">
+              {deal ? publicListingName(deal.title, company.name) : company.name}
+            </h1>
+            <p className="mt-1 text-sm text-[var(--foreground)]/70">
+              {company.name !== (deal?.title ?? company.name) ? (
+                <>
+                  Nombre real: <span className="font-medium text-[var(--brand-dark)]">{company.name}</span>
+                  {" · "}
+                </>
+              ) : null}
+              {company.sector} · {ccaaLabel(company.location)}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            {deal?.published ? (
+              <Link href={`/companies/${company.id}`} className="btn-secondary text-sm">
+                Ver en web ↗
+              </Link>
+            ) : null}
+            {deal?.published ? (
+              <AdminFeatureCompanyButton
+                companyId={company.id}
+                published
+                featuredActive={featuredActive}
+                returnTo={`/admin/companies/${company.id}`}
+              />
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-2">
+          <div className="admin-metric-pill">
+            <span className="admin-metric-pill-label">Facturación</span>
+            <span className="admin-metric-pill-value">{formatCompanyMoney(company.revenue)}</span>
+          </div>
+          <div className="admin-metric-pill">
+            <span className="admin-metric-pill-label">EBITDA</span>
+            <span className="admin-metric-pill-value">{formatCompanyMoney(company.ebitda)}</span>
+          </div>
           {valuation ? (
-            <span className="rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-950">
-              Valoración: {formatCompactEuroRange(valuation.minValue, valuation.maxValue)}
-            </span>
+            <div className="admin-metric-pill">
+              <span className="admin-metric-pill-label">Valoración</span>
+              <span className="admin-metric-pill-value">
+                {formatCompactEuroRange(valuation.minValue, valuation.maxValue)}
+              </span>
+            </div>
           ) : null}
           {valuation && displaySalePrice(valuation) ? (
-            <span className="rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-950">
-              Precio venta: {displaySalePrice(valuation)}
-            </span>
+            <div className="admin-metric-pill">
+              <span className="admin-metric-pill-label">Precio venta</span>
+              <span className="admin-metric-pill-value">{displaySalePrice(valuation)}</span>
+            </div>
           ) : null}
         </div>
+
         {company.removedAt && (
           <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
             Empresa archivada el{" "}
@@ -141,13 +177,10 @@ export default async function AdminCompanyDetail({
             {company.removedBy
               ? ` por ${company.removedBy.name?.trim() || company.removedBy.email}`
               : ""}
-            . No aparece en listados públicos ni en el panel del vendedor; los datos se conservan en base de
-            datos.
+            . No aparece en listados públicos ni en el panel del vendedor.
           </p>
         )}
-        <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
-          En esta ficha puedes ver la información general, editar los textos y enlaces que verán los usuarios en el listado y en la página de detalle, revisar documentos subidos por el vendedor, la documentación legal y publicar o despublicar la empresa en el marketplace.
-        </p>
+
         {sp.success === "created" && (
           <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
             Empresa creada. Completa o revisa los datos abajo y guarda.
@@ -221,8 +254,8 @@ export default async function AdminCompanyDetail({
       </div>
 
       {/* EDITAR FICHA PÚBLICA */}
-      <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
-        <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+      <section className="admin-section">
+        <h2 className="admin-section-title">
           Editar ficha pública (listado y detalle)
         </h2>
         <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
@@ -484,8 +517,8 @@ export default async function AdminCompanyDetail({
         </form>
       </section>
 
-      <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
-        <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+      <section className="admin-section">
+        <h2 className="admin-section-title">
           Valoración orientativa y precio de venta (€)
         </h2>
         <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
@@ -546,7 +579,7 @@ export default async function AdminCompanyDetail({
 
       {company.sellerDocumentsNote?.trim() && (
         <section className="rounded-2xl bg-amber-50/90 border border-amber-200/80 shadow-md p-6">
-          <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+          <h2 className="admin-section-title">
             Comentario del vendedor (documentación)
           </h2>
           <p className="mt-3 text-sm text-[var(--foreground)] whitespace-pre-wrap leading-relaxed">
@@ -565,8 +598,8 @@ export default async function AdminCompanyDetail({
       />
 
       {/* DOCUMENTACIÓN LEGAL */}
-      <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
-        <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+      <section className="admin-section">
+        <h2 className="admin-section-title">
           Documentación legal
         </h2>
         <p className="mt-2 text-sm sm:text-base text-[var(--foreground)] opacity-90">
@@ -614,8 +647,8 @@ export default async function AdminCompanyDetail({
       </section>
 
       {/* ACCIONES ADMIN */}
-      <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
-        <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
+      <section className="admin-section">
+        <h2 className="admin-section-title">
           Estado y publicación
         </h2>
 
