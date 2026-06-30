@@ -35,7 +35,7 @@ export default async function BuyerDashboardPage() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       <div className="panel-hero">
-        <p className="page-eyebrow">Panel del inversor</p>
+        <p className="page-eyebrow">Panel del comprador</p>
         <h1 className="page-title mt-2">
           Hola{displayName ? `, ${displayName}` : ""}
         </h1>

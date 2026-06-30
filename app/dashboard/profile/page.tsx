@@ -75,7 +75,7 @@ export default async function DashboardProfilePage() {
           <p className="text-xs text-[var(--foreground)] opacity-65">
             Rol:{" "}
             <span className="font-medium">
-              {user.role === "BUYER" && "Comprador / inversor"}
+              {user.role === "BUYER" && "Comprador"}
               {user.role === "SELLER" && "Vendedor"}
               {user.role === "PROFESSIONAL" && "Profesional"}
               {user.role === "ADMIN" && "Administrador"}
@@ -130,7 +130,7 @@ export default async function DashboardProfilePage() {
 
       {isBuyer && (
         <UserDrivePanel
-          title="Google Drive (inversor)"
+          title="Google Drive (comprador)"
           driveUrl={
             user.documentsDriveFolderUrl?.trim() ||
             process.env.NEXT_PUBLIC_BUYER_DOCUMENTS_DRIVE_URL?.trim() ||
@@ -158,7 +158,7 @@ export default async function DashboardProfilePage() {
             href="/dashboard/buyer"
             className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
           >
-            ← Volver al panel del inversor
+            ← Volver al panel del comprador
           </Link>
         )}
         {isSellerOnly && (
