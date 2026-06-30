@@ -2,7 +2,7 @@ import FeaturedCompaniesCarousel from "./FeaturedCompaniesCarousel";
 import { getFeaturedCompanies } from "@/lib/public-companies";
 
 export default async function FeaturedCompanies() {
-  const companies = await getFeaturedCompanies(6);
+  const { companies, hasManualFeatured } = await getFeaturedCompanies(6);
 
   if (companies.length === 0) return null;
 
@@ -14,7 +14,9 @@ export default async function FeaturedCompanies() {
             Empresas destacadas
           </h2>
           <p className="mt-3 text-sm text-[var(--foreground)]/70 sm:text-base">
-            Oportunidades reales, verificadas y confidenciales
+            {hasManualFeatured
+              ? "Oportunidades reales, verificadas y confidenciales"
+              : "Las empresas publicadas con mayor EBITDA en el marketplace"}
           </p>
         </div>
 

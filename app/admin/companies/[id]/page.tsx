@@ -10,6 +10,7 @@ import CcaaSelect from "@/components/forms/CcaaSelect";
 import { getFormSectorOptions } from "@/lib/sector-catalog";
 import { ccaaLabel } from "@/lib/spain-ccaa";
 import { isFeaturedActive, FEATURED_DURATION_MS } from "@/lib/company-ranking";
+import AdminFeatureCompanyButton from "@/components/admin/AdminFeatureCompanyButton";
 import { publicListingName } from "@/lib/company-display-names";
 import { getCompanyDocumentsDriveUrl, displaySalePrice, formatCompanyMoney } from "@/lib/company-display";
 import { formatCompactEuroRange } from "@/lib/format-financial";
@@ -697,17 +698,13 @@ export default async function AdminCompanyDetail({
                   durante {featuredDays} días; después se quita sola.
                 </p>
               )}
-              <form action="/api/admin/company/feature" method="POST" className="mt-3">
-                <input type="hidden" name="companyId" value={company.id} />
-                <button
-                  type="submit"
-                  className={`rounded-xl px-6 py-3.5 text-sm font-semibold text-white shadow-lg hover:opacity-95 transition ${
-                    featuredActive ? "bg-amber-600" : "bg-[var(--brand-primary)]"
-                  }`}
-                >
-                  {featuredActive ? "Quitar destacado" : "Destacar empresa"}
-                </button>
-              </form>
+              <AdminFeatureCompanyButton
+                companyId={company.id}
+                published={Boolean(deal?.published)}
+                featuredActive={featuredActive}
+                returnTo={`/admin/companies/${company.id}`}
+                className="mt-3"
+              />
             </>
           ) : (
             <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">

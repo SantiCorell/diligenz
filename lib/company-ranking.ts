@@ -78,3 +78,38 @@ export function sortCompaniesForListing<T extends CompanyRankingFields>(
 ): T[] {
   return [...items].sort((a, b) => compareCompaniesForListing(a, b, now));
 }
+
+/**
+ * Carrusel de la home: si hay destacadas manuales activas (<14 días), van primero
+ * y se rellena hasta `limit` con el resto por EBITDA; si no hay ninguna activa,
+ * solo las de mayor EBITDA.
+ */
+export function pickHomepageCompanies<T extends CompanyRankingFields & { id: string }>(
+  items: T[],
+  limit: number,
+  now = new Date()
+): T[] {
+  if (items.length === 0 || limit <= 0) return [];
+
+  const activeFeatured = items.filter((item) => isFeaturedActive(item.featuredAt, now));
+
+  if (activeFeatured.length === 0) {
+    return sortCompaniesForListing(items, now).slice(0, limit);
+  }
+
+  const featuredSorted = sortCompaniesForListing(activeFeatured, now);
+  const featuredIds = new Set(featuredSorted.map((item) => item.id));
+  const rest = sortCompaniesForListing(
+    items.filter((item) => !featuredIds.has(item.id)),
+    now
+  );
+
+  return [...featuredSorted, ...rest].slice(0, limit);
+}
+
+export function hasActiveManualFeatured(
+  items: Array<{ featuredAt?: Date | string | null }>,
+  now = new Date()
+): boolean {
+  return items.some((item) => isFeaturedActive(item.featuredAt, now));
+}

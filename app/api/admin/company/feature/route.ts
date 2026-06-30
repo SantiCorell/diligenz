@@ -48,10 +48,12 @@ export async function POST(req: Request) {
     data: { featuredAt: currentlyFeatured ? null : new Date() },
   });
 
-  return NextResponse.redirect(
-    new URL(
-      `/admin/companies/${companyId}?success=${currentlyFeatured ? "unfeatured" : "featured"}`,
-      req.url
-    )
-  );
+  const returnTo = formData.get("returnTo")?.toString();
+  const success = currentlyFeatured ? "unfeatured" : "featured";
+  const redirectPath =
+    returnTo?.startsWith("/admin/companies") && !returnTo.includes("..")
+      ? `${returnTo}${returnTo.includes("?") ? "&" : "?"}success=${success}`
+      : `/admin/companies/${companyId}?success=${success}`;
+
+  return NextResponse.redirect(new URL(redirectPath, req.url));
 }

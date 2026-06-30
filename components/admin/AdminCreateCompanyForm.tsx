@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import UserOwnerSearch from "./UserOwnerSearch";
 import SectorSelect from "@/components/forms/SectorSelect";
 import CcaaSelect from "@/components/forms/CcaaSelect";
@@ -8,35 +9,61 @@ import type { SectorOption } from "@/lib/valuation-sectors";
 
 type Props = {
   sectorOptions: SectorOption[];
+  /** Abrir al cargar (p. ej. tras error al crear). */
+  defaultOpen?: boolean;
 };
 
-export default function AdminCreateCompanyForm({ sectorOptions }: Props) {
+export default function AdminCreateCompanyForm({ sectorOptions, defaultOpen = false }: Props) {
+  const [open, setOpen] = useState(defaultOpen);
   const [ownerError, setOwnerError] = useState(false);
 
   return (
-    <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 mb-10">
-      <h2 className="text-lg font-semibold text-[var(--brand-primary)]">
-        Crear empresa y asignar a un usuario
-      </h2>
-      <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
-        Busca por nombre o email al usuario vendedor (o cualquier usuario) que será titular de la ficha.
-        Se crea en borrador con valoración orientativa y deal interno sin publicar.
-      </p>
-      <form
-        action="/api/admin/company/create"
-        method="POST"
-        className="mt-6 space-y-4"
-        onSubmit={(e) => {
-          const fd = new FormData(e.currentTarget);
-          const oid = fd.get("ownerId")?.toString()?.trim();
-          if (!oid) {
-            e.preventDefault();
-            setOwnerError(true);
-          } else {
-            setOwnerError(false);
-          }
-        }}
+    <section className="mb-10 rounded-2xl border border-[var(--brand-primary)]/10 bg-white shadow-md">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-3 px-6 py-5 text-left"
+        aria-expanded={open}
       >
+        <span>
+          <span className="block text-lg font-semibold text-[var(--brand-primary)]">
+            Crear empresa y asignar a un usuario
+          </span>
+          <span className="mt-1 block text-sm text-[var(--foreground)] opacity-80">
+            {open
+              ? "Ocultar formulario"
+              : "Despliega para dar de alta una ficha en borrador"}
+          </span>
+        </span>
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-[var(--brand-primary)] transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+          aria-hidden
+        />
+      </button>
+
+      {open ? (
+        <div className="border-t border-[var(--brand-primary)]/10 px-6 pb-6 pt-2">
+          <p className="text-sm text-[var(--foreground)] opacity-90">
+            Busca por nombre o email al usuario vendedor (o cualquier usuario) que será titular de la
+            ficha. Se crea en borrador con valoración orientativa y deal interno sin publicar.
+          </p>
+          <form
+            action="/api/admin/company/create"
+            method="POST"
+            className="mt-6 space-y-4"
+            onSubmit={(e) => {
+              const fd = new FormData(e.currentTarget);
+              const oid = fd.get("ownerId")?.toString()?.trim();
+              if (!oid) {
+                e.preventDefault();
+                setOwnerError(true);
+              } else {
+                setOwnerError(false);
+              }
+            }}
+          >
         <UserOwnerSearch initialUserId="" initialSummary="" />
         {ownerError && (
           <p className="text-sm text-red-600 font-medium">
@@ -125,7 +152,9 @@ export default function AdminCreateCompanyForm({ sectorOptions }: Props) {
         >
           Crear empresa
         </button>
-      </form>
+          </form>
+        </div>
+      ) : null}
     </section>
   );
 }

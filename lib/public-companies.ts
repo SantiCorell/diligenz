@@ -8,6 +8,8 @@ import {
 } from "@/lib/sector-visual";
 import {
   featuredCutoffDate,
+  hasActiveManualFeatured,
+  pickHomepageCompanies,
   sortCompaniesForListing,
 } from "@/lib/company-ranking";
 import { publicListingName } from "@/lib/company-display-names";
@@ -192,12 +194,24 @@ export async function getPublicCompanies(
   }
 }
 
-/** Empresas para el carrusel de la home: publicadas, orden por destacado + EBITDA. */
+export type FeaturedCompaniesResult = {
+  companies: CompanyMock[];
+  /** Hay al menos una destacada manualmente activa (<14 días). */
+  hasManualFeatured: boolean;
+};
+
+/** Empresas para el carrusel de la home: destacadas activas o, si no hay, mayor EBITDA. */
 export async function getFeaturedCompanies(
   limit = FEATURED_HOME_LIMIT
-): Promise<CompanyMock[]> {
+): Promise<FeaturedCompaniesResult> {
+  const empty: FeaturedCompaniesResult = { companies: [], hasManualFeatured: false };
+
   try {
-    await clearExpiredFeaturedCompanies();
+    try {
+      await clearExpiredFeaturedCompanies();
+    } catch {
+      // Entornos sin columna featuredAt migrada aún
+    }
 
     const deals = await prisma.deal.findMany({
       where: {
@@ -211,13 +225,25 @@ export async function getFeaturedCompanies(
       },
     });
 
-    if (deals.length === 0) return [];
+    if (deals.length === 0) return empty;
 
-    return sortDealsByRanking(deals)
-      .slice(0, limit)
-      .map((deal) => mapDealToMock(deal));
+    const rankable = deals.map((deal) => ({
+      id: deal.company.id,
+      deal,
+      name: deal.company.name,
+      ebitda: deal.company.ebitda,
+      featuredAt: deal.company.featuredAt ?? null,
+    }));
+
+    const hasManualFeatured = hasActiveManualFeatured(rankable);
+    const picked = pickHomepageCompanies(rankable, limit);
+
+    return {
+      companies: picked.map((row) => mapDealToMock(row.deal)),
+      hasManualFeatured,
+    };
   } catch {
-    return [];
+    return empty;
   }
 }
 

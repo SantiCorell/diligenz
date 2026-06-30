@@ -6,7 +6,8 @@ import { backfillMissingCompanyReferencesIfNeeded, companyReferenceFieldSupporte
 import AdminCreateCompanyForm from "@/components/admin/AdminCreateCompanyForm";
 import DeleteCompanyButton from "@/components/companies/DeleteCompanyButton";
 import { getFormSectorOptions } from "@/lib/sector-catalog";
-import { isFeaturedActive } from "@/lib/company-ranking";
+import { isFeaturedActive, FEATURED_DURATION_MS } from "@/lib/company-ranking";
+import AdminFeatureCompanyButton from "@/components/admin/AdminFeatureCompanyButton";
 import { publicListingName } from "@/lib/company-display-names";
 import { getFavoriteCountsByCompanyIds } from "@/lib/company-favorites";
 import { formatCompactEuroRange } from "@/lib/format-financial";
@@ -14,7 +15,15 @@ import { formatCompactEuroRange } from "@/lib/format-financial";
 export default async function AdminCompaniesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; ref?: string; status?: string; docs?: string; marketplace?: string; error?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    ref?: string;
+    status?: string;
+    docs?: string;
+    marketplace?: string;
+    error?: string;
+    success?: string;
+  }>;
 }) {
   const session = await getSessionWithUser();
   if (!session || session.user.role !== "ADMIN") redirect("/login");
@@ -73,6 +82,7 @@ export default async function AdminCompaniesPage({
   const favoriteCounts = await getFavoriteCountsByCompanyIds(
     filteredCompanies.map((company) => company.id)
   );
+  const featuredDays = Math.round(FEATURED_DURATION_MS / (24 * 60 * 60 * 1000));
 
   return (
     <main className="max-w-5xl mx-auto">
@@ -111,7 +121,20 @@ export default async function AdminCompaniesPage({
           Esa referencia ya está en uso. Elige otra distinta.
         </p>
       )}
-      <AdminCreateCompanyForm sectorOptions={sectorOptions} />
+      {params.success === "featured" && (
+        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Empresa destacada en listados y home durante {featuredDays} días.
+        </p>
+      )}
+      {params.success === "unfeatured" && (
+        <p className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          Destacado retirado.
+        </p>
+      )}
+      <AdminCreateCompanyForm
+        sectorOptions={sectorOptions}
+        defaultOpen={Boolean(params.error?.startsWith("create_"))}
+      />
 
       <form
         method="GET"
@@ -237,6 +260,11 @@ export default async function AdminCompaniesPage({
                     ★ Destacada
                   </span>
                 )}
+                <AdminFeatureCompanyButton
+                  companyId={company.id}
+                  published={Boolean(deal?.published)}
+                  featuredActive={isFeaturedActive(company.featuredAt)}
+                />
                 <Link
                   href={`/admin/companies/${company.id}`}
                   className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
