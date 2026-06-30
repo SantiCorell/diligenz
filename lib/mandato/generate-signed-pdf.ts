@@ -55,10 +55,6 @@ function stripDataUrl(b64: string): string {
   return i >= 0 ? b64.slice(i + 1) : b64;
 }
 
-function formatEur(value: number): string {
-  return `${value.toLocaleString("es-ES")} EUR`;
-}
-
 function fillField(
   page: PDFPage,
   font: PDFFont,
@@ -109,53 +105,47 @@ export async function generateSignedMandatePdf(
   const p1 = pages[0];
   const p2 = pages[1];
   const p3 = pages[2];
-  const p4 = pages[3];
+
+  const sellerName = data.companyLegalName;
+  const sellerCif = data.companyCif;
+  const sellerAddress = data.companyAddress;
+  const companyName = data.companyTradeName?.trim() || data.companyLegalName;
 
   // Página 1 — EL VENDEDOR
-  fillField(p1, font, data.companyLegalName, 172, 346, 100);
-  fillField(p1, font, data.companyCif, 340, 346, 90);
-  fillField(p1, font, data.companyAddress, 115, 313, 200);
-  fillField(p1, font, data.contactEmail, 172, 280, 100);
-  if (data.contactPhone) fillField(p1, font, data.contactPhone, 340, 280, 90);
-  fillField(p1, font, data.representativeName, 172, 247, 200);
-  fillField(p1, font, data.representativeDni, 172, 204, 90);
+  fillField(p1, font, sellerName, 180, 446, 95);
+  fillField(p1, font, sellerCif, 340, 446, 90);
+  fillField(p1, font, sellerAddress, 130, 416, 200);
+  fillField(p1, font, data.contactEmail, 130, 387, 140);
+  if (data.contactPhone) fillField(p1, font, data.contactPhone, 340, 377, 90);
+  if (data.representativeName) fillField(p1, font, data.representativeName, 160, 347, 200);
+  if (data.representativeDni) fillField(p1, font, data.representativeDni, 130, 319, 90);
 
-  // Página 2 — LA COMPAÑÍA
-  fillField(p2, font, data.companyTradeName || data.companyLegalName, 172, 726, 200);
-  fillField(p2, font, data.companyCif, 120, 692, 120);
-  fillField(p2, font, data.companyAddress, 140, 659, 200);
-  if (data.companySector) fillField(p2, font, data.companySector, 172, 616, 100);
-  if (data.companyCnae) fillField(p2, font, data.companyCnae, 320, 616, 90);
-  if (data.companyFoundedYear != null)
-    fillField(p2, font, String(data.companyFoundedYear), 130, 573, 60);
-  if (data.employeeCount != null) fillField(p2, font, String(data.employeeCount), 350, 573, 60);
-  if (data.lastRevenueEur != null)
-    fillField(p2, font, formatEur(data.lastRevenueEur), 150, 530, 100);
-  if (data.lastEbitdaEur != null) fillField(p2, font, formatEur(data.lastEbitdaEur), 370, 530, 90);
-  if (data.expectedSalePriceEur != null)
-    fillField(p2, font, formatEur(data.expectedSalePriceEur), 220, 497, 120);
-  if (data.saleReason) fillField(p2, font, data.saleReason, 170, 464, 200, 8);
+  // Página 1 — LA COMPAÑÍA EN VENTA
+  fillField(p1, font, companyName, 160, 205, 200);
+  fillField(p1, font, sellerCif, 90, 175, 120);
+  fillField(p1, font, sellerAddress, 140, 145, 200);
 
-  // Página 3 — fecha y declaraciones aceptadas
-  const { day, monthName, year } = signedDateParts(data.signedAt);
-  fillField(p3, font, day, 262, 190, 28);
-  fillField(p3, font, monthName, 295, 190, 120);
-  fillField(p3, font, year, 500, 190, 40);
-
-  const declarationYs = [370.6, 357.2, 343.9, 330.5, 306.8, 293.5];
+  // Página 2 — declaraciones aceptadas (sección 5)
+  const declarationYs = [219.3, 206.0, 192.6, 179.3, 156.0, 142.6];
   for (const y of declarationYs) {
-    markCheckbox(p3, font, 74.7, y);
+    markCheckbox(p2, font, 74.7, y);
   }
 
-  // Página 4 — firma del vendedor
+  // Página 3 — fecha y firma del vendedor
+  const { day, monthName, year } = signedDateParts(data.signedAt);
+  fillField(p3, font, day, 248, 724, 28);
+  fillField(p3, font, monthName, 280, 724, 80);
+  fillField(p3, font, year, 390, 724, 50);
+
   const pngBytes = Uint8Array.from(Buffer.from(stripDataUrl(data.signaturePngBase64), "base64"));
   const sigImage = await pdf.embedPng(pngBytes);
   const sigW = 160;
   const sigH = (sigImage.height / sigImage.width) * sigW;
-  p4.drawImage(sigImage, { x: 320, y: 610, width: sigW, height: sigH });
+  p3.drawImage(sigImage, { x: 320, y: 500, width: sigW, height: sigH });
 
-  fillField(p4, font, data.representativeName, 380, 598, 150);
-  fillField(p4, font, data.companyCif, 360, 589, 150);
+  const signatoryName = data.representativeName?.trim() || sellerName;
+  fillField(p3, font, signatoryName, 360, 458, 150);
+  fillField(p3, font, sellerCif, 360, 448, 150);
 
   return pdf.save();
 }

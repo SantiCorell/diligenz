@@ -317,13 +317,6 @@ export default function DashboardShell({
             )}
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border-2 border-[var(--brand-primary)]/25 bg-[var(--brand-primary)]/5 px-3.5 py-1.5 text-sm font-semibold text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/10 transition"
-            >
-              Ver web
-              <span aria-hidden>↗</span>
-            </Link>
             <button
               onClick={logout}
               className="text-sm font-medium text-[var(--brand-dark)]/70 hover:text-[var(--brand-primary)]"
@@ -350,15 +343,14 @@ function WebNavItem({
     <Link
       href="/"
       onClick={onNavigate}
-      className={`flex w-full shrink-0 items-center rounded-xl border-2 border-[var(--brand-primary)]/35 bg-[var(--brand-primary)]/8 font-semibold text-[var(--brand-primary)] shadow-sm transition hover:border-[var(--brand-primary)]/55 hover:bg-[var(--brand-primary)]/12 ${
-        collapsed ? "justify-center px-2 py-2.5" : "gap-2.5 px-3 py-2.5"
-      }`}
+      className={`panel-nav-link text-[var(--brand-dark)]/70 ${collapsed ? "justify-center" : ""} ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"}`}
       title={collapsed ? "Ver web" : undefined}
     >
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-primary)]/15 text-sm">
-        ↗
-      </span>
-      {!collapsed && <span>Ver web</span>}
+      {collapsed ? (
+        <span className="text-[11px] font-semibold leading-tight">Web</span>
+      ) : (
+        <span>Ver web</span>
+      )}
     </Link>
   );
 }

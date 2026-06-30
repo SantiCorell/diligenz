@@ -28,7 +28,10 @@ export const getActiveCustomSectors = cache(async (): Promise<CustomSectorRow[]>
 
 export async function getFormSectorOptions(): Promise<SectorOption[]> {
   const custom = await getActiveCustomSectors();
-  const builtIn = VALUATION_SECTOR_OPTIONS.filter((o) => o.value !== "");
+  const customSlugs = new Set(custom.map((c) => c.slug));
+  const builtIn = VALUATION_SECTOR_OPTIONS.filter(
+    (o) => o.value !== "" && !customSlugs.has(o.value)
+  );
   const customOptions: SectorOption[] = custom.map((c) => ({
     value: c.slug,
     label: c.label,

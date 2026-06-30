@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { slugifySectorLabel } from "@/lib/sector-slug";
+import { listBuiltinSectorsForAdmin } from "@/lib/builtin-sectors-admin";
 import { SECTOR_ICON_PRESETS } from "@/lib/sector-icon-presets";
 import {
   DEFAULT_SECTOR_COLOR_KEY,
@@ -22,6 +23,7 @@ export async function GET(req: Request) {
   });
   return NextResponse.json({
     sectors,
+    builtinSectors: listBuiltinSectorsForAdmin(),
     iconPresets: SECTOR_ICON_PRESETS.map((p) => ({ key: p.key, label: p.label })),
     colorPresets: SECTOR_COLOR_PRESETS.map((p) => ({
       key: p.key,

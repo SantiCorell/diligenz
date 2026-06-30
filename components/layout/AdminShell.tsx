@@ -159,6 +159,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
             label="Ver web"
             collapsed={!expanded}
             active={false}
+            noIcon
             onNavigate={() => setMobileSidebarOpen(false)}
           />
         </nav>
@@ -282,29 +283,36 @@ function AdminNavLink({
   label,
   collapsed,
   active,
+  noIcon,
   onNavigate,
 }: {
   href: string;
   label: string;
   collapsed: boolean;
   active: boolean;
+  noIcon?: boolean;
   onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
       onClick={onNavigate}
-      className={`panel-nav-link ${collapsed ? "justify-center" : "gap-3"} ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"} ${
+      className={`panel-nav-link ${collapsed ? "justify-center" : noIcon ? "" : "gap-3"} ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"} ${
         active
           ? "admin-nav-active text-[var(--brand-primary)] font-semibold"
           : "text-[var(--brand-dark)]/70"
       }`}
       title={collapsed ? label : undefined}
     >
-      <span className={`panel-nav-icon ${active ? "panel-nav-icon--active" : ""}`}>
-        {active ? "▸" : "◦"}
-      </span>
+      {!noIcon && (
+        <span className={`panel-nav-icon ${active ? "panel-nav-icon--active" : ""}`}>
+          {active ? "▸" : "◦"}
+        </span>
+      )}
       {!collapsed && <span>{label}</span>}
+      {collapsed && noIcon && (
+        <span className="text-[11px] font-semibold leading-tight">Web</span>
+      )}
     </Link>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ProfileCheckIndicator from "@/components/dashboard/ProfileCheckIndicator";
 
 type Props = {
   emailVerified: boolean;
@@ -25,13 +26,14 @@ export default function ProfileStatus({
 
   return (
     <div className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">
-      <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-4">👤 Mi perfil</h2>
+      <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-4">Mi perfil</h2>
 
       <ul className="space-y-3 text-sm sm:text-base text-[var(--foreground)] opacity-90">
         {items.map((item) => (
           <li key={item.label} className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              {item.ok ? "✅" : "⬜"} {item.label}
+            <span className="flex items-center gap-2.5">
+              <ProfileCheckIndicator state={item.ok ? "done" : "todo"} />
+              <span>{item.label}</span>
             </span>
 
             {!item.ok && item.action && (

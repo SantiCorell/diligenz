@@ -4,6 +4,7 @@ import { getUserDniPendingReview } from "@/lib/user-documents/dni-status";
 import { getSessionWithUser } from "@/lib/session";
 import UserDrivePanel from "@/components/dashboard/UserDrivePanel";
 import ProfileEditor from "@/components/dashboard/ProfileEditor";
+import ProfileCheckIndicator from "@/components/dashboard/ProfileCheckIndicator";
 
 export default async function DashboardProfilePage() {
   const session = await getSessionWithUser();
@@ -202,8 +203,9 @@ function CheckRow({
 }) {
   return (
     <li className="flex items-center justify-between gap-3">
-      <span className="flex items-center gap-2">
-        {ok ? "✅" : pending ? "🟡" : "⬜"} {label}
+      <span className="flex items-center gap-2.5">
+        <ProfileCheckIndicator state={ok ? "done" : pending ? "pending" : "todo"} />
+        <span>{label}</span>
       </span>
       {!ok && href && (
         <Link

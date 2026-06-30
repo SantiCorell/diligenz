@@ -16,9 +16,23 @@ export const MANDATO_META = {
 export const MANDATO_FEE_SUMMARY = [
   "Honorarios por éxito: 4% del precio de transmisión efectivo, con un mínimo de 5.000 € (sin IVA).",
   "Elaboración del contrato de compraventa: gratuita si el precio ≤ 150.000 €; 1.500 € si supera dicho importe.",
-  "Honorarios por retirada o venta fuera de canal (trabajos iniciados): 5.000 €.",
+  "Honorarios por retirada o venta fuera de canal (una vez iniciados los trabajos): 5.000 €.",
   "Encargo exclusivo inicial de 6 meses, prorrogable salvo denuncia con 1 mes de preaviso.",
 ];
+
+export const MANDATO_PARTICULARES_EXCERPT = `MANDATO DE VENTA — CONDICIONES PARTICULARES (2026)
+
+1. Datos de las partes. DILIGENZ actúa como intermediario (Jose Ángel Cañizares Llorca, NIF 23848753F). EL VENDEDOR facilita sus datos de identificación y los de la compañía en venta.
+
+2. Exclusividad. Encargo exclusivo por 6 meses naturales desde la firma, prorrogable salvo denuncia con 1 mes de preaviso.
+
+3. Honorarios. Success fee 4% (mín. 5.000 €); contrato de compraventa según tramos; penalidad 5.000 € por retirada o venta fuera de canal.
+
+4. Documentación. EL VENDEDOR entrega la documentación indicada en el plazo de 10 días hábiles.
+
+5. Declaraciones. El vendedor declara titularidad/representación, veracidad de la información, ausencia de impedimentos y aceptación de las Condiciones Generales.
+
+Documento íntegro: /legal/mandato-venta-condiciones-particulares-2026.pdf`;
 
 export const MANDATO_GENERAL_CLAUSES_EXCERPT = `CONDICIONES GENERALES — MANDATO DE VENTA DILIGENZ (2026)
 
