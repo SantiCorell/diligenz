@@ -4,9 +4,12 @@ import { getClientIP } from "@/lib/security";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { generateSignedCompraDocuments } from "@/lib/mandato/generate-signed-compra-pdf";
 import { compraZipFileName, zipCompraDocuments } from "@/lib/mandato/compra-zip";
-import { sendEmail } from "@/lib/email";
+import { sendMandatoSignedEmails } from "@/lib/emails/mandato-signed";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
-import { syncUserDriveFolderName } from "@/lib/google-drive/user-drive";
+import {
+  ensureUserDriveFolder,
+  syncUserDriveFolderName,
+} from "@/lib/google-drive/user-drive";
 
 const BUYER_ROLES = new Set(["BUYER", "ADMIN"]);
 
@@ -85,13 +88,21 @@ export async function POST(req: Request) {
   let driveDocumentUploadedAll = false;
 
   try {
-    const folderId = await syncUserDriveFolderName({
+    const folderId = await ensureUserDriveFolder({
+      userId: session.userId,
+      role: session.user.role,
+      personName: payload.representativeName || payload.buyerLegalName,
+      companyName: payload.buyerLegalName,
+      userEmail: session.user.email,
+    });
+    driveFolderCreated = Boolean(folderId);
+
+    await syncUserDriveFolderName({
       userId: session.userId,
       role: session.user.role,
       personName: payload.representativeName || payload.buyerLegalName,
       companyName: payload.buyerLegalName,
     });
-    driveFolderCreated = Boolean(folderId);
 
     const uploadedFlags: boolean[] = [];
     for (const file of [
@@ -148,52 +159,42 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  const emailTo = payload.contactEmail || session.user.email;
-  const diligenzNotifyEmail =
-    process.env.MANDATO_NOTIFY_EMAIL?.trim() || "info@diligenz.es";
-  const signedAtLabel = signedAt.toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+  const clientName = payload.representativeName || payload.buyerLegalName;
+  const representativeLine =
+    payload.representativeName || payload.representativeDni
+      ? `${payload.representativeName || "—"} (${payload.representativeDni || "—"})`
+      : "No indicado";
   const attachments = [
     { filename: docs.particularesFileName, content: Buffer.from(docs.particularesPdf) },
     { filename: docs.generalesFileName, content: Buffer.from(docs.generalesPdf) },
     { filename: zipFileName, content: zipBytes },
   ];
 
-  let userEmailSent = false;
-  let internalEmailSent = false;
-
-  try {
-    userEmailSent = await sendEmail({
-      to: emailTo,
-      subject: "Copia de tu Mandato de Compra firmado — Diligenz",
-      text: `Hola ${payload.representativeName || payload.buyerLegalName},\n\nAdjuntamos copia del Mandato de Compra (Condiciones Particulares y Condiciones Generales) que has firmado electrónicamente en Diligenz el ${signedAtLabel}.\n\nConserva estos documentos para tu registro.\n\nDILIGENZ`,
+  const { userSent: userEmailSent, internalSent: internalEmailSent } =
+    await sendMandatoSignedEmails({
+      clientEmail: payload.contactEmail || session.user.email,
+      clientName,
+      documentTitle: "Mandato de Compra",
+      signedAt,
+      userSubject: "Copia de tu Mandato de Compra firmado — Diligenz",
+      internalSubject: `Nuevo mandato de compra firmado — ${payload.buyerLegalName}`,
+      internalSummaryHtml: `<strong>Comprador:</strong> ${payload.buyerLegalName} (${payload.buyerNifCif})<br>
+<strong>Representante:</strong> ${representativeLine}<br>
+<strong>Email contacto:</strong> ${payload.contactEmail}<br>
+<strong>Teléfono:</strong> ${payload.contactPhone ?? "—"}`,
+      internalSummaryText: `Comprador: ${payload.buyerLegalName} (${payload.buyerNifCif})
+Representante: ${representativeLine}
+Email contacto: ${payload.contactEmail}
+Teléfono: ${payload.contactPhone ?? "—"}`,
       attachments,
     });
-  } catch (e) {
-    console.error("[mandato/compra/sign] email comprador error:", e);
-  }
-
-  if (emailTo.toLowerCase() !== diligenzNotifyEmail.toLowerCase()) {
-    try {
-      internalEmailSent = await sendEmail({
-        to: diligenzNotifyEmail,
-        subject: `Nuevo mandato de compra firmado — ${payload.buyerLegalName}`,
-        text: `Se ha firmado un nuevo Mandato de Compra en Diligenz.\n\nComprador: ${payload.buyerLegalName} (${payload.buyerNifCif})\nRepresentante: ${payload.representativeName || payload.representativeDni ? `${payload.representativeName || "—"} (${payload.representativeDni || "—"})` : "No indicado"}\nEmail contacto: ${payload.contactEmail}\nTeléfono: ${payload.contactPhone ?? "—"}\nFecha de firma: ${signedAtLabel}\n\nAdjuntos: Condiciones Particulares, Condiciones Generales y ZIP.`,
-        attachments,
-      });
-    } catch (e) {
-      console.error("[mandato/compra/sign] email info@diligenz error:", e);
-    }
-  } else {
-    internalEmailSent = userEmailSent;
-  }
 
   if (!userEmailSent) {
     console.warn("[mandato/compra/sign] PDF firmado OK; correo al comprador no enviado (revisa SMTP).");
   }
   if (!internalEmailSent) {
     console.warn(
-      "[mandato/compra/sign] PDF firmado OK; copia interna no enviada a",
-      diligenzNotifyEmail
+      "[mandato/compra/sign] PDF firmado OK; copia interna no enviada (revisa SMTP/MANDATO_NOTIFY_EMAIL)"
     );
   }
 

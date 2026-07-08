@@ -7,9 +7,12 @@ import {
   colaboracionZipFileName,
   zipColaboracionDocuments,
 } from "@/lib/mandato/colaboracion-zip";
-import { sendEmail } from "@/lib/email";
+import { sendMandatoSignedEmails } from "@/lib/emails/mandato-signed";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
-import { syncUserDriveFolderName } from "@/lib/google-drive/user-drive";
+import {
+  ensureUserDriveFolder,
+  syncUserDriveFolderName,
+} from "@/lib/google-drive/user-drive";
 
 const PROFESSIONAL_ROLES = new Set(["PROFESSIONAL", "ADMIN"]);
 
@@ -91,13 +94,21 @@ export async function POST(req: Request) {
   let driveDocumentUploadedAll = false;
 
   try {
-    const folderId = await syncUserDriveFolderName({
+    const folderId = await ensureUserDriveFolder({
+      userId: session.userId,
+      role: session.user.role,
+      personName: payload.representativeName || payload.professionalLegalName,
+      companyName: payload.professionalLegalName,
+      userEmail: session.user.email,
+    });
+    driveFolderCreated = Boolean(folderId);
+
+    await syncUserDriveFolderName({
       userId: session.userId,
       role: session.user.role,
       personName: payload.representativeName || payload.professionalLegalName,
       companyName: payload.professionalLegalName,
     });
-    driveFolderCreated = Boolean(folderId);
 
     const uploadedFlags: boolean[] = [];
     for (const file of [
@@ -160,52 +171,42 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  const emailTo = payload.contactEmail || session.user.email;
-  const diligenzNotifyEmail =
-    process.env.MANDATO_NOTIFY_EMAIL?.trim() || "info@diligenz.es";
-  const signedAtLabel = signedAt.toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+  const clientName = payload.representativeName || payload.professionalLegalName;
+  const representativeLine =
+    payload.representativeName || payload.representativeDni
+      ? `${payload.representativeName || "—"} (${payload.representativeDni || "—"})`
+      : "No indicado";
   const attachments = [
     { filename: docs.particularesFileName, content: Buffer.from(docs.particularesPdf) },
     { filename: docs.generalesFileName, content: Buffer.from(docs.generalesPdf) },
     { filename: zipFileName, content: zipBytes },
   ];
 
-  let userEmailSent = false;
-  let internalEmailSent = false;
-
-  try {
-    userEmailSent = await sendEmail({
-      to: emailTo,
-      subject: "Copia de tu Acuerdo de Colaboración firmado — Diligenz",
-      text: `Hola ${payload.representativeName || payload.professionalLegalName},\n\nAdjuntamos copia del Acuerdo de Colaboración (Condiciones Particulares y Condiciones Generales) que has firmado electrónicamente en Diligenz el ${signedAtLabel}.\n\nConserva estos documentos para tu registro.\n\nDILIGENZ`,
+  const { userSent: userEmailSent, internalSent: internalEmailSent } =
+    await sendMandatoSignedEmails({
+      clientEmail: payload.contactEmail || session.user.email,
+      clientName,
+      documentTitle: "Acuerdo de Colaboración",
+      signedAt,
+      userSubject: "Copia de tu Acuerdo de Colaboración firmado — Diligenz",
+      internalSubject: `Nuevo acuerdo de colaboración firmado — ${payload.professionalLegalName}`,
+      internalSummaryHtml: `<strong>Profesional:</strong> ${payload.professionalLegalName} (${payload.professionalNif})<br>
+<strong>Representante:</strong> ${representativeLine}<br>
+<strong>Email contacto:</strong> ${payload.contactEmail}<br>
+<strong>Teléfono:</strong> ${payload.contactPhone ?? "—"}`,
+      internalSummaryText: `Profesional: ${payload.professionalLegalName} (${payload.professionalNif})
+Representante: ${representativeLine}
+Email contacto: ${payload.contactEmail}
+Teléfono: ${payload.contactPhone ?? "—"}`,
       attachments,
     });
-  } catch (e) {
-    console.error("[mandato/colaboracion/sign] email profesional error:", e);
-  }
-
-  if (emailTo.toLowerCase() !== diligenzNotifyEmail.toLowerCase()) {
-    try {
-      internalEmailSent = await sendEmail({
-        to: diligenzNotifyEmail,
-        subject: `Nuevo acuerdo de colaboración firmado — ${payload.professionalLegalName}`,
-        text: `Se ha firmado un nuevo Acuerdo de Colaboración en Diligenz.\n\nProfesional: ${payload.professionalLegalName} (${payload.professionalNif})\nRepresentante: ${payload.representativeName || payload.representativeDni ? `${payload.representativeName || "—"} (${payload.representativeDni || "—"})` : "No indicado"}\nEmail contacto: ${payload.contactEmail}\nTeléfono: ${payload.contactPhone ?? "—"}\nFecha de firma: ${signedAtLabel}\n\nAdjuntos: Condiciones Particulares, Condiciones Generales y ZIP.`,
-        attachments,
-      });
-    } catch (e) {
-      console.error("[mandato/colaboracion/sign] email info@diligenz error:", e);
-    }
-  } else {
-    internalEmailSent = userEmailSent;
-  }
 
   if (!userEmailSent) {
     console.warn("[mandato/colaboracion/sign] PDF firmado OK; correo al profesional no enviado (revisa SMTP).");
   }
   if (!internalEmailSent) {
     console.warn(
-      "[mandato/colaboracion/sign] PDF firmado OK; copia interna no enviada a",
-      diligenzNotifyEmail
+      "[mandato/colaboracion/sign] PDF firmado OK; copia interna no enviada (revisa SMTP/MANDATO_NOTIFY_EMAIL)"
     );
   }
 

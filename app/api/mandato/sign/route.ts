@@ -3,9 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { getClientIP } from "@/lib/security";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { generateSignedMandatePdf } from "@/lib/mandato/generate-signed-pdf";
-import { sendEmail } from "@/lib/email";
+import { sendMandatoSignedEmails } from "@/lib/emails/mandato-signed";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
-import { syncUserDriveFolderName } from "@/lib/google-drive/user-drive";
+import {
+  ensureUserDriveFolder,
+  syncUserDriveFolderName,
+} from "@/lib/google-drive/user-drive";
 
 const SELLER_ROLES = new Set(["SELLER", "PROFESSIONAL", "ADMIN"]);
 
@@ -96,13 +99,21 @@ export async function POST(req: Request) {
   let driveDocumentUploaded = false;
 
   try {
-    const folderId = await syncUserDriveFolderName({
+    const folderId = await ensureUserDriveFolder({
+      userId: session.userId,
+      role: session.user.role,
+      personName: payload.representativeName || payload.companyLegalName,
+      companyName: payload.companyLegalName,
+      userEmail: session.user.email,
+    });
+    driveFolderCreated = Boolean(folderId);
+
+    await syncUserDriveFolderName({
       userId: session.userId,
       role: session.user.role,
       personName: payload.representativeName || payload.companyLegalName,
       companyName: payload.companyLegalName,
     });
-    driveFolderCreated = Boolean(folderId);
 
     const uploaded = await syncDocumentToUserDrive({
       userId: session.userId,
@@ -159,51 +170,42 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  const emailTo = payload.contactEmail || session.user.email;
-  const diligenzNotifyEmail =
-    process.env.MANDATO_NOTIFY_EMAIL?.trim() || "info@diligenz.es";
-  const signedAtLabel = signedAt.toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
-  const pdfAttachment = {
-    filename: pdfFileName,
-    content: Buffer.from(pdfBytes),
-  };
+  const clientName = payload.representativeName || payload.companyLegalName;
+  const representativeLine =
+    payload.representativeName || payload.representativeDni
+      ? `${payload.representativeName || "—"} (${payload.representativeDni || "—"})`
+      : "No indicado";
 
-  let userEmailSent = false;
-  let internalEmailSent = false;
-
-  try {
-    userEmailSent = await sendEmail({
-      to: emailTo,
-      subject: "Copia de tu Mandato de Venta firmado — Diligenz",
-      text: `Hola ${payload.representativeName || payload.companyLegalName},\n\nAdjuntamos copia del Mandato de Venta que has firmado electrónicamente en Diligenz el ${signedAtLabel}.\n\nConserva este documento para tu registro.\n\nDILIGENZ`,
-      attachments: [pdfAttachment],
+  const { userSent: userEmailSent, internalSent: internalEmailSent } =
+    await sendMandatoSignedEmails({
+      clientEmail: payload.contactEmail || session.user.email,
+      clientName,
+      documentTitle: "Mandato de Venta",
+      signedAt,
+      userSubject: "Copia de tu Mandato de Venta firmado — Diligenz",
+      internalSubject: `Nuevo mandato firmado — ${payload.companyLegalName}`,
+      internalSummaryHtml: `<strong>Empresa:</strong> ${payload.companyLegalName} (${payload.companyCif})<br>
+<strong>Representante:</strong> ${representativeLine}<br>
+<strong>Email contacto:</strong> ${payload.contactEmail}<br>
+<strong>Teléfono:</strong> ${payload.contactPhone ?? "—"}`,
+      internalSummaryText: `Empresa: ${payload.companyLegalName} (${payload.companyCif})
+Representante: ${representativeLine}
+Email contacto: ${payload.contactEmail}
+Teléfono: ${payload.contactPhone ?? "—"}`,
+      attachments: [
+        {
+          filename: pdfFileName,
+          content: Buffer.from(pdfBytes),
+        },
+      ],
     });
-  } catch (e) {
-    console.error("[mandato/sign] email vendedor error:", e);
-  }
-
-  if (emailTo.toLowerCase() !== diligenzNotifyEmail.toLowerCase()) {
-    try {
-      internalEmailSent = await sendEmail({
-        to: diligenzNotifyEmail,
-        subject: `Nuevo mandato firmado — ${payload.companyLegalName}`,
-        text: `Se ha firmado un nuevo Mandato de Venta en Diligenz.\n\nEmpresa: ${payload.companyLegalName} (${payload.companyCif})\nRepresentante: ${payload.representativeName || payload.representativeDni ? `${payload.representativeName || "—"} (${payload.representativeDni || "—"})` : "No indicado"}\nEmail contacto: ${payload.contactEmail}\nTeléfono: ${payload.contactPhone ?? "—"}\nFecha de firma: ${signedAtLabel}\n\nAdjunto el PDF firmado.`,
-        attachments: [pdfAttachment],
-      });
-    } catch (e) {
-      console.error("[mandato/sign] email info@diligenz error:", e);
-    }
-  } else {
-    internalEmailSent = userEmailSent;
-  }
 
   if (!userEmailSent) {
     console.warn("[mandato/sign] PDF firmado OK; correo al vendedor no enviado (revisa SMTP)");
   }
   if (!internalEmailSent) {
     console.warn(
-      "[mandato/sign] PDF firmado OK; copia interna no enviada a",
-      diligenzNotifyEmail
+      "[mandato/sign] PDF firmado OK; copia interna no enviada (revisa SMTP/MANDATO_NOTIFY_EMAIL)"
     );
   }
 

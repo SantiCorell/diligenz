@@ -1,4 +1,11 @@
 import nodemailer from "nodemailer";
+import {
+  getSmtpEnv,
+  getSmtpFromAddress,
+  getSmtpPort,
+  isEmailConfigured,
+  isSmtpSecure,
+} from "@/lib/email-config";
 
 type SendEmailOptions = {
   to: string;
@@ -8,18 +15,14 @@ type SendEmailOptions = {
   attachments?: { filename: string; content: Buffer }[];
 };
 
-/** Zoho Mail (España/UE): smtp.zoho.eu · Puerto 587 (TLS) o 465 (SSL) */
-export function isEmailConfigured(): boolean {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
-}
+export { isEmailConfigured, getMandatoNotifyEmail } from "@/lib/email-config";
 
 function createSmtpTransport() {
-  const host = process.env.SMTP_HOST!;
-  const user = process.env.SMTP_USER!;
-  const pass = process.env.SMTP_PASS!;
-  const port = Number(process.env.SMTP_PORT ?? 587);
-  const secure =
-    process.env.SMTP_SECURE === "true" || (process.env.SMTP_SECURE !== "false" && port === 465);
+  const host = getSmtpEnv("HOST")!;
+  const user = getSmtpEnv("USER")!;
+  const pass = getSmtpEnv("PASS")!;
+  const port = getSmtpPort();
+  const secure = isSmtpSecure(port);
 
   return nodemailer.createTransport({
     host,
@@ -32,11 +35,14 @@ function createSmtpTransport() {
 
 export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
   if (!isEmailConfigured()) {
-    console.warn("[email] SMTP no configurado; no se envía correo a", opts.to);
+    console.warn(
+      "[email] SMTP no configurado (SMTP_HOST/SMTP_USER/SMTP_PASS); no se envía correo a",
+      opts.to
+    );
     return false;
   }
 
-  const from = process.env.SMTP_FROM ?? process.env.SMTP_USER!;
+  const from = getSmtpFromAddress();
   const transporter = createSmtpTransport();
 
   try {
@@ -50,7 +56,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
     });
     return true;
   } catch (err) {
-    console.error("[email] Error enviando correo:", err);
+    console.error("[email] Error enviando correo a", opts.to, err);
     throw err;
   }
 }
