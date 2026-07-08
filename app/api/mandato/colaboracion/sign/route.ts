@@ -87,13 +87,19 @@ export async function POST(req: Request) {
   const zipBytes = await zipColaboracionDocuments(docs);
   const zipFileName = colaboracionZipFileName(signedAt);
 
+  let driveFolderCreated = false;
+  let driveDocumentUploadedAll = false;
+
   try {
-    await syncUserDriveFolderName({
+    const folderId = await syncUserDriveFolderName({
       userId: session.userId,
       role: session.user.role,
       personName: payload.representativeName || payload.professionalLegalName,
       companyName: payload.professionalLegalName,
     });
+    driveFolderCreated = Boolean(folderId);
+
+    const uploadedFlags: boolean[] = [];
     for (const file of [
       {
         name: docs.particularesFileName,
@@ -104,7 +110,7 @@ export async function POST(req: Request) {
         content: Buffer.from(docs.generalesPdf),
       },
     ]) {
-      await syncDocumentToUserDrive({
+      const uploaded = await syncDocumentToUserDrive({
         userId: session.userId,
         kind: "mandato",
         originalFileName: file.name,
@@ -112,10 +118,22 @@ export async function POST(req: Request) {
         content: file.content,
         companyName: payload.professionalLegalName,
       });
+      uploadedFlags.push(Boolean(uploaded));
+    }
+
+    driveDocumentUploadedAll = uploadedFlags.length > 0 && uploadedFlags.every(Boolean);
+
+    if (!driveFolderCreated) {
+      console.warn("[mandato/colaboracion/sign] Drive carpeta no creada (verifica config/env/Drive).");
+    }
+    if (!driveDocumentUploadedAll) {
+      console.warn("[mandato/colaboracion/sign] Drive documentos no subidos (verifica config/env/Drive).");
     }
   } catch (driveError) {
     console.error("[mandato/colaboracion/sign] google drive error:", driveError);
   }
+
+  const driveOk = driveFolderCreated && driveDocumentUploadedAll;
 
   await prisma.$transaction([
     prisma.collaborationAgreement.create({
@@ -152,8 +170,11 @@ export async function POST(req: Request) {
     { filename: zipFileName, content: zipBytes },
   ];
 
+  let userEmailSent = false;
+  let internalEmailSent = false;
+
   try {
-    await sendEmail({
+    userEmailSent = await sendEmail({
       to: emailTo,
       subject: "Copia de tu Acuerdo de Colaboración firmado — Diligenz",
       text: `Hola ${payload.representativeName || payload.professionalLegalName},\n\nAdjuntamos copia del Acuerdo de Colaboración (Condiciones Particulares y Condiciones Generales) que has firmado electrónicamente en Diligenz el ${signedAtLabel}.\n\nConserva estos documentos para tu registro.\n\nDILIGENZ`,
@@ -165,7 +186,7 @@ export async function POST(req: Request) {
 
   if (emailTo.toLowerCase() !== diligenzNotifyEmail.toLowerCase()) {
     try {
-      await sendEmail({
+      internalEmailSent = await sendEmail({
         to: diligenzNotifyEmail,
         subject: `Nuevo acuerdo de colaboración firmado — ${payload.professionalLegalName}`,
         text: `Se ha firmado un nuevo Acuerdo de Colaboración en Diligenz.\n\nProfesional: ${payload.professionalLegalName} (${payload.professionalNif})\nRepresentante: ${payload.representativeName || payload.representativeDni ? `${payload.representativeName || "—"} (${payload.representativeDni || "—"})` : "No indicado"}\nEmail contacto: ${payload.contactEmail}\nTeléfono: ${payload.contactPhone ?? "—"}\nFecha de firma: ${signedAtLabel}\n\nAdjuntos: Condiciones Particulares, Condiciones Generales y ZIP.`,
@@ -174,6 +195,18 @@ export async function POST(req: Request) {
     } catch (e) {
       console.error("[mandato/colaboracion/sign] email info@diligenz error:", e);
     }
+  } else {
+    internalEmailSent = userEmailSent;
+  }
+
+  if (!userEmailSent) {
+    console.warn("[mandato/colaboracion/sign] PDF firmado OK; correo al profesional no enviado (revisa SMTP).");
+  }
+  if (!internalEmailSent) {
+    console.warn(
+      "[mandato/colaboracion/sign] PDF firmado OK; copia interna no enviada a",
+      diligenzNotifyEmail
+    );
   }
 
   return new NextResponse(new Uint8Array(zipBytes), {
@@ -183,6 +216,9 @@ export async function POST(req: Request) {
       "Content-Disposition": `attachment; filename="${zipFileName}"`,
       "X-Particulares-Filename": docs.particularesFileName,
       "X-Generales-Filename": docs.generalesFileName,
+      "X-Drive-Synced": driveOk ? "1" : "0",
+      "X-Email-User-Sent": userEmailSent ? "1" : "0",
+      "X-Email-Internal-Sent": internalEmailSent ? "1" : "0",
     },
   });
 }

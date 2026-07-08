@@ -92,14 +92,19 @@ export async function POST(req: Request) {
   const pdfBytes = await generateSignedMandatePdf(payload);
   const pdfFileName = `mandato-venta-diligenz-${signedAt.toISOString().slice(0, 10)}.pdf`;
 
+  let driveFolderCreated = false;
+  let driveDocumentUploaded = false;
+
   try {
-    await syncUserDriveFolderName({
+    const folderId = await syncUserDriveFolderName({
       userId: session.userId,
       role: session.user.role,
       personName: payload.representativeName || payload.companyLegalName,
       companyName: payload.companyLegalName,
     });
-    await syncDocumentToUserDrive({
+    driveFolderCreated = Boolean(folderId);
+
+    const uploaded = await syncDocumentToUserDrive({
       userId: session.userId,
       kind: "mandato",
       originalFileName: pdfFileName,
@@ -107,9 +112,19 @@ export async function POST(req: Request) {
       content: Buffer.from(pdfBytes),
       companyName: payload.companyLegalName,
     });
+    driveDocumentUploaded = Boolean(uploaded);
+
+    if (!driveFolderCreated) {
+      console.warn("[mandato/sign] Drive carpeta no creada (verifica config/env/Drive).");
+    }
+    if (!driveDocumentUploaded) {
+      console.warn("[mandato/sign] Drive documento no subido (verifica config/env/Drive).");
+    }
   } catch (driveError) {
     console.error("[mandato/sign] google drive error:", driveError);
   }
+
+  const driveOk = driveFolderCreated && driveDocumentUploaded;
 
   await prisma.$transaction([
     prisma.salesMandate.create({
@@ -197,6 +212,9 @@ export async function POST(req: Request) {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="mandato-venta-diligenz.pdf"`,
+      "X-Drive-Synced": driveOk ? "1" : "0",
+      "X-Email-User-Sent": userEmailSent ? "1" : "0",
+      "X-Email-Internal-Sent": internalEmailSent ? "1" : "0",
     },
   });
 }

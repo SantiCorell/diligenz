@@ -81,18 +81,24 @@ export async function POST(req: Request) {
   const zipBytes = await zipCompraDocuments(docs);
   const zipFileName = compraZipFileName(signedAt);
 
+  let driveFolderCreated = false;
+  let driveDocumentUploadedAll = false;
+
   try {
-    await syncUserDriveFolderName({
+    const folderId = await syncUserDriveFolderName({
       userId: session.userId,
       role: session.user.role,
       personName: payload.representativeName || payload.buyerLegalName,
       companyName: payload.buyerLegalName,
     });
+    driveFolderCreated = Boolean(folderId);
+
+    const uploadedFlags: boolean[] = [];
     for (const file of [
       { name: docs.particularesFileName, content: Buffer.from(docs.particularesPdf) },
       { name: docs.generalesFileName, content: Buffer.from(docs.generalesPdf) },
     ]) {
-      await syncDocumentToUserDrive({
+      const uploaded = await syncDocumentToUserDrive({
         userId: session.userId,
         kind: "mandato",
         originalFileName: file.name,
@@ -100,10 +106,22 @@ export async function POST(req: Request) {
         content: file.content,
         companyName: payload.buyerLegalName,
       });
+      uploadedFlags.push(Boolean(uploaded));
+    }
+
+    driveDocumentUploadedAll = uploadedFlags.length > 0 && uploadedFlags.every(Boolean);
+
+    if (!driveFolderCreated) {
+      console.warn("[mandato/compra/sign] Drive carpeta no creada (verifica config/env/Drive).");
+    }
+    if (!driveDocumentUploadedAll) {
+      console.warn("[mandato/compra/sign] Drive documentos no subidos (verifica config/env/Drive).");
     }
   } catch (driveError) {
     console.error("[mandato/compra/sign] google drive error:", driveError);
   }
+
+  const driveOk = driveFolderCreated && driveDocumentUploadedAll;
 
   await prisma.$transaction([
     prisma.purchaseMandate.create({
@@ -140,8 +158,11 @@ export async function POST(req: Request) {
     { filename: zipFileName, content: zipBytes },
   ];
 
+  let userEmailSent = false;
+  let internalEmailSent = false;
+
   try {
-    await sendEmail({
+    userEmailSent = await sendEmail({
       to: emailTo,
       subject: "Copia de tu Mandato de Compra firmado — Diligenz",
       text: `Hola ${payload.representativeName || payload.buyerLegalName},\n\nAdjuntamos copia del Mandato de Compra (Condiciones Particulares y Condiciones Generales) que has firmado electrónicamente en Diligenz el ${signedAtLabel}.\n\nConserva estos documentos para tu registro.\n\nDILIGENZ`,
@@ -153,7 +174,7 @@ export async function POST(req: Request) {
 
   if (emailTo.toLowerCase() !== diligenzNotifyEmail.toLowerCase()) {
     try {
-      await sendEmail({
+      internalEmailSent = await sendEmail({
         to: diligenzNotifyEmail,
         subject: `Nuevo mandato de compra firmado — ${payload.buyerLegalName}`,
         text: `Se ha firmado un nuevo Mandato de Compra en Diligenz.\n\nComprador: ${payload.buyerLegalName} (${payload.buyerNifCif})\nRepresentante: ${payload.representativeName || payload.representativeDni ? `${payload.representativeName || "—"} (${payload.representativeDni || "—"})` : "No indicado"}\nEmail contacto: ${payload.contactEmail}\nTeléfono: ${payload.contactPhone ?? "—"}\nFecha de firma: ${signedAtLabel}\n\nAdjuntos: Condiciones Particulares, Condiciones Generales y ZIP.`,
@@ -162,6 +183,18 @@ export async function POST(req: Request) {
     } catch (e) {
       console.error("[mandato/compra/sign] email info@diligenz error:", e);
     }
+  } else {
+    internalEmailSent = userEmailSent;
+  }
+
+  if (!userEmailSent) {
+    console.warn("[mandato/compra/sign] PDF firmado OK; correo al comprador no enviado (revisa SMTP).");
+  }
+  if (!internalEmailSent) {
+    console.warn(
+      "[mandato/compra/sign] PDF firmado OK; copia interna no enviada a",
+      diligenzNotifyEmail
+    );
   }
 
   return new NextResponse(new Uint8Array(zipBytes), {
@@ -169,6 +202,9 @@ export async function POST(req: Request) {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${zipFileName}"`,
+      "X-Drive-Synced": driveOk ? "1" : "0",
+      "X-Email-User-Sent": userEmailSent ? "1" : "0",
+      "X-Email-Internal-Sent": internalEmailSent ? "1" : "0",
     },
   });
 }
