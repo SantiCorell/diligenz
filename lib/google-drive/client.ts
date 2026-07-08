@@ -1,15 +1,25 @@
 import { google } from "googleapis";
+import type { OAuth2Client } from "google-auth-library";
 import { driveFolderUrl } from "./folder-name";
 import { getDriveAuth, getDriveAuthMode, isGoogleDriveConfigured } from "./auth";
 
 export { isGoogleDriveConfigured, getDriveAuthMode };
 
-function getDriveClient() {
-  return google.drive({ version: "v3", auth: getDriveAuth() as never });
+async function getDriveClient() {
+  const auth = getDriveAuth();
+  if (getDriveAuthMode() === "oauth") {
+    try {
+      await (auth as OAuth2Client).getAccessToken();
+    } catch (err) {
+      console.error("[google-drive] OAuth getAccessToken:", err);
+      throw err;
+    }
+  }
+  return google.drive({ version: "v3", auth: auth as never });
 }
 
 async function createFolderInParent(parentId: string, folderName: string): Promise<string> {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   const created = await drive.files.create({
     requestBody: {
       name: folderName,
@@ -30,7 +40,7 @@ export async function createClientFolder(folderName: string): Promise<string> {
 }
 
 export async function findOrCreateSubfolder(parentId: string, folderName: string): Promise<string> {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   const escaped = folderName.replace(/'/g, "\\'");
   const list = await drive.files.list({
     q: `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and name='${escaped}' and trashed=false`,
@@ -49,7 +59,7 @@ export async function shareFolderWithUser(
   email: string,
   role: "reader" | "writer" = "reader"
 ): Promise<void> {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   await drive.permissions.create({
     fileId: folderId,
     requestBody: {
@@ -63,7 +73,7 @@ export async function shareFolderWithUser(
 }
 
 export async function renameDriveFolder(folderId: string, newName: string): Promise<void> {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   await drive.files.update({
     fileId: folderId,
     requestBody: { name: newName },
@@ -77,7 +87,7 @@ export async function uploadFileToFolder(opts: {
   mimeType: string;
   content: Buffer | Uint8Array;
 }): Promise<string> {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   const { Readable } = await import("node:stream");
   const body = Readable.from(Buffer.from(opts.content));
 
@@ -116,20 +126,29 @@ export async function uploadFileToFolder(opts: {
 }
 
 export async function getFolderMetadata(folderId: string) {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   const res = await drive.files.get({
     fileId: folderId,
-    fields: "id,name,driveId,owners,shared",
+    fields: "id,name,driveId,owners,shared,trashed",
     supportsAllDrives: true,
   });
   return res.data;
+}
+
+export async function isDriveFolderAccessible(folderId: string): Promise<boolean> {
+  try {
+    const meta = await getFolderMetadata(folderId);
+    return Boolean(meta.id && meta.trashed !== true);
+  } catch {
+    return false;
+  }
 }
 
 export async function downloadFileFromFolder(opts: {
   folderId: string;
   nameIncludes: string;
 }): Promise<{ buffer: Buffer; mimeType: string; name: string } | null> {
-  const drive = getDriveClient();
+  const drive = await getDriveClient();
   const needle = opts.nameIncludes.toLowerCase();
   let pageToken: string | undefined;
 

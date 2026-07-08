@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
+import { ensureUserDriveFolder } from "@/lib/google-drive/user-drive";
+import { getDriveAuthMode } from "@/lib/google-drive/auth";
 import {
   dniSideFromInput,
   isCloudOnlyDniPath,
@@ -68,25 +70,67 @@ export async function POST(req: Request) {
   const mimeType = file.type || "application/octet-stream";
   const bytes = Buffer.from(await file.arrayBuffer());
 
-  const kind = side === "FRONT" ? "dni-front" : "dni-back";
+  const personName =
+    session.user.name?.trim() || session.user.email.split("@")[0] || "Cliente";
+
   let driveSyncedAt: Date | null = null;
+  let driveError: string | null = null;
+
   try {
-    const synced = await syncDocumentToUserDrive({
+    const folderId = await ensureUserDriveFolder({
       userId: session.userId,
-      kind,
-      originalFileName: file.name,
-      mimeType,
-      content: bytes,
+      role: session.user.role,
+      personName,
+      userEmail: session.user.email,
     });
-    if (synced) driveSyncedAt = new Date();
+    if (!folderId) {
+      driveError = "no_folder";
+    }
   } catch (e) {
-    console.error("[user/dni] drive sync:", e);
+    driveError = e instanceof Error ? e.message : "folder_error";
+    console.error("[user/dni] ensure folder:", e);
+  }
+
+  const kind = side === "FRONT" ? "dni-front" : "dni-back";
+  if (!driveError) {
+    try {
+      const synced = await syncDocumentToUserDrive({
+        userId: session.userId,
+        kind,
+        originalFileName: file.name,
+        mimeType,
+        content: bytes,
+      });
+      if (synced) {
+        driveSyncedAt = new Date();
+      } else {
+        driveError = "upload_failed";
+      }
+    } catch (e) {
+      driveError = e instanceof Error ? e.message : "upload_error";
+      console.error("[user/dni] drive sync:", e);
+    }
   }
 
   if (!useLocalDniDisk() && !driveSyncedAt) {
+    console.error("[user/dni] Drive falló:", {
+      userId: session.userId,
+      authMode: getDriveAuthMode(),
+      driveError,
+    });
     return NextResponse.json(
-      { error: "No se pudo guardar el DNI en Drive. Inténtalo de nuevo en unos minutos." },
-      { status: 503 }
+      {
+        error:
+          "No se pudo guardar el DNI en Drive. Inténtalo de nuevo en unos minutos.",
+        code: driveError ?? "drive_sync_failed",
+      },
+      {
+        status: 503,
+        headers: {
+          "X-Drive-Error": driveError ?? "unknown",
+          "X-Drive-Auth-Mode": getDriveAuthMode() ?? "none",
+        },
+      }
     );
   }
 

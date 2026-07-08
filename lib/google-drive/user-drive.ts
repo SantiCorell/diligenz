@@ -9,6 +9,7 @@ import {
   createClientFolder,
   downloadFileFromFolder,
   findOrCreateSubfolder,
+  isDriveFolderAccessible,
   isGoogleDriveConfigured,
   renameDriveFolder,
   shareFolderWithUser,
@@ -61,7 +62,20 @@ export async function ensureUserDriveFolder(opts: {
   const existingId = user.documentsDriveFolderUrl
     ? parseDriveFolderId(user.documentsDriveFolderUrl)
     : null;
-  if (existingId) return existingId;
+  if (existingId) {
+    const accessible = await isDriveFolderAccessible(existingId);
+    if (accessible) return existingId;
+
+    console.warn(
+      "[google-drive] carpeta guardada inaccesible; se recreará para",
+      opts.userId,
+      existingId
+    );
+    await prisma.user.update({
+      where: { id: opts.userId },
+      data: { documentsDriveFolderUrl: null },
+    });
+  }
 
   const folderName = buildClientDriveFolderName({
     role: opts.role,
@@ -133,6 +147,17 @@ export async function uploadUserDriveDocument(opts: {
     ? parseDriveFolderId(user.documentsDriveFolderUrl)
     : null;
 
+  if (folderId) {
+    const accessible = await isDriveFolderAccessible(folderId);
+    if (!accessible) {
+      await prisma.user.update({
+        where: { id: opts.userId },
+        data: { documentsDriveFolderUrl: null },
+      });
+      folderId = null;
+    }
+  }
+
   if (!folderId) {
     folderId = await ensureUserDriveFolder({
       userId: opts.userId,
@@ -145,11 +170,7 @@ export async function uploadUserDriveDocument(opts: {
 
   let targetFolderId = folderId;
   if (opts.subfolder?.trim()) {
-    try {
-      targetFolderId = await findOrCreateSubfolder(folderId, opts.subfolder.trim());
-    } catch (err) {
-      console.error("[google-drive] subcarpeta:", err);
-    }
+    targetFolderId = await findOrCreateSubfolder(folderId, opts.subfolder.trim());
   }
 
   try {
@@ -161,8 +182,48 @@ export async function uploadUserDriveDocument(opts: {
     });
     return true;
   } catch (err) {
-    console.error("[google-drive] subir documento:", err);
-    return false;
+    const msg = err instanceof Error ? err.message : String(err);
+    const notFound =
+      msg.includes("File not found") ||
+      msg.includes("notFound") ||
+      msg.includes("404");
+
+    if (!notFound) {
+      console.error("[google-drive] subir documento:", err);
+      return false;
+    }
+
+    console.warn("[google-drive] carpeta inválida al subir; reintentando para", opts.userId);
+    await prisma.user.update({
+      where: { id: opts.userId },
+      data: { documentsDriveFolderUrl: null },
+    });
+
+    const retryFolderId = await ensureUserDriveFolder({
+      userId: opts.userId,
+      role: user.role,
+      personName: user.name?.trim() || user.email.split("@")[0],
+      userEmail: user.email,
+    });
+    if (!retryFolderId) return false;
+
+    let retryTargetId = retryFolderId;
+    if (opts.subfolder?.trim()) {
+      retryTargetId = await findOrCreateSubfolder(retryFolderId, opts.subfolder.trim());
+    }
+
+    try {
+      await uploadFileToFolder({
+        folderId: retryTargetId,
+        fileName: opts.fileName,
+        mimeType: opts.mimeType,
+        content: opts.content,
+      });
+      return true;
+    } catch (retryErr) {
+      console.error("[google-drive] subir documento (reintento):", retryErr);
+      return false;
+    }
   }
 }
 
