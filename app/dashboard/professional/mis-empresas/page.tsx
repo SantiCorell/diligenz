@@ -10,9 +10,8 @@ import {
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUser } from "@/lib/session";
-import ProfessionalCompanySlots, {
-  type ProfessionalCompanySlot,
-} from "@/components/dashboard/ProfessionalCompanySlots";
+import ProfessionalCompanySlots from "@/components/dashboard/ProfessionalCompanySlots";
+import { buildOwnerCompanyCardInfo } from "@/components/dashboard/OwnerCompanyCardMeta";
 
 function companyStatusMeta(company: {
   status: string;
@@ -52,16 +51,14 @@ export default async function ProfessionalMisEmpresasPage() {
     orderBy: { createdAt: "asc" },
   });
 
-  const slots: ProfessionalCompanySlot[] = companies.map((company) => {
-    const deal = company.deals[0];
+  const slots = companies.map((company) => {
     const status = companyStatusMeta(company);
     return {
       id: company.id,
-      title: deal?.title || company.name || "Proyecto confidencial",
       sector: company.sector,
-      location: company.location,
       statusLabel: status.label,
       statusClass: status.className,
+      ...buildOwnerCompanyCardInfo(company),
     };
   });
 
@@ -74,7 +71,7 @@ export default async function ProfessionalMisEmpresasPage() {
           <div>
             <p className="page-eyebrow">Dashboard del profesional</p>
             <h1 className="text-lg sm:text-xl font-bold text-[var(--brand-primary)]">
-              Mis empresas
+              Empresas activas
             </h1>
             <p className="mt-1.5 text-xs sm:text-sm text-[var(--foreground)] opacity-85 max-w-2xl">
               {unlimited

@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { SELL_DASHBOARD_PATH } from "@/lib/companies-dashboard-path";
+import { OwnerCompanyCardMeta, type OwnerCompanyCardInfo } from "@/components/dashboard/OwnerCompanyCardMeta";
 
 export type ProfessionalCompanySlot = {
   id: string;
-  title: string;
   sector: string;
-  location: string;
   statusLabel: string;
   statusClass: string;
-};
+} & OwnerCompanyCardInfo;
 
 type Props = {
   filled: ProfessionalCompanySlot[];
@@ -64,7 +63,7 @@ function FilledSlot({ slot }: { slot: ProfessionalCompanySlot }) {
   return (
     <Link
       href={`/dashboard/seller/companies/${slot.id}`}
-      className="flex min-h-[148px] flex-col rounded-xl border border-[var(--brand-primary)]/15 bg-white p-4 shadow-sm transition hover:border-[var(--brand-primary)]/30 hover:shadow-md sm:min-h-[160px]"
+      className="flex min-h-[188px] flex-col rounded-xl border border-[var(--brand-primary)]/15 bg-white p-4 shadow-sm transition hover:border-[var(--brand-primary)]/30 hover:shadow-md sm:min-h-[200px]"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <span
@@ -76,12 +75,7 @@ function FilledSlot({ slot }: { slot: ProfessionalCompanySlot }) {
           {slot.sector}
         </span>
       </div>
-      <h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-snug text-[var(--brand-dark)] sm:text-base">
-        {slot.title}
-      </h3>
-      <p className="mt-1 truncate text-[11px] text-[var(--foreground)]/60 sm:text-xs">
-        {slot.location}
-      </p>
+      <OwnerCompanyCardMeta info={slot} compact />
       <span className="mt-auto pt-3 text-xs font-semibold text-[var(--brand-primary)]">
         Gestionar →
       </span>

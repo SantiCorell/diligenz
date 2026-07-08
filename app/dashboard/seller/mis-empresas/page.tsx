@@ -23,10 +23,10 @@ export default async function SellerMisEmpresasPage() {
       <div className="panel-hero mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="page-eyebrow">Panel del vendedor</p>
-          <h1 className="page-title mt-1">Mis empresas en venta</h1>
+          <h1 className="page-title mt-1">Empresas activas</h1>
           <p className="mt-2 text-sm text-[var(--foreground)]/75 sm:text-base">
-            Gestiona tus empresas de forma confidencial. Una vez publicadas en la web, la ficha la
-            actualiza solo Diligenz.
+            Gestiona tus empresas de forma confidencial. Aquí ves el nombre real, el nombre web y
+            la referencia de cada proyecto.
           </p>
         </div>
         <Link href={SELL_DASHBOARD_PATH} className="btn-primary shrink-0">

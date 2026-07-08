@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SELL_DASHBOARD_PATH } from "@/lib/companies-dashboard-path";
+import { countActiveOwnerCompanies } from "@/lib/professional-company-limit";
 import { getDisplayName } from "@/lib/user-display";
 import { getSessionWithUser } from "@/lib/session";
 
@@ -11,6 +12,7 @@ export default async function SellerDashboardPage() {
 
   const displayName =
     session.user.name?.trim() || getDisplayName(session.user.email);
+  const activeCompanies = await countActiveOwnerCompanies(session.userId);
 
   return (
     <main className="max-w-6xl mx-auto space-y-8">
@@ -47,11 +49,25 @@ export default async function SellerDashboardPage() {
             Acceso directo
           </p>
           <h2 className="mt-2 text-lg font-bold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">
-            Mis empresas
+            Empresas activas
           </h2>
           <p className="mt-2 text-sm text-[var(--foreground)]/75">
-            Revisa el estado de tus proyectos, valoración y documentación por empresa.
+            {activeCompanies === 0
+              ? "Aún no tienes proyectos en curso. Sube tu primera empresa para empezar."
+              : (
+                <>
+                  Tienes{" "}
+                  <span className="font-bold text-[var(--brand-primary)]">
+                    {activeCompanies}
+                  </span>{" "}
+                  {activeCompanies === 1 ? "empresa activa" : "empresas activas"}.
+                  Revisa valoración y documentación.
+                </>
+              )}
           </p>
+          <span className="mt-4 inline-block text-sm font-semibold text-[var(--brand-primary)]">
+            Ver empresas activas →
+          </span>
         </Link>
       </div>
 

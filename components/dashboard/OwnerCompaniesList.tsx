@@ -4,6 +4,10 @@ import Link from "next/link";
 import DeleteCompanyButton from "@/components/companies/DeleteCompanyButton";
 import { displaySalePrice } from "@/lib/company-display";
 import { formatCompactEuroRange } from "@/lib/format-financial";
+import {
+  OwnerCompanyCardMeta,
+  buildOwnerCompanyCardInfo,
+} from "@/components/dashboard/OwnerCompanyCardMeta";
 
 export function OwnerCompaniesListSkeleton() {
   return (
@@ -65,22 +69,18 @@ export async function OwnerCompaniesList({ userId, dashboardPath }: Props) {
         const valuation = company.valuations[0] ?? null;
         const allDocsSigned =
           company.documents.length > 0 && company.documents.every((d) => d.signed);
+        const cardInfo = buildOwnerCompanyCardInfo(company);
 
         return (
           <div
             key={company.id}
             className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 transition hover:shadow-lg"
           >
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-[var(--brand-primary)]">
-                  {deal?.title || "Proyecto confidencial"}
-                </h2>
-                <p className="mt-1 text-sm text-[var(--foreground)] opacity-85">
-                  {company.sector} · {company.location}
-                </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <OwnerCompanyCardMeta info={cardInfo} />
                 {valuation && (
-                  <p className="mt-3 text-lg font-medium text-[var(--brand-primary)]">
+                  <p className="mt-4 text-lg font-medium text-[var(--brand-primary)]">
                     Valoración: {formatCompactEuroRange(valuation.minValue, valuation.maxValue)}
                   </p>
                 )}

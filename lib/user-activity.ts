@@ -1,5 +1,7 @@
-import type { Prisma, UserActivityType } from "@prisma/client";
+import type { Prisma, UserActivityType, CompanyStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { publicListingName } from "@/lib/company-display-names";
+import { formatCompactEuroRange } from "@/lib/format-financial";
 
 export type UserActivityMetadata = Record<string, Prisma.InputJsonValue>;
 
@@ -178,4 +180,65 @@ export async function getUserActivityStats(userId: string) {
     rejectedInfoRequests: rejected,
     favoriteCount,
   };
+}
+
+export type UserOwnerCompanySummary = {
+  companyId: string;
+  realName: string;
+  webName: string;
+  reference: string | null;
+  companyStatus: CompanyStatus;
+  dealPublished: boolean;
+  createdAt: Date;
+  valuedAt: Date | null;
+  valuationLabel: string | null;
+};
+
+export async function getUserOwnerCompanySummaries(
+  userId: string
+): Promise<UserOwnerCompanySummary[]> {
+  const companies = await prisma.company.findMany({
+    where: { ownerId: userId, removedAt: null },
+    include: {
+      deals: { orderBy: { createdAt: "desc" }, take: 1 },
+      valuations: { orderBy: { createdAt: "desc" }, take: 1 },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return companies.map((company) => {
+    const deal = company.deals[0];
+    const valuation = company.valuations[0];
+    return {
+      companyId: company.id,
+      realName: company.name.trim() || "—",
+      webName: publicListingName(deal?.title, company.name),
+      reference: company.reference?.trim() || null,
+      companyStatus: company.status,
+      dealPublished: Boolean(deal?.published),
+      createdAt: company.createdAt,
+      valuedAt: valuation?.createdAt ?? null,
+      valuationLabel: valuation
+        ? formatCompactEuroRange(valuation.minValue, valuation.maxValue)
+        : null,
+    };
+  });
+}
+
+export async function getUserOwnerCompanyStats(userId: string) {
+  const companies = await getUserOwnerCompanySummaries(userId);
+  return {
+    totalCompanies: companies.length,
+    valuedCompanies: companies.filter((c) => c.valuationLabel).length,
+    publishedCompanies: companies.filter((c) => c.dealPublished).length,
+    inReviewCompanies: companies.filter((c) => c.companyStatus === "IN_PROCESS").length,
+  };
+}
+
+export function formatOwnerCompanyStatusLabel(summary: UserOwnerCompanySummary): string {
+  if (summary.dealPublished) return "Publicada";
+  if (summary.companyStatus === "IN_PROCESS") return "En revisión";
+  if (summary.companyStatus === "SOLD") return "Vendida";
+  if (summary.companyStatus === "PUBLISHED") return "Publicada";
+  return "Borrador";
 }

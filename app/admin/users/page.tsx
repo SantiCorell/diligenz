@@ -471,6 +471,13 @@ type ActivityStats = {
   rejectedInfoRequests: number;
 };
 
+type OwnerActivityStats = {
+  totalCompanies: number;
+  valuedCompanies: number;
+  publishedCompanies: number;
+  inReviewCompanies: number;
+};
+
 type ActivityEventRow = {
   id: string;
   interestId: string | null;
@@ -480,10 +487,62 @@ type ActivityEventRow = {
   createdAt: string;
 };
 
+type OwnerCompanyRow = {
+  id: string;
+  companyId: string;
+  realName: string;
+  webName: string;
+  reference: string | null;
+  companyStatus: string;
+  dealPublished: boolean;
+  valuationLabel: string | null;
+  createdAt: string;
+  valuedAt: string | null;
+};
+
+type ValuedCompanyRow = {
+  id: string;
+  companyId: string;
+  realName: string;
+  webName: string;
+  reference: string | null;
+  valuationLabel: string | null;
+  valuedAt: string;
+};
+
+function ownerCompanyStatusLabel(row: Pick<OwnerCompanyRow, "dealPublished" | "companyStatus">): string {
+  if (row.dealPublished) return "Publicada";
+  if (row.companyStatus === "IN_PROCESS") return "En revisión";
+  if (row.companyStatus === "SOLD") return "Vendida";
+  if (row.companyStatus === "PUBLISHED") return "Publicada";
+  return "Borrador";
+}
+
+function ownerCompanyStatusBadgeClass(row: Pick<OwnerCompanyRow, "dealPublished" | "companyStatus">): string {
+  if (row.dealPublished) return "border-green-200 bg-green-50 text-green-800";
+  if (row.companyStatus === "IN_PROCESS") return "border-amber-200 bg-amber-50 text-amber-800";
+  if (row.companyStatus === "SOLD") return "border-slate-200 bg-slate-100 text-slate-600";
+  return "border-slate-200 bg-slate-50 text-slate-700";
+}
+
+function formatActivityDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function UserActivityPanel({ user }: { user: UserRow }) {
+  const isOwnerRole = user.role === "SELLER" || user.role === "PROFESSIONAL";
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<ActivityStats | null>(null);
+  const [view, setView] = useState<"buyer" | "owner">(isOwnerRole ? "owner" : "buyer");
+  const [stats, setStats] = useState<ActivityStats | OwnerActivityStats | null>(null);
   const [events, setEvents] = useState<ActivityEventRow[]>([]);
+  const [companies, setCompanies] = useState<OwnerCompanyRow[]>([]);
+  const [valuedCompanies, setValuedCompanies] = useState<ValuedCompanyRow[]>([]);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const loadActivity = useCallback(async () => {
@@ -491,8 +550,19 @@ function UserActivityPanel({ user }: { user: UserRow }) {
     try {
       const res = await authFetch(`/api/admin/users/${user.id}/activity?limit=40`);
       const data = await res.json();
-      if (data.stats) setStats(data.stats as ActivityStats);
-      setEvents((data.events ?? []) as ActivityEventRow[]);
+      if (data.view === "owner") {
+        setView("owner");
+        if (data.stats) setStats(data.stats as OwnerActivityStats);
+        setCompanies((data.companies ?? []) as OwnerCompanyRow[]);
+        setValuedCompanies((data.valuedCompanies ?? []) as ValuedCompanyRow[]);
+        setEvents([]);
+      } else {
+        setView("buyer");
+        if (data.stats) setStats(data.stats as ActivityStats);
+        setEvents((data.events ?? []) as ActivityEventRow[]);
+        setCompanies([]);
+        setValuedCompanies([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -522,14 +592,129 @@ function UserActivityPanel({ user }: { user: UserRow }) {
         Historial de actividad
       </p>
       <p className="text-xs text-slate-600 mb-4 max-w-2xl leading-relaxed">
-        Una línea por empresa. Cambia el estado desde la etiqueta sin salir de esta ficha.
+        {view === "owner"
+          ? "Empresas subidas por este usuario y valoraciones asociadas. Enlace directo a la ficha en admin."
+          : "Una línea por empresa. Cambia el estado desde la etiqueta sin salir de esta ficha."}
       </p>
 
       {loading ? (
         <p className="text-sm text-slate-500">Cargando historial…</p>
+      ) : view === "owner" ? (
+        <>
+          {stats && "totalCompanies" in stats && (
+            <div className="mb-4 flex flex-wrap gap-2">
+              <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-800">
+                Subidas: {stats.totalCompanies}
+              </span>
+              <span className="rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-900">
+                Valoradas: {stats.valuedCompanies}
+              </span>
+              <span className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-900">
+                Publicadas: {stats.publishedCompanies}
+              </span>
+              <span className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900">
+                En revisión: {stats.inReviewCompanies}
+              </span>
+            </div>
+          )}
+
+          <div className="mb-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+              Empresas subidas
+            </p>
+            {companies.length === 0 ? (
+              <p className="text-sm text-slate-500">Sin empresas subidas.</p>
+            ) : (
+              <ul className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {companies.map((company) => (
+                  <li
+                    key={company.id}
+                    className="rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-sm"
+                  >
+                    <div className="flex flex-wrap items-center gap-2 gap-y-1">
+                      <span
+                        className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${ownerCompanyStatusBadgeClass(company)}`}
+                      >
+                        {ownerCompanyStatusLabel(company)}
+                      </span>
+                      <Link
+                        href={`/admin/companies/${company.companyId}`}
+                        className="font-medium text-[var(--brand-primary)] hover:underline"
+                      >
+                        {company.webName}
+                      </Link>
+                      {company.reference && (
+                        <span className="text-xs text-slate-500">Ref. {company.reference}</span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {company.realName !== company.webName ? (
+                        <>
+                          <span className="text-slate-500">Nombre real:</span> {company.realName}
+                          {" · "}
+                        </>
+                      ) : null}
+                      Subida: {formatActivityDate(company.createdAt)}
+                      {company.valuationLabel ? (
+                        <>
+                          {" · "}
+                          <span className="font-medium text-violet-800">
+                            Valoración: {company.valuationLabel}
+                          </span>
+                        </>
+                      ) : null}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+              Empresas valoradas
+            </p>
+            {valuedCompanies.length === 0 ? (
+              <p className="text-sm text-slate-500">Sin valoraciones registradas.</p>
+            ) : (
+              <ul className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {valuedCompanies.map((company) => (
+                  <li
+                    key={company.id}
+                    className="rounded-lg border border-violet-100 bg-violet-50/50 px-3 py-2.5 text-sm"
+                  >
+                    <div className="flex flex-wrap items-center gap-2 gap-y-1">
+                      <span className="shrink-0 rounded-full border border-violet-200 bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-900">
+                        {company.valuationLabel}
+                      </span>
+                      <Link
+                        href={`/admin/companies/${company.companyId}`}
+                        className="font-medium text-[var(--brand-primary)] hover:underline"
+                      >
+                        {company.webName}
+                      </Link>
+                      {company.reference && (
+                        <span className="text-xs text-slate-500">Ref. {company.reference}</span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {company.realName !== company.webName ? (
+                        <>
+                          {company.realName}
+                          {" · "}
+                        </>
+                      ) : null}
+                      Valorada: {formatActivityDate(company.valuedAt)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
       ) : (
         <>
-          {stats && (
+          {stats && "totalInfoRequests" in stats && (
             <div className="mb-4 flex flex-wrap gap-2">
               <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-800">
                 Total solicitudes: {stats.totalInfoRequests}
@@ -598,13 +783,7 @@ function UserActivityPanel({ user }: { user: UserRow }) {
                     )}
                   </div>
                   <p className="mt-1 text-xs text-slate-500">
-                    {new Date(event.createdAt).toLocaleDateString("es-ES", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatActivityDate(event.createdAt)}
                   </p>
                 </li>
               ))}

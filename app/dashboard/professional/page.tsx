@@ -62,46 +62,38 @@ export default async function ProfessionalDashboardPage() {
             Datos de contacto, verificación, acuerdo de colaboración y carpeta de Google Drive.
           </p>
         </Link>
+
         <Link
           href={PROFESSIONAL_MIS_EMPRESAS_PATH}
-          className="page-card page-card-padded group transition hover:border-[var(--brand-primary)]/30 hover:shadow-md"
+          className={`page-card page-card-padded group transition hover:border-[var(--brand-primary)]/30 hover:shadow-md ${
+            !unlimited && maxSlots != null && activeCompanies >= maxSlots
+              ? "border-amber-200/80 bg-amber-50/40"
+              : ""
+          }`}
         >
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-primary)]">
             Acceso directo
           </p>
           <h2 className="mt-2 text-lg font-bold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">
-            Mis empresas
+            Empresas activas
           </h2>
           <p className="mt-2 text-sm text-[var(--foreground)]/75">
-            Revisa el estado de tus proyectos, valoración y documentación por empresa.
+            {unlimited
+              ? "Revisa el estado de tus proyectos, valoración y documentación por empresa."
+              : (
+                <>
+                  Tienes{" "}
+                  <span className="font-bold text-[var(--brand-primary)]">
+                    {activeCompanies}/{maxSlots}
+                  </span>{" "}
+                  espacios ocupados. Gestiona tus proyectos en curso.
+                </>
+              )}
           </p>
+          <span className="mt-4 inline-block text-sm font-semibold text-[var(--brand-primary)]">
+            Ver empresas activas →
+          </span>
         </Link>
-
-        {!unlimited && maxSlots != null && (
-          <Link
-            href={PROFESSIONAL_MIS_EMPRESAS_PATH}
-            className={`page-card page-card-padded group transition hover:border-[var(--brand-primary)]/30 hover:shadow-md sm:col-span-2 md:col-span-1 ${
-              activeCompanies >= maxSlots ? "border-amber-200/80 bg-amber-50/40" : ""
-            }`}
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-primary)]">
-              Acceso directo
-            </p>
-            <h2 className="mt-2 text-lg font-bold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">
-              Empresas activas
-            </h2>
-            <p className="mt-2 text-sm text-[var(--foreground)]/75">
-              Tienes{" "}
-              <span className="font-bold text-[var(--brand-primary)]">
-                {activeCompanies}/{maxSlots}
-              </span>{" "}
-              espacios ocupados.
-            </p>
-            <span className="mt-4 inline-block text-sm font-semibold text-[var(--brand-primary)]">
-              Ver mis empresas →
-            </span>
-          </Link>
-        )}
       </div>
 
       {canAddMore ? (
