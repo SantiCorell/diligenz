@@ -1,5 +1,6 @@
 import type { AuthClient } from "google-auth-library";
 import { google } from "googleapis";
+import { getGoogleOAuthCredentials } from "@/lib/google-oauth-credentials";
 
 export type DriveAuthMode = "oauth" | "service_account";
 
@@ -8,9 +9,8 @@ export function getDriveAuthMode(): DriveAuthMode | null {
   if (!folderId) return null;
 
   const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN?.trim();
-  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
-  if (refreshToken && clientId && clientSecret) return "oauth";
+  const oauth = getGoogleOAuthCredentials();
+  if (refreshToken && oauth) return "oauth";
 
   const email = process.env.GOOGLE_DRIVE_CLIENT_EMAIL?.trim();
   const key = process.env.GOOGLE_DRIVE_PRIVATE_KEY?.trim();
@@ -32,10 +32,13 @@ export function getDriveAuth(): AuthClient {
   }
 
   if (mode === "oauth") {
-    const oauth2 = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID!.trim(),
-      process.env.GOOGLE_CLIENT_SECRET!.trim()
-    );
+    const oauth = getGoogleOAuthCredentials();
+    if (!oauth) {
+      throw new Error(
+        "Google Drive OAuth: faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET (o AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET)."
+      );
+    }
+    const oauth2 = new google.auth.OAuth2(oauth.clientId, oauth.clientSecret);
     oauth2.setCredentials({
       refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN!.trim(),
     });

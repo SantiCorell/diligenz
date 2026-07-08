@@ -11,7 +11,13 @@ async function getDriveClient() {
     try {
       await (auth as OAuth2Client).getAccessToken();
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       console.error("[google-drive] OAuth getAccessToken:", err);
+      if (msg.includes("invalid_client")) {
+        throw new Error(
+          "Google Drive OAuth invalid_client: GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en Vercel deben ser exactamente los mismos que en Google Cloud Console y los usados al generar GOOGLE_DRIVE_REFRESH_TOKEN (npm run drive:oauth)."
+        );
+      }
       throw err;
     }
   }

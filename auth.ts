@@ -9,6 +9,7 @@ import {
   DRIVE_OAUTH_SETUP_COOKIE,
   upsertEnvLocal,
 } from "@/lib/google-drive/oauth-setup";
+import { getGoogleOAuthCredentials } from "@/lib/google-oauth-credentials";
 
 function diligenzAdapter(): Adapter {
   const base = PrismaAdapter(prisma) as Adapter;
@@ -47,14 +48,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   providers: [
     GoogleProvider({
-      clientId:
-        process.env.GOOGLE_CLIENT_ID ??
-        process.env.AUTH_GOOGLE_ID ??
-        "",
-      clientSecret:
-        process.env.GOOGLE_CLIENT_SECRET ??
-        process.env.AUTH_GOOGLE_SECRET ??
-        "",
+      clientId: getGoogleOAuthCredentials()?.clientId ?? "",
+      clientSecret: getGoogleOAuthCredentials()?.clientSecret ?? "",
     }),
   ],
   callbacks: {
