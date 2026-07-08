@@ -125,4 +125,48 @@ export async function getFolderMetadata(folderId: string) {
   return res.data;
 }
 
+export async function downloadFileFromFolder(opts: {
+  folderId: string;
+  nameIncludes: string;
+}): Promise<{ buffer: Buffer; mimeType: string; name: string } | null> {
+  const drive = getDriveClient();
+  const needle = opts.nameIncludes.toLowerCase();
+  let pageToken: string | undefined;
+
+  do {
+    const list = await drive.files.list({
+      q: `'${opts.folderId}' in parents and trashed=false`,
+      fields: "nextPageToken, files(id, name, mimeType)",
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+      pageSize: 100,
+      pageToken,
+    });
+
+    const match = (list.data.files ?? []).find(
+      (file) =>
+        file.id &&
+        file.name &&
+        file.mimeType !== "application/vnd.google-apps.folder" &&
+        file.name.toLowerCase().includes(needle)
+    );
+
+    if (match?.id && match.name) {
+      const downloaded = await drive.files.get(
+        { fileId: match.id, alt: "media", supportsAllDrives: true },
+        { responseType: "arraybuffer" }
+      );
+      return {
+        buffer: Buffer.from(downloaded.data as ArrayBuffer),
+        mimeType: match.mimeType ?? "application/octet-stream",
+        name: match.name,
+      };
+    }
+
+    pageToken = list.data.nextPageToken ?? undefined;
+  } while (pageToken);
+
+  return null;
+}
+
 export { driveFolderUrl };

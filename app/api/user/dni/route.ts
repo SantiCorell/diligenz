@@ -3,8 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
 import {
   dniSideFromInput,
+  isCloudOnlyDniPath,
   removeDniFile,
   saveDniFile,
+  useLocalDniDisk,
 } from "@/lib/user-documents/dni";
 import { getDniVerificationStatus } from "@/lib/user-documents/dni-status";
 import { getSessionWithUserFromRequest } from "@/lib/session";
@@ -66,6 +68,28 @@ export async function POST(req: Request) {
   const mimeType = file.type || "application/octet-stream";
   const bytes = Buffer.from(await file.arrayBuffer());
 
+  const kind = side === "FRONT" ? "dni-front" : "dni-back";
+  let driveSyncedAt: Date | null = null;
+  try {
+    const synced = await syncDocumentToUserDrive({
+      userId: session.userId,
+      kind,
+      originalFileName: file.name,
+      mimeType,
+      content: bytes,
+    });
+    if (synced) driveSyncedAt = new Date();
+  } catch (e) {
+    console.error("[user/dni] drive sync:", e);
+  }
+
+  if (!useLocalDniDisk() && !driveSyncedAt) {
+    return NextResponse.json(
+      { error: "No se pudo guardar el DNI en Drive. Inténtalo de nuevo en unos minutos." },
+      { status: 503 }
+    );
+  }
+
   let storage: { storagePath: string; size: number };
   try {
     storage = await saveDniFile({
@@ -85,21 +109,6 @@ export async function POST(req: Request) {
   });
   if (existing) {
     await removeDniFile(existing.storagePath);
-  }
-
-  const kind = side === "FRONT" ? "dni-front" : "dni-back";
-  let driveSyncedAt: Date | null = null;
-  try {
-    const synced = await syncDocumentToUserDrive({
-      userId: session.userId,
-      kind,
-      originalFileName: file.name,
-      mimeType,
-      content: bytes,
-    });
-    if (synced) driveSyncedAt = new Date();
-  } catch (e) {
-    console.error("[user/dni] drive sync:", e);
   }
 
   await prisma.$transaction([

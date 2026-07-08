@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import { prisma } from "@/lib/prisma";
-import { dniAbsolutePath, dniSideFromInput } from "@/lib/user-documents/dni";
+import { downloadUserDniFromDrive } from "@/lib/google-drive/user-drive";
+import {
+  dniAbsolutePath,
+  dniSideFromInput,
+  isCloudOnlyDniPath,
+} from "@/lib/user-documents/dni";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 
 export async function GET(req: Request) {
@@ -23,18 +28,37 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Documento no encontrado." }, { status: 404 });
   }
 
-  let buffer: Buffer;
-  try {
-    buffer = await readFile(dniAbsolutePath(doc.storagePath));
-  } catch {
-    return NextResponse.json({ error: "Archivo no disponible." }, { status: 404 });
+  let buffer: Buffer | null = null;
+  let mimeType = doc.mimeType ?? "application/octet-stream";
+  let fileName = doc.name;
+
+  if (!isCloudOnlyDniPath(doc.storagePath)) {
+    try {
+      buffer = await readFile(dniAbsolutePath(doc.storagePath));
+    } catch {
+      buffer = null;
+    }
   }
 
-  const safeName = doc.name.replace(/"/g, "%22");
-  const isImage = (doc.mimeType ?? "").startsWith("image/");
+  if (!buffer) {
+    const fromDrive = await downloadUserDniFromDrive({
+      userId: session.userId,
+      side,
+      originalFileName: doc.name,
+    });
+    if (!fromDrive) {
+      return NextResponse.json({ error: "Archivo no disponible." }, { status: 404 });
+    }
+    buffer = fromDrive.buffer;
+    mimeType = fromDrive.mimeType;
+    fileName = fromDrive.name;
+  }
+
+  const safeName = fileName.replace(/"/g, "%22");
+  const isImage = mimeType.startsWith("image/");
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
-      "Content-Type": doc.mimeType ?? "application/octet-stream",
+      "Content-Type": mimeType,
       "Content-Disposition": isImage
         ? `inline; filename="${safeName}"`
         : `attachment; filename="${safeName}"`,

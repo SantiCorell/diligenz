@@ -1,4 +1,4 @@
-import type { UserRole } from "@prisma/client";
+import type { DniDocumentSide, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   buildClientDriveFolderName,
@@ -7,12 +7,14 @@ import {
 } from "./folder-name";
 import {
   createClientFolder,
+  downloadFileFromFolder,
   findOrCreateSubfolder,
   isGoogleDriveConfigured,
   renameDriveFolder,
   shareFolderWithUser,
   uploadFileToFolder,
 } from "./client";
+import { buildDriveFileName } from "./document-sync";
 
 function clientShareRole(): "reader" | "writer" {
   const role = process.env.GOOGLE_DRIVE_CLIENT_SHARE_ROLE?.trim().toLowerCase();
@@ -161,5 +163,44 @@ export async function uploadUserDriveDocument(opts: {
   } catch (err) {
     console.error("[google-drive] subir documento:", err);
     return false;
+  }
+}
+
+export async function downloadUserDniFromDrive(opts: {
+  userId: string;
+  side: DniDocumentSide;
+  originalFileName: string;
+}): Promise<{ buffer: Buffer; mimeType: string; name: string } | null> {
+  if (!isGoogleDriveConfigured()) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: opts.userId },
+    select: { documentsDriveFolderUrl: true },
+  });
+  const folderId = user?.documentsDriveFolderUrl
+    ? parseDriveFolderId(user.documentsDriveFolderUrl)
+    : null;
+  if (!folderId) return null;
+
+  try {
+    const identidadId = await findOrCreateSubfolder(folderId, "Identidad");
+    const kind = opts.side === "FRONT" ? "dni-front" : "dni-back";
+    const driveFileName = buildDriveFileName({
+      kind,
+      originalName: opts.originalFileName,
+    });
+    const downloaded = await downloadFileFromFolder({
+      folderId: identidadId,
+      nameIncludes: driveFileName,
+    });
+    if (downloaded) return downloaded;
+
+    return downloadFileFromFolder({
+      folderId: identidadId,
+      nameIncludes: opts.side === "FRONT" ? "anverso" : "reverso",
+    });
+  } catch (err) {
+    console.error("[google-drive] descargar DNI:", err);
+    return null;
   }
 }

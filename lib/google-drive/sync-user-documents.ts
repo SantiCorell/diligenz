@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { generateSignedMandatePdf } from "@/lib/mandato/generate-signed-pdf";
 import { generateSignedCompraDocuments } from "@/lib/mandato/generate-signed-compra-pdf";
 import { generateSignedColaboracionDocuments } from "@/lib/mandato/generate-signed-colaboracion-pdfs";
-import { dniAbsolutePath } from "@/lib/user-documents/dni";
+import { dniAbsolutePath, isCloudOnlyDniPath } from "@/lib/user-documents/dni";
 import { syncDocumentToUserDrive } from "./document-sync";
 import { ensureUserDriveFolder, syncUserDriveFolderName } from "./user-drive";
 import { isGoogleDriveConfigured } from "./client";
@@ -84,7 +84,12 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
   });
 
   for (const doc of user.dniDocuments) {
+    if (doc.driveSyncedAt) continue;
     try {
+      if (isCloudOnlyDniPath(doc.storagePath)) {
+        errors.push(`DNI ${doc.side}: solo en Drive (sin copia local)`);
+        continue;
+      }
       const buffer = await readFile(dniAbsolutePath(doc.storagePath));
       const kind = doc.side === "FRONT" ? "dni-front" : "dni-back";
       const ok = await syncDocumentToUserDrive({
