@@ -3,7 +3,12 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter } from "next-auth/adapters";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import {
+  DRIVE_OAUTH_SETUP_COOKIE,
+  upsertEnvLocal,
+} from "@/lib/google-drive/oauth-setup";
 
 function diligenzAdapter(): Adapter {
   const base = PrismaAdapter(prisma) as Adapter;
@@ -58,6 +63,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return url;
       }
 
+      if (url.includes("/api/drive/oauth/done")) {
+        return `${baseUrl}/api/drive/oauth/done`;
+      }
+
       let destination = "/dashboard";
       try {
         const parsed = new URL(url, baseUrl);
@@ -78,6 +87,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }: any) {
       if (account?.provider === "google") {
         try {
+          if (account.refresh_token || account.scope?.includes("drive")) {
+            await prisma.account.updateMany({
+              where: {
+                provider: "google",
+                providerAccountId: account.providerAccountId,
+              },
+              data: {
+                ...(account.refresh_token
+                  ? { refresh_token: account.refresh_token }
+                  : {}),
+                ...(account.access_token
+                  ? { access_token: account.access_token }
+                  : {}),
+                ...(account.scope ? { scope: account.scope } : {}),
+                ...(account.expires_at ? { expires_at: account.expires_at } : {}),
+              },
+            });
+          }
+
+          if (
+            process.env.NODE_ENV !== "production" &&
+            account.refresh_token
+          ) {
+            const cookieStore = await cookies();
+            if (cookieStore.get(DRIVE_OAUTH_SETUP_COOKIE)?.value === "1") {
+              upsertEnvLocal(
+                "GOOGLE_DRIVE_REFRESH_TOKEN",
+                account.refresh_token
+              );
+              cookieStore.delete(DRIVE_OAUTH_SETUP_COOKIE);
+            }
+          }
+
           const existingUser = await prisma.user.findUnique({
             where: { email: user.email! },
             select: { blocked: true, blockedUntil: true, provider: true },
