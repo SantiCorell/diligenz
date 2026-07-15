@@ -13,6 +13,7 @@ import {
 } from "@/lib/seo";
 import "./globals.css";
 import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
+import ConditionalGoogleAnalytics from "@/components/consent/ConditionalGoogleAnalytics";
 import ConditionalGoogleTagManager from "@/components/consent/ConditionalGoogleTagManager";
 import ConditionalSpeedInsights from "@/components/consent/ConditionalSpeedInsights";
 import SectorCatalogHydrator from "@/components/sectors/SectorCatalogHydrator";
@@ -152,6 +153,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ConditionalGoogleTagManager />
+        <ConditionalGoogleAnalytics />
         {children}
         <SectorCatalogHydrator />
         <CookieConsentBanner />

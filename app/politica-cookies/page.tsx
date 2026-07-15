@@ -107,8 +107,17 @@ export default function PoliticaCookiesPage() {
                         <td className="px-3 py-2.5">Google Tag Manager</td>
                         <td className="px-3 py-2.5">Análisis / medición</td>
                         <td className="px-3 py-2.5">
-                          Gestión de etiquetas de medición (p. ej. Google Analytics), solo si
-                          aceptas &quot;Aceptar todas&quot;.
+                          Gestión de etiquetas de medición, solo si aceptas &quot;Aceptar
+                          todas&quot;.
+                        </td>
+                        <td className="px-3 py-2.5">Según Google / política del proveedor</td>
+                      </tr>
+                      <tr className="bg-white">
+                        <td className="px-3 py-2.5">Google Analytics (GA4)</td>
+                        <td className="px-3 py-2.5">Análisis / medición</td>
+                        <td className="px-3 py-2.5">
+                          Estadísticas agregadas de uso del sitio, solo si aceptas &quot;Aceptar
+                          todas&quot;.
                         </td>
                         <td className="px-3 py-2.5">Según Google / política del proveedor</td>
                       </tr>
@@ -134,7 +143,8 @@ export default function PoliticaCookiesPage() {
                   Al entrar en el sitio aparece una <strong>barra fija en la parte inferior</strong>{" "}
                   hasta que eliges <strong>&quot;Solo necesarias&quot;</strong> o{" "}
                   <strong>&quot;Aceptar todas&quot;</strong>. Hasta entonces no activamos herramientas
-                  de medición opcionales (p. ej. Google Tag Manager, Speed Insights). Puedes revisar o cambiar tu
+                  de medición opcionales (p. ej. Google Tag Manager, Google Analytics, Speed
+                  Insights). Puedes revisar o cambiar tu
                   decisión desde el pie de página: <strong>Configuración de cookies</strong>, que
                   vuelve a mostrar la barra.
                 </p>
