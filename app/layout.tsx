@@ -13,6 +13,7 @@ import {
 } from "@/lib/seo";
 import "./globals.css";
 import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
+import ConditionalGoogleTagManager from "@/components/consent/ConditionalGoogleTagManager";
 import ConditionalSpeedInsights from "@/components/consent/ConditionalSpeedInsights";
 import SectorCatalogHydrator from "@/components/sectors/SectorCatalogHydrator";
 
@@ -150,6 +151,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--brand-bg)] text-[var(--foreground)]`}
         suppressHydrationWarning
       >
+        <ConditionalGoogleTagManager />
         {children}
         <SectorCatalogHydrator />
         <CookieConsentBanner />
