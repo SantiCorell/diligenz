@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { trackWaitlistSignup } from "@/lib/meta-pixel";
 
 export default function WaitlistLanding() {
   const [email, setEmail] = useState("");
@@ -28,6 +29,7 @@ export default function WaitlistLanding() {
       }
       setStatus("success");
       setMessage(data.message || "¡Listo! Te avisamos cuando estemos en marcha.");
+      trackWaitlistSignup();
       setEmail("");
     } catch {
       setStatus("error");

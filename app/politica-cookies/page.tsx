@@ -121,6 +121,15 @@ export default function PoliticaCookiesPage() {
                         </td>
                         <td className="px-3 py-2.5">Según Google / política del proveedor</td>
                       </tr>
+                      <tr className="bg-[var(--brand-bg)]/40">
+                        <td className="px-3 py-2.5">Meta Pixel</td>
+                        <td className="px-3 py-2.5">Marketing / medición</td>
+                        <td className="px-3 py-2.5">
+                          Medición de campañas Meta (Facebook/Instagram) y eventos de conversión,
+                          solo si aceptas &quot;Aceptar todas&quot;.
+                        </td>
+                        <td className="px-3 py-2.5">Según Meta / política del proveedor</td>
+                      </tr>
                       <tr className="bg-white">
                         <td className="px-3 py-2.5">Vercel Speed Insights</td>
                         <td className="px-3 py-2.5">Análisis / rendimiento</td>
@@ -143,8 +152,8 @@ export default function PoliticaCookiesPage() {
                   Al entrar en el sitio aparece una <strong>barra fija en la parte inferior</strong>{" "}
                   hasta que eliges <strong>&quot;Solo necesarias&quot;</strong> o{" "}
                   <strong>&quot;Aceptar todas&quot;</strong>. Hasta entonces no activamos herramientas
-                  de medición opcionales (p. ej. Google Tag Manager, Google Analytics, Speed
-                  Insights). Puedes revisar o cambiar tu
+                  de medición opcionales (p. ej. Google Tag Manager, Google Analytics, Meta Pixel,
+                  Speed Insights). Puedes revisar o cambiar tu
                   decisión desde el pie de página: <strong>Configuración de cookies</strong>, que
                   vuelve a mostrar la barra.
                 </p>

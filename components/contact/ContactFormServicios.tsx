@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackContact } from "@/lib/meta-pixel";
 
 const MOTIVOS = [
   { value: "valoracion", label: "Valoración de mi empresa" },
@@ -51,6 +52,7 @@ export default function ContactFormServicios() {
         return;
       }
       setSent(true);
+      trackContact({ source: "servicios", type: motivo || type });
     } catch {
       setError("Error de conexión.");
     }

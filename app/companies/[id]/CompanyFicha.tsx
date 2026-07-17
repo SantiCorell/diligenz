@@ -21,6 +21,7 @@ import { authFetch } from "@/lib/auth-client";
 import SectorVisual from "@/components/companies/SectorVisual";
 import { getSectorVisual } from "@/lib/sector-visual";
 import { formatEuroAmountFromString, formatEuroRange } from "@/lib/format-financial";
+import { trackRequestCompanyInfo, trackViewCompany } from "@/lib/meta-pixel";
 
 type TabId = "informacion" | "descripcion" | "documentos";
 
@@ -62,6 +63,14 @@ export default function CompanyFicha({
   const hasBuyerTeaser = Boolean(company.buyerTeaserUrl?.trim());
 
   useEffect(() => {
+    trackViewCompany({
+      companyId: company.id,
+      companyName: company.name,
+      sector: company.sector,
+    });
+  }, [company.id, company.name, company.sector]);
+
+  useEffect(() => {
     if (!isLoggedIn) return;
     authFetch(`/api/companies/${company.id}/interest`)
       .then((r) => r.json())
@@ -93,6 +102,10 @@ export default function CompanyFicha({
       if (res.ok) {
         setRequestInfo(true);
         setRequestModalSuccess(true);
+        trackRequestCompanyInfo({
+          companyId: company.id,
+          companyName: company.name,
+        });
       } else {
         setRequestError(
           typeof data.error === "string"

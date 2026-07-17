@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ShellLayout from "@/components/layout/ShellLayout";
+import { trackContact } from "@/lib/meta-pixel";
 
 export default function ContactPage() {
   const [type, setType] = useState<"PARTICULAR" | "EMPRESA">("PARTICULAR");
@@ -41,6 +42,7 @@ export default function ContactPage() {
         return;
       }
       setSent(true);
+      trackContact({ source: "contact", type });
       setName("");
       setEmail("");
       setPhone("");

@@ -7,6 +7,7 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { setStoredToken } from "@/lib/auth-client";
+import { trackLogin } from "@/lib/meta-pixel";
 
 const ROLE_TARGET: Record<string, string> = {
   ADMIN: "/admin",
@@ -48,6 +49,7 @@ export default function LoginModal({ open, onClose, onOpenRegister, onSuccess }:
         return;
       }
       if (data.token) setStoredToken(data.token);
+      trackLogin({ method: "email", role: data.role });
       onSuccess?.();
       const target = (data.role && ROLE_TARGET[data.role]) || "/dashboard";
       router.push(target);

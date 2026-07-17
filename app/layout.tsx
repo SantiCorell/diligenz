@@ -16,6 +16,7 @@ import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
 import ConditionalGoogleAnalytics from "@/components/consent/ConditionalGoogleAnalytics";
 import ConditionalGoogleTagManager from "@/components/consent/ConditionalGoogleTagManager";
 import ConditionalSpeedInsights from "@/components/consent/ConditionalSpeedInsights";
+import MetaPixelProvider from "@/components/consent/MetaPixelProvider";
 import SectorCatalogHydrator from "@/components/sectors/SectorCatalogHydrator";
 
 const geistSans = Geist({
@@ -154,6 +155,7 @@ export default function RootLayout({
       >
         <ConditionalGoogleTagManager />
         <ConditionalGoogleAnalytics />
+        <MetaPixelProvider />
         {children}
         <SectorCatalogHydrator />
         <CookieConsentBanner />

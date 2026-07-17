@@ -7,6 +7,7 @@ import { authFetch } from "@/lib/auth-client";
 import { formatCompactEuroRange } from "@/lib/format-financial";
 import { SPAIN_CCAA_OPTIONS } from "@/lib/spain-ccaa";
 import { VALUATION_SECTOR_OPTIONS, type SectorOption } from "@/lib/valuation-sectors";
+import { trackValuationLead } from "@/lib/meta-pixel";
 
 type ValuationResult = {
   minValue: number;
@@ -131,6 +132,11 @@ export default function SellValuationForm({
         setError(data.error || "No se pudo calcular la valoración.");
         return;
       }
+      trackValuationLead({
+        sector,
+        location,
+        value: typeof data.maxValue === "number" ? data.maxValue : undefined,
+      });
       setResult(data);
     } catch {
       setError("Error inesperado. Inténtalo de nuevo.");

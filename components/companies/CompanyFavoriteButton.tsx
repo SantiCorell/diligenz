@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Heart } from "lucide-react";
 import { authFetch } from "@/lib/auth-client";
+import { trackAddToWishlist } from "@/lib/meta-pixel";
 
 type Props = {
   companyId: string;
@@ -41,6 +42,9 @@ export default function CompanyFavoriteButton({
       );
       if (!res.ok) return;
       setFavorite(next);
+      if (next) {
+        trackAddToWishlist({ companyId });
+      }
       onChange?.(next);
     } finally {
       setLoading(false);

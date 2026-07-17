@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { setStoredToken } from "@/lib/auth-client";
 import { dashboardPathForRole } from "@/lib/dashboard-path";
+import { trackCompleteRegistration } from "@/lib/meta-pixel";
 
 type Role = "SELLER" | "BUYER" | "PROFESSIONAL";
 
@@ -68,6 +69,10 @@ export default function RegisterFormModal({ open, onClose, onOpenLogin, onSucces
         return;
       }
       if (data.token) setStoredToken(data.token);
+      trackCompleteRegistration({
+        role: data.role ?? role,
+        method: "email",
+      });
       onSuccess?.();
       const target = dashboardPathForRole(data.role ?? "BUYER");
       router.push(target);

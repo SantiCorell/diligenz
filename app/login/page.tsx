@@ -7,6 +7,7 @@ import Image from "next/image";
 import ShellLayout from "@/components/layout/ShellLayout";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { setStoredToken } from "@/lib/auth-client";
+import { trackLogin } from "@/lib/meta-pixel";
 
 const ROLE_TARGET: Record<string, string> = {
   ADMIN: "/admin",
@@ -64,6 +65,7 @@ export default function LoginPage() {
       if (data.token) {
         setStoredToken(data.token);
       }
+      trackLogin({ method: "email", role: data.role });
       const target = (data.role && ROLE_TARGET[data.role]) || "/dashboard";
       router.push(target);
     } catch {

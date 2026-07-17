@@ -8,6 +8,7 @@ import ShellLayout from "@/components/layout/ShellLayout";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { setStoredToken } from "@/lib/auth-client";
 import { dashboardPathForRole } from "@/lib/dashboard-path";
+import { trackCompleteRegistration } from "@/lib/meta-pixel";
 
 type Role = "SELLER" | "BUYER" | "PROFESSIONAL";
 
@@ -64,6 +65,10 @@ export default function RegisterPage() {
       if (data.token) {
         setStoredToken(data.token);
       }
+      trackCompleteRegistration({
+        role: data.role ?? role,
+        method: "email",
+      });
       const target = dashboardPathForRole(data.role ?? "BUYER");
       router.push(target);
     } catch {
