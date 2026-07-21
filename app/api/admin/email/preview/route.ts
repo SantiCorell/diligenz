@@ -16,6 +16,8 @@ export async function GET(req: Request) {
   const template = searchParams.get("template") ?? "";
   const recipientEmail = (searchParams.get("email") ?? "").trim();
   const recipientName = (searchParams.get("name") ?? "").trim() || null;
+  const subjectOverride = searchParams.get("subject")?.trim() || null;
+  const bodyTextOverride = searchParams.get("bodyText")?.trim() || null;
 
   if (!isAdminEmailTemplateId(template)) {
     return NextResponse.json(
@@ -31,14 +33,16 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Indica el email del destinatario." }, { status: 400 });
   }
 
-  const built = buildAdminOutreachEmail(template, {
-    recipientEmail,
-    recipientName,
-  });
+  const built = buildAdminOutreachEmail(
+    template,
+    { recipientEmail, recipientName },
+    { subject: subjectOverride, bodyText: bodyTextOverride }
+  );
 
   return NextResponse.json({
     template,
     subject: built.subject,
+    bodyText: built.bodyText,
     html: built.html,
     text: built.text,
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Mail, Phone, Send } from "lucide-react";
 import { authFetch } from "@/lib/auth-client";
 import {
@@ -22,43 +22,68 @@ export default function AdminContactEmailPanel({
   email,
   name,
   phone,
-  defaultTemplate = "seguimiento_general",
+  defaultTemplate = "recontacto_sin_respuesta",
   className = "",
 }: Props) {
   const [template, setTemplate] = useState<AdminEmailTemplateId>(defaultTemplate);
   const [subject, setSubject] = useState("");
+  const [bodyText, setBodyText] = useState("");
   const [htmlPreview, setHtmlPreview] = useState("");
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [showComposer, setShowComposer] = useState(false);
+  const skipNextDebounce = useRef(false);
 
-  const loadPreview = useCallback(async () => {
-    if (!email.trim()) return;
-    setLoadingPreview(true);
-    setMessage(null);
-    try {
-      const p = new URLSearchParams({
-        template,
-        email: email.trim(),
-      });
-      if (name?.trim()) p.set("name", name.trim());
-      const res = await authFetch(`/api/admin/email/preview?${p.toString()}`);
-      const data = await res.json();
-      if (!res.ok) {
-        setMessage({ type: "err", text: data.error ?? "No se pudo cargar la vista previa." });
-        return;
+  const loadPreview = useCallback(
+    async (opts?: { subject?: string; bodyText?: string }) => {
+      if (!email.trim()) return;
+      setLoadingPreview(true);
+      setMessage(null);
+      try {
+        const p = new URLSearchParams({
+          template,
+          email: email.trim(),
+        });
+        if (name?.trim()) p.set("name", name.trim());
+        const subj = opts?.subject ?? subject;
+        const body = opts?.bodyText ?? bodyText;
+        if (subj.trim()) p.set("subject", subj.trim());
+        if (body.trim()) p.set("bodyText", body.trim());
+
+        const res = await authFetch(`/api/admin/email/preview?${p.toString()}`);
+        const data = await res.json();
+        if (!res.ok) {
+          setMessage({ type: "err", text: data.error ?? "No se pudo cargar la vista previa." });
+          return;
+        }
+        setSubject(data.subject ?? "");
+        setBodyText(data.bodyText ?? "");
+        setHtmlPreview(data.html ?? "");
+      } finally {
+        setLoadingPreview(false);
       }
-      setSubject(data.subject ?? "");
-      setHtmlPreview(data.html ?? "");
-    } finally {
-      setLoadingPreview(false);
-    }
-  }, [email, name, template]);
+    },
+    [email, name, template, subject, bodyText]
+  );
 
   useEffect(() => {
-    if (showComposer) loadPreview();
-  }, [showComposer, loadPreview]);
+    if (showComposer) {
+      skipNextDebounce.current = true;
+      void loadPreview({ subject: "", bodyText: "" });
+    }
+  }, [showComposer, template, email, name]); // eslint-disable-line react-hooks/exhaustive-deps -- recargar al cambiar plantilla
+
+  useEffect(() => {
+    if (!showComposer || skipNextDebounce.current) {
+      skipNextDebounce.current = false;
+      return;
+    }
+    const t = setTimeout(() => {
+      void loadPreview();
+    }, 450);
+    return () => clearTimeout(t);
+  }, [subject, bodyText, showComposer, loadPreview]);
 
   const handleSend = async () => {
     setSending(true);
@@ -72,6 +97,7 @@ export default function AdminContactEmailPanel({
           name: name?.trim() || undefined,
           template,
           subject: subject.trim() || undefined,
+          bodyText: bodyText.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -147,18 +173,35 @@ export default function AdminContactEmailPanel({
           </div>
 
           <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+              Mensaje (editable)
+            </label>
+            <textarea
+              value={bodyText}
+              onChange={(e) => setBodyText(e.target.value)}
+              rows={7}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm leading-relaxed focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/15 resize-y min-h-[140px]"
+              placeholder="Escribe el cuerpo del correo. Separa párrafos con una línea en blanco."
+            />
+            <p className="mt-1.5 text-[11px] text-slate-500">
+              El diseño Diligenz (cabecera, colores y botón) se aplica automáticamente. Separa
+              párrafos con una línea en blanco.
+            </p>
+          </div>
+
+          <div>
             <div className="flex items-center justify-between gap-2 mb-1.5">
-              <label className="text-xs font-semibold text-slate-600">Vista previa del borrador</label>
+              <label className="text-xs font-semibold text-slate-600">Vista previa</label>
               <button
                 type="button"
-                onClick={loadPreview}
+                onClick={() => void loadPreview()}
                 disabled={loadingPreview}
                 className="text-xs font-medium text-[var(--brand-primary)] hover:underline disabled:opacity-50"
               >
-                {loadingPreview ? "Cargando…" : "Actualizar"}
+                {loadingPreview ? "Actualizando…" : "Actualizar ahora"}
               </button>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden shadow-inner">
               {loadingPreview ? (
                 <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -168,7 +211,7 @@ export default function AdminContactEmailPanel({
                 <iframe
                   title="Vista previa del email"
                   srcDoc={htmlPreview}
-                  className="w-full min-h-[320px] max-h-[480px] bg-white"
+                  className="w-full min-h-[360px] max-h-[520px] bg-white"
                   sandbox=""
                 />
               ) : (
@@ -187,7 +230,7 @@ export default function AdminContactEmailPanel({
             <button
               type="button"
               onClick={handleSend}
-              disabled={sending || loadingPreview || !subject.trim()}
+              disabled={sending || loadingPreview || !subject.trim() || !bodyText.trim()}
               className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-primary)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50 transition"
             >
               {sending ? (

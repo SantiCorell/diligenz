@@ -376,7 +376,9 @@ function LeadRowCard({
                   : (data as SerializedContactLead).name
               }
               phone={data.phone}
-              defaultTemplate={isValuation ? "seguimiento_valoracion" : "seguimiento_general"}
+              defaultTemplate={
+                isValuation ? "seguimiento_valoracion" : "recontacto_sin_respuesta"
+              }
             />
           </div>
         </>

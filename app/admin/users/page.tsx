@@ -1069,6 +1069,7 @@ export default function AdminUsersPage() {
   const [role, setRole] = useState<UserRole>("ADMIN");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const [createUserOpen, setCreateUserOpen] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -1149,6 +1150,7 @@ export default function AdminUsersPage() {
       setCreateUserName("");
       setPhone("");
       setRole("ADMIN");
+      setCreateUserOpen(false);
       loadUsers();
     } catch {
       setMessage({ type: "error", text: "Error de conexión." });
@@ -1338,15 +1340,46 @@ export default function AdminUsersPage() {
       </section>
 
       {/* Crear usuario */}
-      <section className="rounded-2xl border border-slate-200/90 bg-white shadow-sm p-5 sm:p-6 mb-8">
-        <div className="flex items-center gap-2 mb-5">
-          <UserPlus className="w-5 h-5 text-[var(--brand-primary)]" aria-hidden />
-          <h2 className="text-lg font-semibold text-slate-900">Crear usuario</h2>
-        </div>
-        <form
-          onSubmit={handleCreate}
-          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6"
+      <section className="rounded-2xl border border-slate-200/90 bg-white shadow-sm overflow-hidden mb-8">
+        <button
+          type="button"
+          onClick={() => setCreateUserOpen((v) => !v)}
+          aria-expanded={createUserOpen}
+          className="flex w-full items-center justify-between gap-3 px-5 py-3.5 border-b border-slate-100 bg-slate-50/80 text-left hover:bg-slate-50 transition-colors"
         >
+          <div className="flex min-w-0 items-center gap-2">
+            <UserPlus className="w-4 h-4 shrink-0 text-[var(--brand-primary)]" aria-hidden />
+            <h2 className="text-sm font-semibold text-slate-800">Crear usuario</h2>
+            {!createUserOpen && (
+              <span className="hidden sm:inline text-xs text-slate-500 font-normal truncate">
+                Alta manual de comprador, vendedor, profesional o admin
+              </span>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            {message && !createUserOpen && (
+              <span
+                className={`hidden sm:inline text-xs font-medium ${
+                  message.type === "ok" ? "text-emerald-700" : "text-red-600"
+                }`}
+              >
+                {message.text}
+              </span>
+            )}
+            <ChevronDown
+              className={`w-4 h-4 text-slate-500 transition-transform ${
+                createUserOpen ? "rotate-180" : ""
+              }`}
+              aria-hidden
+            />
+          </div>
+        </button>
+        {createUserOpen && (
+          <div className="p-5 sm:p-6">
+            <form
+              onSubmit={handleCreate}
+              className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6"
+            >
           <div className="sm:col-span-2">
             <label htmlFor="new-name" className="block text-xs font-medium text-slate-600 mb-1.5">
               Nombre completo (opcional)
@@ -1442,7 +1475,9 @@ export default function AdminUsersPage() {
               </span>
             )}
           </div>
-        </form>
+            </form>
+          </div>
+        )}
       </section>
 
       {/* Tabla */}

@@ -26,6 +26,8 @@ export async function POST(req: Request) {
     typeof body.name === "string" && body.name.trim() ? body.name.trim() : null;
   const subjectOverride =
     typeof body.subject === "string" && body.subject.trim() ? body.subject.trim() : null;
+  const bodyTextOverride =
+    typeof body.bodyText === "string" && body.bodyText.trim() ? body.bodyText.trim() : null;
 
   if (!to || !to.includes("@")) {
     return NextResponse.json({ error: "Email de destino no válido." }, { status: 400 });
@@ -35,15 +37,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Plantilla no válida." }, { status: 400 });
   }
 
-  const built = buildAdminOutreachEmail(template, {
-    recipientEmail: to,
-    recipientName,
-  });
+  const built = buildAdminOutreachEmail(
+    template,
+    { recipientEmail: to, recipientName },
+    { subject: subjectOverride, bodyText: bodyTextOverride }
+  );
 
   try {
     const sent = await sendEmail({
       to,
-      subject: subjectOverride ?? built.subject,
+      subject: built.subject,
       text: built.text,
       html: built.html,
     });
@@ -52,7 +55,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No se pudo enviar el correo." }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, subject: subjectOverride ?? built.subject });
+    return NextResponse.json({ ok: true, subject: built.subject });
   } catch (err) {
     console.error("[admin/email/send]", err);
     return NextResponse.json({ error: "Error al enviar el correo." }, { status: 500 });

@@ -206,9 +206,7 @@ function UnregisteredRow({
             email={group.email}
             name={group.displayName}
             phone={group.phone}
-            defaultTemplate={
-              group.valuationCount > 0 ? "seguimiento_valoracion" : "invitacion_registro"
-            }
+            defaultTemplate="recontacto_sin_respuesta"
           />
 
           {group.valuations.map((v) => (
