@@ -18,6 +18,7 @@ import { formatCompactEuroRange } from "@/lib/format-financial";
 import { ensureCompanyDriveFolder } from "@/lib/google-drive/company-drive";
 import { ensureCompanyReference } from "@/lib/company-reference";
 import { resolveBuyerDocuments } from "@/lib/buyer-documents";
+import { companyStatusLabel } from "@/lib/admin-company-views";
 import type { DocumentType } from "@prisma/client";
 
 function entityTypeLabel(t: string | null | undefined) {
@@ -103,7 +104,7 @@ export default async function AdminCompanyDetail({
                 <span className="font-mono">{companyReference}</span>
               </AdminStatusChip>
               <AdminStatusChip tone={deal?.published ? "success" : "neutral"}>
-                {company.status}
+                {companyStatusLabel(company.status)}
               </AdminStatusChip>
               {featuredActive && <AdminStatusChip tone="featured">★ Destacada</AdminStatusChip>}
               {allDocsSigned ? (
@@ -140,6 +141,62 @@ export default async function AdminCompanyDetail({
                 returnTo={`/admin/companies/${company.id}`}
               />
             ) : null}
+          </div>
+        </div>
+
+        <div className="mt-5 pt-4 border-t border-[var(--brand-primary)]/10">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+            <form
+              action="/api/admin/company/update-status"
+              method="POST"
+              className="flex flex-wrap items-center gap-2 sm:gap-3"
+            >
+              <input type="hidden" name="companyId" value={company.id} />
+              <span className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-primary)]/80 shrink-0">
+                Estado
+              </span>
+              <select
+                id="company-status"
+                name="status"
+                defaultValue={company.status}
+                className="rounded-lg border border-[var(--brand-primary)]/20 bg-white px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none min-w-[12rem]"
+              >
+                <option value="DRAFT">Borrador</option>
+                <option value="IN_PROCESS">En revisión</option>
+                <option value="PUBLISHED">Publicado en web</option>
+                <option value="SOLD">Vendido</option>
+              </select>
+              <button
+                type="submit"
+                className="rounded-lg px-3 py-2 text-sm font-semibold bg-[var(--brand-primary)] text-white hover:opacity-95 transition"
+              >
+                Guardar
+              </button>
+            </form>
+
+            {deal?.published ? (
+              <span className="inline-flex items-center rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-800">
+                Visible en marketplace
+              </span>
+            ) : deal ? (
+              <form action="/api/admin/company/publish-deal" method="POST" className="inline-flex">
+                <input type="hidden" name="companyId" value={company.id} />
+                <button
+                  type="submit"
+                  className="rounded-lg px-3 py-2 text-sm font-semibold bg-green-600 text-white hover:opacity-95 transition"
+                >
+                  Publicar en marketplace
+                </button>
+              </form>
+            ) : (
+              <span className="text-xs text-[var(--foreground)]/60">Sin deal — no publicable aún</span>
+            )}
+
+            {!allDocsSigned && !deal?.published && (
+              <span className="text-xs text-amber-800 font-medium">
+                Docs pendientes antes de publicar
+              </span>
+            )}
           </div>
         </div>
 
@@ -650,109 +707,35 @@ export default async function AdminCompanyDetail({
         )}
       </section>
 
-      {/* ACCIONES ADMIN */}
+      {/* Destacar en listados */}
       <section className="admin-section">
-        <h2 className="admin-section-title">
-          Estado y publicación
-        </h2>
-
+        <h2 className="admin-section-title">Destacar en listados</h2>
         {deal?.published ? (
-          <p className="mt-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 font-medium">
-            ✔ Publicada en el marketplace — visible en &quot;Empresas&quot; en la web.
-          </p>
+          <>
+            {featuredActive && company.featuredAt ? (
+              <p className="mt-2 text-sm text-amber-800 font-medium">
+                ★ Destacada hasta{" "}
+                {new Date(
+                  company.featuredAt.getTime() + FEATURED_DURATION_MS
+                ).toLocaleDateString("es-ES", { dateStyle: "long" })}
+                .
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-[var(--foreground)] opacity-85">
+                Pasa a la primera posición durante {featuredDays} días.
+              </p>
+            )}
+            <AdminFeatureCompanyButton
+              companyId={company.id}
+              published={Boolean(deal?.published)}
+              featuredActive={featuredActive}
+              returnTo={`/admin/companies/${company.id}`}
+              className="mt-3"
+            />
+          </>
         ) : (
-          <p className="mt-3 rounded-xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg-lavender)]/40 px-4 py-3 text-sm text-[var(--foreground)]">
-            No visible en la web. Elige <strong>Publicado en web</strong> o usa el botón de publicación
-            rápida.
-          </p>
-        )}
-
-        <form
-          action="/api/admin/company/update-status"
-          method="POST"
-          className="mt-4 flex flex-wrap items-end gap-3"
-        >
-          <input type="hidden" name="companyId" value={company.id} />
-          <div>
-            <label htmlFor="company-status" className="block text-xs font-semibold text-[var(--brand-primary)] mb-1.5">
-              Estado operativo
-            </label>
-            <select
-              id="company-status"
-              name="status"
-              defaultValue={company.status}
-              className="rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-sm text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none min-w-[220px]"
-            >
-              <option value="DRAFT">Borrador — no visible</option>
-              <option value="IN_PROCESS">En revisión — no visible</option>
-              <option value="PUBLISHED">Publicado en web</option>
-              <option value="SOLD">Vendido — fuera del listado</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--foreground)]/90 text-white shadow-lg hover:opacity-95 transition"
-          >
-            Guardar estado
-          </button>
-        </form>
-
-        {deal && !deal.published ? (
-          <form action="/api/admin/company/publish-deal" method="POST" className="mt-4">
-            <input type="hidden" name="companyId" value={company.id} />
-            <button
-              type="submit"
-              className="rounded-xl px-6 py-3.5 text-sm font-semibold bg-green-600 text-white shadow-lg hover:opacity-95 transition"
-            >
-              Publicar en marketplace
-            </button>
-            <p className="mt-2 text-xs text-[var(--foreground)] opacity-70">
-              Atajo: publica en la web y deja el estado en &quot;Publicado en web&quot;.
-            </p>
-          </form>
-        ) : !deal ? (
-          <p className="mt-4 text-sm text-[var(--foreground)] opacity-70">
-            Sin deal asociado: crea la empresa desde valoración o admin para poder publicarla.
-          </p>
-        ) : null}
-
-        <div className="mt-6 pt-6 border-t border-[var(--brand-primary)]/10">
-          <h3 className="text-sm font-semibold text-[var(--brand-primary)]">Destacar en listados</h3>
-          {deal?.published ? (
-            <>
-              {featuredActive && company.featuredAt ? (
-                <p className="mt-2 text-sm text-amber-800 font-medium">
-                  ★ Destacada hasta{" "}
-                  {new Date(
-                    company.featuredAt.getTime() + FEATURED_DURATION_MS
-                  ).toLocaleDateString("es-ES", { dateStyle: "long" })}
-                  . Aparece primero en el marketplace y en la home.
-                </p>
-              ) : (
-                <p className="mt-2 text-sm text-[var(--foreground)] opacity-85">
-                  Las empresas se ordenan por EBITDA. Al destacar, esta pasa a la primera posición
-                  durante {featuredDays} días; después se quita sola.
-                </p>
-              )}
-              <AdminFeatureCompanyButton
-                companyId={company.id}
-                published={Boolean(deal?.published)}
-                featuredActive={featuredActive}
-                returnTo={`/admin/companies/${company.id}`}
-                className="mt-3"
-              />
-            </>
-          ) : (
-            <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
-              Publica la empresa en el marketplace para poder destacarla.
-            </p>
-          )}
-        </div>
-
-        {!allDocsSigned && (
-          <p className="mt-4 text-xs text-amber-700 font-medium">
-            ⚠️ La empresa no tiene toda la documentación firmada. Publicar en marketplace es bajo tu responsabilidad.
+          <p className="mt-2 text-sm text-[var(--foreground)] opacity-70">
+            Publica la empresa en el marketplace para poder destacarla.
           </p>
         )}
       </section>

@@ -44,7 +44,7 @@ const BOXES: {
   {
     id: "draft",
     label: "Borradores",
-    description: "Sin publicar en web",
+    description: "Sin publicar · docs OK",
     icon: PencilLine,
     activeClass: "border-violet-400 bg-violet-50 ring-2 ring-violet-200",
     idleClass: "border-slate-200 bg-white hover:border-violet-300 hover:bg-violet-50/40",
@@ -52,7 +52,7 @@ const BOXES: {
   {
     id: "docs",
     label: "Doc. pendiente",
-    description: "Falta firmar documentos",
+    description: "Sin publicar · falta firmar",
     icon: FileWarning,
     activeClass: "border-amber-400 bg-amber-50 ring-2 ring-amber-200",
     idleClass: "border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/40",

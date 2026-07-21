@@ -15,6 +15,12 @@ import AdminStatusChip from "@/components/admin/AdminStatusChip";
 import { publicListingName } from "@/lib/company-display-names";
 import { getFavoriteCountsByCompanyIds } from "@/lib/company-favorites";
 import { formatCompactEuroRange } from "@/lib/format-financial";
+import {
+  companyInDocsPendingBucket,
+  companyInDraftBucket,
+  companyIsPublished,
+  companyStatusLabel,
+} from "@/lib/admin-company-views";
 
 export default async function AdminCompaniesPage({
   searchParams,
@@ -97,26 +103,23 @@ export default async function AdminCompaniesPage({
       ? companies.filter((c) => c.documents.some((d) => !d.signed))
       : companies;
 
-  function companyIsDraft(c: (typeof companies)[0]) {
-    const deal = c.deals.find((d) => d.published) ?? c.deals[0];
-    const isOnWeb = Boolean(deal?.published);
-    return !isOnWeb && (c.status === "DRAFT" || c.status === "IN_PROCESS");
-  }
-
   function companyDocsPending(c: (typeof companies)[0]) {
-    return c.documents.length === 0 || c.documents.some((d) => !d.signed);
+    return companyInDocsPendingBucket(c);
   }
 
-  function companyIsPublished(c: (typeof companies)[0]) {
-    const deal = c.deals.find((d) => d.published) ?? c.deals[0];
-    return Boolean(deal?.published) || c.status === "PUBLISHED";
+  function companyIsDraft(c: (typeof companies)[0]) {
+    return companyInDraftBucket(c);
+  }
+
+  function companyPublished(c: (typeof companies)[0]) {
+    return companyIsPublished(c);
   }
 
   const viewCounts = {
     all: filteredCompanies.length,
     draft: filteredCompanies.filter(companyIsDraft).length,
     docs: filteredCompanies.filter(companyDocsPending).length,
-    published: filteredCompanies.filter(companyIsPublished).length,
+    published: filteredCompanies.filter(companyPublished).length,
   };
 
   const viewFilteredCompanies =
@@ -125,7 +128,7 @@ export default async function AdminCompaniesPage({
       : view === "docs"
       ? filteredCompanies.filter(companyDocsPending)
       : view === "published"
-      ? filteredCompanies.filter(companyIsPublished)
+      ? filteredCompanies.filter(companyPublished)
       : filteredCompanies;
 
   const favoriteCounts = await getFavoriteCountsByCompanyIds(
@@ -302,7 +305,7 @@ export default async function AdminCompaniesPage({
                   <AdminStatusChip tone={allDocsSigned ? "success" : "warning"}>
                     {allDocsSigned ? "Docs OK" : "Docs pend."}
                   </AdminStatusChip>
-                  <AdminStatusChip tone="primary">{company.status}</AdminStatusChip>
+                  <AdminStatusChip tone="primary">{companyStatusLabel(company.status)}</AdminStatusChip>
                   {isOnWeb && <AdminStatusChip tone="success">En la web</AdminStatusChip>}
                   {isOnWeb && featuredActive && (
                     <AdminStatusChip tone="featured">★ Destacada</AdminStatusChip>
