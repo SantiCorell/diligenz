@@ -34,7 +34,6 @@ export default async function DashboardProfilePage() {
           Completar verificación
         </h2>
         <ul className="space-y-3 text-sm text-[var(--foreground)]">
-          <CheckRow ok={user.emailVerified} label="Email verificado" />
           <CheckRow
             ok={user.ndaSigned}
             label={

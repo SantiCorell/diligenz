@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { getSessionWithUser } from "@/lib/session";
 import { backfillMissingCompanyReferencesIfNeeded, companyReferenceFieldSupported } from "@/lib/company-reference";
 import AdminCreateCompanyForm from "@/components/admin/AdminCreateCompanyForm";
+import AdminCompaniesViewFilter, {
+  type CompanyViewFilter,
+} from "@/components/admin/AdminCompaniesViewFilter";
 import DeleteCompanyButton from "@/components/companies/DeleteCompanyButton";
 import { getFormSectorOptions } from "@/lib/sector-catalog";
 import { isFeaturedActive, FEATURED_DURATION_MS } from "@/lib/company-ranking";
@@ -22,6 +25,7 @@ export default async function AdminCompaniesPage({
     status?: string;
     docs?: string;
     marketplace?: string;
+    view?: string;
     error?: string;
     success?: string;
   }>;
@@ -35,6 +39,19 @@ export default async function AdminCompaniesPage({
   const status = params.status;
   const docs = params.docs;
   const marketplaceOnly = params.marketplace === "1";
+  const viewParam = params.view;
+  const view: CompanyViewFilter =
+    viewParam === "draft" || viewParam === "docs" || viewParam === "published"
+      ? viewParam
+      : "all";
+
+  const baseQueryParts: string[] = [];
+  if (q) baseQueryParts.push(`q=${encodeURIComponent(q)}`);
+  if (ref) baseQueryParts.push(`ref=${encodeURIComponent(ref)}`);
+  if (status) baseQueryParts.push(`status=${encodeURIComponent(status)}`);
+  if (docs) baseQueryParts.push(`docs=${encodeURIComponent(docs)}`);
+  if (marketplaceOnly) baseQueryParts.push("marketplace=1");
+  const baseQuery = baseQueryParts.join("&");
 
   await backfillMissingCompanyReferencesIfNeeded();
 
@@ -80,8 +97,39 @@ export default async function AdminCompaniesPage({
       ? companies.filter((c) => c.documents.some((d) => !d.signed))
       : companies;
 
+  function companyIsDraft(c: (typeof companies)[0]) {
+    const deal = c.deals.find((d) => d.published) ?? c.deals[0];
+    const isOnWeb = Boolean(deal?.published);
+    return !isOnWeb && (c.status === "DRAFT" || c.status === "IN_PROCESS");
+  }
+
+  function companyDocsPending(c: (typeof companies)[0]) {
+    return c.documents.length === 0 || c.documents.some((d) => !d.signed);
+  }
+
+  function companyIsPublished(c: (typeof companies)[0]) {
+    const deal = c.deals.find((d) => d.published) ?? c.deals[0];
+    return Boolean(deal?.published) || c.status === "PUBLISHED";
+  }
+
+  const viewCounts = {
+    all: filteredCompanies.length,
+    draft: filteredCompanies.filter(companyIsDraft).length,
+    docs: filteredCompanies.filter(companyDocsPending).length,
+    published: filteredCompanies.filter(companyIsPublished).length,
+  };
+
+  const viewFilteredCompanies =
+    view === "draft"
+      ? filteredCompanies.filter(companyIsDraft)
+      : view === "docs"
+      ? filteredCompanies.filter(companyDocsPending)
+      : view === "published"
+      ? filteredCompanies.filter(companyIsPublished)
+      : filteredCompanies;
+
   const favoriteCounts = await getFavoriteCountsByCompanyIds(
-    filteredCompanies.map((company) => company.id)
+    viewFilteredCompanies.map((company) => company.id)
   );
   const featuredDays = Math.round(FEATURED_DURATION_MS / (24 * 60 * 60 * 1000));
 
@@ -135,6 +183,12 @@ export default async function AdminCompaniesPage({
       <AdminCreateCompanyForm
         sectorOptions={sectorOptions}
         defaultOpen={Boolean(params.error?.startsWith("create_"))}
+      />
+
+      <AdminCompaniesViewFilter
+        current={view}
+        baseQuery={baseQuery}
+        counts={viewCounts}
       />
 
       <form
@@ -192,13 +246,13 @@ export default async function AdminCompaniesPage({
       </form>
 
       <div className="space-y-4">
-        {filteredCompanies.length === 0 && (
+        {viewFilteredCompanies.length === 0 && (
           <p className="rounded-2xl admin-list-card p-8 text-center text-sm sm:text-base text-[var(--foreground)] opacity-90">
             No hay empresas que coincidan con los filtros.
           </p>
         )}
 
-        {filteredCompanies.map((company) => {
+        {viewFilteredCompanies.map((company) => {
           const allDocsSigned =
             company.documents.length > 0 &&
             company.documents.every((d) => d.signed);

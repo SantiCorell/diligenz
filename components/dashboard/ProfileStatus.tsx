@@ -2,7 +2,6 @@ import Link from "next/link";
 import ProfileCheckIndicator from "@/components/dashboard/ProfileCheckIndicator";
 
 type Props = {
-  emailVerified: boolean;
   ndaSigned: boolean;
   dniVerified: boolean;
   /** Anverso y reverso subidos, aún sin validar por admin */
@@ -17,7 +16,6 @@ type Props = {
 };
 
 export default function ProfileStatus({
-  emailVerified,
   ndaSigned,
   dniVerified,
   dniPendingReview = false,
@@ -40,7 +38,6 @@ export default function ProfileStatus({
       role === "ADMIN");
 
   const items = [
-    { label: "Email verificado", ok: emailVerified },
     {
       label:
         role === "PROFESSIONAL"

@@ -2,20 +2,17 @@ import Link from "next/link";
 import ProfileCheckIndicator from "@/components/dashboard/ProfileCheckIndicator";
 
 type Props = {
-  emailVerified: boolean;
   ndaSigned: boolean;
   dniVerified: boolean;
   profileComplete: boolean;
 };
 
 export default function ProfileStatus({
-  emailVerified,
   ndaSigned,
   dniVerified,
   profileComplete,
 }: Props) {
   const items = [
-    { label: "Email verificado", ok: emailVerified },
     { label: "NDA firmado", ok: ndaSigned, action: "/dashboard/nda" },
     { label: "DNI validado", ok: dniVerified, action: "/dashboard/verification" },
     { label: "Perfil completo", ok: profileComplete, action: "/dashboard/profile" },

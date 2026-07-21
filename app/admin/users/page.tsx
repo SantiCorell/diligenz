@@ -13,6 +13,7 @@ import {
 import { dniStatusLabel, type DniVerificationStatus } from "@/lib/user-documents/dni-status";
 import { Search, SlidersHorizontal, UserPlus, Trash2, ChevronDown } from "lucide-react";
 import AdminUnregisteredContactsList from "@/components/admin/AdminUnregisteredContactsList";
+import AdminContactEmailPanel from "@/components/admin/AdminContactEmailPanel";
 
 type UserRow = {
   id: string;
@@ -78,13 +79,7 @@ function UserDniReviewPanel({
 
   return (
     <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
-      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
-        Revisión DNI / NIE
-      </p>
-      <p className="text-xs text-slate-600 mb-3 max-w-2xl leading-relaxed">
-        Revisa las fotos en Google Drive (subcarpeta <strong>Identidad</strong> dentro de la carpeta
-        del cliente). Cuando confirmes que el documento es correcto, marca como verificado.
-      </p>
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-3">Revisión DNI / NIE</p>
 
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <span
@@ -122,7 +117,7 @@ function UserDniReviewPanel({
           </a>
         ) : (
           <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            Sin carpeta Drive — configúrala arriba o espera al registro automático.
+            Sin carpeta Drive
           </span>
         )}
         {status === "pending" && !user.dniVerified && (
@@ -152,7 +147,6 @@ function UserVerificationPanel({
   user: UserRow;
   onSaved: () => void;
 }) {
-  const [emailVerified, setEmailVerified] = useState(user.emailVerified);
   const [ndaSigned, setNdaSigned] = useState(user.ndaSigned);
   const [dniVerified, setDniVerified] = useState(user.dniVerified);
   const [profileVerifiedByAdmin, setProfileVerifiedByAdmin] = useState(
@@ -163,7 +157,6 @@ function UserVerificationPanel({
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sincronizar formulario al cambiar usuario en admin */
-    setEmailVerified(user.emailVerified);
     setNdaSigned(user.ndaSigned);
     setDniVerified(user.dniVerified);
     setProfileVerifiedByAdmin(user.profileVerifiedByAdmin);
@@ -179,7 +172,6 @@ function UserVerificationPanel({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          emailVerified,
           ndaSigned,
           dniVerified,
           profileVerifiedByAdmin,
@@ -199,34 +191,16 @@ function UserVerificationPanel({
     setSaving(false);
   }, [
     user.id,
-    emailVerified,
     ndaSigned,
     dniVerified,
     profileVerifiedByAdmin,
     onSaved,
   ]);
 
-  const effectiveProfile = Boolean(user.phone?.trim()) || profileVerifiedByAdmin;
-
   return (
     <div className="border-t border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white px-4 py-5 sm:px-6">
-      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
-        Validación del perfil (dashboard)
-      </p>
-      <p className="text-xs text-slate-600 mb-4 max-w-2xl leading-relaxed">
-        Coinciden con «Mi perfil» del usuario. «Perfil completo» también cuenta si tiene teléfono o marcas
-        la validación admin.
-      </p>
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-3">Validación del perfil</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-        <label className="flex items-center gap-2 cursor-pointer text-slate-700">
-          <input
-            type="checkbox"
-            checked={emailVerified}
-            onChange={(e) => setEmailVerified(e.target.checked)}
-            className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
-          />
-          <span>Email verificado</span>
-        </label>
         <label className="flex items-center gap-2 cursor-pointer text-slate-700">
           <input
             type="checkbox"
@@ -252,12 +226,9 @@ function UserVerificationPanel({
             onChange={(e) => setProfileVerifiedByAdmin(e.target.checked)}
             className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
           />
-          <span>Perfil completo (validado por admin)</span>
+          <span>Perfil completo</span>
         </label>
       </div>
-      <p className="mt-2 text-xs text-slate-500">
-        Vista previa «Perfil completo» en dashboard: {effectiveProfile ? "sí" : "no"}
-      </p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           type="button"
@@ -922,8 +893,7 @@ function AdminUserMobileCard({
   onVerificationSaved: () => void;
 }) {
   const checksOk =
-    [u.emailVerified, u.ndaSigned, u.dniVerified, profileCompleteEffective(u)].filter(Boolean)
-      .length;
+    [u.ndaSigned, u.dniVerified, profileCompleteEffective(u)].filter(Boolean).length;
   const displayName = u.name?.trim() || "—";
   const phoneRaw = u.phone?.trim();
 
@@ -1024,7 +994,7 @@ function AdminUserMobileCard({
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="rounded-lg bg-violet-100 px-2.5 py-1 text-xs font-semibold text-[var(--brand-dark)]">
-            {checksOk}/4 verificación
+            {checksOk}/3 verificación
           </span>
           {u.hasCompanyDocumentLinks && (
             <span className="text-[10px] uppercase tracking-wide text-emerald-900 font-semibold bg-emerald-100 px-2.5 py-1.5 rounded-lg">
@@ -1050,6 +1020,16 @@ function AdminUserMobileCard({
 
       {isExpanded && (
         <div className="border-t border-slate-200/80">
+          <div className="p-4 sm:p-5 border-b border-slate-100">
+            <AdminContactEmailPanel
+              email={u.email}
+              name={u.name}
+              phone={u.phone}
+              defaultTemplate={
+                u.role === "SELLER" ? "proximos_pasos_vendedor" : "seguimiento_general"
+              }
+            />
+          </div>
           <UserDniReviewPanel user={u} onMarkVerified={onVerificationSaved} />
           <UserVerificationPanel user={u} onSaved={onVerificationSaved} />
           <UserDriveFolderPanel user={u} onSaved={onVerificationSaved} />
@@ -1071,7 +1051,6 @@ export default function AdminUsersPage() {
   const [q, setQ] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [fEmail, setFEmail] = useState(false);
   const [fDni, setFDni] = useState(false);
   const [fDniPending, setFDniPending] = useState(false);
   const [fNda, setFNda] = useState(false);
@@ -1092,7 +1071,6 @@ export default function AdminUsersPage() {
     if (qt) p.set("q", qt);
     if (roleFilter) p.set("role", roleFilter);
     if (statusFilter) p.set("status", statusFilter);
-    if (fEmail) p.set("emailVerified", "1");
     if (fDni) p.set("dniVerified", "1");
     if (fDniPending) p.set("dniPending", "1");
     if (fNda) p.set("ndaSigned", "1");
@@ -1127,7 +1105,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [q, roleFilter, statusFilter, fEmail, fDni, fDniPending, fNda, fDocLinks]);
+  }, [q, roleFilter, statusFilter, fDni, fDniPending, fNda, fDocLinks]);
 
   useEffect(() => {
     if (usersTab !== "registered") return;
@@ -1313,15 +1291,6 @@ export default function AdminUsersPage() {
         <div className="px-5 pb-5 flex flex-col gap-1 border-t border-slate-100 pt-4">
           <span className="text-xs font-semibold text-slate-500 mb-1">Verificación</span>
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1 sm:gap-x-4 sm:gap-y-2">
-            <label className="inline-flex items-center gap-3 text-sm text-slate-800 cursor-pointer min-h-11 py-1 sm:py-0 -mx-1 px-1 rounded-lg sm:rounded-none sm:mx-0 sm:px-0 active:bg-slate-50 sm:active:bg-transparent">
-              <input
-                type="checkbox"
-                checked={fEmail}
-                onChange={(e) => setFEmail(e.target.checked)}
-                className="h-5 w-5 rounded border-slate-300 text-[var(--brand-primary)] shrink-0"
-              />
-              Mail verificado
-            </label>
             <label className="inline-flex items-center gap-3 text-sm text-slate-800 cursor-pointer min-h-11 py-1 sm:py-0 -mx-1 px-1 rounded-lg sm:rounded-none sm:mx-0 sm:px-0 active:bg-slate-50 sm:active:bg-transparent">
               <input
                 type="checkbox"
@@ -1535,7 +1504,7 @@ export default function AdminUsersPage() {
                 <tbody className="divide-y divide-slate-100">
                   {users.map((u) => {
                     const checksOk =
-                      [u.emailVerified, u.ndaSigned, u.dniVerified, profileCompleteEffective(u)].filter(
+                      [u.ndaSigned, u.dniVerified, profileCompleteEffective(u)].filter(
                         Boolean
                       ).length;
                     const displayName = u.name?.trim() || "—";
@@ -1644,7 +1613,7 @@ export default function AdminUsersPage() {
                           </td>
                           <td className="px-4 py-3.5">
                             <span className="text-xs font-semibold text-slate-700">
-                              {checksOk}/4
+                              {checksOk}/3
                             </span>
                             {u.dniPendingReview && (
                               <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-800 font-semibold">
@@ -1680,6 +1649,18 @@ export default function AdminUsersPage() {
                         {expandedUserId === u.id && (
                           <tr className="bg-slate-50/50">
                             <td colSpan={7} className="p-0">
+                              <div className="p-4 sm:px-6 border-b border-slate-100">
+                                <AdminContactEmailPanel
+                                  email={u.email}
+                                  name={u.name}
+                                  phone={u.phone}
+                                  defaultTemplate={
+                                    u.role === "SELLER"
+                                      ? "proximos_pasos_vendedor"
+                                      : "seguimiento_general"
+                                  }
+                                />
+                              </div>
                               <UserDniReviewPanel user={u} onMarkVerified={loadUsers} />
                               <UserVerificationPanel user={u} onSaved={loadUsers} />
                               <UserDriveFolderPanel user={u} onSaved={loadUsers} />

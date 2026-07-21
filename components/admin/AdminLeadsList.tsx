@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import LeadCardActions from "@/components/admin/LeadCardActions";
+import AdminContactEmailPanel from "@/components/admin/AdminContactEmailPanel";
 import {
   LEAD_CATEGORY_LABELS,
   normalizeLeadCategory,
@@ -74,7 +75,13 @@ export type SerializedLeadRow =
 function leadCategoryBadgeClass(cat: LeadCategory) {
   if (cat === "pendiente") return "bg-amber-500/20 text-amber-900";
   if (cat === "gestionado") return "bg-emerald-500/20 text-emerald-900";
-  return "bg-red-500/15 text-red-900";
+  return "bg-slate-300/50 text-slate-700";
+}
+
+function leadTypeBadgeClass(isValuation: boolean) {
+  return isValuation
+    ? "bg-violet-500/15 text-violet-800 border border-violet-200/60"
+    : "bg-sky-500/15 text-sky-800 border border-sky-200/60";
 }
 
 function formatLeadDate(iso: string) {
@@ -213,7 +220,7 @@ function ContactLeadDetails({ lead }: { lead: SerializedContactLead }) {
   return (
     <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6 space-y-4 border-t border-[var(--brand-primary)]/10 pt-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-xl bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-700 inline-flex items-center gap-1.5">
+        <span className="rounded-xl bg-sky-500/15 px-3 py-1.5 text-xs font-semibold text-sky-800 border border-sky-200/60 inline-flex items-center gap-1.5">
           <MessageSquare className="w-3.5 h-3.5" />
           {sourceLabel}
         </span>
@@ -296,11 +303,7 @@ function LeadRowCard({
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span
-                  className={`rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                    isValuation
-                      ? "bg-amber-500/15 text-amber-800"
-                      : "bg-emerald-500/15 text-emerald-800"
-                  }`}
+                  className={`rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${leadTypeBadgeClass(isValuation)}`}
                 >
                   {isValuation ? "Valoración" : "Contacto"}
                 </span>
@@ -357,12 +360,27 @@ function LeadRowCard({
         </div>
       </button>
 
-      {isExpanded &&
-        (isValuation ? (
-          <ValuationLeadDetails lead={data as SerializedValuationLead} />
-        ) : (
-          <ContactLeadDetails lead={data as SerializedContactLead} />
-        ))}
+      {isExpanded && (
+        <>
+          {isValuation ? (
+            <ValuationLeadDetails lead={data as SerializedValuationLead} />
+          ) : (
+            <ContactLeadDetails lead={data as SerializedContactLead} />
+          )}
+          <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6">
+            <AdminContactEmailPanel
+              email={data.email}
+              name={
+                isValuation
+                  ? (data as SerializedValuationLead).companyName
+                  : (data as SerializedContactLead).name
+              }
+              phone={data.phone}
+              defaultTemplate={isValuation ? "seguimiento_valoracion" : "seguimiento_general"}
+            />
+          </div>
+        </>
+      )}
     </article>
   );
 }

@@ -27,7 +27,6 @@ export default async function DashboardLayout({
       {/* PERFIL (SIEMPRE ARRIBA) */}
       <div className="mb-8">
         <ProfileStatus
-          emailVerified={user.emailVerified}
           ndaSigned={user.ndaSigned}
           dniVerified={user.dniVerified}
           dniPendingReview={dniPendingReview}
