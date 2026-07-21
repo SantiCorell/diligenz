@@ -285,7 +285,8 @@ ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "gmv" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "sellerDescription" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "documentLinks" JSONB;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "buyerTeaserUrl" TEXT;
--- Si true + buyerTeaserUrl: comprador con solicitud MANAGED ve solo ese enlace (no la carpeta Drive).
+ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "buyerDocuments" JSONB;
+-- Si true + buyerDocuments: comprador con solicitud MANAGED ve los enlaces (pestaña Documentos).
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "attachmentsApproved" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "exerciseResult" TEXT;
 ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "removedAt" TIMESTAMP(3);

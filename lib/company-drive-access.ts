@@ -1,4 +1,8 @@
 import type { RequestStatus } from "@prisma/client";
+import {
+  buyerDocumentsMeaningful,
+  type BuyerDocument,
+} from "@/lib/buyer-documents";
 
 /** Compradores con solicitud en gestión pueden ver la carpeta Drive del negocio. */
 export function buyerCanSeeCompanyDriveFolder(
@@ -7,16 +11,28 @@ export function buyerCanSeeCompanyDriveFolder(
   return status === "MANAGED";
 }
 
-/** Teaser/documento en Drive: solicitud en gestión y admin lo ha habilitado. */
-export function buyerCanDownloadCompanyTeaser(opts: {
+/** Documentos para compradores: solicitud en gestión y admin lo ha habilitado. */
+export function buyerCanAccessCompanyDocuments(opts: {
   requestStatus: RequestStatus | null | undefined;
   attachmentsApproved: boolean;
-  buyerTeaserUrl: string | null | undefined;
+  buyerDocuments?: unknown;
+  buyerTeaserUrl?: string | null | undefined;
 }): boolean {
-  const url = opts.buyerTeaserUrl?.trim();
   return (
-    Boolean(url) &&
+    buyerDocumentsMeaningful(opts.buyerDocuments, opts.buyerTeaserUrl) &&
     opts.attachmentsApproved &&
     buyerCanSeeCompanyDriveFolder(opts.requestStatus)
   );
 }
+
+/** @deprecated Usa buyerCanAccessCompanyDocuments */
+export function buyerCanDownloadCompanyTeaser(opts: {
+  requestStatus: RequestStatus | null | undefined;
+  attachmentsApproved: boolean;
+  buyerTeaserUrl: string | null | undefined;
+  buyerDocuments?: unknown;
+}): boolean {
+  return buyerCanAccessCompanyDocuments(opts);
+}
+
+export type { BuyerDocument };

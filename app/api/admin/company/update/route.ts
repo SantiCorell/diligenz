@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { isCompanyRemoved } from "@/lib/is-company-removed";
 import { parseCompanyReferenceInput } from "@/lib/company-reference";
+import { parseBuyerDocumentsJson } from "@/lib/buyer-documents";
 
 function parseDocumentLinks(raw: string | null): { label: string; url: string }[] | null {
   if (!raw || !raw.trim()) return null;
@@ -47,11 +48,16 @@ export async function POST(req: Request) {
   const documentLinks = parseDocumentLinks(documentLinksRaw ?? null);
 
   if (partial === "visibility") {
-    const buyerTeaserUrlRaw = formData.get("buyerTeaserUrl")?.toString();
-    const buyerTeaserUrl = buyerTeaserUrlRaw?.trim() || null;
+    const buyerDocumentsRaw = formData.get("buyerDocuments")?.toString();
+    const buyerDocuments = parseBuyerDocumentsJson(buyerDocumentsRaw);
+    const firstUrl = buyerDocuments[0]?.url ?? null;
     await prisma.company.update({
       where: { id: companyId },
-      data: { attachmentsApproved, buyerTeaserUrl },
+      data: {
+        attachmentsApproved,
+        buyerDocuments: buyerDocuments.length ? buyerDocuments : Prisma.JsonNull,
+        buyerTeaserUrl: firstUrl,
+      },
     });
     return NextResponse.redirect(
       new URL(`/admin/companies/${companyId}?success=visibility`, url.origin)

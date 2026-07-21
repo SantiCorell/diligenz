@@ -17,6 +17,7 @@ import { getCompanyDocumentsDriveUrl, displaySalePrice, formatCompanyMoney } fro
 import { formatCompactEuroRange } from "@/lib/format-financial";
 import { ensureCompanyDriveFolder } from "@/lib/google-drive/company-drive";
 import { ensureCompanyReference } from "@/lib/company-reference";
+import { resolveBuyerDocuments } from "@/lib/buyer-documents";
 import type { DocumentType } from "@prisma/client";
 
 function entityTypeLabel(t: string | null | undefined) {
@@ -594,7 +595,10 @@ export default async function AdminCompanyDetail({
         companyDriveUrl={companyDriveUrl}
         ownerDriveUrl={ownerDriveUrl}
         attachmentsApproved={company.attachmentsApproved}
-        buyerTeaserUrl={company.buyerTeaserUrl}
+        buyerDocuments={resolveBuyerDocuments(
+          company.buyerDocuments,
+          company.buyerTeaserUrl
+        )}
       />
 
       {/* DOCUMENTACIÓN LEGAL */}

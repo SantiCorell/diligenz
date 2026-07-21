@@ -1,5 +1,7 @@
 export type DocumentLink = { label: string; url: string };
 
+export type BuyerDocumentLink = { label: string; url: string; sortOrder?: number };
+
 export type CompanyMock = {
   id: string;
   name: string;
@@ -17,9 +19,11 @@ export type CompanyMock = {
   sellerDescription?: string | null;
   /** Carpeta Drive interna; solo vendedor y admin */
   documentLinks?: DocumentLink[] | null;
-  /** Enlace único al teaser/documento para compradores con solicitud validada */
+  /** Documentos/enlaces para compradores con solicitud validada (pestaña Documentos) */
+  buyerDocuments?: BuyerDocumentLink[] | null;
+  /** Legacy: primer enlace (compat); preferir buyerDocuments */
   buyerTeaserUrl?: string | null;
-  /** Si true y hay buyerTeaserUrl: comprador MANAGED puede ver el enlace del teaser */
+  /** Si true y hay buyerDocuments: comprador MANAGED puede ver los enlaces */
   attachmentsApproved?: boolean;
   /** Tipo: EMPRESA | AUTONOMO; histórico STARTUP/MARKETPLACE */
   companyType?: string | null;

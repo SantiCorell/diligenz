@@ -283,8 +283,9 @@ model Company {
   description String?       // Resumen breve para listados y tarjetas
   sellerDescription String?  @db.Text  // Descripción amplia del vendedor (solo usuarios registrados)
   documentLinks       Json?    // [{ label, url }] carpeta Drive interna (solo vendedor/admin)
-  buyerTeaserUrl      String?  // Enlace único al documento/teaser para compradores validados
-  attachmentsApproved Boolean  @default(false) // Si true + solicitud MANAGED: comprador ve buyerTeaserUrl
+  buyerTeaserUrl      String?  // Legacy: primer enlace (compat); preferir buyerDocuments
+  buyerDocuments      Json?    // [{ label, url, sortOrder }] documentos para compradores validados
+  attachmentsApproved Boolean  @default(false) // Si true + solicitud MANAGED: comprador ve buyerDocuments
   status      CompanyStatus @default(DRAFT)
   createdAt   DateTime      @default(now())
   removedAt   DateTime?

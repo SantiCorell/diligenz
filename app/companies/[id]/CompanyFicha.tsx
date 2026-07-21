@@ -60,7 +60,8 @@ export default function CompanyFicha({
   const [uploading, setUploading] = useState(false);
   const canSeeDocuments = isOwner || isAdmin;
   const hasDriveLinks = Boolean(company.documentLinks?.length);
-  const hasBuyerTeaser = Boolean(company.buyerTeaserUrl?.trim());
+  const buyerDocuments = company.buyerDocuments ?? [];
+  const hasBuyerDocuments = buyerDocuments.length > 0;
 
   useEffect(() => {
     trackViewCompany({
@@ -423,26 +424,6 @@ export default function CompanyFicha({
                   </ul>
                 </div>
               )}
-            {isLoggedIn && !isOwner && !isAdmin && hasBuyerTeaser && company.buyerTeaserUrl && (
-              <div className="mt-6 pt-6 border-t border-[var(--brand-primary)]/10">
-                <h3 className="text-sm font-semibold text-[var(--brand-primary)] opacity-90 flex items-center gap-2">
-                  <ExternalLink className="w-4 h-4" />
-                  Documento / teaser
-                </h3>
-                <p className="mt-1 text-xs text-[var(--foreground)] opacity-70">
-                  Tu solicitud de información está validada. Solo tienes acceso a este documento.
-                </p>
-                <a
-                  href={company.buyerTeaserUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-2 text-[var(--brand-primary)] hover:underline font-medium"
-                >
-                  Descargar documento / teaser
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            )}
           </section>
         )}
 
@@ -466,57 +447,106 @@ export default function CompanyFicha({
                   Saber más
                 </button>
               </div>
-            ) : !canSeeDocuments ? (
-              <p className="mt-4 text-[var(--foreground)] opacity-80">
-                La subida de archivos en la web es solo para el vendedor y el equipo Diligenz. Si
-                solicitaste información y está validada, el documento / teaser está en la pestaña
-                Descripción.
-              </p>
             ) : (
-              <div className="mt-6 space-y-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <label className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-primary)]/15 px-4 py-2.5 text-sm font-medium text-[var(--brand-primary)] cursor-pointer hover:bg-[var(--brand-primary)]/20">
-                    <Upload className="w-4 h-4" />
-                    {uploading ? "Subiendo…" : "Subir documento"}
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-                      onChange={handleUpload}
-                      disabled={uploading}
-                    />
-                  </label>
-                  <span className="text-xs text-[var(--foreground)] opacity-70">
-                    PDF, Word, Excel o imágenes. Máx. 15 MB.
-                  </span>
-                </div>
-                {files.length === 0 ? (
-                  <p className="text-sm text-[var(--foreground)] opacity-70">
-                    Aún no hay documentos subidos. Sube memorias, cuentas anuales o otros archivos para que el equipo pueda revisarlos.
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {files.map((f) => (
-                      <li
-                        key={f.id}
-                        className="flex items-center justify-between gap-4 rounded-xl border border-[var(--brand-primary)]/10 bg-[var(--brand-bg-lavender)]/40 px-4 py-3"
-                      >
-                        <span className="text-sm font-medium text-[var(--foreground)] truncate">
-                          {f.name}
-                        </span>
-                        <a
-                          href={`/api/companies/${company.id}/files/${f.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 rounded-lg bg-[var(--brand-primary)]/15 p-2 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/25"
-                          title="Descargar"
+              <div className="mt-6 space-y-6">
+                {hasBuyerDocuments && (
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-[var(--brand-primary)] flex items-center gap-2">
+                        <ExternalLink className="w-4 h-4" />
+                        Documentación disponible
+                      </h3>
+                      <p className="mt-1 text-xs text-[var(--foreground)] opacity-70">
+                        {isAdmin
+                          ? "Vista previa de lo que verá el comprador cuando su solicitud esté en gestión."
+                          : "Tu solicitud de información está validada. Puedes acceder a estos documentos."}
+                      </p>
+                    </div>
+                    <ul className="space-y-2">
+                      {buyerDocuments.map((doc, index) => (
+                        <li
+                          key={`${doc.url}-${index}`}
+                          className="flex items-center justify-between gap-4 rounded-xl border border-[var(--brand-primary)]/10 bg-[var(--brand-bg-lavender)]/40 px-4 py-3"
                         >
-                          <Download className="w-4 h-4" />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+                          <span className="text-sm font-medium text-[var(--foreground)]">
+                            {doc.label}
+                          </span>
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[var(--brand-primary)]/15 px-3 py-2 text-sm font-medium text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/25"
+                          >
+                            Abrir
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
+
+                {canSeeDocuments ? (
+                  <div className={hasBuyerDocuments ? "pt-6 border-t border-[var(--brand-primary)]/10 space-y-4" : "space-y-4"}>
+                    <div>
+                      <h3 className="text-sm font-semibold text-[var(--brand-primary)]">
+                        Archivos internos del proyecto
+                      </h3>
+                      <p className="mt-1 text-xs text-[var(--foreground)] opacity-70">
+                        Solo visible para el vendedor y el equipo Diligenz.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-primary)]/15 px-4 py-2.5 text-sm font-medium text-[var(--brand-primary)] cursor-pointer hover:bg-[var(--brand-primary)]/20">
+                        <Upload className="w-4 h-4" />
+                        {uploading ? "Subiendo…" : "Subir documento"}
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                          onChange={handleUpload}
+                          disabled={uploading}
+                        />
+                      </label>
+                      <span className="text-xs text-[var(--foreground)] opacity-70">
+                        PDF, Word, Excel o imágenes. Máx. 15 MB.
+                      </span>
+                    </div>
+                    {files.length === 0 ? (
+                      <p className="text-sm text-[var(--foreground)] opacity-70">
+                        Aún no hay documentos subidos. Sube memorias, cuentas anuales u otros
+                        archivos para que el equipo pueda revisarlos.
+                      </p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {files.map((f) => (
+                          <li
+                            key={f.id}
+                            className="flex items-center justify-between gap-4 rounded-xl border border-[var(--brand-primary)]/10 bg-[var(--brand-bg-lavender)]/40 px-4 py-3"
+                          >
+                            <span className="text-sm font-medium text-[var(--foreground)] truncate">
+                              {f.name}
+                            </span>
+                            <a
+                              href={`/api/companies/${company.id}/files/${f.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 rounded-lg bg-[var(--brand-primary)]/15 p-2 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/25"
+                              title="Descargar"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ) : !hasBuyerDocuments ? (
+                  <p className="text-[var(--foreground)] opacity-80">
+                    Solicita información sobre esta empresa. Cuando tu solicitud esté en gestión y el
+                    equipo habilite la documentación, los documentos aparecerán aquí.
+                  </p>
+                ) : null}
               </div>
             )}
           </section>

@@ -10,7 +10,8 @@ import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
 import { SITE_URL, SITE_NAME, getBreadcrumbSchema } from "@/lib/seo";
 import { publicListingName } from "@/lib/company-display-names";
 import { ensureCompanyReference } from "@/lib/company-reference";
-import { buyerCanDownloadCompanyTeaser } from "@/lib/company-drive-access";
+import { buyerCanAccessCompanyDocuments } from "@/lib/company-drive-access";
+import { resolveBuyerDocuments } from "@/lib/buyer-documents";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -59,6 +60,7 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     sellerDescription: company.sellerDescription ?? null,
     documentLinks: Array.isArray(docLinks) ? docLinks : null,
     buyerTeaserUrl: company.buyerTeaserUrl?.trim() || null,
+    buyerDocuments: resolveBuyerDocuments(company.buyerDocuments, company.buyerTeaserUrl),
     attachmentsApproved: company.attachmentsApproved ?? false,
     heroImageSrc: heroFile ? `/api/companies/${company.id}/files/${heroFile.id}` : null,
     galleryImageSrcs,
@@ -104,10 +106,13 @@ export default async function CompanyDetailPage({ params }: Props) {
 
   let isOwner = false;
   let isAdmin = false;
-  let buyerDriveAccess = false;
+  let buyerDocumentAccess = false;
   if (userId && !isMockCompanyId(id)) {
     const [companyRow, user, infoRequest] = await Promise.all([
-      prisma.company.findUnique({ where: { id }, select: { ownerId: true } }),
+      prisma.company.findUnique({
+        where: { id },
+        select: { ownerId: true, buyerDocuments: true, buyerTeaserUrl: true },
+      }),
       prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
       prisma.userCompanyInterest.findFirst({
         where: { userId, companyId: id, type: "REQUEST_INFO" },
@@ -116,12 +121,16 @@ export default async function CompanyDetailPage({ params }: Props) {
     ]);
     isOwner = companyRow?.ownerId === userId;
     isAdmin = user?.role === "ADMIN";
-    buyerDriveAccess = buyerCanDownloadCompanyTeaser({
+    buyerDocumentAccess = buyerCanAccessCompanyDocuments({
       requestStatus: infoRequest?.status,
       attachmentsApproved: company.attachmentsApproved ?? false,
-      buyerTeaserUrl: company.buyerTeaserUrl,
+      buyerDocuments: companyRow?.buyerDocuments,
+      buyerTeaserUrl: companyRow?.buyerTeaserUrl,
     });
   }
+
+  const resolvedBuyerDocs = company.buyerDocuments ?? [];
+  const showBuyerDocumentsPreview = isAdmin && resolvedBuyerDocs.length > 0;
 
   const breadcrumbSchema = getBreadcrumbSchema([
     { name: "Inicio", url: SITE_URL },
@@ -132,7 +141,9 @@ export default async function CompanyDetailPage({ params }: Props) {
   const companyForFicha: CompanyMock = {
     ...company,
     documentLinks: isOwner || isAdmin ? company.documentLinks : null,
-    buyerTeaserUrl: buyerDriveAccess ? company.buyerTeaserUrl : null,
+    buyerDocuments:
+      buyerDocumentAccess || showBuyerDocumentsPreview ? resolvedBuyerDocs : null,
+    buyerTeaserUrl: null,
   };
 
   return (
