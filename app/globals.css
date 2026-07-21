@@ -584,6 +584,7 @@ body {
   overflow: hidden;
   border-radius: 1.25rem;
   background: #ffffff;
+  isolation: isolate;
 }
 
 @media (min-width: 640px) {
@@ -606,7 +607,9 @@ body {
   outline: none;
   background: #ffffff;
   opacity: 1;
-  transform: translateZ(0);
+  /* El mp4 trae un marco oscuro interior: ampliamos un poco para recortarlo. */
+  transform: translateZ(0) scale(1.035);
+  transform-origin: center center;
   filter: contrast(1.1) saturate(1.14) brightness(1.03);
 }
 
