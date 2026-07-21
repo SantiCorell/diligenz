@@ -52,7 +52,7 @@ const BOXES: {
   {
     id: "review",
     label: "En revisión",
-    description: "Estado: En revisión",
+    description: "En revisión o publicadas con docs pendientes",
     icon: SearchCheck,
     activeClass: "border-amber-400 bg-amber-50 ring-2 ring-amber-200",
     idleClass: "border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/40",
@@ -60,7 +60,7 @@ const BOXES: {
   {
     id: "published",
     label: "Publicadas",
-    description: "Visibles en la web",
+    description: "En la web con documentación OK",
     icon: Globe,
     activeClass: "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-200",
     idleClass: "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40",

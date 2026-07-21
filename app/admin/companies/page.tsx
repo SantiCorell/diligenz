@@ -17,8 +17,8 @@ import { getFavoriteCountsByCompanyIds } from "@/lib/company-favorites";
 import { formatCompactEuroRange } from "@/lib/format-financial";
 import {
   companyInDraftBucket,
+  companyInPublishedBucket,
   companyInReviewBucket,
-  companyIsPublishedOnWeb,
   companyStatusLabel,
 } from "@/lib/admin-company-views";
 
@@ -114,7 +114,7 @@ export default async function AdminCompaniesPage({
   }
 
   function companyPublished(c: (typeof companies)[0]) {
-    return companyIsPublishedOnWeb(c);
+    return companyInPublishedBucket(c);
   }
 
   const viewCounts = {
