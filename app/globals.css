@@ -500,13 +500,13 @@ body {
 .hero-video-browser {
   position: relative;
   border-radius: 1.25rem;
-  background: #ffffff;
-  border: 1px solid rgb(0 0 0 / 0.08);
+  background: transparent;
+  border: none;
   opacity: 1;
   box-shadow:
-    0 4px 20px rgb(0 0 0 / 0.1),
-    0 20px 56px rgb(var(--brand-shadow) / 0.16),
-    0 40px 88px rgb(0 0 0 / 0.1);
+    0 4px 20px rgb(0 0 0 / 0.08),
+    0 20px 56px rgb(var(--brand-shadow) / 0.14),
+    0 40px 88px rgb(0 0 0 / 0.08);
   overflow: hidden;
 }
 
@@ -520,75 +520,16 @@ body {
   animation: hero-browser-float 7s ease-in-out infinite;
 }
 
-.hero-video-browser-bar {
-  display: none;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #ddd8e8;
-  background: linear-gradient(180deg, #f0edf5 0%, #e6e1ef 100%);
-}
-
-@media (min-width: 640px) {
-  .hero-video-browser-bar {
-    display: flex;
-  }
-}
-
-.hero-video-browser-dots {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-shrink: 0;
-}
-
-.hero-video-browser-dots span {
-  display: block;
-  width: 0.65rem;
-  height: 0.65rem;
-  border-radius: 999px;
-  background: #d8d3e6;
-}
-
-.hero-video-browser-dots span:nth-child(1) {
-  background: #ff5f57;
-}
-
-.hero-video-browser-dots span:nth-child(2) {
-  background: #febc2e;
-}
-
-.hero-video-browser-dots span:nth-child(3) {
-  background: #28c840;
-}
-
-.hero-video-browser-url {
-  flex: 1;
-  min-width: 0;
-  border-radius: 0.5rem;
-  border: 1px solid #e4e0ef;
-  background: #ffffff;
-  padding: 0.45rem 0.85rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.72rem;
-  line-height: 1.2;
-  color: #6b7280;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .hero-video-clip {
   position: relative;
   overflow: hidden;
   border-radius: 1.25rem;
-  background: #ffffff;
+  background: transparent;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .hero-video-clip {
-    border-radius: 0 0 1.5rem 1.5rem;
+    border-radius: 1.5rem;
   }
 }
 
@@ -604,7 +545,7 @@ body {
   padding: 0;
   border: none;
   outline: none;
-  background: #ffffff;
+  background: transparent;
   opacity: 1;
   transform: translateZ(0);
   filter: contrast(1.1) saturate(1.14) brightness(1.03);
