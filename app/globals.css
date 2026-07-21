@@ -402,8 +402,8 @@ body {
   position: absolute;
   left: -0.03em;
   right: -0.03em;
-  bottom: 0.1em;
-  height: 0.11em;
+  bottom: 0.05em;
+  height: 0.15em;
   background: var(--brand-bg-mint);
   opacity: 0.9;
   z-index: -1;
