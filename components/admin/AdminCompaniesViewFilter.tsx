@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { FileWarning, Globe, PencilLine, LayoutGrid } from "lucide-react";
+import { Globe, PencilLine, LayoutGrid, SearchCheck } from "lucide-react";
 
-export type CompanyViewFilter = "all" | "draft" | "docs" | "published";
+export type CompanyViewFilter = "all" | "draft" | "review" | "published";
 
 type Props = {
   current: CompanyViewFilter;
@@ -12,7 +12,7 @@ type Props = {
   counts: {
     all: number;
     draft: number;
-    docs: number;
+    review: number;
     published: number;
   };
 };
@@ -44,23 +44,23 @@ const BOXES: {
   {
     id: "draft",
     label: "Borradores",
-    description: "Sin publicar · docs OK",
+    description: "Estado: Borrador (DRAFT)",
     icon: PencilLine,
     activeClass: "border-violet-400 bg-violet-50 ring-2 ring-violet-200",
     idleClass: "border-slate-200 bg-white hover:border-violet-300 hover:bg-violet-50/40",
   },
   {
-    id: "docs",
-    label: "Doc. pendiente",
-    description: "Sin publicar · falta firmar",
-    icon: FileWarning,
+    id: "review",
+    label: "En revisión",
+    description: "Estado: En revisión",
+    icon: SearchCheck,
     activeClass: "border-amber-400 bg-amber-50 ring-2 ring-amber-200",
     idleClass: "border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/40",
   },
   {
     id: "published",
     label: "Publicadas",
-    description: "Visibles en marketplace",
+    description: "Visibles en la web",
     icon: Globe,
     activeClass: "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-200",
     idleClass: "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40",

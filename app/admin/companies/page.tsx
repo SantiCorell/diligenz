@@ -16,9 +16,9 @@ import { publicListingName } from "@/lib/company-display-names";
 import { getFavoriteCountsByCompanyIds } from "@/lib/company-favorites";
 import { formatCompactEuroRange } from "@/lib/format-financial";
 import {
-  companyInDocsPendingBucket,
   companyInDraftBucket,
-  companyIsPublished,
+  companyInReviewBucket,
+  companyIsPublishedOnWeb,
   companyStatusLabel,
 } from "@/lib/admin-company-views";
 
@@ -47,8 +47,10 @@ export default async function AdminCompaniesPage({
   const marketplaceOnly = params.marketplace === "1";
   const viewParam = params.view;
   const view: CompanyViewFilter =
-    viewParam === "draft" || viewParam === "docs" || viewParam === "published"
+    viewParam === "draft" || viewParam === "review" || viewParam === "published"
       ? viewParam
+      : viewParam === "docs"
+      ? "review"
       : "all";
 
   const baseQueryParts: string[] = [];
@@ -103,30 +105,30 @@ export default async function AdminCompaniesPage({
       ? companies.filter((c) => c.documents.some((d) => !d.signed))
       : companies;
 
-  function companyDocsPending(c: (typeof companies)[0]) {
-    return companyInDocsPendingBucket(c);
-  }
-
   function companyIsDraft(c: (typeof companies)[0]) {
     return companyInDraftBucket(c);
   }
 
+  function companyInReview(c: (typeof companies)[0]) {
+    return companyInReviewBucket(c);
+  }
+
   function companyPublished(c: (typeof companies)[0]) {
-    return companyIsPublished(c);
+    return companyIsPublishedOnWeb(c);
   }
 
   const viewCounts = {
     all: filteredCompanies.length,
     draft: filteredCompanies.filter(companyIsDraft).length,
-    docs: filteredCompanies.filter(companyDocsPending).length,
+    review: filteredCompanies.filter(companyInReview).length,
     published: filteredCompanies.filter(companyPublished).length,
   };
 
   const viewFilteredCompanies =
     view === "draft"
       ? filteredCompanies.filter(companyIsDraft)
-      : view === "docs"
-      ? filteredCompanies.filter(companyDocsPending)
+      : view === "review"
+      ? filteredCompanies.filter(companyInReview)
       : view === "published"
       ? filteredCompanies.filter(companyPublished)
       : filteredCompanies;
