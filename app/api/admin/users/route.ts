@@ -100,6 +100,7 @@ export async function GET(req: Request) {
       ndaSigned: true,
       dniVerified: true,
       profileVerifiedByAdmin: true,
+      notionValidated: true,
       documentsDriveFolderUrl: true,
       maxConcurrentInfoRequests: true,
       maxConcurrentCompanies: true,

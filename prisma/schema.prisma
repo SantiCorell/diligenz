@@ -30,6 +30,8 @@ model User {
   dniVerified   Boolean  @default(false)
   /// Si true, el dashboard cuenta "Perfil completo" aunque falte teléfono (validación admin).
   profileVerifiedByAdmin Boolean @default(false)
+  /// Validado / dado de alta en Notion (check admin; por defecto no).
+  notionValidated Boolean @default(false)
 
   /// Carpeta de Google Drive con documentos del usuario (solo admin lo gestiona en panel).
   documentsDriveFolderUrl String?

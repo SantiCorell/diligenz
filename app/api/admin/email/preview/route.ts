@@ -3,6 +3,7 @@ import { getSessionWithUserFromRequest } from "@/lib/session";
 import {
   ADMIN_EMAIL_TEMPLATE_IDS,
   buildAdminOutreachEmail,
+  isAdminEmailTemplateEditable,
   isAdminEmailTemplateId,
 } from "@/lib/emails/admin-outreach-templates";
 
@@ -36,13 +37,22 @@ export async function GET(req: Request) {
   const built = buildAdminOutreachEmail(
     template,
     { recipientEmail, recipientName },
-    { subject: subjectOverride, bodyText: bodyTextOverride }
+    isAdminEmailTemplateEditable(template)
+      ? { subject: subjectOverride, bodyText: bodyTextOverride }
+      : undefined
   );
+
+  if (isAdminEmailTemplateEditable(template) && (!built.subject || !built.bodyText.trim())) {
+    return NextResponse.json(
+      { error: "Indica asunto y mensaje para el correo libre." },
+      { status: 400 }
+    );
+  }
 
   return NextResponse.json({
     template,
     subject: built.subject,
-    bodyText: built.bodyText,
+    bodyText: isAdminEmailTemplateEditable(template) ? built.bodyText : undefined,
     html: built.html,
     text: built.text,
   });

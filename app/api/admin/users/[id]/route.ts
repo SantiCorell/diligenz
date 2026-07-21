@@ -20,6 +20,7 @@ type PatchBody = {
   ndaSigned?: unknown;
   dniVerified?: unknown;
   profileVerifiedByAdmin?: unknown;
+  notionValidated?: unknown;
   accountStatus?: unknown;
   role?: unknown;
   documentsDriveFolderUrl?: unknown;
@@ -48,6 +49,7 @@ export async function PATCH(req: Request, { params }: Params) {
     ndaSigned?: boolean;
     dniVerified?: boolean;
     profileVerifiedByAdmin?: boolean;
+    notionValidated?: boolean;
     accountStatus?: UserAccountStatus;
     role?: UserRole;
     documentsDriveFolderUrl?: string | null;
@@ -60,6 +62,9 @@ export async function PATCH(req: Request, { params }: Params) {
   if (typeof body.dniVerified === "boolean") data.dniVerified = body.dniVerified;
   if (typeof body.profileVerifiedByAdmin === "boolean") {
     data.profileVerifiedByAdmin = body.profileVerifiedByAdmin;
+  }
+  if (typeof body.notionValidated === "boolean") {
+    data.notionValidated = body.notionValidated;
   }
   if (
     typeof body.accountStatus === "string" &&
@@ -158,7 +163,7 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json(
       {
         error:
-          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, accountStatus, role, documentsDriveFolderUrl, maxConcurrentInfoRequests, maxConcurrentCompanies",
+          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, notionValidated, accountStatus, role, documentsDriveFolderUrl, maxConcurrentInfoRequests, maxConcurrentCompanies",
       },
       { status: 400 }
     );
@@ -183,6 +188,7 @@ export async function PATCH(req: Request, { params }: Params) {
         ndaSigned: true,
         dniVerified: true,
         profileVerifiedByAdmin: true,
+        notionValidated: true,
         phone: true,
         accountStatus: true,
         role: true,

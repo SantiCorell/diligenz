@@ -12,6 +12,7 @@ export const ADMIN_EMAIL_TEMPLATE_IDS = [
   "invitacion_registro",
   "seguimiento_valoracion",
   "proximos_pasos_vendedor",
+  "correo_libre",
 ] as const;
 
 export type AdminEmailTemplateId = (typeof ADMIN_EMAIL_TEMPLATE_IDS)[number];
@@ -23,7 +24,12 @@ export const ADMIN_EMAIL_TEMPLATE_LABELS: Record<AdminEmailTemplateId, string> =
   invitacion_registro: "Invitación a crear cuenta",
   seguimiento_valoracion: "Seguimiento tras valoración",
   proximos_pasos_vendedor: "Próximos pasos (vendedor)",
+  correo_libre: "Correo libre",
 };
+
+export function isAdminEmailTemplateEditable(templateId: AdminEmailTemplateId): boolean {
+  return templateId === "correo_libre";
+}
 
 export function isAdminEmailTemplateId(v: string): v is AdminEmailTemplateId {
   return ADMIN_EMAIL_TEMPLATE_IDS.includes(v as AdminEmailTemplateId);
@@ -165,6 +171,14 @@ function getTemplateLayout(
           "<strong>¿Necesitas ayuda?</strong><br>Responde a este correo o llámanos y te acompañamos en el proceso.",
         cta: { label: "Ir a mi panel", href: `${baseUrl}/dashboard` },
       };
+
+    case "correo_libre":
+      return {
+        defaultSubject: "",
+        preheader: "Mensaje desde el equipo de Diligenz.",
+        title: "Mensaje desde Diligenz",
+        defaultBodyParagraphs: [],
+      };
   }
 }
 
@@ -180,14 +194,15 @@ export function buildAdminOutreachEmail(
 ): { subject: string; html: string; text: string; bodyText: string } {
   const layout = getTemplateLayout(templateId, ctx);
   const greet = greeting(ctx);
+  const editable = isAdminEmailTemplateEditable(templateId);
 
-  const paragraphs = paragraphsFromBodyText(
-    overrides?.bodyText?.trim() ?? "",
-    layout.defaultBodyParagraphs
-  );
+  const paragraphs = editable
+    ? paragraphsFromBodyText(overrides?.bodyText?.trim() ?? "", [])
+    : layout.defaultBodyParagraphs;
   const bodyText = bodyTextFromParagraphs(paragraphs);
-  const subject =
-    overrides?.subject?.trim() || layout.defaultSubject;
+  const subject = editable
+    ? overrides?.subject?.trim() ?? ""
+    : layout.defaultSubject;
 
   const html = buildEmailLayout({
     preheader: layout.preheader,

@@ -10,7 +10,7 @@ import {
   ACCOUNT_STATUSES,
   accountStatusBadgeClass,
 } from "@/lib/user-admin-ui";
-import { dniStatusLabel, type DniVerificationStatus } from "@/lib/user-documents/dni-status";
+import { type DniVerificationStatus } from "@/lib/user-documents/dni-status";
 import { Search, SlidersHorizontal, UserPlus, Trash2, ChevronDown } from "lucide-react";
 import AdminUnregisteredContactsList from "@/components/admin/AdminUnregisteredContactsList";
 import AdminContactEmailPanel from "@/components/admin/AdminContactEmailPanel";
@@ -27,6 +27,7 @@ type UserRow = {
   ndaSigned: boolean;
   dniVerified: boolean;
   profileVerifiedByAdmin: boolean;
+  notionValidated: boolean;
   hasCompanyDocumentLinks: boolean;
   hasUserDriveFolder: boolean;
   documentsDriveFolderUrl: string | null;
@@ -43,33 +44,42 @@ function profileCompleteEffective(u: UserRow) {
   return Boolean(u.phone?.trim()) || u.profileVerifiedByAdmin;
 }
 
-function UserDniReviewPanel({
+function UserNotionValidationPanel({
   user,
-  onMarkVerified,
+  onSaved,
 }: {
   user: UserRow;
-  onMarkVerified: () => void;
+  onSaved: () => void;
 }) {
-  const status = user.dniVerificationStatus ?? "none";
+  const [validated, setValidated] = useState(user.notionValidated);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
-  const markVerified = async () => {
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- sincronizar al cambiar usuario */
+    setValidated(user.notionValidated);
     setMsg(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [user.id, user.notionValidated]);
+
+  const setValue = async (next: boolean) => {
+    if (next === validated || saving) return;
     setSaving(true);
+    setMsg(null);
     try {
       const res = await authFetch(`/api/admin/users/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dniVerified: true }),
+        body: JSON.stringify({ notionValidated: next }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setMsg({ type: "error", text: (data as { error?: string }).error ?? "Error al guardar" });
         return;
       }
-      setMsg({ type: "ok", text: "DNI marcado como verificado." });
-      onMarkVerified();
+      setValidated(next);
+      setMsg({ type: "ok", text: next ? "Marcado OK en Notion." : "Marcado como pendiente." });
+      onSaved();
     } catch {
       setMsg({ type: "error", text: "Error de conexión." });
     } finally {
@@ -78,63 +88,81 @@ function UserDniReviewPanel({
   };
 
   return (
-    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
-      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-3">Revisión DNI / NIE</p>
-
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        <span
-          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
-            status === "verified"
-              ? "bg-emerald-100 text-emerald-900"
-              : status === "pending"
-                ? "bg-amber-100 text-amber-900"
-                : status === "incomplete"
-                  ? "bg-sky-100 text-sky-900"
-                  : "bg-slate-100 text-slate-600"
-          }`}
-        >
-          {dniStatusLabel(status)}
-        </span>
-        <span className="text-xs text-slate-600">
-          Anverso: {user.dniHasFront ? "✓" : "—"} · Reverso: {user.dniHasBack ? "✓" : "—"}
-          {user.dniHasFront || user.dniHasBack
-            ? user.dniDriveSynced
-              ? " · En Drive"
-              : " · Falta copia Drive"
-            : ""}
-        </span>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        {user.documentsDriveFolderUrl ? (
-          <a
-            href={user.documentsDriveFolderUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-slate-800 text-white hover:opacity-95"
+    <div
+      className={`border-b border-slate-200/80 px-4 py-4 sm:px-6 ${
+        validated ? "bg-emerald-50/50" : "bg-amber-50/60"
+      }`}
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-[var(--brand-primary)]">Notion</p>
+          <p className="mt-0.5 text-xs text-slate-600">
+            {validated
+              ? "Usuario validado en Notion."
+              : "Pendiente de validar en Notion."}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm"
+            role="group"
+            aria-label="Validación Notion"
           >
-            Abrir carpeta Drive (Identidad)
-          </a>
-        ) : (
-          <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            Sin carpeta Drive
-          </span>
-        )}
-        {status === "pending" && !user.dniVerified && (
-          <button
-            type="button"
-            onClick={markVerified}
-            disabled={saving}
-            className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-emerald-600 text-white hover:opacity-95 disabled:opacity-50"
-          >
-            {saving ? "Guardando…" : "Marcar DNI verificado"}
-          </button>
-        )}
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void setValue(false)}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                !validated
+                  ? "bg-amber-100 text-amber-900 ring-1 ring-amber-200"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              No
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void setValue(true)}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                validated
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              OK
+            </button>
+          </div>
+          {saving && <span className="text-xs text-slate-500">Guardando…</span>}
+        </div>
       </div>
       {msg && (
         <p className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}>
           {msg.text}
         </p>
+      )}
+    </div>
+  );
+}
+
+function UserDniReviewPanel({ user }: { user: UserRow }) {
+  return (
+    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-3">Revisión DNI / NIE</p>
+
+      {user.documentsDriveFolderUrl ? (
+        <a
+          href={user.documentsDriveFolderUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-slate-800 text-white hover:opacity-95"
+        >
+          Abrir carpeta Drive (Identidad)
+        </a>
+      ) : (
+        <span className="inline-flex text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          Sin carpeta Drive
+        </span>
       )}
     </div>
   );
@@ -999,6 +1027,15 @@ function AdminUserMobileCard({
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
+          {u.notionValidated ? (
+            <span className="text-[10px] uppercase tracking-wide text-emerald-900 font-semibold bg-emerald-100 px-2.5 py-1.5 rounded-lg">
+              Notion OK
+            </span>
+          ) : (
+            <span className="text-[10px] uppercase tracking-wide text-amber-900 font-semibold bg-amber-100 px-2.5 py-1.5 rounded-lg">
+              Notion pend.
+            </span>
+          )}
           <span className="rounded-lg bg-violet-100 px-2.5 py-1 text-xs font-semibold text-[var(--brand-dark)]">
             {checksOk}/3 verificación
           </span>
@@ -1026,6 +1063,7 @@ function AdminUserMobileCard({
 
       {isExpanded && (
         <div className="border-t border-slate-200/80">
+          <UserNotionValidationPanel user={u} onSaved={onVerificationSaved} />
           <div className="p-4 sm:p-5 border-b border-slate-100">
             <AdminContactEmailPanel
               email={u.email}
@@ -1036,7 +1074,7 @@ function AdminUserMobileCard({
               }
             />
           </div>
-          <UserDniReviewPanel user={u} onMarkVerified={onVerificationSaved} />
+          <UserDniReviewPanel user={u} />
           <UserVerificationPanel user={u} onSaved={onVerificationSaved} />
           <UserDriveFolderPanel user={u} onSaved={onVerificationSaved} />
           <UserInfoRequestLimitPanel user={u} onSaved={onVerificationSaved} />
@@ -1097,6 +1135,7 @@ export default function AdminUsersPage() {
               ndaSigned: Boolean(u.ndaSigned),
               dniVerified: Boolean(u.dniVerified),
               profileVerifiedByAdmin: Boolean(u.profileVerifiedByAdmin),
+              notionValidated: Boolean(u.notionValidated),
               hasCompanyDocumentLinks: Boolean(u.hasCompanyDocumentLinks),
               hasUserDriveFolder: Boolean(u.hasUserDriveFolder ?? u.documentsDriveFolderUrl?.trim()),
               documentsDriveFolderUrl: u.documentsDriveFolderUrl ?? null,
@@ -1653,7 +1692,16 @@ export default function AdminUsersPage() {
                             </div>
                           </td>
                           <td className="px-4 py-3.5">
-                            <span className="text-xs font-semibold text-slate-700">
+                            {u.notionValidated ? (
+                              <span className="text-[10px] uppercase tracking-wide text-emerald-800 font-semibold">
+                                Notion OK
+                              </span>
+                            ) : (
+                              <span className="text-[10px] uppercase tracking-wide text-amber-800 font-semibold">
+                                Notion pend.
+                              </span>
+                            )}
+                            <span className="ml-2 text-xs font-semibold text-slate-700">
                               {checksOk}/3
                             </span>
                             {u.dniPendingReview && (
@@ -1690,6 +1738,7 @@ export default function AdminUsersPage() {
                         {expandedUserId === u.id && (
                           <tr className="bg-slate-50/50">
                             <td colSpan={7} className="p-0">
+                              <UserNotionValidationPanel user={u} onSaved={loadUsers} />
                               <div className="p-4 sm:px-6 border-b border-slate-100">
                                 <AdminContactEmailPanel
                                   email={u.email}
@@ -1702,7 +1751,7 @@ export default function AdminUsersPage() {
                                   }
                                 />
                               </div>
-                              <UserDniReviewPanel user={u} onMarkVerified={loadUsers} />
+                              <UserDniReviewPanel user={u} />
                               <UserVerificationPanel user={u} onSaved={loadUsers} />
                               <UserDriveFolderPanel user={u} onSaved={loadUsers} />
                               <UserInfoRequestLimitPanel user={u} onSaved={loadUsers} />

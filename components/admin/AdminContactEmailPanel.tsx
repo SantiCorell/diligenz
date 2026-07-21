@@ -6,6 +6,7 @@ import { authFetch } from "@/lib/auth-client";
 import {
   ADMIN_EMAIL_TEMPLATE_IDS,
   ADMIN_EMAIL_TEMPLATE_LABELS,
+  isAdminEmailTemplateEditable,
   type AdminEmailTemplateId,
 } from "@/lib/emails/admin-outreach-templates";
 
@@ -34,6 +35,7 @@ export default function AdminContactEmailPanel({
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [showComposer, setShowComposer] = useState(false);
   const skipNextDebounce = useRef(false);
+  const isFreeEmail = isAdminEmailTemplateEditable(template);
 
   const loadPreview = useCallback(
     async (opts?: { subject?: string; bodyText?: string }) => {
@@ -41,15 +43,28 @@ export default function AdminContactEmailPanel({
       setLoadingPreview(true);
       setMessage(null);
       try {
+        let freeSubject = subject;
+        let freeBody = bodyText;
+        if (isFreeEmail) {
+          freeSubject = (opts?.subject ?? subject).trim();
+          freeBody = (opts?.bodyText ?? bodyText).trim();
+          setSubject(freeSubject);
+          setBodyText(freeBody);
+          if (!freeSubject || !freeBody) {
+            setHtmlPreview("");
+            return;
+          }
+        }
+
         const p = new URLSearchParams({
           template,
           email: email.trim(),
         });
         if (name?.trim()) p.set("name", name.trim());
-        const subj = opts?.subject ?? subject;
-        const body = opts?.bodyText ?? bodyText;
-        if (subj.trim()) p.set("subject", subj.trim());
-        if (body.trim()) p.set("bodyText", body.trim());
+        if (isFreeEmail) {
+          p.set("subject", freeSubject);
+          p.set("bodyText", freeBody);
+        }
 
         const res = await authFetch(`/api/admin/email/preview?${p.toString()}`);
         const data = await res.json();
@@ -58,24 +73,30 @@ export default function AdminContactEmailPanel({
           return;
         }
         setSubject(data.subject ?? "");
-        setBodyText(data.bodyText ?? "");
+        if (isFreeEmail) setBodyText(data.bodyText ?? "");
         setHtmlPreview(data.html ?? "");
       } finally {
         setLoadingPreview(false);
       }
     },
-    [email, name, template, subject, bodyText]
+    [email, name, template, subject, bodyText, isFreeEmail]
   );
 
   useEffect(() => {
     if (showComposer) {
       skipNextDebounce.current = true;
-      void loadPreview({ subject: "", bodyText: "" });
+      if (isFreeEmail) {
+        setSubject("");
+        setBodyText("");
+        void loadPreview({ subject: "", bodyText: "" });
+      } else {
+        void loadPreview();
+      }
     }
-  }, [showComposer, template, email, name]); // eslint-disable-line react-hooks/exhaustive-deps -- recargar al cambiar plantilla
+  }, [showComposer, template, email, name]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!showComposer || skipNextDebounce.current) {
+    if (!showComposer || !isFreeEmail || skipNextDebounce.current) {
       skipNextDebounce.current = false;
       return;
     }
@@ -83,7 +104,7 @@ export default function AdminContactEmailPanel({
       void loadPreview();
     }, 450);
     return () => clearTimeout(t);
-  }, [subject, bodyText, showComposer, loadPreview]);
+  }, [subject, bodyText, showComposer, loadPreview, isFreeEmail]);
 
   const handleSend = async () => {
     setSending(true);
@@ -96,8 +117,9 @@ export default function AdminContactEmailPanel({
           to: email.trim(),
           name: name?.trim() || undefined,
           template,
-          subject: subject.trim() || undefined,
-          bodyText: bodyText.trim() || undefined,
+          ...(isFreeEmail
+            ? { subject: subject.trim(), bodyText: bodyText.trim() }
+            : {}),
         }),
       });
       const data = await res.json();
@@ -106,12 +128,17 @@ export default function AdminContactEmailPanel({
         return;
       }
       setMessage({ type: "ok", text: `Correo enviado a ${email}` });
+      if (isFreeEmail) {
+        setSubject("");
+        setBodyText("");
+      }
     } finally {
       setSending(false);
     }
   };
 
   const phoneDigits = phone?.replace(/\s/g, "") ?? "";
+  const canSend = isFreeEmail ? subject.trim() && bodyText.trim() : Boolean(htmlPreview);
 
   return (
     <div className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-5 space-y-4 ${className}`}>
@@ -160,34 +187,42 @@ export default function AdminContactEmailPanel({
                 </option>
               ))}
             </select>
+            {!isFreeEmail && subject && (
+              <p className="mt-2 text-xs text-slate-500">
+                Asunto: <span className="font-medium text-slate-700">{subject}</span>
+              </p>
+            )}
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Asunto</label>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/15"
-            />
-          </div>
+          {isFreeEmail && (
+            <>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Asunto</label>
+                <input
+                  type="text"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/15"
+                  placeholder="Escribe el asunto del correo"
+                />
+              </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-              Mensaje (editable)
-            </label>
-            <textarea
-              value={bodyText}
-              onChange={(e) => setBodyText(e.target.value)}
-              rows={7}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm leading-relaxed focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/15 resize-y min-h-[140px]"
-              placeholder="Escribe el cuerpo del correo. Separa párrafos con una línea en blanco."
-            />
-            <p className="mt-1.5 text-[11px] text-slate-500">
-              El diseño Diligenz (cabecera, colores y botón) se aplica automáticamente. Separa
-              párrafos con una línea en blanco.
-            </p>
-          </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Mensaje</label>
+                <textarea
+                  value={bodyText}
+                  onChange={(e) => setBodyText(e.target.value)}
+                  rows={7}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm leading-relaxed focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/15 resize-y min-h-[140px]"
+                  placeholder="Escribe el cuerpo del correo. Separa párrafos con una línea en blanco."
+                />
+                <p className="mt-1.5 text-[11px] text-slate-500">
+                  El diseño Diligenz se aplica automáticamente. Separa párrafos con una línea en
+                  blanco.
+                </p>
+              </div>
+            </>
+          )}
 
           <div>
             <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -216,7 +251,9 @@ export default function AdminContactEmailPanel({
                 />
               ) : (
                 <p className="p-6 text-sm text-slate-500 text-center">
-                  Selecciona una plantilla para ver el borrador.
+                  {isFreeEmail
+                    ? "Escribe asunto y mensaje para ver la vista previa."
+                    : "Selecciona una plantilla para ver el borrador."}
                 </p>
               )}
             </div>
@@ -230,7 +267,7 @@ export default function AdminContactEmailPanel({
             <button
               type="button"
               onClick={handleSend}
-              disabled={sending || loadingPreview || !subject.trim() || !bodyText.trim()}
+              disabled={sending || loadingPreview || !canSend}
               className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-primary)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50 transition"
             >
               {sending ? (

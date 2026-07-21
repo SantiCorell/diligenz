@@ -23,6 +23,7 @@
 --     (usa ValuationLead y ContactRequest existentes).
 --   • Drive lazy: carpeta CLIENTES solo al subir DNI, firmar mandato/NDA, empresa o
 --     valoración — sin cambios de esquema (documentsDriveFolderUrl ya existe).
+--   • User.notionValidated: check admin «Validado en Notion» (default false).
 --
 -- Local: npm run db:push:local   (usa .env.local, no este script)
 -- =============================================================================
@@ -71,6 +72,7 @@ END $$;
 -- -----------------------------------------------------------------------------
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerified" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "profileVerifiedByAdmin" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "notionValidated" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "accountStatus" "UserAccountStatus" NOT NULL DEFAULT 'ACTIVE';
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMP(3);
 ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "ndaSigned" BOOLEAN NOT NULL DEFAULT false;

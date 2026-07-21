@@ -3,6 +3,7 @@ import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import {
   buildAdminOutreachEmail,
+  isAdminEmailTemplateEditable,
   isAdminEmailTemplateId,
 } from "@/lib/emails/admin-outreach-templates";
 
@@ -40,8 +41,17 @@ export async function POST(req: Request) {
   const built = buildAdminOutreachEmail(
     template,
     { recipientEmail: to, recipientName },
-    { subject: subjectOverride, bodyText: bodyTextOverride }
+    isAdminEmailTemplateEditable(template)
+      ? { subject: subjectOverride, bodyText: bodyTextOverride }
+      : undefined
   );
+
+  if (isAdminEmailTemplateEditable(template) && (!built.subject || !built.bodyText.trim())) {
+    return NextResponse.json(
+      { error: "Indica asunto y mensaje para el correo libre." },
+      { status: 400 }
+    );
+  }
 
   try {
     const sent = await sendEmail({
