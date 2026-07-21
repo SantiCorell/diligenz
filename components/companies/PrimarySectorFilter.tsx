@@ -21,44 +21,36 @@ export default function PrimarySectorFilter({
   const allActive = !selectedSector;
 
   return (
-    <section
-      className="rounded-2xl border border-black/[0.06] bg-[var(--surface-card)] p-4 sm:p-5 md:p-6 shadow-[0_2px_12px_rgba(15,23,42,0.05)]"
-      aria-label="Filtrar por sector principal"
-    >
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--brand-primary)] sm:text-sm">
-            Explora por sector
-          </p>
-          <h2 className="mt-1.5 text-xl font-bold tracking-tight text-[var(--brand-dark)] sm:text-2xl md:text-3xl">
-            ¿Qué tipo de empresa buscas?
-          </h2>
-          <p className="mt-2 text-sm text-[var(--foreground)]/70 max-w-xl sm:text-base">
-            Selecciona uno de los cinco sectores principales del marketplace. Los resultados se actualizan al instante.
-          </p>
-        </div>
-        <p className="mt-2 sm:mt-0 text-sm font-semibold text-[var(--foreground)]/75 shrink-0 sm:text-base">
-          <span className="text-[var(--brand-primary)] font-semibold">{totalCount}</span>{" "}
+    <section className="mb-8 md:mb-10" aria-label="Filtrar por sector principal">
+      <div className="relative mb-6 text-center sm:mb-7">
+        <h2 className="text-xl font-bold tracking-tight text-[var(--brand-dark)] sm:text-2xl md:text-[1.75rem]">
+          ¿Qué tipo de empresa buscas?
+        </h2>
+        <p className="mt-2 text-sm text-[var(--foreground)]/65 sm:text-base">
+          Selecciona un sector. Los resultados se actualizan al instante.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-[var(--foreground)]/70 sm:absolute sm:right-0 sm:top-1/2 sm:mt-0 sm:-translate-y-1/2 sm:text-base">
+          <span className="text-[var(--brand-primary)]">{totalCount}</span>{" "}
           {totalCount === 1 ? "empresa" : "empresas"} en catálogo
         </p>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
         <button
           type="button"
           onClick={() => onSectorChange("")}
           aria-pressed={allActive}
-          className={`group relative flex flex-col items-start rounded-xl border-2 p-3.5 sm:p-4 text-left transition-all duration-200 ${
+          className={`group relative flex flex-col items-start rounded-2xl border p-3.5 sm:p-4 text-left transition-all duration-200 ${
             allActive
-              ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/[0.06] shadow-[0_0_0_1px_rgba(137,74,246,0.15)]"
-              : "border-black/[0.06] bg-[var(--surface-muted)]/40 hover:border-[var(--brand-primary)]/30 hover:bg-[var(--surface-muted)]/70"
+              ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/[0.05] shadow-[0_0_0_1px_rgba(137,74,246,0.12)]"
+              : "border-black/[0.08] bg-white hover:border-[var(--brand-primary)]/25 hover:bg-[var(--brand-primary)]/[0.03]"
           }`}
         >
           <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg border transition ${
+            className={`flex h-10 w-10 items-center justify-center rounded-xl border transition ${
               allActive
-                ? "border-[var(--brand-primary)]/25 bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]"
-                : "border-black/[0.06] bg-[var(--surface-card)] text-[var(--foreground)]/50 group-hover:text-[var(--brand-primary)]"
+                ? "border-[var(--brand-primary)]/20 bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]"
+                : "border-black/[0.06] bg-[var(--surface-muted)]/50 text-[var(--foreground)]/50 group-hover:text-[var(--brand-primary)]"
             }`}
           >
             <LayoutGrid className="h-5 w-5" strokeWidth={1.75} />
@@ -71,7 +63,7 @@ export default function PrimarySectorFilter({
             className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
               allActive
                 ? "bg-[var(--brand-primary)] text-white"
-                : "bg-[var(--surface-card)] text-[var(--foreground)]/55 border border-black/[0.06]"
+                : "bg-[var(--surface-muted)] text-[var(--foreground)]/55"
             }`}
           >
             {totalCount}
@@ -89,17 +81,17 @@ export default function PrimarySectorFilter({
               type="button"
               onClick={() => onSectorChange(sector.value)}
               aria-pressed={isActive}
-              className={`group relative flex flex-col items-start rounded-xl border-2 p-3.5 sm:p-4 text-left transition-all duration-200 ${
+              className={`group relative flex flex-col items-start rounded-2xl border p-3.5 sm:p-4 text-left transition-all duration-200 ${
                 isActive
-                  ? "shadow-[0_4px_16px_rgba(15,23,42,0.08)]"
-                  : "border-black/[0.06] bg-[var(--surface-muted)]/30 hover:border-black/[0.1] hover:bg-[var(--surface-muted)]/60"
+                  ? "bg-white shadow-[0_4px_20px_rgba(15,23,42,0.06)]"
+                  : "border-black/[0.08] bg-white hover:border-black/[0.12] hover:bg-[var(--surface-muted)]/20"
               }`}
               style={
                 isActive
                   ? {
                       borderColor: visual.accent,
-                      backgroundColor: `${visual.accent}10`,
-                      boxShadow: `0 0 0 1px ${visual.accent}22, 0 4px 16px rgba(15,23,42,0.06)`,
+                      backgroundColor: `${visual.accent}08`,
+                      boxShadow: `0 0 0 1px ${visual.accent}20, 0 4px 20px rgba(15,23,42,0.05)`,
                     }
                   : undefined
               }

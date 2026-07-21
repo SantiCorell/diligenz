@@ -119,9 +119,9 @@ export default async function CompaniesPage({ searchParams }: Props) {
       />
       <div className="relative px-4 py-6 sm:px-6 md:py-8">
         <div className="mx-auto max-w-7xl">
-          <header className="mb-8 md:mb-10">
+          <header className="mb-10 md:mb-12 text-center">
             <p className="page-eyebrow">Marketplace M&A</p>
-            <h1 className="page-title mt-2">
+            <h1 className="page-title mt-2 mx-auto max-w-4xl">
               Empresas en{" "}
               <span className="page-title-highlight">venta</span>
               {activeSectorLabel && (
@@ -131,11 +131,12 @@ export default async function CompaniesPage({ searchParams }: Props) {
                 </span>
               )}
             </h1>
-            <p className="page-lead mt-4 max-w-2xl">
+            <p className="page-lead mt-4 max-w-2xl mx-auto">
               Oportunidades verificadas de adquisición en España. Filtra por sector, ubicación, facturación y EBITDA, y accede a la ficha completa al registrarte.
             </p>
             {useOnlyReal && (
-              <p className="mt-3 inline-flex items-center rounded-full border border-[var(--brand-primary)]/20 bg-[var(--brand-primary)]/[0.08] px-3.5 py-1.5 text-xs font-semibold text-[var(--brand-primary)]">
+              <p className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-primary)]/20 bg-[var(--brand-primary)]/[0.08] px-3.5 py-1.5 text-xs font-semibold text-[var(--brand-primary)]">
+                <span aria-hidden>✓</span>
                 Catálogo con empresas reales publicadas
               </p>
             )}
