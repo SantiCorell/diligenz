@@ -146,6 +146,12 @@ export async function POST(req: Request, { params }: Params) {
         userId,
         type: "INFO_REQUEST_CREATED",
         createdAt: { gte: today },
+        NOT: {
+          metadata: {
+            path: ["backfill"],
+            equals: true,
+          },
+        },
       },
     });
 

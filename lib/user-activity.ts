@@ -148,14 +148,8 @@ export async function getUserInfoRequestSummaries(userId: string): Promise<UserI
 }
 
 export async function getUserActivityStats(userId: string) {
-  const [totalCreated, interests, favoriteCount] = await Promise.all([
-    prisma.userActivityEvent.count({
-      where: { userId, type: "INFO_REQUEST_CREATED" },
-    }),
-    prisma.userCompanyInterest.findMany({
-      where: { userId, type: "REQUEST_INFO" },
-      select: { status: true },
-    }),
+  const [summaries, favoriteCount] = await Promise.all([
+    getUserInfoRequestSummaries(userId),
     prisma.userCompanyInterest.count({
       where: { userId, type: "FAVORITE" },
     }),
@@ -164,20 +158,33 @@ export async function getUserActivityStats(userId: string) {
   let active = 0;
   let managed = 0;
   let rejected = 0;
-  for (const row of interests) {
-    const status = row.status ?? "PENDING";
-    if (status === "PENDING") active += 1;
-    else if (status === "MANAGED") {
-      active += 1;
-      managed += 1;
-    } else if (status === "REJECTED") rejected += 1;
+  let cancelled = 0;
+
+  for (const summary of summaries) {
+    switch (summary.status) {
+      case "PENDING":
+        active += 1;
+        break;
+      case "MANAGED":
+        active += 1;
+        managed += 1;
+        break;
+      case "REJECTED":
+        rejected += 1;
+        break;
+      case "CANCELLED":
+        cancelled += 1;
+        break;
+    }
   }
 
   return {
-    totalInfoRequests: totalCreated,
+    /** Empresas distintas con solicitud (estado actual; coincide con el listado admin). */
+    totalInfoRequests: summaries.length,
     activeInfoRequests: active,
     managedInfoRequests: managed,
     rejectedInfoRequests: rejected,
+    cancelledInfoRequests: cancelled,
     favoriteCount,
   };
 }

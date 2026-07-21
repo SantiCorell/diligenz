@@ -441,6 +441,7 @@ type ActivityStats = {
   activeInfoRequests: number;
   managedInfoRequests: number;
   rejectedInfoRequests: number;
+  cancelledInfoRequests: number;
 };
 
 type OwnerActivityStats = {
@@ -689,7 +690,7 @@ function UserActivityPanel({ user }: { user: UserRow }) {
           {stats && "totalInfoRequests" in stats && (
             <div className="mb-4 flex flex-wrap gap-2">
               <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-800">
-                Total solicitudes: {stats.totalInfoRequests}
+                Total: {stats.totalInfoRequests}
               </span>
               <span className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900">
                 Activas: {stats.activeInfoRequests}
@@ -700,6 +701,11 @@ function UserActivityPanel({ user }: { user: UserRow }) {
               <span className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-900">
                 Rechazadas: {stats.rejectedInfoRequests}
               </span>
+              {stats.cancelledInfoRequests > 0 && (
+                <span className="rounded-lg bg-slate-200/80 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                  Canceladas: {stats.cancelledInfoRequests}
+                </span>
+              )}
             </div>
           )}
 
