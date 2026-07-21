@@ -76,6 +76,16 @@ body {
   }
 }
 
+@keyframes hero-browser-float {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(3px, -4px);
+  }
+}
+
 @keyframes hero-dot-pulse {
   0%,
   100% {
@@ -491,6 +501,7 @@ body {
   border-radius: 1.25rem;
   background: #ffffff;
   border: 1px solid rgb(0 0 0 / 0.08);
+  opacity: 1;
   box-shadow:
     0 4px 20px rgb(0 0 0 / 0.1),
     0 20px 56px rgb(var(--brand-shadow) / 0.16),
@@ -505,7 +516,7 @@ body {
 }
 
 .hero-video-browser-float {
-  animation: hero-float 7s ease-in-out infinite;
+  animation: hero-browser-float 7s ease-in-out infinite;
 }
 
 .hero-video-browser-bar {
@@ -593,8 +604,9 @@ body {
   border: none;
   outline: none;
   background: #ffffff;
+  opacity: 1;
   transform: translateZ(0);
-  filter: contrast(1.06) saturate(1.08);
+  filter: contrast(1.1) saturate(1.14) brightness(1.03);
 }
 
 /* ── Sistema de diseño (web + panel) ── */
