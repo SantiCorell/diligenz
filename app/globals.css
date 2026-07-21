@@ -338,11 +338,11 @@ body {
 }
 
 .hero-eyebrow {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgb(255 255 255 / 0.82);
+  color: rgb(255 255 255 / 0.92);
 }
 
 @media (min-width: 640px) {
@@ -383,20 +383,21 @@ body {
   position: relative;
   display: inline-block;
   white-space: nowrap;
+  isolation: isolate;
 }
 
 .hero-title-highlight::after {
   content: "";
   position: absolute;
-  left: -0.06em;
-  right: -0.06em;
-  bottom: 0.08em;
-  height: 0.34em;
-  background: var(--brand-bg-mint);
-  opacity: 0.92;
+  left: -0.04em;
+  right: -0.04em;
+  bottom: -0.1em;
+  height: 0.17em;
+  background: #9fbf6a;
+  opacity: 0.9;
   z-index: -1;
-  border-radius: 3px;
-  transform: rotate(-0.6deg);
+  border-radius: 2px;
+  transform: rotate(-0.5deg);
 }
 
 .hero-panel-video .hero-video-stage {
@@ -468,23 +469,119 @@ body {
   .hero-video-stage {
     margin-top: 3.25rem;
     padding-bottom: 2rem;
+    max-width: 52rem;
   }
 }
 
 @media (min-width: 768px) {
   .hero-video-stage {
     margin-top: 3.75rem;
+    max-width: 58rem;
   }
+}
+
+@media (min-width: 1024px) {
+  .hero-video-stage {
+    max-width: 64rem;
+  }
+}
+
+.hero-video-browser {
+  position: relative;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  border: 1px solid rgb(0 0 0 / 0.08);
+  box-shadow:
+    0 4px 20px rgb(0 0 0 / 0.1),
+    0 20px 56px rgb(var(--brand-shadow) / 0.16),
+    0 40px 88px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .hero-video-browser {
+    border-radius: 1.5rem;
+  }
+}
+
+.hero-video-browser-float {
+  animation: hero-float 7s ease-in-out infinite;
+}
+
+.hero-video-browser-bar {
+  display: none;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #ddd8e8;
+  background: linear-gradient(180deg, #f0edf5 0%, #e6e1ef 100%);
+}
+
+@media (min-width: 640px) {
+  .hero-video-browser-bar {
+    display: flex;
+  }
+}
+
+.hero-video-browser-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.hero-video-browser-dots span {
+  display: block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: #d8d3e6;
+}
+
+.hero-video-browser-dots span:nth-child(1) {
+  background: #ff5f57;
+}
+
+.hero-video-browser-dots span:nth-child(2) {
+  background: #febc2e;
+}
+
+.hero-video-browser-dots span:nth-child(3) {
+  background: #28c840;
+}
+
+.hero-video-browser-url {
+  flex: 1;
+  min-width: 0;
+  border-radius: 0.5rem;
+  border: 1px solid #e4e0ef;
+  background: #ffffff;
+  padding: 0.45rem 0.85rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: #6b7280;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hero-video-clip {
   position: relative;
   overflow: hidden;
-  border-radius: 1.5rem;
+  border-radius: 1.25rem;
   background: #ffffff;
-  box-shadow:
-    0 4px 24px rgb(var(--brand-shadow) / 0.06),
-    0 16px 48px rgb(0 0 0 / 0.04);
+}
+
+@media (min-width: 640px) {
+  .hero-video-clip {
+    border-radius: 0 0 1.5rem 1.5rem;
+  }
+}
+
+.hero-video-browser .hero-video-clip {
+  box-shadow: none;
 }
 
 .hero-video-element {
@@ -572,22 +669,67 @@ body {
 }
 
 .page-eyebrow {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--brand-primary);
 }
 
+@media (min-width: 640px) {
+  .page-eyebrow {
+    font-size: 0.875rem;
+  }
+}
+
 .page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
   color: var(--brand-dark);
+}
+
+.page-title-highlight {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
+
+.page-title-highlight::after {
+  content: "";
+  position: absolute;
+  left: -0.04em;
+  right: -0.04em;
+  bottom: -0.08em;
+  height: 0.16em;
+  background: #b8d48a;
+  opacity: 0.92;
+  z-index: -1;
+  border-radius: 2px;
+  transform: rotate(-0.5deg);
+}
+
+.page-lead {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--foreground) 80%, transparent);
 }
 
 @media (min-width: 640px) {
   .page-title {
-    font-size: 1.875rem;
+    font-size: 2.625rem;
+  }
+
+  .page-lead {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-title {
+    font-size: 3.125rem;
+    line-height: 1.06;
   }
 }
 

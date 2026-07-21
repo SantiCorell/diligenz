@@ -119,19 +119,23 @@ export default async function CompaniesPage({ searchParams }: Props) {
       />
       <div className="relative px-4 py-6 sm:px-6 md:py-8">
         <div className="mx-auto max-w-7xl">
-          <header className="mb-6 md:mb-8">
+          <header className="mb-8 md:mb-10">
             <p className="page-eyebrow">Marketplace M&A</p>
-            <h1 className="page-title mt-1">
-              Empresas en venta
+            <h1 className="page-title mt-2">
+              Empresas en{" "}
+              <span className="page-title-highlight">venta</span>
               {activeSectorLabel && (
-                <span className="text-[var(--foreground)]/55 font-medium"> · {activeSectorLabel}</span>
+                <span className="text-[var(--foreground)]/55 font-semibold">
+                  {" "}
+                  · {activeSectorLabel}
+                </span>
               )}
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-[var(--foreground)]/70 max-w-2xl leading-relaxed">
+            <p className="page-lead mt-4 max-w-2xl">
               Oportunidades verificadas de adquisición en España. Filtra por sector, ubicación, facturación y EBITDA, y accede a la ficha completa al registrarte.
             </p>
             {useOnlyReal && (
-              <p className="mt-2 inline-flex items-center rounded-full border border-[var(--brand-primary)]/15 bg-[var(--brand-primary)]/[0.06] px-3 py-1 text-xs font-medium text-[var(--brand-primary)]">
+              <p className="mt-3 inline-flex items-center rounded-full border border-[var(--brand-primary)]/20 bg-[var(--brand-primary)]/[0.08] px-3.5 py-1.5 text-xs font-semibold text-[var(--brand-primary)]">
                 Catálogo con empresas reales publicadas
               </p>
             )}

@@ -40,8 +40,8 @@ export default function CompaniesResultsBar({
           <Building2 className="h-4 w-4" strokeWidth={2} />
         </div>
         <div className="min-w-0">
-          <p className="text-sm sm:text-base font-semibold text-[var(--foreground)]">{headline}</p>
-          <p className="mt-0.5 text-xs sm:text-sm text-[var(--foreground)]/55">
+          <p className="text-base sm:text-lg font-bold text-[var(--brand-dark)]">{headline}</p>
+          <p className="mt-0.5 text-sm text-[var(--foreground)]/60">
             {total > 0 ? (
               <>
                 Mostrando {from}–{to} de {total}

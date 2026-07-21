@@ -27,17 +27,17 @@ export default function PrimarySectorFilter({
     >
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--brand-primary)] sm:text-sm">
             Explora por sector
           </p>
-          <h2 className="mt-1 text-lg sm:text-xl font-semibold text-[var(--foreground)]">
+          <h2 className="mt-1.5 text-xl font-bold tracking-tight text-[var(--brand-dark)] sm:text-2xl md:text-3xl">
             ¿Qué tipo de empresa buscas?
           </h2>
-          <p className="mt-1 text-sm text-[var(--foreground)]/60 max-w-xl">
+          <p className="mt-2 text-sm text-[var(--foreground)]/70 max-w-xl sm:text-base">
             Selecciona uno de los cinco sectores principales del marketplace. Los resultados se actualizan al instante.
           </p>
         </div>
-        <p className="mt-2 sm:mt-0 text-sm font-medium text-[var(--foreground)]/70 shrink-0">
+        <p className="mt-2 sm:mt-0 text-sm font-semibold text-[var(--foreground)]/75 shrink-0 sm:text-base">
           <span className="text-[var(--brand-primary)] font-semibold">{totalCount}</span>{" "}
           {totalCount === 1 ? "empresa" : "empresas"} en catálogo
         </p>
