@@ -6,7 +6,6 @@ import { createSession } from "@/lib/session";
 import { getClientIP, isValidEmail, isValidPhone } from "@/lib/security";
 import { sendWelcomeEmail } from "@/lib/emails/welcome";
 import type { WelcomeRole } from "@/lib/emails/welcome";
-import { ensureUserDriveFolder } from "@/lib/google-drive/user-drive";
 
 export async function POST(req: Request) {
   try {
@@ -169,16 +168,7 @@ export async function POST(req: Request) {
       console.error("[register] welcome email error:", emailError);
     }
 
-    try {
-      await ensureUserDriveFolder({
-        userId: user.id,
-        role: user.role as WelcomeRole,
-        personName: fullName,
-        userEmail: normalizedEmail,
-      });
-    } catch (driveError) {
-      console.error("[register] google drive folder error:", driveError);
-    }
+    // Carpeta Drive del cliente: lazy (DNI, mandato/NDA, empresa o valoración).
 
     const token = await createSession(user.id);
     return NextResponse.json(

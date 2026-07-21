@@ -18,7 +18,11 @@
 --     cambios de estado, favoritos).
 --   • UserCompanyInterest: solicitudes (REQUEST_INFO) y favoritos (FAVORITE).
 --   • User.maxConcurrentInfoRequests / maxConcurrentCompanies.
---   • Company.buyerTeaserUrl, attachmentsApproved, reference, featuredAt, etc.
+--   • Company.buyerTeaserUrl, buyerDocuments, attachmentsApproved, reference, featuredAt, etc.
+--   • Admin leads colapsables + pestaña usuarios no registrados: sin cambios de esquema
+--     (usa ValuationLead y ContactRequest existentes).
+--   • Drive lazy: carpeta CLIENTES solo al subir DNI, firmar mandato/NDA, empresa o
+--     valoración — sin cambios de esquema (documentsDriveFolderUrl ya existe).
 --
 -- Local: npm run db:push:local   (usa .env.local, no este script)
 -- =============================================================================

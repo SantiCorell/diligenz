@@ -12,6 +12,7 @@ import {
 } from "@/lib/user-admin-ui";
 import { dniStatusLabel, type DniVerificationStatus } from "@/lib/user-documents/dni-status";
 import { Search, SlidersHorizontal, UserPlus, Trash2, ChevronDown } from "lucide-react";
+import AdminUnregisteredContactsList from "@/components/admin/AdminUnregisteredContactsList";
 
 type UserRow = {
   id: string;
@@ -1062,6 +1063,7 @@ function AdminUserMobileCard({
 }
 
 export default function AdminUsersPage() {
+  const [usersTab, setUsersTab] = useState<"registered" | "unregistered">("registered");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
@@ -1128,11 +1130,12 @@ export default function AdminUsersPage() {
   }, [q, roleFilter, statusFilter, fEmail, fDni, fDniPending, fNda, fDocLinks]);
 
   useEffect(() => {
+    if (usersTab !== "registered") return;
     const t = setTimeout(() => {
       loadUsers();
     }, q.trim() ? 320 : 0);
     return () => clearTimeout(t);
-  }, [loadUsers, q]);
+  }, [loadUsers, q, usersTab]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1219,16 +1222,44 @@ export default function AdminUsersPage() {
           Administración
         </p>
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-          Usuarios registrados
+          {usersTab === "registered" ? "Usuarios registrados" : "Usuarios no registrados"}
         </h1>
         <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl leading-relaxed">
-          Gestiona roles, estado de cuenta y verificación. Filtra por nombre, email, rol, estado o criterios
-          de documentación. Los usuarios eliminados desaparecen del listado y pueden volver a registrarse con
-          el mismo email.
+          {usersTab === "registered"
+            ? "Gestiona roles, estado de cuenta y verificación. Filtra por nombre, email, rol, estado o criterios de documentación."
+            : "Contactos con valoraciones o mensajes de contacto que aún no tienen cuenta en Diligenz. Agrupados por email."}
         </p>
       </header>
 
-      {/* Filtros */}
+      <div className="mb-8 flex flex-wrap gap-2 border-b border-slate-200 pb-1">
+        <button
+          type="button"
+          onClick={() => setUsersTab("registered")}
+          className={`rounded-t-lg px-4 py-2.5 text-sm font-semibold transition border-b-2 -mb-px ${
+            usersTab === "registered"
+              ? "border-[var(--brand-primary)] text-[var(--brand-primary)] bg-white"
+              : "border-transparent text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Registrados
+        </button>
+        <button
+          type="button"
+          onClick={() => setUsersTab("unregistered")}
+          className={`rounded-t-lg px-4 py-2.5 text-sm font-semibold transition border-b-2 -mb-px ${
+            usersTab === "unregistered"
+              ? "border-[var(--brand-primary)] text-[var(--brand-primary)] bg-white"
+              : "border-transparent text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          No registrados
+        </button>
+      </div>
+
+      {usersTab === "unregistered" ? (
+        <AdminUnregisteredContactsList />
+      ) : (
+        <>
       <section className="mb-8 rounded-2xl border border-slate-200/90 bg-white shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100 bg-slate-50/80">
           <SlidersHorizontal className="w-4 h-4 text-[var(--brand-primary)]" aria-hidden />
@@ -1672,6 +1703,8 @@ export default function AdminUsersPage() {
         <p className="mt-6 text-xs text-slate-500">
           {admins.length} administrador{admins.length !== 1 ? "es" : ""} en el resultado actual.
         </p>
+      )}
+        </>
       )}
     </main>
   );

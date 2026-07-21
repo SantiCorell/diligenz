@@ -46,6 +46,21 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
     return { ok: false, folderUrl: null, synced, errors: ["Usuario no encontrado"] };
   }
 
+  const hasContent =
+    user.dniDocuments.length > 0 ||
+    Boolean(user.salesMandate) ||
+    Boolean(user.purchaseMandate) ||
+    Boolean(user.collaborationAgreement);
+
+  if (!hasContent) {
+    return {
+      ok: true,
+      folderUrl: user.documentsDriveFolderUrl,
+      synced,
+      errors: [],
+    };
+  }
+
   const personName = user.name?.trim() || user.email.split("@")[0];
   const companyName =
     user.salesMandate?.companyLegalName ??

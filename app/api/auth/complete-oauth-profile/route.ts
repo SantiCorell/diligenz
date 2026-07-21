@@ -8,7 +8,6 @@ import { getSessionWithUserFromRequest } from "@/lib/session";
 import { isValidPhone } from "@/lib/security";
 import { sendWelcomeEmail } from "@/lib/emails/welcome";
 import type { WelcomeRole } from "@/lib/emails/welcome";
-import { ensureUserDriveFolder } from "@/lib/google-drive/user-drive";
 
 export async function POST(req: Request) {
   const session = await getSessionWithUserFromRequest(req);
@@ -104,17 +103,6 @@ export async function POST(req: Request) {
       }
     } catch (emailError) {
       console.error("[complete-oauth-profile] welcome email error:", emailError);
-    }
-
-    try {
-      await ensureUserDriveFolder({
-        userId: user.id,
-        role,
-        personName,
-        userEmail: user.email,
-      });
-    } catch (driveError) {
-      console.error("[complete-oauth-profile] google drive folder error:", driveError);
     }
   }
 

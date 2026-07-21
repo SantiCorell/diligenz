@@ -41,6 +41,11 @@ async function shareUserDriveFolder(folderId: string, clientEmail: string): Prom
   }
 }
 
+/**
+ * Crea (o reutiliza) la carpeta CLIENTES del usuario.
+ * Política lazy: no llamar en registro/OAuth; solo cuando haya contenido
+ * (DNI, mandato/NDA, subcarpeta de empresa o valoración).
+ */
 export async function ensureUserDriveFolder(opts: {
   userId: string;
   role: UserRole;
