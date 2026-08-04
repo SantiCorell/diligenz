@@ -1,7 +1,6 @@
 "use client";
 
 import { LayoutGrid } from "lucide-react";
-import SectorIcon from "@/components/companies/SectorIcon";
 import { PRIMARY_SECTOR_OPTIONS } from "@/lib/valuation-sectors";
 import { getSectorVisual } from "@/lib/sector-visual";
 
@@ -12,6 +11,14 @@ type Props = {
   totalCount: number;
 };
 
+function descriptionBullets(description: string): string[] {
+  return description
+    .split(/,| y /i)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
 export default function PrimarySectorFilter({
   selectedSector,
   onSectorChange,
@@ -20,100 +27,101 @@ export default function PrimarySectorFilter({
 }: Props) {
   const allActive = !selectedSector;
 
+  const cards = [
+    {
+      value: "",
+      title: "Todos",
+      bullets: ["Ver todo el catálogo", "Todos los sectores", "Filtros combinables"],
+      count: totalCount,
+      active: allActive,
+      icon: (
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]">
+          <LayoutGrid className="h-5 w-5" strokeWidth={2} aria-hidden />
+        </div>
+      ),
+    },
+    ...PRIMARY_SECTOR_OPTIONS.map((sector) => {
+      const visual = getSectorVisual(sector.value);
+      const Icon = visual.icon;
+      return {
+        value: sector.value,
+        title: sector.shortLabel,
+        bullets: descriptionBullets(sector.description),
+        count: countsBySector[sector.value] ?? 0,
+        active: selectedSector === sector.value,
+        icon: (
+          <div
+            className={`flex h-11 w-11 items-center justify-center rounded-xl ${visual.iconBgClass}`}
+          >
+            <Icon className="h-5 w-5" strokeWidth={2} aria-hidden />
+          </div>
+        ),
+      };
+    }),
+  ];
+
   return (
-    <section className="mb-8 md:mb-10" aria-label="Filtrar por sector principal">
-      <div className="relative mb-6 text-center sm:mb-7">
-        <h2 className="text-xl font-bold tracking-tight text-[var(--brand-dark)] sm:text-2xl md:text-[1.75rem]">
+    <section
+      className="mb-8 rounded-[1.75rem] bg-[var(--brand-surface)] px-4 py-8 sm:mb-10 sm:px-6 sm:py-9 md:mb-12"
+      aria-label="Filtrar por sector principal"
+    >
+      <div className="mb-7 text-center">
+        <p className="page-eyebrow">Sectores</p>
+        <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--brand-dark)] sm:text-3xl">
           ¿Qué tipo de empresa buscas?
         </h2>
-        <p className="mt-2 text-sm text-[var(--foreground)]/65 sm:text-base">
-          Selecciona un sector. Los resultados se actualizan al instante.
-        </p>
-        <p className="mt-3 text-sm font-semibold text-[var(--foreground)]/70 sm:absolute sm:right-0 sm:top-1/2 sm:mt-0 sm:-translate-y-1/2 sm:text-base">
-          <span className="text-[var(--brand-primary)]">{totalCount}</span>{" "}
+        <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--brand-dark)]/60 sm:text-base">
+          Elige un sector. Los resultados se actualizan al instante ·{" "}
+          <span className="font-semibold text-[var(--brand-primary)]">{totalCount}</span>{" "}
           {totalCount === 1 ? "empresa" : "empresas"} en catálogo
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
-        <button
-          type="button"
-          onClick={() => onSectorChange("")}
-          aria-pressed={allActive}
-          className={`group relative flex flex-col items-start rounded-2xl border p-3.5 sm:p-4 text-left transition-all duration-200 ${
-            allActive
-              ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/[0.05] shadow-[0_0_0_1px_rgba(137,74,246,0.12)]"
-              : "border-black/[0.08] bg-white hover:border-[var(--brand-primary)]/25 hover:bg-[var(--brand-primary)]/[0.03]"
-          }`}
-        >
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-xl border transition ${
-              allActive
-                ? "border-[var(--brand-primary)]/20 bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]"
-                : "border-black/[0.06] bg-[var(--surface-muted)]/50 text-[var(--foreground)]/50 group-hover:text-[var(--brand-primary)]"
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
+        {cards.map((card) => (
+          <button
+            key={card.value || "all"}
+            type="button"
+            onClick={() => onSectorChange(card.value)}
+            aria-pressed={card.active}
+            className={`group flex flex-col gap-3 rounded-[1.35rem] bg-white p-5 text-left shadow-sm outline-none transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_40px_-22px_rgba(145,70,255,0.35)] focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)] focus-visible:ring-offset-2 ${
+              card.active
+                ? "ring-2 ring-[var(--brand-primary)]/35 shadow-[0_12px_32px_-16px_rgba(145,70,255,0.4)]"
+                : ""
             }`}
           >
-            <LayoutGrid className="h-5 w-5" strokeWidth={1.75} />
-          </div>
-          <span className="mt-3 text-sm font-semibold text-[var(--foreground)]">Todos</span>
-          <span className="mt-0.5 text-[11px] text-[var(--foreground)]/50 leading-snug">
-            Ver todo el catálogo
-          </span>
-          <span
-            className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-              allActive
-                ? "bg-[var(--brand-primary)] text-white"
-                : "bg-[var(--surface-muted)] text-[var(--foreground)]/55"
-            }`}
-          >
-            {totalCount}
-          </span>
-        </button>
+            {card.icon}
 
-        {PRIMARY_SECTOR_OPTIONS.map((sector) => {
-          const visual = getSectorVisual(sector.value);
-          const isActive = selectedSector === sector.value;
-          const count = countsBySector[sector.value] ?? 0;
+            <h3 className="text-lg font-extrabold tracking-tight text-[var(--brand-dark)]">
+              {card.title}
+            </h3>
 
-          return (
-            <button
-              key={sector.value}
-              type="button"
-              onClick={() => onSectorChange(sector.value)}
-              aria-pressed={isActive}
-              className={`group relative flex flex-col items-start rounded-2xl border p-3.5 sm:p-4 text-left transition-all duration-200 ${
-                isActive
-                  ? "bg-white shadow-[0_4px_20px_rgba(15,23,42,0.06)]"
-                  : "border-black/[0.08] bg-white hover:border-black/[0.12] hover:bg-[var(--surface-muted)]/20"
+            <ul className="flex flex-1 flex-col gap-1.5 text-sm text-[var(--brand-dark)]/65">
+              {card.bullets.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="font-extrabold text-[var(--brand-primary)]" aria-hidden>
+                    ·
+                  </span>
+                  <span className="leading-snug">{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            <span
+              className={`mt-1 inline-flex self-start rounded-full px-3.5 py-1.5 text-xs font-extrabold ${
+                card.count === 0 && !card.active
+                  ? "bg-[var(--brand-surface)] text-[var(--brand-dark)]/50"
+                  : "bg-[var(--brand-accent)] text-[var(--brand-dark)]"
               }`}
-              style={
-                isActive
-                  ? {
-                      borderColor: visual.accent,
-                      backgroundColor: `${visual.accent}08`,
-                      boxShadow: `0 0 0 1px ${visual.accent}20, 0 4px 20px rgba(15,23,42,0.05)`,
-                    }
-                  : undefined
-              }
             >
-              <SectorIcon sector={sector.value} size="xs" className="transition group-hover:scale-[1.03]" />
-              <span className="mt-3 text-sm font-semibold text-[var(--foreground)] leading-tight">
-                {sector.shortLabel}
-              </span>
-              <span className="mt-0.5 text-[11px] text-[var(--foreground)]/50 leading-snug line-clamp-2">
-                {sector.description}
-              </span>
-              <span
-                className="mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold text-white"
-                style={{
-                  backgroundColor: isActive ? visual.accent : `${visual.accent}cc`,
-                }}
-              >
-                {count} {count === 1 ? "empresa" : "empresas"}
-              </span>
-            </button>
-          );
-        })}
+              {card.count} {card.count === 1 ? "empresa" : "empresas"}
+            </span>
+
+            <span className="text-sm font-bold text-[var(--brand-primary)] group-hover:underline group-hover:underline-offset-4">
+              {card.active ? "Filtro activo →" : "Ver empresas →"}
+            </span>
+          </button>
+        ))}
       </div>
     </section>
   );

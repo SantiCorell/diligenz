@@ -1,13 +1,19 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import SectorIcon from "@/components/companies/SectorIcon";
 import { HOMEPAGE_FEATURED_SECTORS, getSectorVisual } from "@/lib/sector-visual";
 
 const MOBILE_CAROUSEL =
-  "-mx-4 flex gap-4 overflow-x-auto scroll-px-4 px-4 snap-x snap-mandatory pb-4 pt-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:scroll-px-0 sm:px-0 sm:pb-2 sm:pt-2 lg:grid-cols-4";
+  "-mx-4 flex gap-4 overflow-x-auto scroll-px-4 px-4 snap-x snap-mandatory pb-4 pt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:scroll-px-0 sm:px-0 sm:pb-0 sm:pt-0 lg:grid-cols-4";
 
 const MOBILE_CARD =
   "w-[min(82vw,300px)] shrink-0 snap-center sm:w-auto sm:shrink sm:snap-align-none";
+
+function descriptionBullets(description: string): string[] {
+  return description
+    .split(/,| y |·|\./i)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 3)
+    .slice(0, 3);
+}
 
 function SectorCard({
   slug,
@@ -17,59 +23,78 @@ function SectorCard({
   description: string;
 }) {
   const visual = getSectorVisual(slug);
-  const displayName = visual.shortLabel;
+  const Icon = visual.icon;
+  const bullets = descriptionBullets(description);
 
   return (
-    <div
-      className={`sector-card flex flex-col rounded-2xl bg-[#edeaf3] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-[#e8e4f0] hover:shadow-[0_14px_40px_rgba(145,70,255,0.12)] motion-reduce:hover:scale-100 ${MOBILE_CARD}`}
+    <Link
+      href={`/companies?sector=${slug}`}
+      className={`group flex flex-col gap-3 rounded-[1.35rem] bg-white p-5 shadow-sm outline-none transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_40px_-22px_rgba(145,70,255,0.35)] focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)] focus-visible:ring-offset-2 ${MOBILE_CARD}`}
     >
-      <SectorIcon sector={slug} size="md" />
-      <span
-        className={`mt-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium ${visual.tagClass}`}
+      <div
+        className={`flex h-11 w-11 items-center justify-center rounded-xl ${visual.iconBgClass}`}
       >
-        {displayName}
+        <Icon className="h-5 w-5" strokeWidth={2} aria-hidden />
+      </div>
+
+      <h3 className="text-lg font-extrabold tracking-tight text-[var(--brand-dark)]">
+        {visual.shortLabel}
+      </h3>
+
+      <ul className="flex flex-1 flex-col gap-1.5 text-sm text-[var(--brand-dark)]/65">
+        {(bullets.length > 0 ? bullets : [description]).map((item) => (
+          <li key={item} className="flex gap-2">
+            <span className="font-extrabold text-[var(--brand-primary)]" aria-hidden>
+              ·
+            </span>
+            <span className="leading-snug">{item}</span>
+          </li>
+        ))}
+      </ul>
+
+      <span className="mt-1 inline-flex self-start rounded-full bg-[var(--brand-accent)] px-3.5 py-1.5 text-xs font-extrabold text-[var(--brand-dark)]">
+        Sector especializado
       </span>
-      <h3 className="mt-3 text-lg font-semibold text-[var(--brand-dark)]">{displayName}</h3>
-      <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--foreground)]/70">
-        {description}
-      </p>
-      <Link
-        href={`/companies?sector=${slug}`}
-        className="mt-5 inline-flex w-fit items-center gap-1.5 rounded-full border border-[var(--brand-primary)]/25 bg-white px-4 py-2 text-sm font-semibold text-[var(--brand-primary)] transition hover:border-[var(--brand-primary)]/40 hover:bg-white/90"
-      >
-        Ver empresas
-        <ArrowRight className="h-4 w-4" />
-      </Link>
-    </div>
+
+      <span className="text-sm font-bold text-[var(--brand-primary)] group-hover:underline group-hover:underline-offset-4">
+        Ver empresas →
+      </span>
+    </Link>
   );
 }
 
 export default function SpecializedSectors() {
   return (
-    <section className="relative py-14 md:py-20">
+    <section className="relative py-14 md:py-20" aria-labelledby="sectores-especializados-heading">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between md:gap-8">
-          <h2 className="text-2xl font-bold text-[var(--brand-primary)] sm:text-3xl">
-            Sectores especializados
-          </h2>
-          <p className="max-w-md text-sm leading-relaxed text-[var(--foreground)]/70 sm:text-base md:text-right">
-            Analizamos y acompañamos operaciones en sectores con alta actividad y demanda
-            inversora.
+        <div className="rounded-[1.75rem] bg-[var(--brand-surface)] px-4 py-8 sm:px-6 sm:py-10 md:px-8">
+          <div className="text-center">
+            <p className="page-eyebrow">Sectores</p>
+            <h2
+              id="sectores-especializados-heading"
+              className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--brand-dark)] sm:text-3xl"
+            >
+              Sectores especializados
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--brand-dark)]/60 sm:text-base">
+              Analizamos y acompañamos operaciones en sectores con alta actividad y demanda
+              inversora.
+            </p>
+          </div>
+
+          <p className="mt-6 text-center text-xs text-[var(--brand-dark)]/50 sm:hidden">
+            Desliza para ver todos los sectores →
           </p>
-        </div>
 
-        <p className="mt-8 text-center text-xs text-[var(--foreground)]/60 sm:hidden">
-          Desliza para ver todos los sectores →
-        </p>
-
-        <div className={`mt-4 sm:mt-10 ${MOBILE_CAROUSEL}`}>
-          {HOMEPAGE_FEATURED_SECTORS.map((sector) => (
-            <SectorCard
-              key={sector.slug}
-              slug={sector.slug}
-              description={sector.description}
-            />
-          ))}
+          <div className={`mt-4 sm:mt-8 ${MOBILE_CAROUSEL}`}>
+            {HOMEPAGE_FEATURED_SECTORS.map((sector) => (
+              <SectorCard
+                key={sector.slug}
+                slug={sector.slug}
+                description={sector.description}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>
