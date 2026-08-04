@@ -5,9 +5,10 @@ import { trackContact } from "@/lib/meta-pixel";
 
 const MOTIVOS = [
   { value: "valoracion", label: "Valoración de mi empresa" },
-  { value: "due-diligence", label: "Due diligence" },
+  { value: "due-diligence", label: "Due diligence (legal / fiscal / laboral / financiera)" },
   { value: "vender", label: "Vender empresa" },
   { value: "comprar", label: "Comprar / Invertir" },
+  { value: "contrato", label: "Contrato, SPA o pacto de socios" },
   { value: "otro", label: "Otro" },
 ];
 

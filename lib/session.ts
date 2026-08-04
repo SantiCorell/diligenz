@@ -45,14 +45,20 @@ export async function createSession(userId: string): Promise<string> {
 /** Busca la sesión en DB; si existe y no ha expirado, la devuelve (con user) */
 export async function getSessionFromToken(sessionToken: string | undefined) {
   if (!sessionToken?.trim()) return null;
-  const session = await prisma.session.findUnique({
-    where: { sessionToken },
-    include: { user: true },
-  });
-  if (!session || session.expires < new Date()) return null;
-  if (session.user.deletedAt != null) return null;
-  if (session.user.accountStatus === "REJECTED") return null;
-  return session;
+  try {
+    const session = await prisma.session.findUnique({
+      where: { sessionToken },
+      include: { user: true },
+    });
+    if (!session || session.expires < new Date()) return null;
+    if (session.user.deletedAt != null) return null;
+    if (session.user.accountStatus === "REJECTED") return null;
+    return session;
+  } catch (err) {
+    // Evita tumbar páginas públicas si la DB no está disponible (dev local).
+    console.error("[session] getSessionFromToken failed:", err);
+    return null;
+  }
 }
 
 /** Prórroga la sesión (sliding) y devuelve el mismo token */
