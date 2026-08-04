@@ -213,7 +213,7 @@ export default function CompaniesGrid({
       />
 
       {companies.length > 0 ? (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2">
           {companies.map((company) => (
             <CompanyCard
               key={company.id}

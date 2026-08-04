@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Hash, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import type { CompanyMock } from "@/lib/mock-companies";
 import { formatEuroAmountFromString, formatEuroRange } from "@/lib/format-financial";
 import { ccaaLabel } from "@/lib/spain-ccaa";
 import { getSectorVisual } from "@/lib/sector-visual";
-import SectorIcon from "@/components/companies/SectorIcon";
 import CompanyFavoriteButton from "@/components/companies/CompanyFavoriteButton";
 
 type Props = {
@@ -18,6 +17,31 @@ type Props = {
   ctaLabel?: string;
 };
 
+function MetricCell({
+  label,
+  value,
+  muted,
+}: {
+  label: string;
+  value: string;
+  muted?: boolean;
+}) {
+  return (
+    <div className="min-w-0">
+      <span className="block text-[11px] font-medium leading-tight text-[var(--brand-dark)]/55 sm:text-xs">
+        {label}
+      </span>
+      <b
+        className={`mt-0.5 block truncate text-sm font-extrabold tracking-tight sm:text-[15px] ${
+          muted ? "font-medium text-[var(--brand-dark)]/45" : "text-[var(--brand-dark)]"
+        }`}
+      >
+        {value}
+      </b>
+    </div>
+  );
+}
+
 export default function CompanyCard({
   company,
   isLoggedIn = false,
@@ -26,122 +50,144 @@ export default function CompanyCard({
   ctaLabel = "Más información",
 }: Props) {
   const sectorVisual = getSectorVisual(company.sector);
-  const descMax = compact ? 120 : 140;
+  const descMax = compact ? 100 : 160;
   const descriptionPreview =
     company.description.length > descMax
-      ? company.description.slice(0, descMax) + "…"
+      ? company.description.slice(0, descMax).trimEnd() + "…"
       : company.description;
 
-  const annualRevenue = company.revenue?.trim() || company.gmv?.trim() || "—";
+  const annualRevenueRaw = company.revenue?.trim() || company.gmv?.trim() || "";
+  const annualRevenue = annualRevenueRaw
+    ? formatEuroAmountFromString(annualRevenueRaw)
+    : "—";
+  const ebitdaRaw = company.ebitda?.trim() || "";
+  const ebitda = ebitdaRaw ? formatEuroAmountFromString(ebitdaRaw) : "—";
+  const exerciseRaw = company.exerciseResult?.trim() || "";
+  const exercise = exerciseRaw ? formatEuroAmountFromString(exerciseRaw) : "—";
+  const employees =
+    company.employees != null ? String(company.employees) : "—";
+
   const salePrice =
     company.valuationSaleMin != null || company.valuationSaleMax != null
-      ? formatEuroRange(company.valuationSaleMin, company.valuationSaleMax) ?? "—"
+      ? formatEuroRange(company.valuationSaleMin, company.valuationSaleMax)
       : null;
-  const metrics = [
-    { label: "Facturación anual €", value: annualRevenue, isFinancial: true },
-    { label: "EBITDA", value: company.ebitda || "—", isFinancial: true },
-    ...(salePrice
-      ? [{ label: "Precio de venta", value: salePrice, isFinancial: false as const }]
-      : []),
-    { label: "Resultado ejercicio", value: company.exerciseResult || "—", isFinancial: true },
-    {
-      label: "Nº Empleados",
-      value: company.employees != null ? String(company.employees) : "—",
-      isFinancial: false,
-    },
-  ];
+
+  const refLabel = company.reference
+    ? company.reference.startsWith("#")
+      ? company.reference
+      : `# ${company.reference}`
+    : null;
 
   return (
     <div className="company-card-hover-wrap h-full">
       <article
-        className={`company-card-shell flex h-full flex-col overflow-hidden rounded-[1.75rem] bg-[var(--brand-bg-lavender)]/55 ${
-          compact ? "min-h-[300px] p-3.5 sm:min-h-[320px] sm:p-4" : "min-h-[300px] p-4 sm:min-h-[320px]"
+        className={`company-card-shell flex h-full flex-col rounded-[1.5rem] border border-[var(--brand-dark)]/[0.09] bg-white ${
+          compact ? "gap-3 p-4 sm:p-5" : "gap-3.5 p-5 sm:gap-4 sm:p-6"
         }`}
       >
-        <div className="grid h-full min-h-0 flex-1 grid-cols-2 gap-2.5 sm:gap-3">
-          {/* Panel izquierdo — ficha blanca */}
-          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/80 bg-white p-3 sm:p-3.5">
-            <div className="flex min-h-0 items-start gap-2">
-              <p
-                className={`min-w-0 flex-1 leading-snug text-[var(--foreground)]/75 ${
-                  compact ? "text-xs line-clamp-3 sm:text-[13px]" : "text-[13px] line-clamp-5 sm:text-sm"
-                }`}
-              >
-                {descriptionPreview}
-              </p>
-              <SectorIcon sector={company.sector} size="sm" />
-            </div>
-
-            <div className="mt-auto shrink-0 space-y-1.5 pt-3 sm:space-y-2 sm:pt-4">
-            {metrics.map(({ label, value, isFinancial }) => (
-              <div key={label} className="flex items-center justify-between gap-2">
-                <span className="flex min-w-0 items-center gap-1.5 text-[11px] leading-tight text-[var(--foreground)]/60 sm:text-xs">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-primary)]" aria-hidden />
-                  {label}
-                </span>
-                <span className="shrink-0 rounded-full bg-[var(--surface-muted)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--brand-dark)] sm:text-xs">
-                  {isFinancial ? formatEuroAmountFromString(value) : value}
-                </span>
-              </div>
-            ))}
-          </div>
+        {/* Tags */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-[var(--brand-primary)]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--brand-primary)] sm:text-xs">
+            {sectorVisual.shortLabel}
+          </span>
+          <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-[var(--brand-surface)] px-3 py-1 text-[11px] font-semibold text-[var(--brand-dark)]/70 sm:text-xs">
+            <MapPin className="h-3 w-3 shrink-0 text-red-500/80" aria-hidden />
+            <span className="truncate">{ccaaLabel(company.location)}</span>
+          </span>
+          {refLabel ? (
+            <span className="ml-auto rounded-full border border-[var(--brand-dark)]/12 px-2.5 py-1 font-mono text-[11px] font-bold tracking-wide text-[var(--brand-dark)]/65 sm:text-xs">
+              {refLabel}
+            </span>
+          ) : null}
+          {isLoggedIn ? (
+            <span className={refLabel ? "" : "ml-auto"}>
+              <CompanyFavoriteButton
+                companyId={company.id}
+                initialFavorite={isFavorite}
+                variant="icon"
+                size="sm"
+              />
+            </span>
+          ) : null}
         </div>
 
-        {/* Panel derecho — tags, nombre y CTA */}
-        <div className="flex h-full min-h-0 min-w-0 flex-col justify-between rounded-2xl p-2.5 sm:p-3">
-          <div>
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <span
-                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${sectorVisual.tagClass}`}
-              >
-                {sectorVisual.shortLabel}
-              </span>
-              <span className="inline-flex max-w-[55%] items-center gap-1 rounded-full border border-[var(--brand-primary)]/15 bg-white/90 px-2.5 py-1 text-[11px] font-medium text-[var(--brand-dark)]/75 sm:text-xs">
-                <MapPin className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
-                <span className="truncate">{ccaaLabel(company.location)}</span>
-              </span>
-            </div>
-            <h3
-              className={`mt-3 font-bold leading-tight text-[var(--brand-dark)] ${
-                compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"
-              }`}
-            >
-              {company.name}
-            </h3>
-            {company.reference ? (
-              <p
-                className="mt-2 inline-flex items-center gap-1 rounded-full border border-[var(--brand-primary)]/20 bg-white/90 px-2.5 py-1 font-mono text-[11px] font-bold tracking-wide text-[var(--brand-primary)] sm:text-xs"
-                title="Referencia para solicitar información"
-              >
-                <Hash className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
-                {company.reference}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="mt-auto w-full shrink-0 pt-3">
-            {isLoggedIn ? (
-              <div className="mb-1.5 flex justify-end pr-0.5">
-                <CompanyFavoriteButton
-                  companyId={company.id}
-                  initialFavorite={isFavorite}
-                  variant="icon"
-                  size="sm"
-                />
-              </div>
-            ) : null}
-            <Link
-              href={`/companies/${company.id}`}
-              className={`flex w-full items-center justify-center rounded-full bg-[var(--brand-primary)] font-semibold text-white shadow-md shadow-[var(--brand-primary)]/25 transition hover:opacity-95 ${
-                compact ? "py-2.5 text-sm" : "py-3.5 text-sm sm:text-base"
-              }`}
-            >
-              {ctaLabel}
-            </Link>
-          </div>
+        {/* Title + description */}
+        <div className="min-w-0">
+          <h3
+            className={`font-extrabold leading-snug tracking-tight text-[var(--brand-dark)] ${
+              compact ? "text-lg sm:text-xl" : "text-xl sm:text-[1.35rem]"
+            }`}
+          >
+            {company.name}
+          </h3>
+          <p
+            className={`mt-2 leading-relaxed text-[var(--brand-dark)]/60 ${
+              compact ? "line-clamp-2 text-sm" : "line-clamp-2 text-sm sm:text-[15px]"
+            }`}
+          >
+            {descriptionPreview}
+          </p>
         </div>
-      </div>
-    </article>
+
+        {/* Metrics — 2×2 en móvil, 4 en desktop → menos apilado */}
+        <div
+          className={`grid grid-cols-2 gap-x-3 gap-y-3 rounded-2xl bg-[var(--brand-surface)] ${
+            compact ? "p-3 sm:grid-cols-4 sm:p-3.5" : "p-3.5 sm:grid-cols-4 sm:gap-x-4 sm:p-4"
+          }`}
+        >
+          <MetricCell
+            label="Facturación anual"
+            value={annualRevenue}
+            muted={annualRevenue === "—"}
+          />
+          <MetricCell label="EBITDA" value={ebitda} muted={ebitda === "—"} />
+          <MetricCell
+            label="Resultado ejercicio"
+            value={exercise}
+            muted={exercise === "—"}
+          />
+          <MetricCell
+            label="Nº empleados"
+            value={employees}
+            muted={employees === "—"}
+          />
+        </div>
+
+        {/* Footer */}
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-0.5">
+          {salePrice ? (
+            <span className="inline-flex flex-col rounded-full bg-[var(--brand-accent)] px-4 py-2 leading-tight">
+              <small className="text-[10px] font-semibold text-[var(--brand-dark)]/65">
+                Precio de venta
+              </small>
+              <span className="text-sm font-extrabold text-[var(--brand-dark)] sm:text-[15px]">
+                {salePrice}
+              </span>
+            </span>
+          ) : (
+            <span className="inline-flex flex-col rounded-full bg-[var(--brand-accent)] px-4 py-2 leading-tight">
+              <small className="text-[10px] font-semibold text-[var(--brand-dark)]/65">
+                Consultar
+              </small>
+              <span className="text-sm font-extrabold text-[var(--brand-dark)] sm:text-[15px]">
+                precio
+              </span>
+            </span>
+          )}
+
+          <Link
+            href={`/companies/${company.id}`}
+            className={`group inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--brand-primary)] font-semibold text-white transition hover:opacity-95 ${
+              compact ? "px-4 py-2.5 text-sm" : "px-5 py-2.5 text-sm sm:px-6 sm:py-3"
+            }`}
+          >
+            {ctaLabel}
+            <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
+              →
+            </span>
+          </Link>
+        </div>
+      </article>
     </div>
   );
 }

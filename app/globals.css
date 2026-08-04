@@ -1180,19 +1180,27 @@ body {
 }
 
 .company-card-hover-wrap {
-  padding: 0.875rem 0.25rem;
+  padding: 0.25rem 0;
 }
 
 .company-card-shell {
-  box-shadow: 0 8px 32px rgb(var(--brand-shadow) / 0.1);
+  box-shadow: 0 4px 20px rgb(var(--brand-shadow) / 0.06);
   transition:
-    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .company-card-hover-wrap:hover .company-card-shell {
-  transform: translateY(-10px);
+  transform: translateY(-4px);
   box-shadow:
-    0 24px 48px rgb(var(--brand-shadow) / 0.24),
-    0 10px 20px rgb(0 0 0 / 0.07);
+    0 24px 48px -24px rgb(var(--brand-shadow) / 0.3),
+    0 8px 16px rgb(0 0 0 / 0.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .company-card-shell,
+  .company-card-hover-wrap:hover .company-card-shell {
+    transition: none;
+    transform: none;
+  }
 }
