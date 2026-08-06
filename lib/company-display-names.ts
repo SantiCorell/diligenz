@@ -1,8 +1,10 @@
-/** Nombre visible en tarjetas y ficha pública (deal). */
+/** Nombre visible en tarjetas y ficha pública (deal). Nunca filtrar el nombre legal. */
 export function publicListingName(
   dealTitle: string | null | undefined,
-  companyName: string
+  /** Solo admin/vendedor pueden pasar el nombre real como fallback consciente. */
+  fallback = "Proyecto confidencial"
 ): string {
   const title = dealTitle?.trim();
-  return title || companyName.trim() || "Proyecto confidencial";
+  const safe = fallback.trim();
+  return title || safe || "Proyecto confidencial";
 }

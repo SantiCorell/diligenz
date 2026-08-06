@@ -47,8 +47,7 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
       : [];
   return {
     id: company.id,
-    name: publicListingName(deal.title, company.name),
-    businessName: company.name,
+    name: publicListingName(deal.title),
     sector: company.sector,
     location: company.location,
     revenue: company.revenue?.trim() || "—",
@@ -57,6 +56,7 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     gmv: company.gmv ?? null,
     employees: company.employees ?? null,
     description: company.description ?? "Sin descripción.",
+    // Solo se adjunta a la ficha si el usuario está autenticado (ver abajo).
     sellerDescription: company.sellerDescription ?? null,
     documentLinks: Array.isArray(docLinks) ? docLinks : null,
     buyerTeaserUrl: company.buyerTeaserUrl?.trim() || null,
@@ -140,6 +140,8 @@ export default async function CompanyDetailPage({ params }: Props) {
 
   const companyForFicha: CompanyMock = {
     ...company,
+    // Confidencialidad: no serializar nombre real ni texto del vendedor a anónimos.
+    sellerDescription: isLoggedIn ? company.sellerDescription : null,
     documentLinks: isOwner || isAdmin ? company.documentLinks : null,
     buyerDocuments:
       buyerDocumentAccess || showBuyerDocumentsPreview ? resolvedBuyerDocs : null,

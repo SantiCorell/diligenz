@@ -44,8 +44,7 @@ function mapDealToMock(deal: DealWithCompany): CompanyMock {
   const heroImageSrc = heroFile ? `/api/companies/${c.id}/files/${heroFile.id}` : null;
   return {
     id: c.id,
-    name: publicListingName(deal.title, c.name),
-    businessName: c.name,
+    name: publicListingName(deal.title),
     sector: c.sector,
     location: c.location,
     revenue: c.revenue?.trim() || "—",
@@ -54,13 +53,11 @@ function mapDealToMock(deal: DealWithCompany): CompanyMock {
     gmv: (c as { gmv?: string | null }).gmv ?? null,
     employees: c.employees ?? null,
     description: c.description ?? "Sin descripción.",
-    sellerDescription: (c as { sellerDescription?: string | null }).sellerDescription ?? null,
     documentLinks: null,
     attachmentsApproved: (c as { attachmentsApproved?: boolean }).attachmentsApproved ?? false,
     companyType: (c as { companyType?: string | null }).companyType ?? null,
     yearsOperating: (c as { yearsOperating?: number | null }).yearsOperating ?? null,
     hasReceivedFunding: (c as { hasReceivedFunding?: boolean | null }).hasReceivedFunding ?? null,
-    website: (c as { website?: string | null }).website ?? null,
     heroImageSrc,
     valuationSaleMin: val?.salePriceMin ?? null,
     valuationSaleMax: val?.salePriceMax ?? null,

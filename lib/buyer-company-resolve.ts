@@ -7,12 +7,13 @@ export type ResolvedBuyerCompany = {
   company: CompanyMock | null;
   /** Hay deal publicado: la ficha en /companies/[id] es accesible como en el catálogo */
   published: boolean;
-  /** Si no está publicada pero existe en DB, mostrar nombre */
+  /** Si no está publicada, nombre público seguro para listados del comprador */
   fallbackName: string | null;
 };
 
 /**
  * Resuelve datos de tarjeta para intereses del comprador (mock o empresa real).
+ * Nunca expone Company.name (nombre real) al comprador.
  */
 export async function resolveCompanyForBuyerInterest(
   companyId: string
@@ -25,7 +26,11 @@ export async function resolveCompanyForBuyerInterest(
     const company = await prisma.company.findUnique({
       where: { id: companyId },
       include: {
-        deals: { where: { published: true }, take: 1 },
+        deals: {
+          orderBy: [{ published: "desc" }, { createdAt: "desc" }],
+          take: 1,
+          select: { title: true, published: true },
+        },
         valuations: { orderBy: { createdAt: "desc" }, take: 1 },
         companyFiles: {
           where: { kind: "image" },
@@ -38,8 +43,9 @@ export async function resolveCompanyForBuyerInterest(
     if (!company || company.removedAt) {
       return { company: null, published: false, fallbackName: null };
     }
-    const published = company.deals.length > 0;
     const deal = company.deals[0];
+    const published = Boolean(deal?.published);
+    const listingName = publicListingName(deal?.title);
     const val = company.valuations[0];
     const imgFiles = company.companyFiles;
     const heroFile = imgFiles[0];
@@ -49,8 +55,7 @@ export async function resolveCompanyForBuyerInterest(
         : [];
     const cm: CompanyMock = {
       id: company.id,
-      name: publicListingName(deal?.title, company.name),
-      businessName: company.name,
+      name: listingName,
       sector: company.sector,
       location: company.location,
       revenue: company.revenue?.trim() || company.gmv?.trim() || "—",
@@ -59,7 +64,6 @@ export async function resolveCompanyForBuyerInterest(
       gmv: company.gmv ?? null,
       employees: company.employees ?? null,
       description: company.description ?? "Sin descripción.",
-      sellerDescription: company.sellerDescription ?? null,
       documentLinks: null,
       attachmentsApproved: company.attachmentsApproved ?? false,
       heroImageSrc: heroFile ? `/api/companies/${company.id}/files/${heroFile.id}` : null,
@@ -71,7 +75,7 @@ export async function resolveCompanyForBuyerInterest(
     return {
       company: cm,
       published,
-      fallbackName: published ? null : company.name,
+      fallbackName: published ? null : listingName,
     };
   } catch {
     return { company: null, published: false, fallbackName: null };

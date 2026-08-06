@@ -39,7 +39,10 @@ export type CompanyMock = {
   valuationSaleMax?: number | null;
   /** Referencia pública para citar la empresa (teléfono, email). */
   reference?: string | null;
-  /** Nombre real del negocio (solo admin / propietario). */
+  /**
+   * Nombre real del negocio. Solo admin / propietario en rutas internas.
+   * Nunca incluir en serializers públicos o de comprador.
+   */
   businessName?: string | null;
 };
 
