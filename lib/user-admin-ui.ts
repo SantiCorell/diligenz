@@ -29,9 +29,11 @@ export function accountStatusBadgeClass(s: UserAccountStatus): string {
   }
 }
 
-export const ACCOUNT_STATUSES: UserAccountStatus[] = [
-  "PENDING",
-  "IN_REVIEW",
-  "ACTIVE",
-  "REJECTED",
-];
+/** Estados que el admin puede asignar. «En revisión» queda fuera del selector. */
+export const ACCOUNT_STATUSES: UserAccountStatus[] = ["PENDING", "ACTIVE", "REJECTED"];
+
+/** Si un usuario sigue en IN_REVIEW, se muestra para poder cambiarlo. */
+export function accountStatusOptions(current: UserAccountStatus): UserAccountStatus[] {
+  if (current === "IN_REVIEW") return [current, ...ACCOUNT_STATUSES];
+  return ACCOUNT_STATUSES;
+}

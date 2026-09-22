@@ -9,6 +9,7 @@ import {
   ADMIN_ACCOUNT_STATUS_LABELS,
   ACCOUNT_STATUSES,
   accountStatusBadgeClass,
+  accountStatusOptions,
 } from "@/lib/user-admin-ui";
 import { type DniVerificationStatus } from "@/lib/user-documents/dni-status";
 import { Search, SlidersHorizontal, UserPlus, Trash2, ChevronDown } from "lucide-react";
@@ -44,104 +45,72 @@ function profileCompleteEffective(u: UserRow) {
   return Boolean(u.phone?.trim()) || u.profileVerifiedByAdmin;
 }
 
-function UserNotionValidationPanel({
+function NotionMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} aria-hidden>
+      <path fill="currentColor" d="M3.2 13V3h2.1l5.4 7.2V3H13v10h-2.1L5.5 5.8V13H3.2Z" />
+    </svg>
+  );
+}
+
+function UserNotionToggle({
   user,
   onSaved,
+  compact = false,
 }: {
   user: UserRow;
   onSaved: () => void;
+  compact?: boolean;
 }) {
   const [validated, setValidated] = useState(user.notionValidated);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sincronizar al cambiar usuario */
     setValidated(user.notionValidated);
-    setMsg(null);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [user.id, user.notionValidated]);
 
-  const setValue = async (next: boolean) => {
-    if (next === validated || saving) return;
+  const toggle = async () => {
+    if (saving) return;
+    const next = !validated;
     setSaving(true);
-    setMsg(null);
     try {
       const res = await authFetch(`/api/admin/users/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notionValidated: next }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setMsg({ type: "error", text: (data as { error?: string }).error ?? "Error al guardar" });
-        return;
-      }
+      if (!res.ok) return;
       setValidated(next);
-      setMsg({ type: "ok", text: next ? "Marcado OK en Notion." : "Marcado como pendiente." });
       onSaved();
-    } catch {
-      setMsg({ type: "error", text: "Error de conexión." });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div
-      className={`border-b border-slate-200/80 px-4 py-4 sm:px-6 ${
-        validated ? "bg-emerald-50/50" : "bg-amber-50/60"
+    <button
+      type="button"
+      disabled={saving}
+      onClick={(e) => {
+        e.stopPropagation();
+        void toggle();
+      }}
+      aria-pressed={validated}
+      aria-label={validated ? "Notion validado. Pulsa para marcar pendiente." : "Notion pendiente. Pulsa para marcar OK."}
+      title={validated ? "Validado en Notion" : "Pendiente en Notion"}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition disabled:opacity-60 ${
+        compact ? "min-h-9 px-2.5 text-xs" : "min-h-11 px-3 text-sm"
+      } ${
+        validated
+          ? "bg-emerald-600 text-white shadow-sm hover:bg-emerald-700"
+          : "bg-amber-50 text-amber-900 ring-1 ring-amber-200 hover:bg-amber-100"
       }`}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-[var(--brand-primary)]">Notion</p>
-          <p className="mt-0.5 text-xs text-slate-600">
-            {validated
-              ? "Usuario validado en Notion."
-              : "Pendiente de validar en Notion."}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div
-            className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm"
-            role="group"
-            aria-label="Validación Notion"
-          >
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => void setValue(false)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                !validated
-                  ? "bg-amber-100 text-amber-900 ring-1 ring-amber-200"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              No
-            </button>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => void setValue(true)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                validated
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              OK
-            </button>
-          </div>
-          {saving && <span className="text-xs text-slate-500">Guardando…</span>}
-        </div>
-      </div>
-      {msg && (
-        <p className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}>
-          {msg.text}
-        </p>
-      )}
-    </div>
+      <NotionMark className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
+      {validated ? "OK" : "Pend."}
+    </button>
   );
 }
 
@@ -1012,7 +981,7 @@ function AdminUserMobileCard({
                 className={`appearance-none cursor-pointer w-full min-h-11 rounded-xl pl-3 pr-10 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/25 ${accountStatusBadgeClass(u.accountStatus)}`}
                 aria-labelledby={`m-st-lbl-${u.id}`}
               >
-                {ACCOUNT_STATUSES.map((s) => (
+                {accountStatusOptions(u.accountStatus).map((s) => (
                   <option key={s} value={s}>
                     {ADMIN_ACCOUNT_STATUS_LABELS[s]}
                   </option>
@@ -1026,16 +995,12 @@ function AdminUserMobileCard({
           </div>
         </div>
 
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <span className="text-xs font-medium text-slate-500">Notion</span>
+          <UserNotionToggle user={u} onSaved={onVerificationSaved} />
+        </div>
+
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          {u.notionValidated ? (
-            <span className="text-[10px] uppercase tracking-wide text-emerald-900 font-semibold bg-emerald-100 px-2.5 py-1.5 rounded-lg">
-              Notion OK
-            </span>
-          ) : (
-            <span className="text-[10px] uppercase tracking-wide text-amber-900 font-semibold bg-amber-100 px-2.5 py-1.5 rounded-lg">
-              Notion pend.
-            </span>
-          )}
           <span className="rounded-lg bg-violet-100 px-2.5 py-1 text-xs font-semibold text-[var(--brand-dark)]">
             {checksOk}/3 verificación
           </span>
@@ -1063,7 +1028,6 @@ function AdminUserMobileCard({
 
       {isExpanded && (
         <div className="border-t border-slate-200/80">
-          <UserNotionValidationPanel user={u} onSaved={onVerificationSaved} />
           <div className="p-4 sm:p-5 border-b border-slate-100">
             <AdminContactEmailPanel
               email={u.email}
@@ -1198,12 +1162,30 @@ export default function AdminUsersPage() {
   };
 
   const updateAccountStatus = async (userId: string, accountStatus: UserAccountStatus) => {
+    const current = users.find((u) => u.id === userId);
+    const activateNotion = current?.accountStatus === "PENDING" && accountStatus === "ACTIVE";
     const res = await authFetch(`/api/admin/users/${userId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accountStatus }),
+      body: JSON.stringify({
+        accountStatus,
+        ...(activateNotion ? { notionValidated: true } : {}),
+      }),
     });
-    if (res.ok) loadUsers();
+    if (res.ok) {
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                accountStatus,
+                notionValidated: activateNotion ? true : u.notionValidated,
+              }
+            : u
+        )
+      );
+      loadUsers();
+    }
   };
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
@@ -1574,6 +1556,9 @@ export default function AdminUsersPage() {
                       Estado
                     </th>
                     <th className="px-4 py-3.5 font-semibold text-slate-600 text-xs uppercase tracking-wide whitespace-nowrap">
+                      Notion
+                    </th>
+                    <th className="px-4 py-3.5 font-semibold text-slate-600 text-xs uppercase tracking-wide whitespace-nowrap">
                       Checks
                     </th>
                     <th className="px-4 py-3.5 font-semibold text-slate-600 text-xs uppercase tracking-wide text-right whitespace-nowrap">
@@ -1682,7 +1667,7 @@ export default function AdminUsersPage() {
                                 )}`}
                                 aria-label={`Estado de cuenta de ${displayName}`}
                               >
-                                {ACCOUNT_STATUSES.map((s) => (
+                                {accountStatusOptions(u.accountStatus).map((s) => (
                                   <option key={s} value={s}>
                                     {ADMIN_ACCOUNT_STATUS_LABELS[s]}
                                   </option>
@@ -1691,17 +1676,11 @@ export default function AdminUsersPage() {
                               <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-50" aria-hidden />
                             </div>
                           </td>
+                          <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
+                            <UserNotionToggle user={u} onSaved={loadUsers} compact />
+                          </td>
                           <td className="px-4 py-3.5">
-                            {u.notionValidated ? (
-                              <span className="text-[10px] uppercase tracking-wide text-emerald-800 font-semibold">
-                                Notion OK
-                              </span>
-                            ) : (
-                              <span className="text-[10px] uppercase tracking-wide text-amber-800 font-semibold">
-                                Notion pend.
-                              </span>
-                            )}
-                            <span className="ml-2 text-xs font-semibold text-slate-700">
+                            <span className="text-xs font-semibold text-slate-700">
                               {checksOk}/3
                             </span>
                             {u.dniPendingReview && (
@@ -1737,8 +1716,7 @@ export default function AdminUsersPage() {
                         </tr>
                         {expandedUserId === u.id && (
                           <tr className="bg-slate-50/50">
-                            <td colSpan={7} className="p-0">
-                              <UserNotionValidationPanel user={u} onSaved={loadUsers} />
+                            <td colSpan={8} className="p-0">
                               <div className="p-4 sm:px-6 border-b border-slate-100">
                                 <AdminContactEmailPanel
                                   email={u.email}

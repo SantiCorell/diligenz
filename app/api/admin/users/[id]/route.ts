@@ -5,7 +5,7 @@ import { getSessionWithUserFromRequest } from "@/lib/session";
 
 type Params = { params: Promise<{ id: string }> };
 
-const STATUSES: UserAccountStatus[] = ["PENDING", "IN_REVIEW", "ACTIVE", "REJECTED"];
+const STATUSES: UserAccountStatus[] = ["PENDING", "ACTIVE", "REJECTED"];
 const ASSIGNABLE_ROLES: UserRole[] = ["ADMIN", "BUYER", "SELLER", "PROFESSIONAL"];
 
 const DRIVE_URL_MAX = 2048;
@@ -171,10 +171,14 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const alive = await prisma.user.findFirst({
     where: { id: userId, deletedAt: null },
-    select: { id: true },
+    select: { id: true, accountStatus: true },
   });
   if (!alive) {
     return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+  }
+
+  if (data.accountStatus === "ACTIVE" && alive.accountStatus === "PENDING") {
+    data.notionValidated = true;
   }
 
   try {

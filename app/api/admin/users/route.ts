@@ -6,7 +6,7 @@ import { getSessionWithUserFromRequest } from "@/lib/session";
 import { getDniVerificationStatus, isDniPendingReview } from "@/lib/user-documents/dni-status";
 
 const ROLES: UserRole[] = ["ADMIN", "BUYER", "SELLER", "PROFESSIONAL"];
-const STATUSES: UserAccountStatus[] = ["PENDING", "IN_REVIEW", "ACTIVE", "REJECTED"];
+const STATUSES: UserAccountStatus[] = ["PENDING", "ACTIVE", "REJECTED"];
 
 function jsonDocumentLinksMeaningful(v: unknown): boolean {
   if (v == null) return false;
@@ -35,6 +35,11 @@ export async function GET(req: Request) {
   if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
+
+  await prisma.user.updateMany({
+    where: { accountStatus: "IN_REVIEW" },
+    data: { accountStatus: "ACTIVE" },
+  });
 
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();
