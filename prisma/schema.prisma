@@ -22,7 +22,7 @@ model User {
   passwordHash  String?  // Opcional para usuarios OAuth
   phone         String?
   role          UserRole
-  accountStatus UserAccountStatus @default(ACTIVE)
+  accountStatus UserAccountStatus @default(PENDING)
   deletedAt     DateTime?
   emailVerified Boolean  @default(false)
 
@@ -215,14 +215,17 @@ model VerificationToken {
 /**
  * Interés del usuario en una empresa (solicitar info, favoritos/seguimiento).
  * companyId puede ser id mock (mock-1) o id real de Deal/Company.
- * status solo aplica a REQUEST_INFO: control admin (pendiente, gestionada, rechazada).
+ * status solo aplica a REQUEST_INFO: embudo Pendiente NDA → En revisión → Teaser → Conversaciones → Cerrada / Rechazada.
  */
 model UserCompanyInterest {
-  id        String   @id @default(cuid())
-  companyId String
-  type      CompanyInterestType
-  status    RequestStatus? @default(PENDING) // solo para REQUEST_INFO
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  companyId       String
+  type            CompanyInterestType
+  status          RequestStatus? @default(PENDING_NDA) // solo para REQUEST_INFO
+  /// Nota privada del gestor. El comprador no la ve.
+  internalNote    String?  @db.Text
+  statusUpdatedAt DateTime @default(now())
+  createdAt       DateTime @default(now())
 
   userId String
   user   User   @relation(fields: [userId], references: [id])
@@ -260,6 +263,11 @@ enum RequestStatus {
   PENDING
   MANAGED
   REJECTED
+  PENDING_NDA
+  IN_REVIEW
+  TEASER
+  CONVERSATIONS
+  CLOSED
 }
 
 /**

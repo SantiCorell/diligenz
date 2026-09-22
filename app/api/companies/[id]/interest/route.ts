@@ -12,6 +12,7 @@ import {
   infoRequestLimitMessage,
 } from "@/lib/buyer-info-request-limit";
 import { logUserActivity } from "@/lib/user-activity";
+import { initialRequestStatus } from "@/lib/info-request-pipeline";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -72,6 +73,7 @@ export async function POST(req: Request, { params }: Params) {
       email: true,
       name: true,
       role: true,
+      ndaSigned: true,
       maxConcurrentInfoRequests: true,
     },
   });
@@ -185,14 +187,15 @@ export async function POST(req: Request, { params }: Params) {
         );
       }
 
+      const openingStatus = initialRequestStatus(user.ndaSigned);
       await prisma.userCompanyInterest.create({
-        data: { userId, companyId, type, status: "PENDING" },
+        data: { userId, companyId, type, status: openingStatus, statusUpdatedAt: new Date() },
       });
       await logUserActivity({
         userId,
         type: "INFO_REQUEST_CREATED",
         companyId,
-        metadata: { status: "PENDING" },
+        metadata: { status: openingStatus },
       });
       createdNewInfoRequest = true;
     } else if (existing.status === "REJECTED") {
@@ -208,15 +211,16 @@ export async function POST(req: Request, { params }: Params) {
         );
       }
 
+      const openingStatus = initialRequestStatus(user.ndaSigned);
       await prisma.userCompanyInterest.update({
         where: { id: existing.id },
-        data: { status: "PENDING" },
+        data: { status: openingStatus, statusUpdatedAt: new Date() },
       });
       await logUserActivity({
         userId,
         type: "INFO_REQUEST_CREATED",
         companyId,
-        metadata: { status: "PENDING", revived: true },
+        metadata: { status: openingStatus, revived: true },
       });
       createdNewInfoRequest = true;
     }

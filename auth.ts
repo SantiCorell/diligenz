@@ -23,6 +23,7 @@ function diligenzAdapter(): Adapter {
           name: user.name ?? null,
           image: user.image ?? null,
           role: "BUYER",
+          accountStatus: "PENDING",
           provider: "google",
           oauthProfileComplete: false,
         },

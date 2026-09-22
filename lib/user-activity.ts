@@ -1,4 +1,5 @@
 import type { Prisma, UserActivityType, CompanyStatus } from "@prisma/client";
+import { isActiveRequestStatus } from "@/lib/info-request-pipeline";
 import { prisma } from "@/lib/prisma";
 import { publicListingName } from "@/lib/company-display-names";
 import { formatCompactEuroRange } from "@/lib/format-financial";
@@ -22,8 +23,13 @@ export async function logUserActivity(params: {
 }
 
 const REQUEST_STATUS_LABELS: Record<string, string> = {
-  PENDING: "pendiente",
-  MANAGED: "gestionada",
+  PENDING: "pendiente NDA",
+  PENDING_NDA: "pendiente NDA",
+  IN_REVIEW: "en revisión",
+  MANAGED: "teaser",
+  TEASER: "teaser",
+  CONVERSATIONS: "conversaciones",
+  CLOSED: "cerrada",
   REJECTED: "rechazada",
 };
 
@@ -61,7 +67,16 @@ const INFO_REQUEST_EVENT_TYPES = [
   "INFO_REQUEST_CANCELLED",
 ] as const;
 
-export type InfoRequestSummaryStatus = "PENDING" | "MANAGED" | "REJECTED" | "CANCELLED";
+export type InfoRequestSummaryStatus =
+  | "PENDING"
+  | "PENDING_NDA"
+  | "IN_REVIEW"
+  | "MANAGED"
+  | "TEASER"
+  | "CONVERSATIONS"
+  | "CLOSED"
+  | "REJECTED"
+  | "CANCELLED";
 
 export type UserInfoRequestSummary = {
   companyId: string;
@@ -77,9 +92,17 @@ export function formatInfoRequestSummaryDescription(
   const company = companyName ? ` «${companyName}»` : "";
   switch (status) {
     case "PENDING":
-      return `Solicitud pendiente${company}`;
+    case "PENDING_NDA":
+      return `Solicitud pendiente de verificación${company}`;
+    case "IN_REVIEW":
+      return `Solicitud en revisión${company}`;
     case "MANAGED":
-      return `Solicitud gestionada${company}`;
+    case "TEASER":
+      return `Teaser concedido${company}`;
+    case "CONVERSATIONS":
+      return `Solicitud en conversaciones${company}`;
+    case "CLOSED":
+      return `Solicitud cerrada${company}`;
     case "REJECTED":
       return `Solicitud rechazada${company}`;
     case "CANCELLED":
@@ -161,20 +184,18 @@ export async function getUserActivityStats(userId: string) {
   let cancelled = 0;
 
   for (const summary of summaries) {
-    switch (summary.status) {
-      case "PENDING":
-        active += 1;
-        break;
-      case "MANAGED":
-        active += 1;
-        managed += 1;
-        break;
-      case "REJECTED":
-        rejected += 1;
-        break;
-      case "CANCELLED":
-        cancelled += 1;
-        break;
+    if (summary.status === "CANCELLED") {
+      cancelled += 1;
+      continue;
+    }
+    if (summary.status === "REJECTED") {
+      rejected += 1;
+      continue;
+    }
+    if (summary.status === "CLOSED") continue;
+    if (isActiveRequestStatus(summary.status)) active += 1;
+    if (summary.status === "TEASER" || summary.status === "CONVERSATIONS" || summary.status === "MANAGED") {
+      managed += 1;
     }
   }
 

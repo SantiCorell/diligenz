@@ -25,8 +25,9 @@ export default async function DashboardLayout({
   return (
     <DashboardShell role={user.role} userDisplayName={userDisplayName}>
       {/* PERFIL (SIEMPRE ARRIBA) */}
-      <div className="mb-8">
+      {user.role !== "ADMIN" && (
         <ProfileStatus
+          variant="banner"
           ndaSigned={user.ndaSigned}
           dniVerified={user.dniVerified}
           dniPendingReview={dniPendingReview}
@@ -36,7 +37,7 @@ export default async function DashboardLayout({
           userPhone={user.phone}
           role={user.role}
         />
-      </div>
+      )}
 
       {children}
     </DashboardShell>

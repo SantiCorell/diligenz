@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { UserAccountStatus, UserRole } from "@prisma/client";
 import { getSessionWithUserFromRequest } from "@/lib/session";
+import { promotePendingNdaRequests } from "@/lib/promote-pending-nda";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -201,6 +202,9 @@ export async function PATCH(req: Request, { params }: Params) {
         maxConcurrentCompanies: true,
       },
     });
+    if (data.ndaSigned === true) {
+      await promotePendingNdaRequests(userId);
+    }
     return NextResponse.json({ user });
   } catch {
     return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });

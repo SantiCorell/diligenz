@@ -13,6 +13,7 @@ type Props = {
   role?: "BUYER" | "SELLER" | "ADMIN" | "PROFESSIONAL";
   /** En /dashboard/profile no mostrar enlace a la propia página */
   suppressDetailLink?: boolean;
+  variant?: "card" | "banner";
 };
 
 export default function ProfileStatus({
@@ -25,6 +26,7 @@ export default function ProfileStatus({
   userPhone,
   role,
   suppressDetailLink,
+  variant = "card",
 }: Props) {
   const missingProfile: string[] = [];
   if (!userName?.trim()) missingProfile.push("nombre");
@@ -72,8 +74,51 @@ export default function ProfileStatus({
     !suppressDetailLink &&
     (role === "BUYER" || role === "PROFESSIONAL" || role === "SELLER");
 
+  const pendingLabels = items.filter((item) => !item.ok).map((item) => item.label.replace(" firmado", "").replace(" validado", ""));
+  const bannerHint =
+    pendingLabels.length === 0
+      ? "Verificación completa"
+      : `te falta ${pendingLabels.slice(0, 2).join(" y ").toLowerCase()} para avanzar más rápido`;
+
+  if (variant === "banner") {
+    if (progress >= 100) return null;
+    return (
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-200/80 bg-violet-50/80 px-4 py-3 text-sm text-violet-950">
+        <p>
+          <span className="font-semibold">Verificación: {progress}% completo</span>
+          <span className="text-violet-900/80"> — {bannerHint}</span>
+        </p>
+        <Link
+          href={items.find((item) => !item.ok)?.action ?? "/dashboard/profile"}
+          className="shrink-0 text-sm font-semibold text-[var(--brand-primary)] hover:underline"
+        >
+          Completar →
+        </Link>
+      </div>
+    );
+  }
+
+  if (progress >= 100) return null;
+
+  const heading =
+    role === "SELLER"
+      ? "Verificación de vendedor"
+      : role === "PROFESSIONAL"
+        ? "Verificación de profesional"
+        : "Verificación de comprador";
+
   return (
     <div className="page-card page-card-padded">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <h2 className="text-lg font-semibold text-[var(--brand-dark)]">{heading}</h2>
+        <span className="shrink-0 text-sm font-semibold text-[var(--brand-primary)]">{progress}% completo</span>
+      </div>
+      <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-violet-100">
+        <div className="h-full rounded-full bg-[var(--brand-primary)]" style={{ width: `${progress}%` }} />
+      </div>
+      <p className="mb-4 text-sm text-[var(--foreground)]/75">
+        Completa estos pasos para poder solicitar información confidencial a los vendedores.
+      </p>
       {showProfileWarning && (
         <div
           className="mb-4 rounded-xl border border-amber-300/90 bg-amber-50 px-3 py-2.5 text-xs text-amber-950"
@@ -86,23 +131,9 @@ export default function ProfileStatus({
           </Link>
         </div>
       )}
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-        <h2 className="text-lg font-semibold text-[var(--brand-dark)]">
-          Mi perfil
-        </h2>
-        {showDetailProfileLink && (
-          <Link
-            href="/dashboard/profile"
-            className="text-xs font-medium text-[var(--brand-primary)] hover:underline shrink-0"
-          >
-            Ver perfil completo →
-          </Link>
-        )}
-      </div>
-
-      <ul className="space-y-3 text-sm text-[var(--foreground)]">
+      <ul className="divide-y divide-[var(--brand-primary)]/10 text-sm text-[var(--foreground)]">
         {items.map((item) => (
-          <li key={item.label} className="flex items-center justify-between gap-2">
+          <li key={item.label} className="flex items-center justify-between gap-2 py-3 first:pt-0">
             <span className="flex items-center gap-2.5 min-w-0">
               <ProfileCheckIndicator
                 state={
@@ -115,7 +146,7 @@ export default function ProfileStatus({
             {!item.ok && item.action && (
               <Link
                 href={item.action}
-                className="text-xs font-medium text-[var(--brand-primary)] hover:underline shrink-0"
+                className="shrink-0 rounded-full bg-[var(--brand-primary)] px-4 py-2 text-xs font-semibold text-white hover:opacity-90"
               >
                 {"pending" in item && item.pending ? "Ver estado" : "Completar"}
               </Link>
@@ -124,15 +155,11 @@ export default function ProfileStatus({
         ))}
       </ul>
 
-      <div className="mt-4 text-xs text-[var(--foreground)] opacity-80">
-        Progreso {progress}%
-        <div className="mt-1 h-2 w-full rounded-full bg-[var(--brand-bg)]">
-          <div
-            className="h-2 rounded-full bg-[var(--brand-primary)] transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+      {showDetailProfileLink && (
+        <Link href="/dashboard/profile" className="mt-2 inline-block text-xs font-medium text-[var(--brand-primary)] hover:underline">
+          Ver perfil completo →
+        </Link>
+      )}
     </div>
   );
 }

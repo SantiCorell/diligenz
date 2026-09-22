@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import type { CompanyMock } from "@/lib/mock-companies";
@@ -15,6 +16,8 @@ type Props = {
   /** Versión más compacta para carruseles */
   compact?: boolean;
   ctaLabel?: string;
+  /** Bloque extra dentro de la misma ficha, bajo las acciones. */
+  footer?: ReactNode;
 };
 
 function MetricCell({
@@ -48,6 +51,7 @@ export default function CompanyCard({
   isFavorite = false,
   compact = false,
   ctaLabel = "Más información",
+  footer,
 }: Props) {
   const sectorVisual = getSectorVisual(company.sector);
   const descMax = compact ? 100 : 160;
@@ -187,6 +191,7 @@ export default function CompanyCard({
             </span>
           </Link>
         </div>
+        {footer}
       </article>
     </div>
   );

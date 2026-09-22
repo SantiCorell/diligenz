@@ -134,6 +134,7 @@ export async function POST(req: Request) {
           phone: phone.trim(),
           name: fullName,
           role,
+          accountStatus: "PENDING",
         },
         select: { id: true, role: true },
       });

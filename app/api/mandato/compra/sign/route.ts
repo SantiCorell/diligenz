@@ -5,6 +5,7 @@ import { getSessionWithUserFromRequest } from "@/lib/session";
 import { generateSignedCompraDocuments } from "@/lib/mandato/generate-signed-compra-pdf";
 import { compraZipFileName, zipCompraDocuments } from "@/lib/mandato/compra-zip";
 import { sendMandatoSignedEmails } from "@/lib/emails/mandato-signed";
+import { promotePendingNdaRequests } from "@/lib/promote-pending-nda";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
 import {
   ensureUserDriveFolder,
@@ -158,6 +159,10 @@ export async function POST(req: Request) {
       data: { ndaSigned: true },
     }),
   ]);
+
+  await promotePendingNdaRequests(session.userId).catch((error) => {
+    console.error("[mandato/compra/sign] no se pudieron mover solicitudes a En revisión:", error);
+  });
 
   const clientName = payload.representativeName || payload.buyerLegalName;
   const representativeLine =

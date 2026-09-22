@@ -3,12 +3,13 @@ import {
   buyerDocumentsMeaningful,
   type BuyerDocument,
 } from "@/lib/buyer-documents";
+import { buyerHasTeaserAccess } from "@/lib/info-request-pipeline";
 
-/** Compradores con solicitud en gestión pueden ver la carpeta Drive del negocio. */
+/** Compradores con teaser concedido pueden ver la documentación de la empresa. */
 export function buyerCanSeeCompanyDriveFolder(
   status: RequestStatus | null | undefined
 ): boolean {
-  return status === "MANAGED";
+  return buyerHasTeaserAccess(status);
 }
 
 /** Documentos para compradores: solicitud en gestión y admin lo ha habilitado. */

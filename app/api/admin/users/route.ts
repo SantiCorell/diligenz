@@ -202,7 +202,7 @@ export async function POST(req: Request) {
       role: validRole,
       phone: phone && typeof phone === "string" ? phone.trim() || null : null,
       name: nameTrim,
-      accountStatus: "ACTIVE",
+      accountStatus: validRole === "ADMIN" ? "ACTIVE" : "PENDING",
     },
     select: { id: true, email: true, role: true, createdAt: true, name: true, accountStatus: true },
   });

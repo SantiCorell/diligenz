@@ -8,6 +8,9 @@ import {
   isUnlimitedInfoRequests,
 } from "@/lib/buyer-info-request-limit";
 import { getSessionWithUser } from "@/lib/session";
+import { promotePendingNdaRequests } from "@/lib/promote-pending-nda";
+import { resolveBuyerDocuments } from "@/lib/buyer-documents";
+import { buyerCanAccessCompanyDocuments } from "@/lib/company-drive-access";
 import BuyerCompanySlots, {
   type BuyerCompanySlot,
 } from "@/components/dashboard/BuyerCompanySlots";
@@ -34,34 +37,61 @@ export default async function MisEmpresasPage() {
       dbUser?.maxConcurrentInfoRequests
     ) ?? 4;
 
+  await promotePendingNdaRequests(userId);
+
   const interests = await prisma.userCompanyInterest.findMany({
     where: {
       userId,
       type: "REQUEST_INFO",
-      ...(unlimited ? {} : { status: { in: ["PENDING", "MANAGED"] } }),
     },
     orderBy: { createdAt: "asc" },
   });
 
   const companyIds = [...new Set(interests.map((i) => i.companyId))];
-  const resolvedList = await Promise.all(
-    companyIds.map((id) => resolveCompanyForBuyerInterest(id))
-  );
+  const [resolvedList, companyDocs] = await Promise.all([
+    Promise.all(companyIds.map((id) => resolveCompanyForBuyerInterest(id))),
+    companyIds.length
+      ? prisma.company.findMany({
+          where: { id: { in: companyIds } },
+          select: {
+            id: true,
+            attachmentsApproved: true,
+            buyerDocuments: true,
+            buyerTeaserUrl: true,
+          },
+        })
+      : Promise.resolve([]),
+  ]);
   const resolvedById = new Map(companyIds.map((id, i) => [id, resolvedList[i]]));
+  const docsById = new Map(companyDocs.map((row) => [row.id, row]));
 
   const slots: BuyerCompanySlot[] = interests.map((row) => {
     const resolved = resolvedById.get(row.companyId)!;
+    const docsRow = docsById.get(row.companyId);
     const name =
       resolved.company?.name ??
       resolved.fallbackName ??
       "Empresa (no disponible)";
+    const teaserDocuments = buyerCanAccessCompanyDocuments({
+      requestStatus: row.status,
+      attachmentsApproved: docsRow?.attachmentsApproved ?? false,
+      buyerDocuments: docsRow?.buyerDocuments,
+      buyerTeaserUrl: docsRow?.buyerTeaserUrl,
+    })
+      ? resolveBuyerDocuments(docsRow?.buyerDocuments, docsRow?.buyerTeaserUrl).map((doc) => ({
+          label: doc.label,
+          url: doc.url,
+        }))
+      : [];
     return {
       companyId: row.companyId,
+      interestId: row.id,
       name,
       status: (row.status ?? "PENDING") as RequestStatus,
       published: Boolean(resolved.published && resolved.company),
       company: resolved.company,
       createdAt: row.createdAt,
+      teaserDocuments,
     };
   });
 
@@ -72,16 +102,8 @@ export default async function MisEmpresasPage() {
           Mis empresas
         </h1>
         <p className="mt-1.5 text-xs sm:text-sm text-[var(--foreground)] opacity-85 max-w-2xl">
-          {unlimited
-            ? "Empresas a las que has pedido información y el estado de cada solicitud."
-            : `Puedes tener hasta ${maxSlots} empresas activas a la vez. Cada espacio es una solicitud en curso.`}
+          Empresas a las que has solicitado información y el estado de cada solicitud.
         </p>
-        <div className="mt-3 rounded-lg border border-amber-200/70 bg-amber-50/90 px-3 py-2 text-xs text-amber-950">
-          <p className="font-medium text-amber-950">¿Has solicitado información?</p>
-          <p className="mt-0.5 opacity-95 leading-snug">
-            Un agente se pondrá en contacto contigo. Revisa el estado de cada empresa abajo.
-          </p>
-        </div>
       </div>
 
       <div className="rounded-xl border border-[var(--brand-primary)]/10 bg-white p-4 shadow-sm sm:p-5">

@@ -16,15 +16,16 @@ export default async function SellerDashboardPage() {
 
   return (
     <main className="max-w-6xl mx-auto space-y-8">
-      <div className="panel-hero">
-        <p className="page-eyebrow">Panel del vendedor</p>
-        <h1 className="page-title mt-2">
-          Hola{displayName ? `, ${displayName}` : ""}
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-[var(--foreground)]/75 sm:text-base">
-          Gestiona tus empresas, tu perfil y la documentación desde un solo lugar.
+      <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#9b6dff] via-[#7c4dff] to-[#5b34d6] px-6 py-8 text-white shadow-lg sm:px-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">Panel del vendedor</p>
+        <h1 className="mt-2 text-3xl font-bold">Hola{displayName ? `, ${displayName}` : ""}</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/90 sm:text-base">
+          Gestiona tus empresas, el mandato de venta y la documentación desde un solo lugar.
+          {activeCompanies > 0
+            ? ` Tienes ${activeCompanies} ${activeCompanies === 1 ? "empresa activa" : "empresas activas"}.`
+            : " Todavía no tienes proyectos en curso."}
         </p>
-      </div>
+      </section>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Link

@@ -4,8 +4,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  Globe,
+  Inbox,
+  Layers,
+  LayoutGrid,
+  ListChecks,
+  Search,
+  User,
+  Users,
+} from "lucide-react";
 import { authFetch, clearStoredToken } from "@/lib/auth-client";
-import AdminAmbient from "@/components/layout/AdminAmbient";
 
 type Props = {
   userDisplayName: string;
@@ -15,7 +27,7 @@ type Props = {
 export default function AdminShell({ userDisplayName, children }: Props) {
   const pathname = usePathname();
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState(false);
+  const collapsed = false;
   const [viewSwitcherOpen, setViewSwitcherOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -43,21 +55,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
               height={36}
               className={collapsed ? "h-7 w-auto object-contain" : "h-8 w-auto object-contain"}
             />
-            {expanded && (
-              <span className="text-sm font-semibold truncate text-[var(--brand-dark)]">Admin</span>
-            )}
           </Link>
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="rounded-lg p-2.5 text-[var(--brand-dark)]/70 hover:bg-[var(--brand-surface)] hover:text-[var(--brand-primary)] shrink-0 transition-colors md:block hidden"
-            aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
-            title={collapsed ? "Expandir menú" : "Contraer menú"}
-            type="button"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
           <button
             type="button"
             onClick={() => setMobileSidebarOpen(false)}
@@ -68,10 +66,12 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           </button>
         </div>
 
-        <nav className={`${expanded ? "mt-4 px-3" : "mt-2 px-2"} space-y-1 text-sm flex-1`}>
+        <nav className={`${expanded ? "mt-2 px-3 pb-4" : "mt-2 px-2 pb-3"} min-h-0 flex-1 space-y-0.5 overflow-y-auto overscroll-contain text-sm`}>
+          {expanded && <p className="panel-nav-section-label">Panel admin</p>}
           <AdminNavLink
             href="/admin"
             label="Dashboard"
+            icon={LayoutGrid}
             collapsed={!expanded}
             active={pathname === "/admin"}
             onNavigate={() => setMobileSidebarOpen(false)}
@@ -79,6 +79,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           <AdminNavLink
             href="/admin/sectors"
             label="Sectores"
+            icon={Layers}
             collapsed={!expanded}
             active={pathname.startsWith("/admin/sectors")}
             onNavigate={() => setMobileSidebarOpen(false)}
@@ -86,6 +87,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           <AdminNavLink
             href="/admin/companies"
             label="Empresas"
+            icon={Building2}
             collapsed={!expanded}
             active={pathname.startsWith("/admin/companies")}
             onNavigate={() => setMobileSidebarOpen(false)}
@@ -93,6 +95,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           <AdminNavLink
             href="/admin/actions"
             label="Acciones"
+            icon={ListChecks}
             collapsed={!expanded}
             active={pathname.startsWith("/admin/actions")}
             onNavigate={() => setMobileSidebarOpen(false)}
@@ -100,6 +103,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           <AdminNavLink
             href="/admin/leads"
             label="Leads"
+            icon={Inbox}
             collapsed={!expanded}
             active={pathname.startsWith("/admin/leads")}
             onNavigate={() => setMobileSidebarOpen(false)}
@@ -107,20 +111,21 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           <AdminNavLink
             href="/admin/users"
             label="Usuarios"
+            icon={Users}
             collapsed={!expanded}
             active={pathname.startsWith("/admin/users")}
             onNavigate={() => setMobileSidebarOpen(false)}
           />
           {expanded && (
-            <>
-              <div className="panel-nav-divider" aria-hidden />
-              <p className="panel-nav-section-label">Panel comprador</p>
-            </>
+            <p className="panel-nav-section-label mt-4">
+              Panel comprador <span className="normal-case tracking-normal">· vista previa</span>
+            </p>
           )}
           {!expanded && <div className="panel-nav-divider my-2" aria-hidden />}
           <AdminNavLink
             href="/dashboard/buyer"
             label="Inicio comprador"
+            icon={LayoutGrid}
             collapsed={!expanded}
             active={pathname.startsWith("/dashboard/buyer")}
             onNavigate={() => setMobileSidebarOpen(false)}
@@ -128,6 +133,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           <AdminNavLink
             href="/dashboard/mis-empresas"
             label="Mis empresas"
+            icon={Briefcase}
             collapsed={!expanded}
             active={pathname.startsWith("/dashboard/mis-empresas")}
             onNavigate={() => setMobileSidebarOpen(false)}
@@ -135,6 +141,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           <AdminNavLink
             href="/dashboard/profile"
             label="Mi perfil"
+            icon={User}
             collapsed={!expanded}
             active={pathname.startsWith("/dashboard/profile")}
             onNavigate={() => setMobileSidebarOpen(false)}
@@ -142,6 +149,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           <AdminNavLink
             href="/companies"
             label="Explorar empresas"
+            icon={Search}
             collapsed={!expanded}
             active={
               pathname === "/companies" ||
@@ -153,31 +161,18 @@ export default function AdminShell({ userDisplayName, children }: Props) {
           <AdminNavLink
             href="/"
             label="Ver web"
+            icon={Globe}
             collapsed={!expanded}
             active={false}
-            noIcon
             onNavigate={() => setMobileSidebarOpen(false)}
           />
         </nav>
-
-        <div className={`panel-sidebar-footer ${expanded ? "p-3" : "p-2"}`}>
-          <Link
-            href="/dashboard"
-            className={`panel-nav-link ${expanded ? "gap-3 px-3 py-2" : "justify-center px-2 py-2"} text-[var(--brand-dark)]/75 hover:text-[var(--brand-primary)]`}
-            title={!expanded ? "Panel usuario" : undefined}
-            onClick={() => setMobileSidebarOpen(false)}
-          >
-            <span className={!expanded ? "text-lg" : ""}>←</span>
-            {expanded && <span>Panel usuario</span>}
-          </Link>
-        </div>
     </>
   );
   };
 
   return (
-    <div className="admin-shell relative flex min-h-screen flex-col md:flex-row">
-      <AdminAmbient />
+    <div className="admin-shell relative flex min-h-screen flex-col">
       {mobileSidebarOpen && (
         <>
           <div
@@ -192,14 +187,18 @@ export default function AdminShell({ userDisplayName, children }: Props) {
       )}
 
       <aside
-        className={`panel-sidebar relative z-20 hidden shrink-0 flex-col transition-all duration-200 md:flex ${
+        className={`panel-sidebar fixed inset-y-0 left-0 z-20 hidden h-[100dvh] max-h-[100dvh] flex-col overflow-hidden transition-all duration-200 md:flex ${
           collapsed ? "w-20" : "w-64"
         }`}
       >
         {renderSidebar(false)}
       </aside>
 
-      <div className="relative z-10 flex min-w-0 w-full flex-1 flex-col">
+      <div
+        className={`relative z-10 flex min-w-0 w-full flex-1 flex-col transition-[padding] duration-200 ${
+          collapsed ? "md:pl-20" : "md:pl-64"
+        }`}
+      >
         <header className="panel-header sticky top-0 z-30 flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -215,13 +214,15 @@ export default function AdminShell({ userDisplayName, children }: Props) {
             <p className="truncate text-sm font-medium text-[var(--brand-dark)] sm:text-base">
               Hola, <span className="font-semibold text-[var(--brand-primary)]">{userDisplayName}</span>
             </p>
-            <div className="relative">
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative hidden sm:block">
               <button
                 type="button"
                 onClick={() => setViewSwitcherOpen((o) => !o)}
-                className="rounded-full border border-[var(--brand-primary)]/20 bg-[var(--brand-surface)] px-3 py-1.5 text-sm font-medium text-[var(--brand-primary)] transition hover:bg-[var(--brand-primary)]/10"
+                className="rounded-full border border-[var(--brand-primary)]/35 bg-white px-3.5 py-1.5 text-sm font-medium text-[var(--brand-primary)] transition hover:bg-[var(--brand-primary)]/5"
               >
-                Ver como…
+                Ver como comprador
               </button>
               {viewSwitcherOpen && (
                 <>
@@ -230,7 +231,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
                     aria-hidden
                     onClick={() => setViewSwitcherOpen(false)}
                   />
-                  <div className="absolute left-0 top-full z-20 mt-1 w-56 rounded-xl border border-[var(--brand-primary)]/10 bg-white/95 py-2 shadow-xl backdrop-blur-md">
+                  <div className="absolute right-0 top-full z-20 mt-1 w-56 rounded-xl border border-[var(--brand-primary)]/10 bg-white py-2 shadow-xl">
                     <Link
                       href="/dashboard/buyer"
                       className="block px-4 py-2.5 text-sm text-[var(--brand-dark)] hover:bg-[var(--brand-surface)]"
@@ -249,8 +250,6 @@ export default function AdminShell({ userDisplayName, children }: Props) {
                 </>
               )}
             </div>
-          </div>
-          <div className="flex items-center gap-3">
             {pathname !== "/admin" && (
               <Link
                 href="/admin"
@@ -277,38 +276,31 @@ export default function AdminShell({ userDisplayName, children }: Props) {
 function AdminNavLink({
   href,
   label,
+  icon: Icon,
   collapsed,
   active,
-  noIcon,
   onNavigate,
 }: {
   href: string;
   label: string;
+  icon: LucideIcon;
   collapsed: boolean;
   active: boolean;
-  noIcon?: boolean;
   onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
       onClick={onNavigate}
-      className={`panel-nav-link ${collapsed ? "justify-center" : noIcon ? "" : "gap-3"} ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"} ${
+      className={`panel-nav-link gap-3 ${collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5"} ${
         active
           ? "admin-nav-active text-[var(--brand-primary)] font-semibold"
           : "text-[var(--brand-dark)]/70"
       }`}
       title={collapsed ? label : undefined}
     >
-      {!noIcon && (
-        <span className={`panel-nav-icon ${active ? "panel-nav-icon--active" : ""}`}>
-          {active ? "▸" : "◦"}
-        </span>
-      )}
+      <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} aria-hidden />
       {!collapsed && <span>{label}</span>}
-      {collapsed && noIcon && (
-        <span className="text-[11px] font-semibold leading-tight">Web</span>
-      )}
     </Link>
   );
 }

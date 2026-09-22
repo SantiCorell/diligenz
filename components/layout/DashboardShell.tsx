@@ -4,6 +4,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  Globe,
+  Heart,
+  Inbox,
+  LayoutGrid,
+  ListChecks,
+  Search,
+  Upload,
+  User,
+  Users,
+} from "lucide-react";
 import { authFetch, clearStoredToken } from "@/lib/auth-client";
 import { SELL_DASHBOARD_PATH, SELLER_MIS_EMPRESAS_PATH, PROFESSIONAL_MIS_EMPRESAS_PATH } from "@/lib/companies-dashboard-path";
 import PageAmbient from "@/components/layout/PageAmbient";
@@ -104,6 +118,7 @@ export default function DashboardShell({
             <NavItem
               href="/dashboard/professional"
               label="Dashboard"
+              icon={LayoutGrid}
               active={pathname === "/dashboard/professional"}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -111,6 +126,7 @@ export default function DashboardShell({
             <NavItem
               href="/dashboard/profile"
               label="Mi perfil"
+              icon={User}
               active={pathname.startsWith("/dashboard/profile")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -118,6 +134,7 @@ export default function DashboardShell({
             <NavItem
               href={PROFESSIONAL_MIS_EMPRESAS_PATH}
               label="Mis empresas"
+              icon={Briefcase}
               active={
                 pathname.startsWith(PROFESSIONAL_MIS_EMPRESAS_PATH) ||
                 pathname.startsWith("/dashboard/seller/companies")
@@ -128,6 +145,7 @@ export default function DashboardShell({
             <NavItem
               href={SELL_DASHBOARD_PATH}
               label="Subir empresa"
+              icon={Upload}
               active={pathname.startsWith(SELL_DASHBOARD_PATH)}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -138,6 +156,7 @@ export default function DashboardShell({
             <NavItem
               href={effectiveRole === "ADMIN" ? "/admin" : `/dashboard/${effectiveRole.toLowerCase()}`}
               label="Dashboard"
+              icon={LayoutGrid}
               active={
                 effectiveRole === "ADMIN"
                   ? pathname.startsWith("/admin")
@@ -153,6 +172,7 @@ export default function DashboardShell({
                 <NavItem
                   href="/dashboard/profile"
                   label="Mi perfil"
+                  icon={User}
                   active={pathname.startsWith("/dashboard/profile")}
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
@@ -160,6 +180,7 @@ export default function DashboardShell({
                 <NavItem
                   href="/dashboard/mis-empresas"
                   label="Mis empresas"
+                  icon={Briefcase}
                   active={pathname.startsWith("/dashboard/mis-empresas")}
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
@@ -167,6 +188,7 @@ export default function DashboardShell({
                 <NavItem
                   href="/dashboard/favorites"
                   label="Mis favoritos"
+                  icon={Heart}
                   active={pathname.startsWith("/dashboard/favorites")}
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
@@ -174,6 +196,7 @@ export default function DashboardShell({
                 <NavItem
                   href="/companies"
                   label="Explorar empresas"
+                  icon={Search}
                   active={
                     pathname === "/companies" ||
                     (pathname.startsWith("/companies/") &&
@@ -189,6 +212,7 @@ export default function DashboardShell({
                 <NavItem
                   href="/dashboard/profile"
                   label="Mi perfil"
+                  icon={User}
                   active={pathname.startsWith("/dashboard/profile")}
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
@@ -196,6 +220,7 @@ export default function DashboardShell({
                 <NavItem
                   href={SELLER_MIS_EMPRESAS_PATH}
                   label="Mis empresas"
+                  icon={Briefcase}
                   active={
                     pathname.startsWith(SELLER_MIS_EMPRESAS_PATH) ||
                     pathname.startsWith("/dashboard/seller/companies")
@@ -206,6 +231,7 @@ export default function DashboardShell({
                 <NavItem
                   href={SELL_DASHBOARD_PATH}
                   label="Subir empresa"
+                  icon={Upload}
                   active={pathname.startsWith(SELL_DASHBOARD_PATH)}
                   collapsed={!expanded}
                   onNavigate={() => setMobileSidebarOpen(false)}
@@ -221,6 +247,7 @@ export default function DashboardShell({
             <NavItem
               href="/admin"
               label="Admin · Inicio"
+              icon={LayoutGrid}
               active={pathname.startsWith("/admin")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -228,6 +255,7 @@ export default function DashboardShell({
             <NavItem
               href="/admin/companies"
               label="Admin · Empresas"
+              icon={Building2}
               active={pathname.startsWith("/admin/companies")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -235,6 +263,7 @@ export default function DashboardShell({
             <NavItem
               href="/admin/actions"
               label="Admin · Acciones"
+              icon={ListChecks}
               active={pathname.startsWith("/admin/actions")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -242,6 +271,7 @@ export default function DashboardShell({
             <NavItem
               href="/admin/leads"
               label="Admin · Leads"
+              icon={Inbox}
               active={pathname.startsWith("/admin/leads")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -249,6 +279,7 @@ export default function DashboardShell({
             <NavItem
               href="/admin/users"
               label="Admin · Usuarios"
+              icon={Users}
               active={pathname.startsWith("/admin/users")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
@@ -264,7 +295,7 @@ export default function DashboardShell({
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col md:flex-row md:items-start">
+    <div className="relative flex min-h-screen flex-col">
       <PageAmbient />
       {mobileSidebarOpen && (
         <>
@@ -280,14 +311,18 @@ export default function DashboardShell({
       )}
 
       <aside
-        className={`panel-sidebar sticky top-0 z-20 hidden h-[100dvh] max-h-[100dvh] shrink-0 flex-col overflow-hidden transition-all duration-200 md:flex ${
+        className={`panel-sidebar fixed inset-y-0 left-0 z-20 hidden h-[100dvh] max-h-[100dvh] flex-col overflow-hidden transition-all duration-200 md:flex ${
           collapsed ? "w-20" : "w-64"
         }`}
       >
         {renderSidebar(false)}
       </aside>
 
-      <div className="relative z-10 flex min-w-0 w-full flex-1 flex-col">
+      <div
+        className={`relative z-10 flex min-w-0 w-full flex-1 flex-col transition-[padding] duration-200 ${
+          collapsed ? "md:pl-20" : "md:pl-64"
+        }`}
+      >
         <header className="panel-header sticky top-0 z-30 flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -343,14 +378,11 @@ function WebNavItem({
     <Link
       href="/"
       onClick={onNavigate}
-      className={`panel-nav-link text-[var(--brand-dark)]/70 ${collapsed ? "justify-center" : ""} ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"}`}
+      className={`panel-nav-link gap-3 text-[var(--brand-dark)]/70 ${collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5"}`}
       title={collapsed ? "Ver web" : undefined}
     >
-      {collapsed ? (
-        <span className="text-[11px] font-semibold leading-tight">Web</span>
-      ) : (
-        <span>Ver web</span>
-      )}
+      <Globe className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} aria-hidden />
+      {!collapsed && <span>Ver web</span>}
     </Link>
   );
 }
@@ -358,12 +390,14 @@ function WebNavItem({
 function NavItem({
   href,
   label,
+  icon: Icon,
   active,
   collapsed,
   onNavigate,
 }: {
   href: string;
   label: string;
+  icon: LucideIcon;
   active: boolean;
   collapsed: boolean;
   onNavigate?: () => void;
@@ -372,16 +406,14 @@ function NavItem({
     <Link
       href={href}
       onClick={onNavigate}
-      className={`panel-nav-link ${collapsed ? "justify-center" : "gap-3"} ${collapsed ? "px-2 py-2.5" : "px-3 py-2.5"} ${
+      className={`panel-nav-link gap-3 ${collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5"} ${
         active
           ? "admin-nav-active text-[var(--brand-primary)] font-semibold"
           : "text-[var(--brand-dark)]/70"
       }`}
       title={collapsed ? label : undefined}
     >
-      <span className={`panel-nav-icon ${active ? "panel-nav-icon--active" : ""}`}>
-        {active ? "▸" : "◦"}
-      </span>
+      <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} aria-hidden />
       {!collapsed && <span>{label}</span>}
     </Link>
   );

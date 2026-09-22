@@ -543,8 +543,8 @@ export default function CompanyFicha({
                   </div>
                 ) : !hasBuyerDocuments ? (
                   <p className="text-[var(--foreground)] opacity-80">
-                    Solicita información sobre esta empresa. Cuando tu solicitud esté en gestión y el
-                    equipo habilite la documentación, los documentos aparecerán aquí.
+                    Solicita información sobre esta empresa. Cuando tu gestor te conceda el teaser,
+                    el documento resumen aparecerá aquí.
                   </p>
                 ) : null}
               </div>

@@ -411,16 +411,23 @@ function UserInfoRequestLimitPanel({
   );
 }
 
-const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
-  PENDING: "Pendiente",
-  MANAGED: "Gestionada",
+const REQUEST_STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pendiente NDA",
+  PENDING_NDA: "Pendiente NDA",
+  IN_REVIEW: "En revisión",
+  MANAGED: "Teaser",
+  TEASER: "Teaser",
+  CONVERSATIONS: "Conversaciones",
+  CLOSED: "Cerrada",
   REJECTED: "Rechazada",
 };
 
 function requestStatusBadgeClass(status: string): string {
-  if (status === "MANAGED") return "border-green-200 bg-green-50 text-green-800";
+  if (status === "MANAGED" || status === "TEASER") return "border-lime-200 bg-lime-50 text-lime-900";
+  if (status === "CONVERSATIONS") return "border-sky-200 bg-sky-50 text-sky-900";
   if (status === "REJECTED") return "border-red-200 bg-red-50 text-red-800";
-  if (status === "CANCELLED") return "border-slate-200 bg-slate-100 text-slate-600";
+  if (status === "CLOSED" || status === "CANCELLED") return "border-slate-200 bg-slate-100 text-slate-600";
+  if (status === "IN_REVIEW") return "border-orange-200 bg-orange-50 text-orange-900";
   return "border-amber-200 bg-amber-50 text-amber-800";
 }
 
@@ -721,9 +728,11 @@ function UserActivityPanel({ user }: { user: UserRow }) {
                           className={`appearance-none cursor-pointer rounded-full border pl-3 pr-8 py-1 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/25 disabled:opacity-60 ${requestStatusBadgeClass(event.status)}`}
                           aria-label={`Estado de solicitud para ${event.companyName}`}
                         >
-                          <option value="PENDING">{REQUEST_STATUS_LABELS.PENDING}</option>
-                          <option value="MANAGED">{REQUEST_STATUS_LABELS.MANAGED}</option>
-                          <option value="REJECTED">{REQUEST_STATUS_LABELS.REJECTED}</option>
+                          {(["PENDING_NDA", "IN_REVIEW", "TEASER", "CONVERSATIONS", "CLOSED", "REJECTED"] as const).map((status) => (
+                            <option key={status} value={status}>
+                              {REQUEST_STATUS_LABELS[status]}
+                            </option>
+                          ))}
                         </select>
                         <ChevronDown
                           className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 opacity-50"

@@ -1,5 +1,6 @@
 import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ACTIVE_REQUEST_STATUSES } from "@/lib/info-request-pipeline";
 
 export const DEFAULT_MAX_CONCURRENT_INFO_REQUESTS = 4;
 
@@ -21,7 +22,7 @@ export async function countActiveInfoRequests(userId: string): Promise<number> {
     where: {
       userId,
       type: "REQUEST_INFO",
-      status: { in: ["PENDING", "MANAGED"] },
+      status: { in: ACTIVE_REQUEST_STATUSES },
     },
   });
 }
