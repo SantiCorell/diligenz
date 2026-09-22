@@ -45,14 +45,6 @@ function profileCompleteEffective(u: UserRow) {
   return Boolean(u.phone?.trim()) || u.profileVerifiedByAdmin;
 }
 
-function NotionMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" className={className} aria-hidden>
-      <path fill="currentColor" d="M3.2 13V3h2.1l5.4 7.2V3H13v10h-2.1L5.5 5.8V13H3.2Z" />
-    </svg>
-  );
-}
-
 function UserNotionToggle({
   user,
   onSaved,
@@ -100,15 +92,14 @@ function UserNotionToggle({
       aria-pressed={validated}
       aria-label={validated ? "Notion validado. Pulsa para marcar pendiente." : "Notion pendiente. Pulsa para marcar OK."}
       title={validated ? "Validado en Notion" : "Pendiente en Notion"}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition disabled:opacity-60 ${
-        compact ? "min-h-9 px-2.5 text-xs" : "min-h-11 px-3 text-sm"
+      className={`inline-flex items-center justify-center rounded-lg font-semibold transition disabled:opacity-60 ${
+        compact ? "min-h-9 min-w-9 px-2.5 text-xs" : "min-h-11 px-3 text-sm"
       } ${
         validated
           ? "bg-emerald-600 text-white shadow-sm hover:bg-emerald-700"
           : "bg-amber-50 text-amber-900 ring-1 ring-amber-200 hover:bg-amber-100"
       }`}
     >
-      <NotionMark className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
       {validated ? "OK" : "Pend."}
     </button>
   );
@@ -1707,10 +1698,10 @@ export default function AdminUsersPage() {
                             <button
                               type="button"
                               onClick={() => deleteUser(u)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 min-h-9 py-2 text-xs font-semibold text-red-800 hover:bg-red-50 transition"
+                              className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white min-h-9 min-w-9 text-red-800 hover:bg-red-50 transition"
+                              aria-label={`Eliminar usuario ${displayName}`}
                             >
                               <Trash2 className="w-3.5 h-3.5" aria-hidden />
-                              Eliminar
                             </button>
                           </td>
                         </tr>
