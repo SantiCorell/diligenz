@@ -46,7 +46,7 @@ export function companyAdminViewBucket(c: CompanyForView): CompanyAdminViewBucke
 }
 
 export function companyStatusLabel(status: string): string {
-  if (status === "DRAFT") return "Borrador";
+  if (status === "DRAFT") return "Valoración";
   if (status === "IN_PROCESS") return "En revisión";
   if (status === "PUBLISHED") return "Publicado";
   if (status === "SOLD") return "Vendido";

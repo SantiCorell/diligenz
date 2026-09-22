@@ -36,18 +36,10 @@ const BOXES: {
   {
     id: "all",
     label: "Todas",
-    description: "Catálogo completo",
+    description: "Catálogo sin valoraciones",
     icon: LayoutGrid,
     activeClass: "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 ring-2 ring-[var(--brand-primary)]/20",
     idleClass: "border-slate-200 bg-white hover:border-[var(--brand-primary)]/30 hover:bg-violet-50/30",
-  },
-  {
-    id: "draft",
-    label: "Borradores",
-    description: "Estado: Borrador (DRAFT)",
-    icon: PencilLine,
-    activeClass: "border-violet-400 bg-violet-50 ring-2 ring-violet-200",
-    idleClass: "border-slate-200 bg-white hover:border-violet-300 hover:bg-violet-50/40",
   },
   {
     id: "review",
@@ -64,6 +56,14 @@ const BOXES: {
     icon: Globe,
     activeClass: "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-200",
     idleClass: "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40",
+  },
+  {
+    id: "draft",
+    label: "Valoraciones",
+    description: "Valoraciones aún sin publicar en la web",
+    icon: PencilLine,
+    activeClass: "border-violet-400 bg-violet-50 ring-2 ring-violet-200",
+    idleClass: "border-slate-200 bg-white hover:border-violet-300 hover:bg-violet-50/40",
   },
 ];
 

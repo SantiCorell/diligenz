@@ -117,8 +117,10 @@ export default async function AdminCompaniesPage({
     return companyInPublishedBucket(c);
   }
 
+  const catalogCompanies = filteredCompanies.filter((company) => !companyIsDraft(company));
+
   const viewCounts = {
-    all: filteredCompanies.length,
+    all: catalogCompanies.length,
     draft: filteredCompanies.filter(companyIsDraft).length,
     review: filteredCompanies.filter(companyInReview).length,
     published: filteredCompanies.filter(companyPublished).length,
@@ -131,7 +133,7 @@ export default async function AdminCompaniesPage({
       ? filteredCompanies.filter(companyInReview)
       : view === "published"
       ? filteredCompanies.filter(companyPublished)
-      : filteredCompanies;
+      : catalogCompanies;
 
   const favoriteCounts = await getFavoriteCountsByCompanyIds(
     viewFilteredCompanies.map((company) => company.id)
@@ -148,7 +150,7 @@ export default async function AdminCompaniesPage({
           Empresas
         </h1>
         <p className="mt-3 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed max-w-2xl">
-          Todas las empresas dadas de alta por vendedores. Entra en cada ficha para editar la información pública, cambiar el estado (borrador, en revisión, publicado) y publicar o despublicar en el marketplace.
+          Todas las empresas dadas de alta por vendedores. Entra en cada ficha para editar la información pública, cambiar el estado (valoración, en revisión, publicado) y publicar o despublicar en el marketplace.
         </p>
         <p className="mt-2 text-xs sm:text-sm text-[var(--foreground)] opacity-75">
           Usa los filtros para buscar por nombre, referencia, estado o documentación firmada.
@@ -220,7 +222,7 @@ export default async function AdminCompaniesPage({
           className="rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-sm focus:border-[var(--brand-primary)] focus:outline-none"
         >
           <option value="">Estado</option>
-          <option value="DRAFT">Borrador</option>
+          <option value="DRAFT">Valoración</option>
           <option value="IN_PROCESS">En revisión</option>
           <option value="PUBLISHED">Publicado</option>
           <option value="SOLD">Vendido</option>

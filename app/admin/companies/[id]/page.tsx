@@ -161,7 +161,7 @@ export default async function AdminCompanyDetail({
                 defaultValue={company.status}
                 className="rounded-lg border border-[var(--brand-primary)]/20 bg-white px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none min-w-[12rem]"
               >
-                <option value="DRAFT">Borrador</option>
+                <option value="DRAFT">Valoración</option>
                 <option value="IN_PROCESS">En revisión</option>
                 <option value="PUBLISHED">Publicado en web</option>
                 <option value="SOLD">Vendido</option>
