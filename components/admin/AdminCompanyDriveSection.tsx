@@ -6,7 +6,6 @@ type Props = {
   ownerLabel: string;
   companyDriveUrl: string | null;
   ownerDriveUrl: string;
-  attachmentsApproved: boolean;
   buyerDocuments: BuyerDocument[];
 };
 
@@ -15,7 +14,6 @@ export default function AdminCompanyDriveSection({
   ownerLabel,
   companyDriveUrl,
   ownerDriveUrl,
-  attachmentsApproved,
   buyerDocuments,
 }: Props) {
   return (
@@ -60,7 +58,6 @@ export default function AdminCompanyDriveSection({
 
       <AdminBuyerDocumentsForm
         companyId={companyId}
-        attachmentsApproved={attachmentsApproved}
         initialDocuments={buyerDocuments}
       />
     </section>

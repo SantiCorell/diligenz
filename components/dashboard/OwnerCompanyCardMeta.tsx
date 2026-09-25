@@ -34,11 +34,11 @@ export function OwnerCompanyCardMeta({
     return (
       <dl className="mt-3 space-y-1.5 text-[11px] text-[var(--foreground)]/75 sm:text-xs">
         <div className="flex gap-2">
-          <dt className="shrink-0 font-medium text-[var(--foreground)]/55">Nombre real</dt>
+          <dt className="shrink-0 font-medium text-[var(--foreground)]/55">Nombre web</dt>
           <dd className="line-clamp-2 font-medium text-[var(--brand-dark)]">{info.realName}</dd>
         </div>
         <div className="flex gap-2">
-          <dt className="shrink-0 font-medium text-[var(--foreground)]/55">Nombre web</dt>
+          <dt className="shrink-0 font-medium text-[var(--foreground)]/55">Nombre real</dt>
           <dd className="line-clamp-2">{info.webName}</dd>
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-1">
@@ -59,13 +59,13 @@ export function OwnerCompanyCardMeta({
     <dl className="mt-2 grid grid-cols-1 gap-2 text-sm text-[var(--foreground)]/85 sm:grid-cols-2">
       <div>
         <dt className="text-xs font-medium uppercase tracking-wide text-[var(--foreground)]/55">
-          Nombre real
+          Nombre web
         </dt>
         <dd className="mt-0.5 font-semibold text-[var(--brand-dark)]">{info.realName}</dd>
       </div>
       <div>
         <dt className="text-xs font-medium uppercase tracking-wide text-[var(--foreground)]/55">
-          Nombre web
+          Nombre real
         </dt>
         <dd className="mt-0.5">{info.webName}</dd>
       </div>

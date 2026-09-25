@@ -113,18 +113,8 @@ export async function OwnerCompaniesList({ userId, dashboardPath }: Props) {
                   href={`/dashboard/seller/companies/${company.id}`}
                   className="text-sm font-semibold text-[var(--brand-primary)] hover:underline"
                 >
-                  {deal?.published
-                    ? "Ver ficha y documentación (solo lectura)"
-                    : "Gestionar valoración y precio"}
+                  Ver ficha
                 </Link>
-                {deal && (
-                  <Link
-                    href={`/companies/${company.id}`}
-                    className="text-sm font-medium text-[var(--brand-primary)] hover:underline opacity-90"
-                  >
-                    Ver ficha pública
-                  </Link>
-                )}
                 <DeleteCompanyButton
                   companyId={company.id}
                   companyName={company.name}

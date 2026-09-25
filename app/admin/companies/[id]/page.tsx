@@ -651,7 +651,6 @@ export default async function AdminCompanyDetail({
         ownerLabel={company.owner.name?.trim() || company.owner.email}
         companyDriveUrl={companyDriveUrl}
         ownerDriveUrl={ownerDriveUrl}
-        attachmentsApproved={company.attachmentsApproved}
         buyerDocuments={resolveBuyerDocuments(
           company.buyerDocuments,
           company.buyerTeaserUrl

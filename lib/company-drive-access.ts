@@ -12,16 +12,16 @@ export function buyerCanSeeCompanyDriveFolder(
   return buyerHasTeaserAccess(status);
 }
 
-/** Documentos para compradores: solicitud en gestión y admin lo ha habilitado. */
+/** El comprador ve el teaser en cuanto su solicitud está en teaser y la empresa tiene el documento. */
 export function buyerCanAccessCompanyDocuments(opts: {
   requestStatus: RequestStatus | null | undefined;
-  attachmentsApproved: boolean;
   buyerDocuments?: unknown;
   buyerTeaserUrl?: string | null | undefined;
+  /** Se ignora: el acceso lo decide el estado de la solicitud. */
+  attachmentsApproved?: boolean;
 }): boolean {
   return (
     buyerDocumentsMeaningful(opts.buyerDocuments, opts.buyerTeaserUrl) &&
-    opts.attachmentsApproved &&
     buyerCanSeeCompanyDriveFolder(opts.requestStatus)
   );
 }
@@ -29,7 +29,7 @@ export function buyerCanAccessCompanyDocuments(opts: {
 /** @deprecated Usa buyerCanAccessCompanyDocuments */
 export function buyerCanDownloadCompanyTeaser(opts: {
   requestStatus: RequestStatus | null | undefined;
-  attachmentsApproved: boolean;
+  attachmentsApproved?: boolean;
   buyerTeaserUrl: string | null | undefined;
   buyerDocuments?: unknown;
 }): boolean {

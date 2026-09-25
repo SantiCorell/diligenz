@@ -8,7 +8,6 @@ type Row = { label: string; url: string };
 
 type Props = {
   companyId: string;
-  attachmentsApproved: boolean;
   initialDocuments: BuyerDocument[];
 };
 
@@ -23,7 +22,6 @@ function rowsFromDocs(docs: BuyerDocument[]): Row[] {
 
 export default function AdminBuyerDocumentsForm({
   companyId,
-  attachmentsApproved,
   initialDocuments,
 }: Props) {
   const [rows, setRows] = useState<Row[]>(() => rowsFromDocs(initialDocuments));
@@ -161,19 +159,6 @@ export default function AdminBuyerDocumentsForm({
         <Plus className="h-4 w-4" />
         Añadir otro documento
       </button>
-
-      <label className="flex items-start gap-3 cursor-pointer pt-1">
-        <input
-          type="checkbox"
-          name="attachmentsApproved"
-          id="attachmentsApproved"
-          defaultChecked={attachmentsApproved}
-          className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--brand-primary)]/30 text-[var(--brand-primary)]"
-        />
-        <span className="text-sm font-medium text-[var(--foreground)]">
-          Permitir descarga cuando la solicitud de información esté en gestión
-        </span>
-      </label>
 
       <button
         type="submit"
