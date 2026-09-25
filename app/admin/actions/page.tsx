@@ -198,7 +198,8 @@ export default function AdminActionsPage() {
                 <th className="px-4 py-3">Comprador</th>
                 <th className="px-4 py-3">Empresa</th>
                 <th className="px-4 py-3">Estado</th>
-                <th className="px-4 py-3" aria-sort={createdSort === "desc" ? "descending" : "ascending"}>
+                <th className="px-4 py-3">Actualizada</th>
+                <th className="px-4 py-3 text-right" aria-sort={createdSort === "desc" ? "descending" : "ascending"}>
                   <button
                     type="button"
                     onClick={() => setCreatedSort((current) => (current === "desc" ? "asc" : "desc"))}
@@ -209,7 +210,6 @@ export default function AdminActionsPage() {
                     {createdSort === "desc" ? <ArrowDown className="h-3.5 w-3.5" aria-hidden /> : <ArrowUp className="h-3.5 w-3.5" aria-hidden />}
                   </button>
                 </th>
-                <th className="px-4 py-3">Actualizada</th>
               </tr>
             </thead>
             <tbody>
@@ -218,8 +218,8 @@ export default function AdminActionsPage() {
                   <td className="px-4 py-3">{row.userName || row.userEmail}</td>
                   <td className="px-4 py-3">{row.companyName}</td>
                   <td className="px-4 py-3">{PIPELINE_STATUS_LABELS[row.status]}</td>
-                  <td className="px-4 py-3 tabular-nums text-slate-700">{formatCreatedDate(row.createdAt)}</td>
                   <td className="px-4 py-3 text-slate-500">{ageLabel(new Date(row.statusUpdatedAt))}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-slate-700">{formatCreatedDate(row.createdAt)}</td>
                 </tr>
               ))}
             </tbody>
