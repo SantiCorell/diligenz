@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { authFetch } from "@/lib/auth-client";
 import {
   PIPELINE_STATUSES,
@@ -51,6 +52,12 @@ function initials(name: string | null, email: string): string {
   return source.slice(0, 2).toUpperCase();
 }
 
+function formatCreatedDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+}
+
 function eventLabel(event: HistoryEvent): string {
   const meta = (event.metadata ?? {}) as { to?: string; from?: string; automatic?: boolean };
   if (event.type === "INFO_REQUEST_CREATED") return "Solicitud creada";
@@ -66,6 +73,7 @@ export default function AdminActionsPage() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"pipeline" | "list">("pipeline");
   const [query, setQuery] = useState("");
+  const [createdSort, setCreatedSort] = useState<"desc" | "asc">("desc");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
@@ -99,6 +107,13 @@ export default function AdminActionsPage() {
         .some((value) => String(value).toLowerCase().includes(q))
     );
   }, [actions, query]);
+
+  const listRows = useMemo(() => {
+    return [...visible].sort((a, b) => {
+      const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return createdSort === "desc" ? diff : -diff;
+    });
+  }, [visible, createdSort]);
 
   const updateStatus = async (id: string, status: PipelineStatus) => {
     setSaving(true);
@@ -183,15 +198,27 @@ export default function AdminActionsPage() {
                 <th className="px-4 py-3">Comprador</th>
                 <th className="px-4 py-3">Empresa</th>
                 <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3" aria-sort={createdSort === "desc" ? "descending" : "ascending"}>
+                  <button
+                    type="button"
+                    onClick={() => setCreatedSort((current) => (current === "desc" ? "asc" : "desc"))}
+                    className="inline-flex items-center gap-1 font-semibold uppercase tracking-wide text-slate-700 hover:text-[var(--brand-primary)]"
+                    title={createdSort === "desc" ? "De más reciente a más antigua" : "De más antigua a más reciente"}
+                  >
+                    Creada
+                    {createdSort === "desc" ? <ArrowDown className="h-3.5 w-3.5" aria-hidden /> : <ArrowUp className="h-3.5 w-3.5" aria-hidden />}
+                  </button>
+                </th>
                 <th className="px-4 py-3">Actualizada</th>
               </tr>
             </thead>
             <tbody>
-              {visible.map((row) => (
+              {listRows.map((row) => (
                 <tr key={row.id} className="cursor-pointer border-t border-slate-100 hover:bg-slate-50" onClick={() => setSelectedId(row.id)}>
                   <td className="px-4 py-3">{row.userName || row.userEmail}</td>
                   <td className="px-4 py-3">{row.companyName}</td>
                   <td className="px-4 py-3">{PIPELINE_STATUS_LABELS[row.status]}</td>
+                  <td className="px-4 py-3 tabular-nums text-slate-700">{formatCreatedDate(row.createdAt)}</td>
                   <td className="px-4 py-3 text-slate-500">{ageLabel(new Date(row.statusUpdatedAt))}</td>
                 </tr>
               ))}
