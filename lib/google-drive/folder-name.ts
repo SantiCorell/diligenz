@@ -11,7 +11,9 @@ export function buildClientDriveFolderName(opts: {
       ? "VENDEDOR"
       : opts.role === "PROFESSIONAL"
         ? "PROFESIONAL"
-        : "COMPRADOR";
+        : opts.role === "ADMIN"
+          ? "ADMIN"
+          : "COMPRADOR";
 
   const person = opts.personName.trim().replace(/\s+/g, " ").toUpperCase();
   const company = opts.companyName?.trim().replace(/\s+/g, " ").toUpperCase();

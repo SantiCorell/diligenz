@@ -5,6 +5,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter } from "next-auth/adapters";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { provisionUserDriveFolder } from "@/lib/google-drive/user-drive";
+import { linkServiceRequestsToUser } from "@/lib/link-service-requests";
 import {
   DRIVE_OAUTH_SETUP_COOKIE,
   upsertEnvLocal,
@@ -28,6 +30,24 @@ function diligenzAdapter(): Adapter {
           oauthProfileComplete: false,
         },
       });
+      try {
+        await linkServiceRequestsToUser(created.id, created.email);
+      } catch (linkError) {
+        console.error(
+          "[auth] vincular servicios:",
+          linkError instanceof Error ? linkError.message : "failed"
+        );
+      }
+      try {
+        await provisionUserDriveFolder({
+          id: created.id,
+          role: created.role,
+          name: created.name,
+          email: created.email,
+        });
+      } catch (driveError) {
+        console.error("[auth] carpeta Drive:", driveError);
+      }
       return {
         id: created.id,
         email: created.email,

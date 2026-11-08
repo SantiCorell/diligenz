@@ -82,6 +82,11 @@ export async function POST(req: Request) {
     const sanitizedSubject = subject ? sanitizeLongText(subject, 2000) : null;
     const sanitizedMessage = message ? sanitizeLongText(message) : null;
 
+    const existingUser = await prisma.user.findUnique({
+      where: { email: sanitizedEmail },
+      select: { id: true },
+    });
+
     await prisma.contactRequest.create({
       data: {
         source: validSource,
@@ -94,6 +99,7 @@ export async function POST(req: Request) {
         subject: sanitizedSubject,
         message: sanitizedMessage,
         category: "pendiente",
+        userId: existingUser?.id ?? null,
       },
     });
 

@@ -60,10 +60,16 @@ export default async function DashboardMandatoPage() {
     redirect("/dashboard");
   }
 
-  const mandate = await prisma.salesMandate.findUnique({
-    where: { userId: session.userId },
-    select: { signedAt: true, contactEmail: true },
-  });
+  const [mandate, seller] = await Promise.all([
+    prisma.salesMandate.findUnique({
+      where: { userId: session.userId },
+      select: { signedAt: true, contactEmail: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { salesMandateVariant: true },
+    }),
+  ]);
 
   return (
     <MandatoSignWizard
@@ -72,6 +78,7 @@ export default async function DashboardMandatoPage() {
       signedAt={mandate?.signedAt?.toISOString() ?? null}
       signedEmail={mandate?.contactEmail ?? session.user.email}
       panelHref={panelHref}
+      variant={seller?.salesMandateVariant ?? "EXCLUSIVE"}
     />
   );
 }

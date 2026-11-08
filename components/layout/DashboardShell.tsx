@@ -9,7 +9,10 @@ import {
   Briefcase,
   Building2,
   Globe,
+  Calendar,
+  ClipboardList,
   Heart,
+  Home,
   Inbox,
   LayoutGrid,
   ListChecks,
@@ -68,8 +71,68 @@ export default function DashboardShell({
     router.refresh();
   };
 
+  const serviciosPanel = pathname.startsWith("/dashboard/servicios");
+  const greetingName = userDisplayName?.trim().split(/\s+/)[0] || userDisplayName;
+  const initials = (userDisplayName ?? "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+
   const renderSidebar = (forMobile = false) => {
     const expanded = forMobile ? true : !collapsed;
+    if (serviciosPanel) {
+      return (
+        <>
+          <div className={`panel-sidebar-header shrink-0 flex ${expanded ? "items-center px-4 py-4" : "flex-col items-center py-4 px-2"}`}>
+            <Link href="/dashboard/servicios" className="flex min-w-0 items-center" onClick={() => setMobileSidebarOpen(false)}>
+              <Image
+                src="/logo-diligenz-completo.png"
+                alt="Diligenz"
+                width={120}
+                height={36}
+                className={expanded ? "h-8 w-auto object-contain" : "h-7 w-auto object-contain"}
+              />
+            </Link>
+          </div>
+          <nav className={`${expanded ? "mt-3 px-3 pb-4" : "mt-2 px-2 pb-3"} min-h-0 flex-1 space-y-1 overflow-y-auto text-sm`}>
+            <NavItem href="/dashboard/servicios" label="Panel de bienvenida" icon={Home} active={pathname === "/dashboard/servicios"} collapsed={!expanded} onNavigate={() => setMobileSidebarOpen(false)} />
+            <NavItem href="/dashboard/profile" label="Mi perfil" icon={User} active={pathname.startsWith("/dashboard/profile")} collapsed={!expanded} onNavigate={() => setMobileSidebarOpen(false)} />
+            <div className={`panel-nav-divider ${expanded ? "mt-3 mb-2" : "mt-2 mb-1.5"}`} aria-hidden />
+            <NavItem
+              href="/companies"
+              label="Explorar empresas"
+              icon={Search}
+              active={pathname === "/companies" || (pathname.startsWith("/companies/") && !pathname.startsWith("/companies/mi-interes"))}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
+              href={
+                role === "SELLER"
+                  ? SELLER_MIS_EMPRESAS_PATH
+                  : role === "PROFESSIONAL"
+                    ? PROFESSIONAL_MIS_EMPRESAS_PATH
+                    : "/dashboard/mis-empresas"
+              }
+              label="Mis empresas"
+              icon={Briefcase}
+              active={
+                pathname.startsWith("/dashboard/mis-empresas") ||
+                pathname.startsWith(SELLER_MIS_EMPRESAS_PATH) ||
+                pathname.startsWith(PROFESSIONAL_MIS_EMPRESAS_PATH) ||
+                pathname.startsWith("/dashboard/seller/companies")
+              }
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <div className={`panel-nav-divider ${expanded ? "mt-3 mb-2" : "mt-2 mb-1.5"}`} aria-hidden />
+            <WebNavItem collapsed={!expanded} onNavigate={() => setMobileSidebarOpen(false)} />
+          </nav>
+        </>
+      );
+    }
     return (
     <>
       <div className={`panel-sidebar-header shrink-0 flex ${expanded ? "items-center justify-between gap-3 px-4 py-4" : "flex-col items-center gap-3 py-4 px-2"}`}>
@@ -248,7 +311,7 @@ export default function DashboardShell({
               href="/admin"
               label="Admin · Inicio"
               icon={LayoutGrid}
-              active={pathname.startsWith("/admin")}
+              active={pathname === "/admin"}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
@@ -265,6 +328,14 @@ export default function DashboardShell({
               label="Admin · Acciones"
               icon={ListChecks}
               active={pathname.startsWith("/admin/actions")}
+              collapsed={!expanded}
+              onNavigate={() => setMobileSidebarOpen(false)}
+            />
+            <NavItem
+              href="/admin/servicios"
+              label="Admin · Servicios"
+              icon={ClipboardList}
+              active={pathname.startsWith("/admin/servicios")}
               collapsed={!expanded}
               onNavigate={() => setMobileSidebarOpen(false)}
             />
@@ -286,6 +357,23 @@ export default function DashboardShell({
             />
           </div>
         )}
+
+        <NavItem
+          href="/dashboard/servicios"
+          label="Mis servicios"
+          icon={ClipboardList}
+          active={pathname.startsWith("/dashboard/servicios")}
+          collapsed={!expanded}
+          onNavigate={() => setMobileSidebarOpen(false)}
+        />
+        <NavItem
+          href="/dashboard/calendar"
+          label="Mi calendario"
+          icon={Calendar}
+          active={pathname.startsWith("/dashboard/calendar")}
+          collapsed={!expanded}
+          onNavigate={() => setMobileSidebarOpen(false)}
+        />
 
         <div className={`panel-nav-divider ${expanded ? "mt-3 mb-2" : "mt-2 mb-1.5"}`} aria-hidden />
         <WebNavItem collapsed={!expanded} onNavigate={() => setMobileSidebarOpen(false)} />
@@ -336,8 +424,8 @@ export default function DashboardShell({
               </svg>
             </button>
             <span className="truncate text-sm font-medium text-[var(--brand-dark)]">
-              {userDisplayName ? (
-                <>Hola, <span className="font-semibold text-[var(--brand-primary)]">{userDisplayName}</span></>
+              {greetingName ? (
+                <>Hola, <span className="font-semibold">{greetingName}</span></>
               ) : (
                 <span className="opacity-80">Panel de usuario</span>
               )}
@@ -352,6 +440,17 @@ export default function DashboardShell({
             )}
           </div>
           <div className="flex items-center gap-3">
+            {serviciosPanel && userDisplayName ? (
+              <Link
+                href="/dashboard/profile"
+                className="inline-flex items-center gap-2 rounded-full py-1 pl-1 pr-2 text-sm font-medium text-[var(--brand-dark)] hover:bg-[var(--brand-surface)]"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#efe7ff] text-xs font-bold text-[#7c4dff]">
+                  {initials || "?"}
+                </span>
+                <span className="hidden sm:inline">{userDisplayName}</span>
+              </Link>
+            ) : null}
             <button
               onClick={logout}
               className="text-sm font-medium text-[var(--brand-dark)]/70 hover:text-[var(--brand-primary)]"

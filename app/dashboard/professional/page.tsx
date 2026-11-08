@@ -12,6 +12,7 @@ import {
 import { getDisplayName } from "@/lib/user-display";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUser } from "@/lib/session";
+import DashboardAgentSlot from "@/components/dashboard/DashboardAgentSlot";
 
 export default async function ProfessionalDashboardPage() {
   const session = await getSessionWithUser();
@@ -47,7 +48,7 @@ export default async function ProfessionalDashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 md:gap-5">
         <Link
           href="/dashboard/profile"
           className="page-card page-card-padded group transition hover:border-[var(--brand-primary)]/30 hover:shadow-md"
@@ -94,6 +95,11 @@ export default async function ProfessionalDashboardPage() {
             Ver empresas activas →
           </span>
         </Link>
+        <DashboardAgentSlot
+          userId={session.userId}
+          userName={displayName}
+          userEmail={session.user.email}
+        />
       </div>
 
       {canAddMore ? (

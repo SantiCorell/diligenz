@@ -6,21 +6,27 @@ import {
   FileText,
   ExternalLink,
   MapPin,
-  BarChart3,
-  Users,
   Upload,
   Download,
   File,
   Lock,
+  Check,
+  Heart,
+  MessageSquare,
+  Phone,
+  Repeat,
+  TrendingUp,
 } from "lucide-react";
 import RegisterModal from "@/components/auth/RegisterModal";
 import RequestInfoModal from "@/components/companies/RequestInfoModal";
 import CompanyFavoriteButton from "@/components/companies/CompanyFavoriteButton";
+import AssignedAgentCard from "@/components/dashboard/AssignedAgentCard";
 import type { CompanyMock } from "@/lib/mock-companies";
+import type { AgentCardData } from "@/lib/agent-shared";
 import { authFetch } from "@/lib/auth-client";
-import SectorVisual from "@/components/companies/SectorVisual";
 import { getSectorVisual } from "@/lib/sector-visual";
 import { formatEuroAmountFromString, formatEuroRange } from "@/lib/format-financial";
+import { ccaaLabel } from "@/lib/spain-ccaa";
 import { CONSENT_EVENT, hasAnalyticsConsent } from "@/lib/cookie-consent";
 import { trackRequestCompanyInfo, trackViewCompany } from "@/lib/meta-pixel";
 
@@ -41,13 +47,86 @@ type Props = {
   isLoggedIn: boolean;
   isOwner?: boolean;
   isAdmin?: boolean;
+  agent?: AgentCardData | null;
+  viewerName?: string;
+  viewerEmail?: string;
+  documentCount?: number;
 };
+
+function missingFigure(value: string | null | undefined): boolean {
+  const trimmed = value?.trim() ?? "";
+  return !trimmed || trimmed === "—" || trimmed === "-" || /^confidencial$/i.test(trimmed);
+}
+
+function compactLocation(label: string): string {
+  return label
+    .replace(/^Comunidad de /, "")
+    .replace(/^Comunidad Foral de /, "")
+    .replace(/^Comunidad /, "C. ")
+    .replace(/^Principado de /, "")
+    .replace(/^Región de /, "")
+    .replace(/^Islas /, "");
+}
+
+function growthLabel(value: number): string {
+  const abs = Math.abs(value).toLocaleString("es-ES", { maximumFractionDigits: 1 });
+  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
+  return `${sign}${abs}% crecimiento`;
+}
+
+function projectSummary(description: string): string {
+  const prose = description
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !/^(?:[-•*]|\d+[.)])\s+/.test(line));
+  return prose.join("\n\n");
+}
+
+function opportunityPoints(company: CompanyMock): string[] {
+  const bullets = company.description
+    .split(/\r?\n/)
+    .map((line) => line.trim().match(/^(?:[-•*]|\d+[.)])\s+(.+)$/)?.[1]?.trim() ?? "")
+    .filter(Boolean);
+  if (bullets.length > 0) return bullets.slice(0, 6);
+
+  const points: string[] = [];
+  if (
+    typeof company.revenueGrowthPercent === "number" &&
+    Number.isFinite(company.revenueGrowthPercent)
+  ) {
+    points.push(`Crecimiento de facturación del ${growthLabel(company.revenueGrowthPercent).replace(" crecimiento", "")}.`);
+  }
+  if (typeof company.arr === "number" && company.arr > 0) {
+    points.push("Modelo con ingresos recurrentes.");
+  }
+  if (typeof company.yearsOperating === "number" && company.yearsOperating > 0) {
+    points.push(
+      company.yearsOperating === 1
+        ? "Un año en operación."
+        : `${company.yearsOperating} años en operación.`
+    );
+  }
+  return points;
+}
+
+function ConfidentialBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+      <Lock className="h-3 w-3" aria-hidden />
+      Confidencial
+    </span>
+  );
+}
 
 export default function CompanyFicha({
   company,
   isLoggedIn,
   isOwner = false,
   isAdmin = false,
+  agent = null,
+  viewerName = "",
+  viewerEmail = "",
+  documentCount = 0,
 }: Props) {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [requestModalOpen, setRequestModalOpen] = useState(false);
@@ -163,137 +242,106 @@ export default function CompanyFicha({
     }
   };
 
+  const documentTabLabel =
+    documentCount > 0 ? `Documentos (${documentCount})` : "Documentos";
   const tabs: { id: TabId; label: string }[] = [
     { id: "informacion", label: "Información" },
     { id: "descripcion", label: "Descripción" },
-    { id: "documentos", label: "Documentos" },
+    { id: "documentos", label: documentTabLabel },
   ];
 
   const sectorVisual = getSectorVisual(company.sector);
+  const sectorPath = [
+    sectorVisual.label.replace(/\s*\/\s*/g, " · "),
+    company.sectorSubcategory?.trim() &&
+    !sectorVisual.label.toLowerCase().includes(company.sectorSubcategory.trim().toLowerCase())
+      ? company.sectorSubcategory.trim()
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const locationFull = ccaaLabel(company.location);
+  const locationKnown = !missingFigure(locationFull);
   const annualRevenue = formatEuroAmountFromString(
     company.revenue?.trim() || company.gmv || null
   );
   const ebitdaLabel = formatEuroAmountFromString(company.ebitda);
   const exerciseResultLabel = formatEuroAmountFromString(company.exerciseResult);
   const salePriceLabel = formatEuroRange(company.valuationSaleMin, company.valuationSaleMax);
+  const summary = projectSummary(company.description);
+  const points = opportunityPoints(company);
+  const SectorIcon = sectorVisual.icon;
+  const highlightChips: { key: string; label: string; icon: typeof TrendingUp }[] = [];
+  if (
+    typeof company.revenueGrowthPercent === "number" &&
+    Number.isFinite(company.revenueGrowthPercent) &&
+    company.revenueGrowthPercent !== 0
+  ) {
+    highlightChips.push({
+      key: "growth",
+      label: growthLabel(company.revenueGrowthPercent),
+      icon: TrendingUp,
+    });
+  }
+  if (typeof company.arr === "number" && company.arr > 0) {
+    highlightChips.push({ key: "arr", label: "Ingresos recurrentes", icon: Repeat });
+  }
+
+  const askToRegister = () => setRegisterModalOpen(true);
 
   return (
     <>
-      <div className="mt-6 rounded-xl border border-black/[0.06] bg-[var(--surface-card)] overflow-hidden shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-        <SectorVisual sector={company.sector} variant="banner" />
-        <div className="grid md:grid-cols-[1fr,280px] gap-0">
-          <div className="p-6 md:p-8">
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`rounded-full px-2.5 py-1 text-xs font-medium ${sectorVisual.tagClass}`}
-              >
-                {sectorVisual.label}
+      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+        <div className="relative overflow-hidden bg-gradient-to-r from-[#b57bff] via-[#d2b0ff] to-[#eadbff] px-6 py-8 md:px-8 md:py-10">
+          <SectorIcon
+            className="pointer-events-none absolute -right-2 top-1/2 h-32 w-32 -translate-y-1/2 text-white/35"
+            strokeWidth={1.25}
+            aria-hidden
+          />
+          <span className="relative inline-flex rounded-full bg-white/25 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+            {sectorPath}
+          </span>
+        </div>
+        <div className="px-6 py-6 md:px-8 md:py-7">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-500">
+              <Lock className="h-3 w-3" aria-hidden />
+              Confidencial
+            </span>
+            {company.reference ? (
+              <span className="inline-flex items-center rounded-full bg-[#f3e8ff] px-2.5 py-1 text-[11px] font-semibold text-[#7c4dff]">
+                Ref. {company.reference}
               </span>
-              <span className="rounded-md border border-black/[0.05] px-2.5 py-1 text-[11px] font-normal text-[var(--foreground)]/45">
-                Confidencial
-              </span>
-              {company.reference ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--brand-primary)]/25 bg-[var(--brand-primary)]/5 px-2.5 py-1 font-mono text-[11px] font-bold text-[var(--brand-primary)]">
-                  Ref. {company.reference}
-                </span>
-              ) : null}
-            </div>
-            <h1 className="mt-4 text-2xl md:text-3xl font-semibold text-[var(--foreground)]">
-              {company.name}
-            </h1>
-            <p className="mt-2 flex items-center gap-2 text-sm text-[var(--foreground)]/55">
-              <MapPin className="w-3.5 h-3.5 opacity-60" />
-              {company.location}
+            ) : null}
+          </div>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+            {company.name}
+          </h1>
+          {locationKnown ? (
+            <p className="mt-2 flex items-center gap-2 text-sm text-slate-500">
+              <MapPin className="h-3.5 w-3.5" aria-hidden />
+              {locationFull}
             </p>
-          </div>
-          <div className="bg-[var(--surface-muted)]/40 border-t md:border-t-0 md:border-l border-black/[0.05] p-6 flex flex-col justify-between gap-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-xs text-[var(--foreground)] opacity-70">
-                  Facturación anual €
-                </p>
-                <p className="text-lg font-bold text-[var(--brand-primary)]">
-                  {annualRevenue}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-[var(--foreground)] opacity-70">
-                  EBITDA
-                </p>
-                <p className="text-lg font-bold text-[var(--brand-primary)]">
-                  {ebitdaLabel}
-                </p>
-              </div>
-              {company.exerciseResult ? (
-                <div>
-                  <p className="text-xs text-[var(--foreground)] opacity-70">
-                    Resultado del ejercicio
-                  </p>
-                  <p className="text-lg font-bold text-[var(--brand-primary)]">
-                    {exerciseResultLabel}
-                  </p>
-                </div>
-              ) : null}
-              {salePriceLabel ? (
-                <div className="md:col-span-2 lg:col-span-1">
-                  <p className="text-xs text-[var(--foreground)] opacity-70">
-                    Precio de venta
-                  </p>
-                  <p className="text-lg font-bold text-[var(--brand-primary)]">{salePriceLabel}</p>
-                </div>
-              ) : null}
-              {company.employees != null && (
-                <div>
-                  <p className="text-xs text-[var(--foreground)] opacity-70">
-                    Nº Empleados
-                  </p>
-                  <p className="text-lg font-bold text-[var(--brand-primary)]">
-                    {company.employees}
-                  </p>
-                </div>
-              )}
+          ) : null}
+          {highlightChips.length > 0 ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {highlightChips.map((chip) => (
+                <span
+                  key={chip.key}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700"
+                >
+                  <chip.icon className="h-3.5 w-3.5" aria-hidden />
+                  {chip.label}
+                </span>
+              ))}
             </div>
-            {isLoggedIn ? (
-              <div className="flex flex-col gap-2">
-                {requestInfo ? (
-                  <div className="rounded-xl border border-[var(--brand-primary)]/20 bg-[var(--brand-primary)]/8 px-4 py-3 text-center">
-                    <p className="text-sm font-semibold text-[var(--brand-primary)]">
-                      Solicitud enviada
-                    </p>
-                    <p className="mt-1 text-xs leading-relaxed text-[var(--foreground)]/75">
-                      En breve un compañero se pondrá en contacto contigo.
-                    </p>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={openRequestModal}
-                    className="w-full rounded-xl bg-[var(--brand-primary)] py-3 text-sm font-semibold text-white hover:opacity-90"
-                  >
-                    ¿Estás interesado?
-                  </button>
-                )}
-                <CompanyFavoriteButton
-                  companyId={company.id}
-                  initialFavorite={isFavorite}
-                  onChange={setIsFavorite}
-                />
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setRegisterModalOpen(true)}
-                className="w-full rounded-xl bg-[var(--brand-primary)] py-3 text-sm font-semibold text-white hover:opacity-90"
-              >
-                Regístrate para ver datos y solicitar información
-              </button>
-            )}
-          </div>
+          ) : null}
         </div>
       </div>
 
-      {/* Pestañas */}
-      <div className="mt-8 border-b border-[var(--brand-primary)]/15">
+      <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div>
+      <div className="border-b border-slate-200">
         <nav className="flex gap-6" aria-label="Secciones">
           {tabs.map((tab) => (
             <button
@@ -302,8 +350,8 @@ export default function CompanyFicha({
               onClick={() => setActiveTab(tab.id)}
               className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? "border-[var(--brand-primary)] text-[var(--brand-primary)]"
-                  : "border-transparent text-[var(--foreground)] opacity-70 hover:opacity-100"
+                  ? "border-[#7c4dff] text-[#7c4dff]"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
               {tab.label}
@@ -312,56 +360,26 @@ export default function CompanyFicha({
         </nav>
       </div>
 
-      {/* Contenido por pestaña */}
-      <div className="mt-6 rounded-2xl border border-[var(--brand-primary)]/10 bg-[var(--brand-bg)] p-6 md:p-8">
+      <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm md:p-8">
         {activeTab === "informacion" && (
           <section>
-            <h2 className="text-lg font-bold text-[var(--brand-primary)]">
-              Información del proyecto
-            </h2>
-            <p className="mt-3 text-[var(--foreground)] opacity-90 leading-relaxed">
-              {company.description}
+            <h2 className="text-lg font-bold text-[#7c4dff]">Información del proyecto</h2>
+            <p className="mt-3 whitespace-pre-wrap text-[15px] leading-relaxed text-slate-700">
+              {summary || "Sin descripción."}
             </p>
-            {isLoggedIn && (
-              <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3">
-                <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-[var(--brand-primary)]/70" />
-                    <span className="text-xs font-medium opacity-75">
-                      Facturación anual €
-                    </span>
-                  </div>
-                  <p className="mt-1 font-bold text-[var(--brand-primary)]">
-                    {annualRevenue}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
-                  <span className="text-xs font-medium opacity-75">EBITDA</span>
-                  <p className="mt-1 font-bold text-[var(--brand-primary)]">
-                    {ebitdaLabel}
-                  </p>
-                </div>
-                {company.exerciseResult ? (
-                  <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
-                    <span className="text-xs font-medium opacity-75">Resultado del ejercicio</span>
-                    <p className="mt-1 font-bold text-[var(--brand-primary)]">
-                      {exerciseResultLabel}
-                    </p>
-                  </div>
-                ) : null}
-                {company.employees != null && (
-                  <div className="rounded-xl bg-[var(--brand-bg-lavender)]/60 p-4">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-[var(--brand-primary)]/70" />
-                      <span className="text-xs font-medium opacity-75">Nº Empleados</span>
-                    </div>
-                    <p className="mt-1 font-bold text-[var(--brand-primary)]">
-                      {company.employees}
-                    </p>
-                  </div>
-                )}
+            {points.length > 0 ? (
+              <div className="mt-6 border-t border-slate-100 pt-5">
+                <h3 className="text-sm font-bold text-slate-900">Por qué esta oportunidad</h3>
+                <ul className="mt-3 space-y-2.5">
+                  {points.map((point) => (
+                    <li key={point} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-700">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#7c4dff]" aria-hidden />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            )}
+            ) : null}
           </section>
         )}
 
@@ -560,6 +578,144 @@ export default function CompanyFicha({
             )}
           </section>
         )}
+      </div>
+        </div>
+
+        <aside className="space-y-4">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+              Datos clave
+            </h2>
+            <dl className="mt-2">
+              <div className="flex items-center justify-between gap-4 border-b border-slate-100 py-3">
+                <dt className="text-sm text-slate-500">Sector</dt>
+                <dd className="text-right text-sm font-semibold text-slate-900">
+                  {company.sectorSubcategory?.trim() || sectorVisual.shortLabel}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4 border-b border-slate-100 py-3">
+                <dt className="text-sm text-slate-500">Ubicación</dt>
+                <dd className="text-right text-sm font-semibold text-slate-900">
+                  {locationKnown ? compactLocation(locationFull) : <ConfidentialBadge />}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4 border-b border-slate-100 py-3">
+                <dt className="text-sm text-slate-500">Facturación anual</dt>
+                <dd className="text-right text-sm font-semibold text-slate-900">
+                  {missingFigure(annualRevenue) ? <ConfidentialBadge /> : annualRevenue}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4 py-3">
+                <dt className="text-sm text-slate-500">EBITDA</dt>
+                <dd className="text-right text-sm font-semibold text-slate-900">
+                  {missingFigure(ebitdaLabel) ? <ConfidentialBadge /> : ebitdaLabel}
+                </dd>
+              </div>
+              {!missingFigure(exerciseResultLabel) ? (
+                <div className="flex items-center justify-between gap-4 border-t border-slate-100 py-3">
+                  <dt className="text-sm text-slate-500">Resultado</dt>
+                  <dd className="text-right text-sm font-semibold text-slate-900">{exerciseResultLabel}</dd>
+                </div>
+              ) : null}
+              {salePriceLabel ? (
+                <div className="flex items-center justify-between gap-4 border-t border-slate-100 py-3">
+                  <dt className="text-sm text-slate-500">Precio de venta</dt>
+                  <dd className="text-right text-sm font-semibold text-slate-900">{salePriceLabel}</dd>
+                </div>
+              ) : null}
+              {company.employees != null ? (
+                <div className="flex items-center justify-between gap-4 border-t border-slate-100 py-3">
+                  <dt className="text-sm text-slate-500">Empleados</dt>
+                  <dd className="text-right text-sm font-semibold text-slate-900">{company.employees}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </section>
+
+          <div className="space-y-2.5">
+            {isLoggedIn && requestInfo ? (
+              <div className="rounded-xl border border-[#eadfff] bg-[#f7f2ff] px-4 py-3 text-center">
+                <p className="text-sm font-semibold text-[#5b34d6]">Solicitud enviada</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                  En breve un compañero se pondrá en contacto contigo.
+                </p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={isLoggedIn ? openRequestModal : askToRegister}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#7c4dff] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#6b3df0]"
+              >
+                <MessageSquare className="h-4 w-4" aria-hidden />
+                ¿Estás interesado?
+              </button>
+            )}
+            {isLoggedIn ? (
+              <CompanyFavoriteButton
+                companyId={company.id}
+                initialFavorite={isFavorite}
+                onChange={setIsFavorite}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={askToRegister}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#d4c2ff] bg-white px-4 py-3 text-sm font-semibold text-[#5b34d6] hover:bg-[#f7f2ff]"
+              >
+                <Heart className="h-4 w-4" aria-hidden />
+                Guardar en favoritos
+              </button>
+            )}
+            <p className="text-center text-xs text-slate-400">Sin compromiso · Respuesta en 48h</p>
+          </div>
+
+          {isLoggedIn && agent ? (
+            <AssignedAgentCard
+              variant="listing"
+              agent={agent}
+              nextMeeting={null}
+              userName={viewerName}
+              userEmail={viewerEmail}
+            />
+          ) : (
+            <article className="rounded-2xl border border-[#eadfff] bg-[#f7f2ff] p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#7c4dff]">
+                  <MessageSquare className="h-4 w-4" aria-hidden />
+                </span>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7c4dff]">
+                    ¿Dudas sobre esta operación?
+                  </p>
+                  <p className="mt-1 text-base font-bold text-slate-900">Ponte en contacto con nosotros</p>
+                </div>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                {isLoggedIn
+                  ? "Nuestro equipo te atiende sin compromiso y te asignará un agente directo para esta y el resto de oportunidades."
+                  : "Nuestro equipo te atiende sin compromiso. Al verificarte como comprador, se te asignará un agente directo para esta y el resto de oportunidades."}
+              </p>
+              {isLoggedIn ? (
+                <Link
+                  href="/contact"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#7c4dff] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#6b3df0]"
+                >
+                  <Phone className="h-4 w-4" aria-hidden />
+                  Contactar con nosotros
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={askToRegister}
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#7c4dff] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#6b3df0]"
+                >
+                  <Phone className="h-4 w-4" aria-hidden />
+                  Contactar con nosotros
+                </button>
+              )}
+            </article>
+          )}
+        </aside>
       </div>
 
       <RegisterModal

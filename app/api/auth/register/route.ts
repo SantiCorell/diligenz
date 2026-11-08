@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
+import type { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 import { createSession } from "@/lib/session";
 import { getClientIP, isValidEmail, isValidPhone } from "@/lib/security";
+import { provisionUserDriveFolder } from "@/lib/google-drive/user-drive";
+import { linkServiceRequestsToUser } from "@/lib/link-service-requests";
 import { sendWelcomeEmail } from "@/lib/emails/welcome";
 import type { WelcomeRole } from "@/lib/emails/welcome";
 
@@ -169,7 +172,25 @@ export async function POST(req: Request) {
       console.error("[register] welcome email error:", emailError);
     }
 
-    // Carpeta Drive del cliente: lazy (DNI, mandato/NDA, empresa o valoración).
+    try {
+      await linkServiceRequestsToUser(user.id, normalizedEmail);
+    } catch (linkError) {
+      console.error(
+        "[register] vincular servicios:",
+        linkError instanceof Error ? linkError.message : "failed"
+      );
+    }
+
+    try {
+      await provisionUserDriveFolder({
+        id: user.id,
+        role: user.role as UserRole,
+        name: fullName,
+        email: normalizedEmail,
+      });
+    } catch (driveError) {
+      console.error("[register] carpeta Drive:", driveError);
+    }
 
     const token = await createSession(user.id);
     return NextResponse.json(

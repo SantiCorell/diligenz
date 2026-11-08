@@ -25,6 +25,12 @@ export async function POST(req: Request) {
     );
   }
 
+  const sellerSettings = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { salesMandateVariant: true },
+  });
+  const variant = sellerSettings?.salesMandateVariant ?? "EXCLUSIVE";
+
   const existing = await prisma.salesMandate.findUnique({
     where: { userId: session.userId },
   });
@@ -92,7 +98,7 @@ export async function POST(req: Request) {
     userAgent,
   };
 
-  const pdfBytes = await generateSignedMandatePdf(payload);
+  const pdfBytes = await generateSignedMandatePdf(payload, variant);
   const pdfFileName = `mandato-venta-diligenz-${signedAt.toISOString().slice(0, 10)}.pdf`;
 
   let driveFolderCreated = false;
@@ -162,6 +168,7 @@ export async function POST(req: Request) {
         clientIp,
         userAgent,
         termsAccepted: true,
+        variant,
       },
     }),
     prisma.user.update({
@@ -180,7 +187,8 @@ export async function POST(req: Request) {
     await sendMandatoSignedEmails({
       clientEmail: payload.contactEmail || session.user.email,
       clientName,
-      documentTitle: "Mandato de Venta",
+      documentTitle:
+        variant === "NON_EXCLUSIVE" ? "Mandato de Venta sin exclusividad" : "Mandato de Venta",
       signedAt,
       userSubject: "Copia de tu Mandato de Venta firmado — Diligenz",
       internalSubject: `Nuevo mandato firmado — ${payload.companyLegalName}`,

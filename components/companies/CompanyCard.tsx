@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import type { CompanyMock } from "@/lib/mock-companies";
-import { formatEuroAmountFromString, formatEuroRange } from "@/lib/format-financial";
+import { formatEuroAmount, formatEuroAmountFromString, formatEuroRange } from "@/lib/format-financial";
 import { ccaaLabel } from "@/lib/spain-ccaa";
 import { getSectorVisual } from "@/lib/sector-visual";
 import CompanyFavoriteButton from "@/components/companies/CompanyFavoriteButton";
@@ -20,29 +20,28 @@ type Props = {
   footer?: ReactNode;
 };
 
-function MetricCell({
-  label,
-  value,
-  muted,
-}: {
-  label: string;
-  value: string;
-  muted?: boolean;
-}) {
+function MetricCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
       <span className="block text-[11px] font-medium leading-tight text-[var(--brand-dark)]/55 sm:text-xs">
         {label}
       </span>
-      <b
-        className={`mt-0.5 block truncate text-sm font-extrabold tracking-tight sm:text-[15px] ${
-          muted ? "font-medium text-[var(--brand-dark)]/45" : "text-[var(--brand-dark)]"
-        }`}
-      >
+      <b className="mt-0.5 block truncate text-sm font-extrabold tracking-tight text-[var(--brand-dark)] sm:text-[15px]">
         {value}
       </b>
     </div>
   );
+}
+
+function filledMoney(...candidates: Array<string | number | null | undefined>): string | null {
+  for (const raw of candidates) {
+    if (raw == null) continue;
+    const text = String(raw).trim();
+    if (!text || text === "—" || text === "-") continue;
+    const formatted = formatEuroAmountFromString(text);
+    if (formatted && formatted !== "—") return formatted;
+  }
+  return null;
 }
 
 export default function CompanyCard({
@@ -60,16 +59,28 @@ export default function CompanyCard({
       ? company.description.slice(0, descMax).trimEnd() + "…"
       : company.description;
 
-  const annualRevenueRaw = company.revenue?.trim() || company.gmv?.trim() || "";
-  const annualRevenue = annualRevenueRaw
-    ? formatEuroAmountFromString(annualRevenueRaw)
-    : "—";
-  const ebitdaRaw = company.ebitda?.trim() || "";
-  const ebitda = ebitdaRaw ? formatEuroAmountFromString(ebitdaRaw) : "—";
-  const exerciseRaw = company.exerciseResult?.trim() || "";
-  const exercise = exerciseRaw ? formatEuroAmountFromString(exerciseRaw) : "—";
-  const employees =
-    company.employees != null ? String(company.employees) : "—";
+  const metrics: { label: string; value: string }[] = [];
+  const annualRevenue = filledMoney(company.revenue, company.gmv);
+  if (annualRevenue) metrics.push({ label: "Facturación anual", value: annualRevenue });
+  if (company.arr != null && Number.isFinite(company.arr)) {
+    metrics.push({ label: "ARR", value: formatEuroAmount(company.arr) });
+  }
+  const ebitda = filledMoney(company.ebitda);
+  if (ebitda) metrics.push({ label: "EBITDA", value: ebitda });
+  const exercise = filledMoney(company.exerciseResult);
+  if (exercise) metrics.push({ label: "Resultado ejercicio", value: exercise });
+  if (company.employees != null) {
+    metrics.push({ label: "Nº empleados", value: String(company.employees) });
+  }
+
+  const metricCols =
+    metrics.length <= 1
+      ? "grid-cols-1"
+      : metrics.length === 2
+        ? "grid-cols-2"
+        : metrics.length === 3
+          ? "grid-cols-2 sm:grid-cols-3"
+          : "grid-cols-2 sm:grid-cols-4";
 
   const salePrice =
     company.valuationSaleMin != null || company.valuationSaleMax != null
@@ -133,29 +144,17 @@ export default function CompanyCard({
           </p>
         </div>
 
-        {/* Metrics — 2×2 en móvil, 4 en desktop → menos apilado */}
-        <div
-          className={`grid grid-cols-2 gap-x-3 gap-y-3 rounded-2xl bg-[var(--brand-surface)] ${
-            compact ? "p-3 sm:grid-cols-4 sm:p-3.5" : "p-3.5 sm:grid-cols-4 sm:gap-x-4 sm:p-4"
-          }`}
-        >
-          <MetricCell
-            label="Facturación anual"
-            value={annualRevenue}
-            muted={annualRevenue === "—"}
-          />
-          <MetricCell label="EBITDA" value={ebitda} muted={ebitda === "—"} />
-          <MetricCell
-            label="Resultado ejercicio"
-            value={exercise}
-            muted={exercise === "—"}
-          />
-          <MetricCell
-            label="Nº empleados"
-            value={employees}
-            muted={employees === "—"}
-          />
-        </div>
+        {metrics.length > 0 ? (
+          <div
+            className={`grid gap-x-3 gap-y-3 rounded-2xl bg-[var(--brand-surface)] ${metricCols} ${
+              compact ? "p-3 sm:p-3.5" : "p-3.5 sm:gap-x-4 sm:p-4"
+            }`}
+          >
+            {metrics.map((metric) => (
+              <MetricCell key={metric.label} label={metric.label} value={metric.value} />
+            ))}
+          </div>
+        ) : null}
 
         {/* Footer */}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-0.5">

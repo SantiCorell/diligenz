@@ -4,6 +4,7 @@ import { SELL_DASHBOARD_PATH } from "@/lib/companies-dashboard-path";
 import { countActiveOwnerCompanies } from "@/lib/professional-company-limit";
 import { getDisplayName } from "@/lib/user-display";
 import { getSessionWithUser } from "@/lib/session";
+import DashboardAgentSlot from "@/components/dashboard/DashboardAgentSlot";
 
 export default async function SellerDashboardPage() {
   const session = await getSessionWithUser();
@@ -27,7 +28,7 @@ export default async function SellerDashboardPage() {
         </p>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link
           href="/dashboard/profile"
           className="page-card page-card-padded group transition hover:border-[var(--brand-primary)]/30 hover:shadow-md"
@@ -70,6 +71,11 @@ export default async function SellerDashboardPage() {
             Ver empresas activas →
           </span>
         </Link>
+        <DashboardAgentSlot
+          userId={session.userId}
+          userName={displayName}
+          userEmail={session.user.email}
+        />
       </div>
 
       <div className="panel-hero flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

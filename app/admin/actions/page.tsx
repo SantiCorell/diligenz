@@ -77,6 +77,8 @@ export default function AdminActionsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [reminding, setReminding] = useState(false);
+  const [reminderNote, setReminderNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchActions = async () => {
@@ -96,6 +98,7 @@ export default function AdminActionsPage() {
   useEffect(() => {
     setNote(selected?.internalNote ?? "");
     setError(null);
+    setReminderNote(null);
   }, [selected?.id, selected?.internalNote]);
 
   const visible = useMemo(() => {
@@ -144,7 +147,42 @@ export default function AdminActionsPage() {
     if (res.ok) await fetchActions();
   };
 
+  const sendReminder = async () => {
+    if (!selected) return;
+    const nda = selected.status === "PENDING_NDA";
+    const who = selected.userName || selected.userEmail;
+    const confirmed = window.confirm(
+      nda
+        ? `Se enviará un correo a ${who} (${selected.userEmail}) para que firme el NDA de ${selected.companyName}.`
+        : `Se enviará un correo a ${who} (${selected.userEmail}) pidiendo disponibilidad para hablar de ${selected.companyName}.`
+    );
+    if (!confirmed) return;
+    setReminding(true);
+    setError(null);
+    setReminderNote(null);
+    const res = await authFetch(`/api/admin/actions/${selected.id}/reminder`, { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    setReminding(false);
+    if (!res.ok) {
+      setError((data as { error?: string }).error ?? "No se pudo enviar el recordatorio.");
+      return;
+    }
+    setReminderNote(`Recordatorio enviado a ${selected.userEmail}.`);
+  };
+
   const moment = selected ? buyerMomentCopy(selected.status) : null;
+  const reminder =
+    selected?.status === "PENDING_NDA"
+      ? {
+          label: "Enviar recordatorio: firmar el NDA",
+          hint: "Le pide que firme el NDA para recibir la información y le deja el enlace para reservar una llamada con su gestor.",
+        }
+      : selected?.status === "IN_REVIEW"
+        ? {
+            label: "Enviar recordatorio de contacto",
+            hint: "Le indica que no hemos podido contactarle, le pide su disponibilidad y le deja el enlace para reservar con su gestor.",
+          }
+        : null;
   const primaryAction =
     selected?.status === "IN_REVIEW"
       ? { label: "Conceder acceso al teaser →", status: "TEASER" as const }
@@ -336,6 +374,21 @@ export default function AdminActionsPage() {
                   Guardar nota
                 </button>
               </div>
+
+              {reminder && (
+                <div className="rounded-2xl border border-slate-200 px-4 py-3">
+                  <button
+                    type="button"
+                    disabled={reminding || saving}
+                    onClick={() => void sendReminder()}
+                    className="w-full rounded-full bg-[var(--brand-primary)] px-4 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60"
+                  >
+                    {reminding ? "Enviando…" : reminder.label}
+                  </button>
+                  <p className="mt-2 text-xs text-slate-500">{reminder.hint}</p>
+                  {reminderNote && <p className="mt-2 text-xs font-semibold text-emerald-700">{reminderNote}</p>}
+                </div>
+              )}
 
               {primaryAction && (
                 <button

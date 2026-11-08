@@ -1,27 +1,44 @@
 import { google } from "googleapis";
 import type { OAuth2Client } from "google-auth-library";
 import { driveFolderUrl } from "./folder-name";
-import { getDriveAuth, getDriveAuthMode, isGoogleDriveConfigured } from "./auth";
+import {
+  getDriveAuth,
+  getDriveAuthMode,
+  getServiceAccountAuth,
+  hasServiceAccountCredentials,
+  isGoogleDriveConfigured,
+} from "./auth";
 
 export { isGoogleDriveConfigured, getDriveAuthMode };
 
+let oauthUnavailable = false;
+
 async function getDriveClient() {
-  const auth = getDriveAuth();
+  if (oauthUnavailable && hasServiceAccountCredentials()) {
+    return google.drive({ version: "v3", auth: getServiceAccountAuth() as never });
+  }
   if (getDriveAuthMode() === "oauth") {
+    const auth = getDriveAuth();
     try {
       await (auth as OAuth2Client).getAccessToken();
+      return google.drive({ version: "v3", auth: auth as never });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error("[google-drive] OAuth getAccessToken:", err);
+      if (hasServiceAccountCredentials() && (msg.includes("invalid_grant") || msg.includes("invalid_client"))) {
+        oauthUnavailable = true;
+        console.warn("[google-drive] El token OAuth no es válido. Se usa la cuenta de servicio.");
+        return google.drive({ version: "v3", auth: getServiceAccountAuth() as never });
+      }
       if (msg.includes("invalid_client")) {
         throw new Error(
-          "Google Drive OAuth invalid_client: GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en Vercel deben ser exactamente los mismos que en Google Cloud Console y los usados al generar GOOGLE_DRIVE_REFRESH_TOKEN (npm run drive:oauth)."
+          "Google Drive OAuth invalid_client: GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET deben coincidir con los usados al generar GOOGLE_DRIVE_REFRESH_TOKEN (npm run drive:oauth)."
         );
       }
-      throw err;
+      console.error("[google-drive] OAuth no ha podido renovar el acceso.");
+      throw new Error("Google Drive OAuth ha rechazado el token. Vuelve a ejecutar npm run drive:oauth.");
     }
   }
-  return google.drive({ version: "v3", auth: auth as never });
+  return google.drive({ version: "v3", auth: getDriveAuth() as never });
 }
 
 async function createFolderInParent(parentId: string, folderName: string): Promise<string> {

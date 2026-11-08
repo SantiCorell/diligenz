@@ -10,6 +10,7 @@ import {
   Building2,
   Globe,
   Inbox,
+  ClipboardList,
   Layers,
   LayoutGrid,
   ListChecks,
@@ -98,6 +99,14 @@ export default function AdminShell({ userDisplayName, children }: Props) {
             icon={ListChecks}
             collapsed={!expanded}
             active={pathname.startsWith("/admin/actions")}
+            onNavigate={() => setMobileSidebarOpen(false)}
+          />
+          <AdminNavLink
+            href="/admin/servicios"
+            label="Servicios"
+            icon={ClipboardList}
+            collapsed={!expanded}
+            active={pathname.startsWith("/admin/servicios")}
             onNavigate={() => setMobileSidebarOpen(false)}
           />
           <AdminNavLink

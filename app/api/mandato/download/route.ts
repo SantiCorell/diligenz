@@ -37,7 +37,7 @@ export async function GET(req: Request) {
     signedAt: mandate.signedAt,
     clientIp: mandate.clientIp,
     userAgent: mandate.userAgent,
-  });
+  }, mandate.variant);
 
   return new NextResponse(new Uint8Array(Buffer.from(pdfBytes)), {
     headers: {

@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import {
   Scale,
-  Landmark,
+  FileText,
   Users,
   LineChart,
   ChevronDown,
+  Building2,
+  ArrowRight,
+  Check,
 } from "lucide-react";
+import Link from "next/link";
 import ShellLayout from "@/components/layout/ShellLayout";
 import BudgetCalculatorSection from "@/components/servicios/BudgetCalculatorSection";
 import PlansToggle from "@/components/servicios/PlansToggle";
@@ -40,27 +44,27 @@ const AREA_SERVICES = [
   {
     id: "legal",
     icon: Scale,
-    title: "Legal",
+    title: "Mercantil",
     description:
-      "Due diligence legal, SPA, pactos de socios, contratos y constitución de SL.",
+      "Due diligence legal, compraventa de participaciones, pactos de socios y operaciones societarias.",
     items: [
       "Due diligence legal",
-      "Contrato de compraventa (SPA)",
-      "Pactos de socios y NDA",
-      "Constitución de SL",
+      "Contrato de compraventa de participaciones o acciones (SPA)",
+      "Pactos de socios y acuerdos de confidencialidad (NDA)",
+      "Operaciones societarias: ampliaciones de capital y modificaciones estructurales",
     ],
   },
   {
     id: "fiscal",
-    icon: Landmark,
+    icon: FileText,
     title: "Fiscal",
     description:
-      "Due diligence fiscal, estructura de la operación y planificación tributaria.",
+      "Due diligence fiscal, estructura de la operación y planificación de la transmisión.",
     items: [
       "Due diligence fiscal",
-      "Estructura asset vs share deal",
-      "Contingencias y riesgos AEAT",
-      "Planificación fiscal",
+      "Estructuración de la operación: venta de activos (asset deal) o de participaciones (share deal)",
+      "Análisis de contingencias tributarias",
+      "Planificación fiscal de la transmisión",
     ],
   },
   {
@@ -68,25 +72,25 @@ const AREA_SERVICES = [
     icon: Users,
     title: "Laboral",
     description:
-      "Due diligence laboral, plantilla, Seguridad Social y personas clave.",
+      "Due diligence laboral, sucesión de empresa, Seguridad Social y personas clave.",
     items: [
       "Due diligence laboral",
-      "Subrogación de plantilla",
-      "Contingencias por contratación",
-      "Personas clave y no competencia",
+      "Sucesión de empresa y subrogación de la plantilla (art. 44 ET)",
+      "Contingencias laborales y de Seguridad Social",
+      "Retención de personal clave y pactos de no competencia",
     ],
   },
   {
     id: "financiero",
     icon: LineChart,
-    title: "Financiero",
+    title: "Financiero y contable",
     description:
-      "Due diligence financiera, valoración de empresa y modelo financiero.",
+      "Due diligence financiera, valoración, modelo y revisión de la calidad del resultado.",
     items: [
       "Due diligence financiera",
-      "Valoración profesional",
-      "Valoración orientativa plus",
-      "Modelo y proyecciones",
+      "Valoración de compañías",
+      "Modelo financiero y proyecciones",
+      "Revisión de estados financieros y calidad del resultado",
     ],
   },
 ];
@@ -199,37 +203,102 @@ export default function ServiciosPage() {
 
       <div className="relative">
         {/* Hero — estilo compacto como mock HTML */}
-        <section className="relative px-4 pb-4 pt-10 text-center sm:px-6 md:pb-6 md:pt-12">
+        <section className="relative px-4 pb-8 pt-10 text-center sm:px-6 md:pb-10 md:pt-14">
           <div className="mx-auto max-w-3xl">
-            <p className="page-eyebrow">Servicios M&A</p>
-            <h1 className="page-title mt-3">
-              Asesoramiento experto, presupuesto{" "}
-              <span className="page-title-highlight">en segundos</span>
-            </h1>
-            <p className="page-lead mx-auto mt-3 max-w-xl">
-              Due diligence, valoraciones, contratos y acompañamiento para
-              comprar o vender tu empresa.
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-primary)]">
+              Fusiones y adquisiciones (M&A)
             </p>
+            <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--brand-dark)] sm:text-4xl md:text-[2.6rem] md:leading-tight">
+              Asesoramiento integral en la compraventa de empresas
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-[var(--foreground)]/70 sm:text-base">
+              Acompañamos a vendedores e inversores en cada fase de la operación,
+              desde la valoración inicial hasta la firma ante notario. Asesoramiento
+              mercantil, fiscal, laboral y financiero, con servicios independientes
+              o dirección integral de la operación, y honorarios definidos desde el inicio.
+            </p>
+          </div>
+
+          <div className="mx-auto mt-10 grid max-w-5xl gap-4 text-left md:grid-cols-2">
+            <article className="relative overflow-hidden rounded-[1.6rem] bg-[var(--brand-primary)] px-6 py-7 text-white sm:px-8 sm:py-8">
+              <Building2
+                className="pointer-events-none absolute -bottom-6 -right-4 h-36 w-36 text-white/10"
+                strokeWidth={1.25}
+                aria-hidden
+              />
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75">
+                Lo más solicitado
+              </p>
+              <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">
+                Servicio · Honorarios cerrados
+              </p>
+              <h2 className="mt-2 text-2xl font-extrabold tracking-tight">
+                Constitución exprés de sociedad limitada
+              </h2>
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-white/85">
+                Constitución íntegramente telemática de su sociedad limitada, con
+                otorgamiento notarial por videoconferencia e inscripción registral.
+                Honorarios cerrados que incluyen la tramitación completa.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/servicios/constitucion-sl"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[var(--brand-dark)] hover:opacity-95"
+                >
+                  Iniciar la constitución
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+                <span className="text-sm text-white/80">Honorarios cerrados</span>
+              </div>
+            </article>
+
+            <article className="rounded-[1.6rem] bg-[#f3f0f7] px-6 py-7 sm:px-8 sm:py-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">
+                Primera consulta · Sin compromiso
+              </p>
+              <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--brand-dark)]">
+                Consulta preliminar de orientación
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--foreground)]/70">
+                ¿Está considerando vender su compañía o invertir en una? Una primera
+                conversación con nuestro equipo, sin compromiso, para analizar su
+                situación y definir el enfoque más adecuado para la operación.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-95"
+                >
+                  Concertar una consulta
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+                <span className="text-sm text-[var(--foreground)]/55">
+                  Dirigida a vendedores e inversores
+                </span>
+              </div>
+            </article>
           </div>
         </section>
 
-        {/* 1. Servicios por área — primero */}
         <section
           id="areas"
           className="scroll-mt-24 border-t border-[var(--brand-primary)]/10 bg-[var(--brand-surface)] py-12 md:py-14"
           aria-labelledby="areas-heading"
         >
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="page-eyebrow">Servicios individuales</p>
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-primary)]">
+                Áreas de práctica
+              </p>
               <h2
                 id="areas-heading"
-                className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--brand-dark)] sm:text-3xl md:text-4xl"
+                className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--brand-dark)] sm:text-3xl"
               >
-                ¿Solo necesitas una pieza? Contrátala suelta
+                Asesoramiento especializado por área
               </h2>
               <p className="mt-3 text-sm text-[var(--foreground)]/70 sm:text-base">
-                Legal, fiscal, laboral y financiero — de forma independiente.
+                Cada área puede contratarse de forma independiente, con presupuesto
+                orientativo inmediato.
               </p>
             </div>
 
@@ -256,18 +325,20 @@ export default function ServiciosPage() {
                       {area.title}
                     </h3>
                     <meta itemProp="description" content={area.description} />
-                    <ul className="flex flex-1 flex-col gap-1.5 text-sm text-[var(--foreground)]/75">
+                    <ul className="flex flex-1 flex-col gap-2 text-sm text-[var(--foreground)]/75">
                       {area.items.map((item) => (
                         <li key={item} className="flex gap-2">
-                          <span className="font-extrabold text-[var(--brand-primary)]">
-                            ·
-                          </span>
-                          {item}
+                          <Check
+                            className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand-primary)]"
+                            strokeWidth={2.5}
+                            aria-hidden
+                          />
+                          <span>{item}</span>
                         </li>
                       ))}
                     </ul>
-                    <span className="mt-auto pt-1 text-sm font-bold text-[var(--brand-primary)] group-hover:underline group-hover:underline-offset-4">
-                      Calcular presupuesto →
+                    <span className="mt-auto pt-1 text-sm font-semibold text-[var(--brand-primary)] group-hover:underline group-hover:underline-offset-4">
+                      Solicitar presupuesto →
                     </span>
                     <meta itemProp="areaServed" content="España" />
                     <link itemProp="provider" href={SITE_URL} />
@@ -288,15 +359,18 @@ export default function ServiciosPage() {
           <div id="pricing" className="sr-only" aria-hidden />
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mx-auto mb-2 max-w-2xl text-center">
-              <p className="page-eyebrow">Planes de acompañamiento</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-primary)]">
+                Modalidades de asesoramiento
+              </p>
               <h2
                 id="planes-heading"
                 className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--brand-dark)] sm:text-3xl md:text-4xl"
               >
-                Un plan para cada operación
+                Un nivel de asesoramiento adecuado a cada operación
               </h2>
               <p className="mt-3 text-sm text-[var(--foreground)]/70 sm:text-base">
-                Elige cuánto acompañamiento necesitas. Cambia de plan cuando quieras.
+                Seleccione el alcance de nuestra intervención. La modalidad puede
+                ampliarse en cualquier fase del proceso.
               </p>
             </div>
             <PlansToggle />

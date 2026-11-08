@@ -65,3 +65,70 @@ export const LEGAL_PDF_LINKS = {
   generales: "/legal/condiciones-generales-mandato-venta-2026.pdf",
   particulares: "/legal/mandato-venta-condiciones-particulares-2026.pdf",
 };
+
+export type SalesMandateVariantId = "EXCLUSIVE" | "NON_EXCLUSIVE";
+
+const NON_EXCLUSIVE_META = {
+  title: "Mandato de venta sin exclusividad",
+  subtitle:
+    "Sin exclusividad general · Firma electrónica · Reglamento eIDAS (UE) 910/2014 · Ley 34/2002 LSSI",
+};
+
+const NON_EXCLUSIVE_FEE_SUMMARY = [
+  "Encargo sin exclusividad general: puedes vender por tu cuenta o con otros intermediarios, e informarás a Diligenz de cualquier oferta.",
+  "Cuando Diligenz presente formalmente a un comprador, ese comprador queda en exclusividad durante 12 meses, o mientras siga una negociación activa.",
+  "Honorarios de éxito: 4% del valor de la operación, mínimo 5.000 € (sin IVA), si cierras con un comprador presentado por Diligenz, por cualquier vía.",
+  "Contrato de compraventa, solo si lo encargas: gratuito si el precio es de hasta 150.000 €; 1.500 € (sin IVA) si lo supera.",
+  "Documentación inicial en un máximo de 30 días hábiles desde la firma.",
+];
+
+const NON_EXCLUSIVE_EXCERPT = `CONDICIONES GENERALES — MANDATO DE VENTA SIN EXCLUSIVIDAD (DILIGENZ, versión 2.0 — 2026)
+
+Las Condiciones Generales y las Condiciones Particulares forman un único contrato. Si hay contradicción, prevalecen las Particulares.
+
+1. Objeto. DILIGENZ intermedia, promociona y coordina la venta. Es una obligación de medios, no de resultado. No hay exclusividad general.
+
+2. Intermediario. Jose Ángel Cañizares Llorca (NIF 23848753F), C/ Colón 39, 1º, 46004 Valencia, jose@diligenz.com.
+
+3. Vendedor. Entrega la documentación razonablemente necesaria, responde de su veracidad y colabora en el proceso. Debe informar de inmediato de cualquier oferta o contacto con un comprador.
+
+4. Servicios. Valoración preliminar, cuaderno de venta, promoción confidencial, cualificación de compradores, coordinación y acompañamiento al cierre.
+
+5. Presentación de un comprador. Una presentación válida (por escrito, comprador identificable, fecha y petición expresa de reconocimiento) abre 12 meses de exclusividad solo sobre ese comprador. El plazo se alarga mientras continúe una negociación activa. Cerrar con ese comprador, por cualquier vía, devenga los honorarios de éxito.
+
+6. Honorarios. Éxito: 4% del valor de la transacción, mínimo 5.000 € más IVA. Contrato de compraventa solo si el vendedor lo pide: gratuito hasta 150.000 € y 1.500 € más IVA por encima.
+
+7. Duración. Cualquiera de las partes puede resolver el encargo con 30 días de preaviso. Los plazos de exclusividad ya abiertos sobre un comprador presentado se mantienen.
+
+8. Ley aplicable. Legislación española. Juzgados del domicilio del demandado.
+
+Documentos íntegros:
+/legal/condiciones-generales-mandato-venta-sin-exclusividad-2026.pdf
+/legal/mandato-venta-sin-exclusividad-condiciones-particulares-2026.pdf`;
+
+const NON_EXCLUSIVE_ACCEPTANCE =
+  "He leído y acepto íntegramente el Mandato de Venta sin exclusividad (Condiciones Particulares y Condiciones Generales de DILIGENZ), las condiciones del servicio y la política de privacidad. Autorizo a DILIGENZ a actuar como intermediario sin exclusividad general. Acepto que, cuando DILIGENZ presente formalmente a un comprador, ese comprador queda sujeto a 12 meses de exclusividad y que, si cierro la venta con un comprador presentado por DILIGENZ, deberé abonar los honorarios de éxito.";
+
+const NON_EXCLUSIVE_LINKS = {
+  generales: "/legal/condiciones-generales-mandato-venta-sin-exclusividad-2026.pdf",
+  particulares: "/legal/mandato-venta-sin-exclusividad-condiciones-particulares-2026.pdf",
+};
+
+export function mandatoPresentation(variant: SalesMandateVariantId = "EXCLUSIVE") {
+  if (variant === "NON_EXCLUSIVE") {
+    return {
+      meta: NON_EXCLUSIVE_META,
+      feeSummary: NON_EXCLUSIVE_FEE_SUMMARY,
+      generalExcerpt: NON_EXCLUSIVE_EXCERPT,
+      acceptance: NON_EXCLUSIVE_ACCEPTANCE,
+      links: NON_EXCLUSIVE_LINKS,
+    };
+  }
+  return {
+    meta: { title: MANDATO_META.title, subtitle: MANDATO_META.subtitle },
+    feeSummary: MANDATO_FEE_SUMMARY,
+    generalExcerpt: MANDATO_GENERAL_CLAUSES_EXCERPT,
+    acceptance: MANDATO_ACCEPTANCE_TEXT,
+    links: LEGAL_PDF_LINKS,
+  };
+}

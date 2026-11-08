@@ -27,7 +27,10 @@ async function shareUserDriveFolder(folderId: string, clientEmail: string): Prom
     try {
       await shareFolderWithUser(folderId, clientEmail, clientShareRole());
     } catch (err) {
-      console.error("[google-drive] compartir carpeta con cliente:", err);
+      console.error(
+        "[google-drive] compartir carpeta con cliente:",
+        err instanceof Error ? err.message : "error"
+      );
     }
   }
 
@@ -36,15 +39,17 @@ async function shareUserDriveFolder(folderId: string, clientEmail: string): Prom
     try {
       await shareFolderWithUser(folderId, adminEmail, "writer");
     } catch (err) {
-      console.error("[google-drive] compartir carpeta con admin:", err);
+      console.error(
+        "[google-drive] compartir carpeta con admin:",
+        err instanceof Error ? err.message : "error"
+      );
     }
   }
 }
 
 /**
  * Crea (o reutiliza) la carpeta CLIENTES del usuario.
- * Política lazy: no llamar en registro/OAuth; solo cuando haya contenido
- * (DNI, mandato/NDA, subcarpeta de empresa o valoración).
+ * Se llama al crear la cuenta y también al subir DNI, firmar mandato o crear una empresa.
  */
 export async function ensureUserDriveFolder(opts: {
   userId: string;
@@ -98,9 +103,27 @@ export async function ensureUserDriveFolder(opts: {
     await shareUserDriveFolder(folderId, opts.userEmail ?? user.email);
     return folderId;
   } catch (err) {
-    console.error("[google-drive] crear carpeta cliente:", err);
+    console.error(
+      "[google-drive] crear carpeta cliente:",
+      err instanceof Error ? err.message : "error"
+    );
     return null;
   }
+}
+
+/** Crea la carpeta al alta. Si Drive falla, la cuenta sigue creada. */
+export async function provisionUserDriveFolder(user: {
+  id: string;
+  role: UserRole;
+  name: string | null;
+  email: string;
+}): Promise<string | null> {
+  return ensureUserDriveFolder({
+    userId: user.id,
+    role: user.role,
+    personName: user.name?.trim() || user.email.split("@")[0],
+    userEmail: user.email,
+  });
 }
 
 export async function syncUserDriveFolderName(opts: {
@@ -129,7 +152,7 @@ export async function syncUserDriveFolderName(opts: {
   try {
     await renameDriveFolder(folderId, folderName);
   } catch (err) {
-    console.error("[google-drive] renombrar carpeta:", err);
+    console.error("[google-drive] renombrar carpeta:", err instanceof Error ? err.message : "error");
   }
 }
 
@@ -194,7 +217,7 @@ export async function uploadUserDriveDocument(opts: {
       msg.includes("404");
 
     if (!notFound) {
-      console.error("[google-drive] subir documento:", err);
+      console.error("[google-drive] subir documento:", err instanceof Error ? err.message : "error");
       return false;
     }
 
@@ -226,7 +249,10 @@ export async function uploadUserDriveDocument(opts: {
       });
       return true;
     } catch (retryErr) {
-      console.error("[google-drive] subir documento (reintento):", retryErr);
+      console.error(
+        "[google-drive] subir documento (reintento):",
+        retryErr instanceof Error ? retryErr.message : "error"
+      );
       return false;
     }
   }
@@ -266,7 +292,7 @@ export async function downloadUserDniFromDrive(opts: {
       nameIncludes: opts.side === "FRONT" ? "anverso" : "reverso",
     });
   } catch (err) {
-    console.error("[google-drive] descargar DNI:", err);
+    console.error("[google-drive] descargar DNI:", err instanceof Error ? err.message : "error");
     return null;
   }
 }

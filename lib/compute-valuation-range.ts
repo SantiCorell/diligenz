@@ -174,3 +174,22 @@ export function computeValuationRange(body: {
     yearsOperating,
   });
 }
+
+/** Rangos de EBITDA que usa la calculadora, para explicarlos en la página pública. */
+export function ebitdaMultipleGuide(): { label: string; min: number; max: number }[] {
+  const rows = [
+    { label: "Tecnología y software", sector: "tecnologia-software-saas" },
+    { label: "Salud y clínicas", sector: "salud-bienestar" },
+    { label: "Farma", sector: "farma" },
+    { label: "Servicios profesionales", sector: "servicios-profesionales-b2b" },
+    { label: "Industrial y fabricación", sector: "industria-manufactura" },
+    { label: "Agroalimentario", sector: "agrifood-agronegocio" },
+    { label: "Construcción", sector: "construccion-infraestructuras" },
+    { label: "Retail y distribución", sector: "retail-comercio" },
+    { label: "Hostelería y restauración", sector: "hosteleria-restauracion" },
+  ];
+  return rows.map((row) => {
+    const multiple = resolveMults(row.sector);
+    return { label: row.label, min: multiple.ebitdaMin, max: multiple.ebitdaMax };
+  });
+}

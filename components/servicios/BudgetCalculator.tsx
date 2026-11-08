@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { authFetch } from "@/lib/auth-client";
 import { Check, CheckCircle2, ChevronDown } from "lucide-react";
 import { trackContact } from "@/lib/meta-pixel";
 
@@ -177,6 +178,22 @@ export default function BudgetCalculator({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await authFetch("/api/user/me");
+      if (!res.ok || cancelled) return;
+      const me = await res.json();
+      if (cancelled) return;
+      if (me.name) setName((current) => current || me.name);
+      if (me.email) setEmail((current) => current || me.email);
+      if (me.phone) setPhone((current) => current || me.phone);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);

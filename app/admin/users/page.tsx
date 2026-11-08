@@ -15,6 +15,8 @@ import { type DniVerificationStatus } from "@/lib/user-documents/dni-status";
 import { Search, SlidersHorizontal, UserPlus, Trash2, ChevronDown } from "lucide-react";
 import AdminUnregisteredContactsList from "@/components/admin/AdminUnregisteredContactsList";
 import AdminContactEmailPanel from "@/components/admin/AdminContactEmailPanel";
+import AdminAgentsPanel from "@/components/admin/AdminAgentsPanel";
+import UserAgentAssignPanel from "@/components/admin/UserAgentAssignPanel";
 
 type UserRow = {
   id: string;
@@ -39,7 +41,15 @@ type UserRow = {
   dniDriveSynced?: boolean;
   dniVerificationStatus?: DniVerificationStatus;
   dniPendingReview?: boolean;
+  assignedAgentId?: string | null;
+  servicesAgentId?: string | null;
+  assignedAgent?: { id: string; name: string } | null;
+  salesMandateVariant?: "EXCLUSIVE" | "NON_EXCLUSIVE";
 };
+
+function mandateVariantLabel(variant: UserRow["salesMandateVariant"]) {
+  return variant === "NON_EXCLUSIVE" ? "sin exclusividad" : "con exclusividad";
+}
 
 function profileCompleteEffective(u: UserRow) {
   return Boolean(u.phone?.trim()) || u.profileVerifiedByAdmin;
@@ -105,25 +115,103 @@ function UserNotionToggle({
   );
 }
 
+function AdminDniPreview({
+  userId,
+  side,
+  label,
+}: {
+  userId: string;
+  side: "front" | "back";
+  label: string;
+}) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [mime, setMime] = useState("");
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    void (async () => {
+      const res = await authFetch(`/api/admin/users/${userId}/dni/file?side=${side}`);
+      if (!res.ok) {
+        if (!cancelled) setMissing(true);
+        return;
+      }
+      const blob = await res.blob();
+      if (cancelled) return;
+      objectUrl = URL.createObjectURL(blob);
+      setMime(blob.type || "application/octet-stream");
+      setSrc(objectUrl);
+    })();
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [userId, side]);
+
+  if (missing) {
+    return <p className="text-xs text-slate-500">{label}: no disponible</p>;
+  }
+  if (!src) {
+    return <p className="text-xs text-slate-500">Cargando {label.toLowerCase()}…</p>;
+  }
+  if (mime.startsWith("image/")) {
+    return (
+      <figure>
+        <figcaption className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          {label}
+        </figcaption>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={label}
+          className="max-h-72 w-full rounded-xl border border-slate-200 bg-slate-50 object-contain"
+        />
+      </figure>
+    );
+  }
+  return (
+    <a href={src} download className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">
+      Descargar {label}
+    </a>
+  );
+}
+
 function UserDniReviewPanel({ user }: { user: UserRow }) {
+  const hasUpload = Boolean(user.dniHasFront || user.dniHasBack);
   return (
     <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
-      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-3">Revisión DNI / NIE</p>
-
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">Revisión DNI / NIE</p>
+      <p className="mb-3 max-w-2xl text-xs leading-relaxed text-slate-500">
+        Las fotos solo se cargan en esta sesión de administrador. Márcalo como verificado en el
+        apartado de verificación cuando coincida con el titular.
+      </p>
+      {hasUpload ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {user.dniHasFront ? (
+            <AdminDniPreview userId={user.id} side="front" label="Anverso" />
+          ) : (
+            <p className="text-xs text-amber-800">Falta el anverso.</p>
+          )}
+          {user.dniHasBack ? (
+            <AdminDniPreview userId={user.id} side="back" label="Reverso" />
+          ) : (
+            <p className="text-xs text-amber-800">Falta el reverso.</p>
+          )}
+        </div>
+      ) : (
+        <p className="text-sm text-slate-600">Este usuario todavía no ha subido el DNI.</p>
+      )}
       {user.documentsDriveFolderUrl ? (
         <a
           href={user.documentsDriveFolderUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-slate-800 text-white hover:opacity-95"
+          className="mt-4 inline-flex items-center justify-center rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
         >
-          Abrir carpeta Drive (Identidad)
+          Abrir carpeta Drive
         </a>
-      ) : (
-        <span className="inline-flex text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-          Sin carpeta Drive
-        </span>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -225,6 +313,87 @@ function UserVerificationPanel({
           className="rounded-lg px-4 py-2 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
         >
           {saving ? "Guardando…" : "Guardar checks"}
+        </button>
+        {msg && (
+          <span className={msg.type === "ok" ? "text-sm text-emerald-700" : "text-sm text-red-600"}>
+            {msg.text}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UserSalesMandatePanel({
+  user,
+  onSaved,
+}: {
+  user: UserRow;
+  onSaved: () => void;
+}) {
+  const [variant, setVariant] = useState<"EXCLUSIVE" | "NON_EXCLUSIVE">(
+    user.salesMandateVariant === "NON_EXCLUSIVE" ? "NON_EXCLUSIVE" : "EXCLUSIVE"
+  );
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    setVariant(user.salesMandateVariant === "NON_EXCLUSIVE" ? "NON_EXCLUSIVE" : "EXCLUSIVE");
+    setMsg(null);
+  }, [user]);
+
+  if (user.role !== "SELLER") return null;
+
+  const save = async () => {
+    setMsg(null);
+    setSaving(true);
+    try {
+      const res = await authFetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ salesMandateVariant: variant }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg({ type: "error", text: (data as { error?: string }).error ?? "Error al guardar" });
+        setSaving(false);
+        return;
+      }
+      setMsg({ type: "ok", text: "Mandato actualizado." });
+      onSaved();
+    } catch {
+      setMsg({ type: "error", text: "Error de conexión." });
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">Mandato de venta</p>
+      <p className="text-xs text-slate-600 mb-3 max-w-2xl leading-relaxed">
+        Elige el documento que este vendedor verá y firmará. Por defecto es el mandato con
+        exclusividad. Si ya lo firmó, el PDF guardado se mantiene: este cambio solo afecta a quien
+        todavía no ha firmado.
+      </p>
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 max-w-xl">
+        <label className="flex-1 min-w-0">
+          <span className="block text-xs font-medium text-slate-600 mb-1">Documento a firmar</span>
+          <select
+            value={variant}
+            onChange={(e) => setVariant(e.target.value as "EXCLUSIVE" | "NON_EXCLUSIVE")}
+            className="w-full min-h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
+          >
+            <option value="EXCLUSIVE">Con exclusividad</option>
+            <option value="NON_EXCLUSIVE">Sin exclusividad</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving}
+          className="rounded-lg px-4 py-2 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
+        >
+          {saving ? "Guardando…" : "Guardar mandato"}
         </button>
         {msg && (
           <span className={msg.type === "ok" ? "text-sm text-emerald-700" : "text-sm text-red-600"}>
@@ -779,6 +948,7 @@ function UserDriveFolderPanel({
 }) {
   const [url, setUrl] = useState(user.documentsDriveFolderUrl ?? "");
   const [saving, setSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -814,6 +984,29 @@ function UserDriveFolderPanel({
     setSaving(false);
   }, [user.id, url, onSaved]);
 
+  const createFolder = useCallback(async () => {
+    setMsg(null);
+    setCreating(true);
+    try {
+      const res = await authFetch(`/api/admin/users/${user.id}/drive`, { method: "POST" });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        documentsDriveFolderUrl?: string | null;
+      };
+      if (!res.ok) {
+        setMsg({ type: "error", text: data.error ?? "No se ha podido crear la carpeta." });
+        setCreating(false);
+        return;
+      }
+      if (data.documentsDriveFolderUrl) setUrl(data.documentsDriveFolderUrl);
+      setMsg({ type: "ok", text: "Carpeta de Drive creada." });
+      onSaved();
+    } catch {
+      setMsg({ type: "error", text: "Error de conexión." });
+    }
+    setCreating(false);
+  }, [user.id, onSaved]);
+
   const hasLink = Boolean(user.documentsDriveFolderUrl?.trim());
 
   return (
@@ -828,9 +1021,19 @@ function UserDriveFolderPanel({
         enlace.
       </p>
       {!hasLink && (
-        <p className="mb-3 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2 inline-block">
-          Falta carpeta de Drive — añade el enlace cuando la tengas.
-        </p>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <p className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2">
+            Falta carpeta de Drive.
+          </p>
+          <button
+            type="button"
+            onClick={() => void createFolder()}
+            disabled={creating}
+            className="rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
+          >
+            {creating ? "Creando…" : "Crear carpeta"}
+          </button>
+        </div>
       )}
       <div className="flex flex-col sm:flex-row sm:items-end gap-3 max-w-3xl">
         <label className="flex-1 min-w-0">
@@ -926,6 +1129,16 @@ function AdminUserMobileCard({
               <span className="text-slate-600 font-medium">Teléfono </span>
               {phoneRaw ? phoneRaw : <span className="text-slate-400 font-normal">—</span>}
             </p>
+            <p className="mt-2 text-sm text-slate-600">
+              <span className="font-medium text-slate-500">Agente </span>
+              {u.assignedAgent?.name ?? "Sin agente"}
+            </p>
+            {u.role === "SELLER" ? (
+              <p className="mt-2 text-sm text-slate-600">
+                <span className="font-medium text-slate-500">Mandato </span>
+                {mandateVariantLabel(u.salesMandateVariant)}
+              </p>
+            ) : null}
             <p className="mt-2 text-[11px] text-slate-500">
               {isExpanded ? "Pulsa para cerrar" : "Pulsa para ver detalle completo"}
             </p>
@@ -1029,6 +1242,14 @@ function AdminUserMobileCard({
       {isExpanded && (
         <div className="border-t border-slate-200/80">
           <div className="p-4 sm:p-5 border-b border-slate-100">
+            <UserAgentAssignPanel
+              userId={u.id}
+              assignedAgentId={u.assignedAgentId ?? null}
+              servicesAgentId={u.servicesAgentId ?? null}
+              onSaved={onVerificationSaved}
+            />
+          </div>
+          <div className="p-4 sm:p-5 border-b border-slate-100">
             <AdminContactEmailPanel
               email={u.email}
               name={u.name}
@@ -1040,6 +1261,7 @@ function AdminUserMobileCard({
           </div>
           <UserDniReviewPanel user={u} />
           <UserVerificationPanel user={u} onSaved={onVerificationSaved} />
+          <UserSalesMandatePanel user={u} onSaved={onVerificationSaved} />
           <UserDriveFolderPanel user={u} onSaved={onVerificationSaved} />
           <UserInfoRequestLimitPanel user={u} onSaved={onVerificationSaved} />
           <UserActivityPanel user={u} />
@@ -1051,7 +1273,7 @@ function AdminUserMobileCard({
 }
 
 export default function AdminUsersPage() {
-  const [usersTab, setUsersTab] = useState<"registered" | "unregistered">("registered");
+  const [usersTab, setUsersTab] = useState<"registered" | "unregistered" | "agents">("registered");
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
@@ -1069,6 +1291,10 @@ export default function AdminUsersPage() {
   const [createUserName, setCreateUserName] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<UserRole>("ADMIN");
+  const [agentChoices, setAgentChoices] = useState<{ id: string; name: string; active: boolean; isDefault: boolean }[]>([]);
+  const [agentsLoaded, setAgentsLoaded] = useState(false);
+  const [assignedAgentId, setAssignedAgentId] = useState("");
+  const [agentTouched, setAgentTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [createUserOpen, setCreateUserOpen] = useState(false);
@@ -1108,6 +1334,8 @@ export default function AdminUsersPage() {
               dniDriveSynced: Boolean(u.dniDriveSynced),
               dniVerificationStatus: u.dniVerificationStatus ?? "none",
               dniPendingReview: Boolean(u.dniPendingReview),
+              assignedAgentId: u.assignedAgentId ?? null,
+              assignedAgent: u.assignedAgent ?? null,
             };
           })
         );
@@ -1118,12 +1346,35 @@ export default function AdminUsersPage() {
   }, [q, roleFilter, statusFilter, fDni, fDniPending, fNda, fDocLinks]);
 
   useEffect(() => {
+    if (!createUserOpen) return;
+    let cancelled = false;
+    void (async () => {
+      const res = await authFetch("/api/admin/agents");
+      const data = (await res.json().catch(() => ({}))) as {
+        agents?: { id: string; name: string; active: boolean; isDefault: boolean }[];
+      };
+      if (cancelled || !res.ok) return;
+      setAgentChoices(data.agents ?? []);
+      setAgentsLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [createUserOpen]);
+
+  useEffect(() => {
     if (usersTab !== "registered") return;
     const t = setTimeout(() => {
       loadUsers();
     }, q.trim() ? 320 : 0);
     return () => clearTimeout(t);
   }, [loadUsers, q, usersTab]);
+
+  const fallbackAgentId =
+    agentChoices.find((agent) => agent.isDefault && agent.active)?.id ??
+    agentChoices.find((agent) => agent.active)?.id ??
+    "";
+  const selectedAgentId = agentTouched ? assignedAgentId : assignedAgentId || fallbackAgentId;
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1139,6 +1390,7 @@ export default function AdminUsersPage() {
           phone: phone || undefined,
           role,
           name: createUserName.trim() || undefined,
+          ...(agentsLoaded ? { assignedAgentId: selectedAgentId || null } : {}),
         }),
       });
       const data = await res.json();
@@ -1153,6 +1405,8 @@ export default function AdminUsersPage() {
       setCreateUserName("");
       setPhone("");
       setRole("ADMIN");
+      setAssignedAgentId("");
+      setAgentTouched(false);
       setCreateUserOpen(false);
       loadUsers();
     } catch {
@@ -1229,12 +1483,18 @@ export default function AdminUsersPage() {
           Administración
         </p>
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-          {usersTab === "registered" ? "Usuarios registrados" : "Usuarios no registrados"}
+          {usersTab === "registered"
+            ? "Usuarios registrados"
+            : usersTab === "agents"
+              ? "Agentes"
+              : "Usuarios no registrados"}
         </h1>
         <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl leading-relaxed">
           {usersTab === "registered"
-            ? "Gestiona roles, estado de cuenta y verificación. Filtra por nombre, email, rol, estado o criterios de documentación."
-            : "Contactos con valoraciones o mensajes de contacto que aún no tienen cuenta en Diligenz. Agrupados por email."}
+            ? "Gestiona usuarios, roles, estado de cuenta y verificación. Filtra por nombre, email, rol, estado o criterios de documentación."
+            : usersTab === "agents"
+              ? "Crea los gestores que se asignan a compradores, vendedores y profesionales. Con un enlace de agenda, el usuario puede reservar desde su panel."
+              : "Contactos con valoraciones o mensajes de contacto que aún no tienen cuenta en Diligenz. Agrupados por email."}
         </p>
       </header>
 
@@ -1261,10 +1521,23 @@ export default function AdminUsersPage() {
         >
           No registrados
         </button>
+        <button
+          type="button"
+          onClick={() => setUsersTab("agents")}
+          className={`rounded-t-lg px-4 py-2.5 text-sm font-semibold transition border-b-2 -mb-px ${
+            usersTab === "agents"
+              ? "border-[var(--brand-primary)] text-[var(--brand-primary)] bg-white"
+              : "border-transparent text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          Agentes
+        </button>
       </div>
 
       {usersTab === "unregistered" ? (
         <AdminUnregisteredContactsList />
+      ) : usersTab === "agents" ? (
+        <AdminAgentsPanel />
       ) : (
         <>
       <section className="mb-8 rounded-2xl border border-slate-200/90 bg-white shadow-sm overflow-hidden">
@@ -1478,6 +1751,28 @@ export default function AdminUsersPage() {
               placeholder="+34 …"
             />
           </div>
+          <div className="lg:col-span-2">
+            <label htmlFor="new-agent" className="block text-xs font-medium text-slate-600 mb-1.5">
+              Agente
+            </label>
+            <select
+              id="new-agent"
+              value={selectedAgentId}
+              onChange={(e) => {
+                setAgentTouched(true);
+                setAssignedAgentId(e.target.value);
+              }}
+              className="w-full min-h-11 rounded-xl border border-slate-200 px-3 py-3 text-base sm:text-sm text-slate-900 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
+            >
+              <option value="">Sin agente</option>
+              {agentChoices.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name}
+                  {agent.active ? "" : " (inactivo)"}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="sm:col-span-2 lg:col-span-6 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-4 pt-1">
             <button
               type="submit"
@@ -1605,8 +1900,16 @@ export default function AdminUsersPage() {
                                 }`}
                                 aria-hidden
                               />
-                              <span className="truncate group-hover:text-[var(--brand-primary)]">
-                                {displayName}
+                              <span className="min-w-0">
+                                <span className="block truncate group-hover:text-[var(--brand-primary)]">
+                                  {displayName}
+                                </span>
+                                <span className="block truncate text-[11px] font-normal text-slate-500">
+                                  {u.assignedAgent?.name ? `Agente: ${u.assignedAgent.name}` : "Sin agente"}
+                                  {u.role === "SELLER"
+                                    ? ` · Mandato ${mandateVariantLabel(u.salesMandateVariant)}`
+                                    : ""}
+                                </span>
                               </span>
                             </span>
                           </td>
@@ -1718,6 +2021,14 @@ export default function AdminUsersPage() {
                           <tr className="bg-slate-50/50">
                             <td colSpan={8} className="p-0">
                               <div className="p-4 sm:px-6 border-b border-slate-100">
+                                <UserAgentAssignPanel
+                                  userId={u.id}
+                                  assignedAgentId={u.assignedAgentId ?? null}
+                                  servicesAgentId={u.servicesAgentId ?? null}
+                                  onSaved={loadUsers}
+                                />
+                              </div>
+                              <div className="p-4 sm:px-6 border-b border-slate-100">
                                 <AdminContactEmailPanel
                                   email={u.email}
                                   name={u.name}
@@ -1731,6 +2042,7 @@ export default function AdminUsersPage() {
                               </div>
                               <UserDniReviewPanel user={u} />
                               <UserVerificationPanel user={u} onSaved={loadUsers} />
+                              <UserSalesMandatePanel user={u} onSaved={loadUsers} />
                               <UserDriveFolderPanel user={u} onSaved={loadUsers} />
                               <UserInfoRequestLimitPanel user={u} onSaved={loadUsers} />
                               <UserActivityPanel user={u} />

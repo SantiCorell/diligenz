@@ -3,6 +3,7 @@ import { getDisplayName } from "@/lib/user-display";
 import { getUserDniPendingReview } from "@/lib/user-documents/dni-status";
 import { getSessionWithUser } from "@/lib/session";
 import DashboardShell from "@/components/layout/DashboardShell";
+import HideOnServicios from "@/components/dashboard/HideOnServicios";
 import ProfileStatus from "@/components/dashboard/ProfileStatus";
 
 export default async function DashboardLayout({
@@ -26,17 +27,19 @@ export default async function DashboardLayout({
     <DashboardShell role={user.role} userDisplayName={userDisplayName}>
       {/* PERFIL (SIEMPRE ARRIBA) */}
       {user.role !== "ADMIN" && (
-        <ProfileStatus
-          variant="banner"
-          ndaSigned={user.ndaSigned}
-          dniVerified={user.dniVerified}
-          dniPendingReview={dniPendingReview}
-          profileComplete={profileComplete}
-          profileVerifiedByAdmin={user.profileVerifiedByAdmin}
-          userName={user.name}
-          userPhone={user.phone}
-          role={user.role}
-        />
+        <HideOnServicios>
+          <ProfileStatus
+            variant="banner"
+            ndaSigned={user.ndaSigned}
+            dniVerified={user.dniVerified}
+            dniPendingReview={dniPendingReview}
+            profileComplete={profileComplete}
+            profileVerifiedByAdmin={user.profileVerifiedByAdmin}
+            userName={user.name}
+            userPhone={user.phone}
+            role={user.role}
+          />
+        </HideOnServicios>
       )}
 
       {children}

@@ -1,8 +1,8 @@
 # PostgreSQL local para desarrollo (Diligenz)
 # Uso: docker compose up -d
 # Luego en .env pon:
-#   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/diligenz"
-#   DIRECT_URL="postgresql://postgres:postgres@localhost:5432/diligenz"
+#   DATABASE_URL="postgresql://postgres:postgres@localhost:5437/diligenz"
+#   DIRECT_URL="postgresql://postgres:postgres@localhost:5437/diligenz"
 # Y ejecuta: npx prisma migrate dev
 
 services:
@@ -15,7 +15,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: diligenz
     ports:
-      - "5432:5432"
+      - "5437:5432"
     volumes:
       - diligenz_pgdata:/var/lib/postgresql/data
 

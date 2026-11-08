@@ -3,13 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { authFetch } from "@/lib/auth-client";
-import {
-  LEGAL_PDF_LINKS,
-  MANDATO_ACCEPTANCE_TEXT,
-  MANDATO_FEE_SUMMARY,
-  MANDATO_GENERAL_CLAUSES_EXCERPT,
-  MANDATO_META,
-} from "@/lib/mandato/clauses";
+import { mandatoPresentation, type SalesMandateVariantId } from "@/lib/mandato/clauses";
 import SignaturePad from "./SignaturePad";
 
 type Prefill = {
@@ -24,11 +18,20 @@ type Props = {
   signedAt?: string | null;
   signedEmail?: string;
   panelHref?: string;
+  variant?: SalesMandateVariantId;
 };
 
 const STEPS = ["Tus datos", "Firma digital", "Confirmación"] as const;
 
-export default function MandatoSignWizard({ prefill, alreadySigned, signedAt, signedEmail, panelHref = "/dashboard/seller" }: Props) {
+export default function MandatoSignWizard({
+  prefill,
+  alreadySigned,
+  signedAt,
+  signedEmail,
+  panelHref = "/dashboard/seller",
+  variant = "EXCLUSIVE",
+}: Props) {
+  const copy = mandatoPresentation(variant);
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -187,10 +190,10 @@ export default function MandatoSignWizard({ prefill, alreadySigned, signedAt, si
           Completa tu mandato
         </span>
         <h1 className="mt-2 text-2xl sm:text-3xl font-bold text-[var(--brand-primary)]">
-          {MANDATO_META.title}
+          {copy.meta.title}
         </h1>
         <p className="mt-1 text-xs sm:text-sm text-[var(--foreground)] opacity-80">
-          {MANDATO_META.subtitle}
+          {copy.meta.subtitle}
         </p>
       </div>
 
@@ -279,13 +282,13 @@ export default function MandatoSignWizard({ prefill, alreadySigned, signedAt, si
               </button>
               {clausesOpen && (
                 <div className="border-t border-[var(--brand-primary)]/10 px-4 py-3 max-h-64 overflow-y-auto text-xs text-[var(--foreground)] opacity-90 whitespace-pre-wrap leading-relaxed">
-                  {MANDATO_GENERAL_CLAUSES_EXCERPT}
+                  {copy.generalExcerpt}
                   <div className="mt-4 space-y-1">
                     <p className="font-semibold">Documentos completos:</p>
-                    <a href={LEGAL_PDF_LINKS.generales} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-primary)] underline block">
+                    <a href={copy.links.generales} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-primary)] underline block">
                       Condiciones Generales (PDF)
                     </a>
-                    <a href={LEGAL_PDF_LINKS.particulares} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-primary)] underline block">
+                    <a href={copy.links.particulares} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-primary)] underline block">
                       Condiciones Particulares (PDF)
                     </a>
                   </div>
@@ -294,7 +297,7 @@ export default function MandatoSignWizard({ prefill, alreadySigned, signedAt, si
             </div>
 
             <ul className="text-xs text-[var(--foreground)] opacity-85 space-y-1.5 list-disc pl-4">
-              {MANDATO_FEE_SUMMARY.map((f) => (
+              {copy.feeSummary.map((f) => (
                 <li key={f}>{f}</li>
               ))}
               <li>Datos tratados conforme al RGPD (UE) 2016/679 y LOPDGDD 3/2018.</li>
@@ -309,7 +312,7 @@ export default function MandatoSignWizard({ prefill, alreadySigned, signedAt, si
                 onChange={(e) => setAccepted(e.target.checked)}
                 className="mt-1 shrink-0"
               />
-              <span>{MANDATO_ACCEPTANCE_TEXT}</span>
+              <span>{copy.acceptance}</span>
             </label>
           </div>
         )}

@@ -23,6 +23,25 @@ export function isGoogleDriveConfigured(): boolean {
   return getDriveAuthMode() !== null;
 }
 
+export function hasServiceAccountCredentials(): boolean {
+  return Boolean(
+    process.env.GOOGLE_DRIVE_CLIENT_EMAIL?.trim() && process.env.GOOGLE_DRIVE_PRIVATE_KEY?.trim()
+  );
+}
+
+export function getServiceAccountAuth(): AuthClient {
+  if (!hasServiceAccountCredentials()) {
+    throw new Error("Faltan GOOGLE_DRIVE_CLIENT_EMAIL y GOOGLE_DRIVE_PRIVATE_KEY.");
+  }
+  const subject = process.env.GOOGLE_DRIVE_IMPERSONATE_EMAIL?.trim();
+  return new google.auth.JWT({
+    email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL!.trim(),
+    key: process.env.GOOGLE_DRIVE_PRIVATE_KEY!.replace(/\\n/g, "\n"),
+    scopes: ["https://www.googleapis.com/auth/drive"],
+    ...(subject ? { subject } : {}),
+  }) as unknown as AuthClient;
+}
+
 export function getDriveAuth(): AuthClient {
   const mode = getDriveAuthMode();
   if (!mode) {
@@ -45,11 +64,5 @@ export function getDriveAuth(): AuthClient {
     return oauth2 as unknown as AuthClient;
   }
 
-  const subject = process.env.GOOGLE_DRIVE_IMPERSONATE_EMAIL?.trim();
-  return new google.auth.JWT({
-    email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL!.trim(),
-    key: process.env.GOOGLE_DRIVE_PRIVATE_KEY!.replace(/\\n/g, "\n"),
-    scopes: ["https://www.googleapis.com/auth/drive"],
-    ...(subject ? { subject } : {}),
-  }) as unknown as AuthClient;
+  return getServiceAccountAuth();
 }

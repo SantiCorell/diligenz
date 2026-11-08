@@ -63,6 +63,7 @@ export async function resolveCompanyForBuyerInterest(
       exerciseResult: company.exerciseResult?.trim() || null,
       gmv: company.gmv ?? null,
       employees: company.employees ?? null,
+      arr: company.arr ?? null,
       description: company.description ?? "Sin descripción.",
       documentLinks: null,
       attachmentsApproved: company.attachmentsApproved ?? false,

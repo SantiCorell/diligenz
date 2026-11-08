@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { UserAccountStatus, UserRole } from "@prisma/client";
+import type { SalesMandateVariant, UserAccountStatus, UserRole } from "@prisma/client";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { promotePendingNdaRequests } from "@/lib/promote-pending-nda";
 
@@ -16,6 +16,19 @@ function isGoogleDriveDocsHost(hostname: string): boolean {
   return h === "drive.google.com" || h.endsWith(".drive.google.com") || h === "docs.google.com" || h.endsWith(".docs.google.com");
 }
 
+async function resolveAgentId(
+  raw: unknown
+): Promise<{ id: string | null; error?: undefined } | { id?: undefined; error: string }> {
+  if (raw === null || raw === "") return { id: null };
+  if (typeof raw !== "string") return { error: "Agente no válido." };
+  const agent = await prisma.agent.findUnique({
+    where: { id: raw },
+    select: { id: true },
+  });
+  if (!agent) return { error: "El agente seleccionado no existe." };
+  return { id: agent.id };
+}
+
 type PatchBody = {
   emailVerified?: unknown;
   ndaSigned?: unknown;
@@ -27,6 +40,9 @@ type PatchBody = {
   documentsDriveFolderUrl?: unknown;
   maxConcurrentInfoRequests?: unknown;
   maxConcurrentCompanies?: unknown;
+  assignedAgentId?: unknown;
+  servicesAgentId?: unknown;
+  salesMandateVariant?: unknown;
 };
 
 /**
@@ -56,6 +72,9 @@ export async function PATCH(req: Request, { params }: Params) {
     documentsDriveFolderUrl?: string | null;
     maxConcurrentInfoRequests?: number;
     maxConcurrentCompanies?: number;
+    assignedAgentId?: string | null;
+    servicesAgentId?: string | null;
+    salesMandateVariant?: SalesMandateVariant;
   } = {};
 
   if (typeof body.emailVerified === "boolean") data.emailVerified = body.emailVerified;
@@ -117,6 +136,29 @@ export async function PATCH(req: Request, { params }: Params) {
     data.maxConcurrentInfoRequests = raw;
   }
 
+  if (body.assignedAgentId !== undefined) {
+    const assigned = await resolveAgentId(body.assignedAgentId);
+    if (assigned.error) {
+      return NextResponse.json({ error: assigned.error }, { status: 400 });
+    }
+    data.assignedAgentId = assigned.id;
+  }
+
+  if (body.servicesAgentId !== undefined) {
+    const assigned = await resolveAgentId(body.servicesAgentId);
+    if (assigned.error) {
+      return NextResponse.json({ error: assigned.error }, { status: 400 });
+    }
+    data.servicesAgentId = assigned.id;
+  }
+
+  if (body.salesMandateVariant !== undefined) {
+    if (body.salesMandateVariant !== "EXCLUSIVE" && body.salesMandateVariant !== "NON_EXCLUSIVE") {
+      return NextResponse.json({ error: "Tipo de mandato no válido." }, { status: 400 });
+    }
+    data.salesMandateVariant = body.salesMandateVariant;
+  }
+
   if (body.documentsDriveFolderUrl !== undefined) {
     const raw = body.documentsDriveFolderUrl;
     if (raw === null) {
@@ -164,7 +206,7 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json(
       {
         error:
-          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, notionValidated, accountStatus, role, documentsDriveFolderUrl, maxConcurrentInfoRequests, maxConcurrentCompanies",
+          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, notionValidated, accountStatus, role, documentsDriveFolderUrl, maxConcurrentInfoRequests, maxConcurrentCompanies, assignedAgentId, servicesAgentId, salesMandateVariant",
       },
       { status: 400 }
     );
@@ -200,6 +242,9 @@ export async function PATCH(req: Request, { params }: Params) {
         documentsDriveFolderUrl: true,
         maxConcurrentInfoRequests: true,
         maxConcurrentCompanies: true,
+        assignedAgentId: true,
+        servicesAgentId: true,
+        salesMandateVariant: true,
       },
     });
     if (data.ndaSigned === true) {

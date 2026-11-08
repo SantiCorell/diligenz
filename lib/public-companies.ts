@@ -52,6 +52,7 @@ function mapDealToMock(deal: DealWithCompany): CompanyMock {
     exerciseResult: exerciseResultStr,
     gmv: (c as { gmv?: string | null }).gmv ?? null,
     employees: c.employees ?? null,
+    arr: c.arr ?? null,
     description: c.description ?? "Sin descripción.",
     documentLinks: null,
     attachmentsApproved: (c as { attachmentsApproved?: boolean }).attachmentsApproved ?? false,

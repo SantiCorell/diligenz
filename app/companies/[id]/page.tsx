@@ -4,7 +4,9 @@ import Link from "next/link";
 import ShellLayout from "@/components/layout/ShellLayout";
 import { isMockCompanyId } from "@/lib/mock-companies";
 import { prisma } from "@/lib/prisma";
-import { getUserIdFromSession } from "@/lib/session";
+import { getSessionWithUser } from "@/lib/session";
+import { getDashboardAgent } from "@/lib/agents";
+import type { AgentCardData } from "@/lib/agent-shared";
 import CompanyFicha from "./CompanyFicha";
 import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
 import { SITE_URL, SITE_NAME, getBreadcrumbSchema } from "@/lib/seo";
@@ -15,13 +17,16 @@ import { resolveBuyerDocuments } from "@/lib/buyer-documents";
 
 type Props = { params: Promise<{ id: string }> };
 
-async function getCompanyById(id: string): Promise<CompanyMock | null> {
+async function getCompanyById(
+  id: string,
+  viewerId?: string | null
+): Promise<{ company: CompanyMock; unpublishedPreview: boolean } | null> {
   if (isMockCompanyId(id)) return null;
 
   const company = await prisma.company.findUnique({
     where: { id },
     include: {
-      deals: { where: { published: true }, take: 1 },
+      deals: { orderBy: { createdAt: "desc" }, take: 1 },
       valuations: { orderBy: { createdAt: "desc" }, take: 1 },
       companyFiles: {
         where: { kind: "image" },
@@ -31,12 +36,23 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
       },
     },
   });
-  if (!company || company.removedAt || company.deals.length === 0) return null;
+  if (!company || company.removedAt) return null;
+
+  const latestDeal = company.deals[0] ?? null;
+  const published = latestDeal?.published === true;
+  if (!published) {
+    if (!viewerId) return null;
+    const viewer = await prisma.user.findUnique({
+      where: { id: viewerId },
+      select: { role: true },
+    });
+    if (company.ownerId !== viewerId && viewer?.role !== "ADMIN") return null;
+  }
 
   const reference =
     company.reference ?? (await ensureCompanyReference(company.id));
 
-  const deal = company.deals[0];
+  const deal = latestDeal;
   const val = company.valuations[0];
   const docLinks = company.documentLinks as DocumentLink[] | null | undefined;
   const imgFiles = company.companyFiles;
@@ -45,11 +61,15 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     imgFiles.length > 1
       ? imgFiles.slice(1).map((f) => `/api/companies/${company.id}/files/${f.id}`)
       : [];
-  return {
+  const mapped: CompanyMock = {
     id: company.id,
-    name: publicListingName(deal.title),
+    name: publicListingName(deal?.title),
     sector: company.sector,
     location: company.location,
+    sectorSubcategory: company.sectorSubcategory,
+    revenueGrowthPercent: company.revenueGrowthPercent,
+    arr: company.arr,
+    yearsOperating: company.yearsOperating,
     revenue: company.revenue?.trim() || "—",
     ebitda: company.ebitda ?? "—",
     exerciseResult: company.exerciseResult?.trim() || null,
@@ -68,13 +88,14 @@ async function getCompanyById(id: string): Promise<CompanyMock | null> {
     valuationSaleMax: val?.salePriceMax ?? null,
     reference,
   };
+  return { company: mapped, unpublishedPreview: !published };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const company = await getCompanyById(id);
-  if (!company)
-    return { title: "Empresa no encontrada" };
+  const loaded = await getCompanyById(id);
+  if (!loaded) return { title: "Empresa no encontrada" };
+  const company = loaded.company;
   const title = `${company.name} | Empresa en venta | ${SITE_NAME}`;
   const description =
     company.description && company.description !== "Sin descripción."
@@ -98,15 +119,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CompanyDetailPage({ params }: Props) {
   const { id } = await params;
-  const company = await getCompanyById(id);
-  if (!company) notFound();
-
-  const userId = await getUserIdFromSession();
+  const session = await getSessionWithUser();
+  const userId = session?.userId ?? null;
+  const loaded = await getCompanyById(id, userId);
+  if (!loaded) notFound();
+  const { company, unpublishedPreview } = loaded;
   const isLoggedIn = Boolean(userId);
 
   let isOwner = false;
   let isAdmin = false;
   let buyerDocumentAccess = false;
+  let agent: AgentCardData | null = null;
+  if (userId) {
+    agent = (await getDashboardAgent(userId)).agent;
+  }
   if (userId && !isMockCompanyId(id)) {
     const [companyRow, user, infoRequest] = await Promise.all([
       prisma.company.findUnique({
@@ -162,11 +188,20 @@ export default async function CompanyDetailPage({ params }: Props) {
           >
             ← Volver a empresas
           </Link>
+          {unpublishedPreview && (
+            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+              Este anuncio todavía no está publicado. Solo lo ves tú, para revisar cómo quedará en la web.
+            </p>
+          )}
           <CompanyFicha
             company={companyForFicha}
             isLoggedIn={isLoggedIn}
             isOwner={isOwner}
             isAdmin={isAdmin}
+            agent={agent}
+            viewerName={session?.user.name?.trim() || ""}
+            viewerEmail={session?.user.email ?? ""}
+            documentCount={resolvedBuyerDocs.length}
           />
         </div>
       </div>

@@ -68,6 +68,20 @@ model User {
   collaborationAgreement CollaborationAgreement?
   dniDocuments       UserDniDocument[]
   activityEvents     UserActivityEvent[]
+
+  /// Mandato de venta que ve el vendedor para firmar. Por defecto, con exclusividad.
+  salesMandateVariant SalesMandateVariant @default(EXCLUSIVE)
+
+  /// Gestor asignado por el admin. Se muestra en los paneles de comprador, vendedor y profesional.
+  assignedAgentId String?
+  assignedAgent   Agent?  @relation("MarketplaceAgent", fields: [assignedAgentId], references: [id], onDelete: SetNull)
+
+  /// Gestor del apartado de servicios. Independiente del agente del marketplace.
+  servicesAgentId String?
+  servicesAgent   Agent?  @relation("ServicesAgent", fields: [servicesAgentId], references: [id], onDelete: SetNull)
+  meetings        AgentMeeting[]
+  contactRequests ContactRequest[]
+  clientServices  ClientService[]
 }
 
 /// DNI / NIE del usuario (anverso y reverso). Admin marca dniVerified tras revisión.
@@ -121,9 +135,16 @@ model SalesMandate {
   clientIp           String?
   userAgent          String?
   termsAccepted      Boolean  @default(true)
+  /// Versión firmada. Los mandatos anteriores a este campo son con exclusividad.
+  variant            SalesMandateVariant @default(EXCLUSIVE)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum SalesMandateVariant {
+  EXCLUSIVE
+  NON_EXCLUSIVE
 }
 
 /// Mandato de compra firmado electrónicamente por el comprador / inversor
@@ -420,6 +441,49 @@ model Interest {
  * ENUMS
  * =====================
  */
+/// Gestor que el admin asigna a un usuario. El enlace de reserva (Calendly u otro) habilita «Programar reunión».
+model Agent {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  /// Ruta pública (/agents/...) o URL https. Si hay foto subida, manda photoData.
+  photoUrl   String?
+  photoMime  String?
+  photoData  Bytes?
+  bookingUrl String?
+  active     Boolean  @default(true)
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  users         User[] @relation("MarketplaceAgent")
+  servicesUsers User[] @relation("ServicesAgent")
+  meetings      AgentMeeting[]
+}
+
+model AgentMeeting {
+  id               String             @id @default(cuid())
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentId          String
+  agent            Agent              @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  title            String
+  startsAt         DateTime?
+  endsAt           DateTime?
+  externalEventUri String?            @unique
+  status           AgentMeetingStatus @default(SCHEDULED)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([userId, startsAt])
+}
+
+enum AgentMeetingStatus {
+  SCHEDULED
+  CANCELLED
+}
+
 enum UserRole {
   SELLER
   BUYER
@@ -476,6 +540,68 @@ model ContactRequest {
   message       String?  @db.Text // texto libre (longitud amplia)
   createdAt     DateTime @default(now())
   category      String   @default("pendiente") // pendiente | gestionado | rechazado
+
+  /// Cuenta a la que pertenece la solicitud (mismo email al registrarse, o sesión al enviarla).
+  userId String?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  clientService ClientService?
+
+  @@index([userId])
+  @@index([email])
+}
+
+enum ClientServiceStatus {
+  PROPOSAL
+  IN_PROGRESS
+  COMPLETED
+  DISCARDED
+}
+
+/// Propuesta de servicio que el admin asigna a un cliente. El cliente la acepta y luego sigue los pasos.
+model ClientService {
+  id               String              @id @default(cuid())
+  userId           String
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactRequestId String?             @unique
+  contactRequest   ContactRequest?     @relation(fields: [contactRequestId], references: [id], onDelete: SetNull)
+  title            String
+  summary          String?             @db.Text
+  /// Importe de Diligenz sin IVA.
+  priceEur         Int
+  status           ClientServiceStatus @default(PROPOSAL)
+  acceptedAt       DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  steps            ClientServiceStep[]
+  documents        ClientServiceDocument[]
+
+  @@index([userId, status])
+  @@index([status])
+}
+
+model ClientServiceStep {
+  id        String        @id @default(cuid())
+  serviceId String
+  service   ClientService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  position  Int
+  title     String
+  detail    String?
+  done      Boolean       @default(false)
+
+  @@index([serviceId, position])
+}
+
+model ClientServiceDocument {
+  id          String        @id @default(cuid())
+  serviceId   String
+  service     ClientService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  name        String
+  storagePath String
+  mimeType    String?
+  size        Int?
+  createdAt   DateTime      @default(now())
+
+  @@index([serviceId])
 }
 
 /// Sectores personalizados creados por admin (formularios y fichas).

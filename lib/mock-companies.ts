@@ -6,6 +6,7 @@ export type CompanyMock = {
   id: string;
   name: string;
   sector: string;
+  sectorSubcategory?: string | null;
   location: string;
   revenue: string;
   ebitda: string;
@@ -39,6 +40,10 @@ export type CompanyMock = {
   valuationSaleMax?: number | null;
   /** Referencia pública para citar la empresa (teléfono, email). */
   reference?: string | null;
+  revenueGrowthPercent?: number | null;
+  /** Ingresos recurrentes anuales (€), si el proyecto los tiene. */
+  arr?: number | null;
+  yearsOperating?: number | null;
   /**
    * Nombre real del negocio. Solo admin / propietario en rutas internas.
    * Nunca incluir en serializers públicos o de comprador.

@@ -21,7 +21,7 @@ const USERS = [
   {
     email: "comprador@diligenz.test",
     password: "DiligenzBuyer26",
-    name: "Jose Ángel Demo",
+    name: "Laura Martín",
     phone: "600000002",
     role: "BUYER",
     ndaSigned: false,
@@ -179,6 +179,49 @@ async function main() {
     }
 
     const buyer = users.BUYER;
+    const agent = await prisma.agent.upsert({
+      where: { id: "agent_jose_canizares" },
+      update: {
+        name: "Jose Cañizares",
+        email: "jose@diligenz.es",
+        phone: "623 941 511",
+        photoUrl: "/agents/jose-canizares.jpg",
+        bookingUrl: "https://calendly.com/jose-diligenz/30min",
+        active: true,
+        isDefault: true,
+      },
+      create: {
+        id: "agent_jose_canizares",
+        name: "Jose Cañizares",
+        email: "jose@diligenz.es",
+        phone: "623 941 511",
+        photoUrl: "/agents/jose-canizares.jpg",
+        bookingUrl: "https://calendly.com/jose-diligenz/30min",
+        active: true,
+        isDefault: true,
+      },
+    });
+    if (agent) {
+      await prisma.user.updateMany({
+        where: { email: { in: USERS.map((row) => row.email) } },
+        data: { assignedAgentId: agent.id },
+      });
+      const startsAt = new Date();
+      startsAt.setDate(startsAt.getDate() + 2);
+      startsAt.setHours(10, 0, 0, 0);
+      const endsAt = new Date(startsAt.getTime() + 30 * 60 * 1000);
+      await prisma.agentMeeting.deleteMany({ where: { userId: buyer.id, title: "Reunión con Jose Cañizares" } });
+      await prisma.agentMeeting.create({
+        data: {
+          userId: buyer.id,
+          agentId: agent.id,
+          title: "Reunión con Jose Cañizares",
+          startsAt,
+          endsAt,
+        },
+      });
+    }
+
     let i = 0;
     for (const row of COMPANIES) {
       i += 1;

@@ -13,6 +13,7 @@ type Plan = {
   priceNote: string;
   fee?: string;
   featured?: boolean;
+  tone: "outline" | "solid" | "dark";
   items: { text: string; off?: boolean }[];
   cta: string;
   href: string;
@@ -21,162 +22,175 @@ type Plan = {
 const SELL_PLANS: Plan[] = [
   {
     name: "Esencial",
-    tagline: "Base profesional para salir al mercado.",
+    tagline: "Puesta a punto de la compañía para su salida al mercado.",
     price: "6.000 – 12.000 €",
-    priceNote: "pago único",
-    fee: "Sin success fee",
+    priceNote: "Honorarios fijos",
+    fee: "Sin honorarios de éxito",
+    tone: "outline",
     items: [
-      { text: "Valoración (3 métodos)" },
-      { text: "Teaser + infomemo y data room" },
-      { text: "Checklist pre-due diligence" },
-      { text: "Búsqueda de comprador", off: true },
-      { text: "Negociación y SPA", off: true },
+      {
+        text: "Valoración por tres metodologías: descuento de flujos, múltiplos comparables y valor patrimonial",
+      },
+      {
+        text: "Teaser, cuaderno de venta (Information Memorandum) y sala de datos virtual",
+      },
+      {
+        text: "Revisión preliminar de contingencias (vendor due diligence)",
+      },
+      { text: "Búsqueda activa de inversores (no incluida)", off: true },
     ],
-    cta: "Empezar",
+    cta: "Solicitar propuesta",
     href: "#calculadora",
   },
   {
     name: "Avanzado",
-    tagline: "Mandato activo con compradores cualificados.",
+    tagline: "Comercialización activa entre inversores cualificados.",
     price: "8.000 – 15.000 €",
-    priceNote: "retainer a cuenta",
-    fee: "+ success fee 2,5–4% según tamaño",
+    priceNote: "Retainer inicial",
+    fee: "+ honorarios de éxito del 2,5 % al 4 %",
     featured: true,
+    tone: "solid",
     items: [
-      { text: "Todo lo del plan Esencial" },
-      { text: "Difusión a compradores verificados" },
-      { text: "Coordinación de due diligence" },
-      { text: "Apoyo en negociación hasta LOI" },
-      { text: "Dirección jurídica del SPA", off: true },
+      { text: "Todos los servicios del plan Esencial" },
+      {
+        text: "Presentación confidencial a inversores previamente cualificados, previa firma de NDA",
+      },
+      { text: "Coordinación del proceso de due diligence" },
+      {
+        text: "Asistencia en la negociación hasta la oferta no vinculante o carta de intenciones (LOI)",
+      },
     ],
-    cta: "Empezar",
+    cta: "Solicitar propuesta",
     href: "#calculadora",
   },
   {
     name: "Pro",
-    tagline: "Llave en mano hasta la firma.",
+    tagline: "Dirección de la operación hasta su cierre.",
     price: "15.000 – 25.000 €",
-    priceNote: "retainer + legal",
-    fee: "+ success fee 3–4% según tamaño",
+    priceNote: "Retainer inicial",
+    fee: "+ honorarios de éxito del 3 % al 4 %",
+    tone: "dark",
     items: [
-      { text: "Todo lo del plan Avanzado" },
-      { text: "Dirección jurídica completa (SPA, R&W)" },
-      { text: "Planificación fiscal de la venta" },
-      { text: "Cierre notarial con letrado colegiado" },
-      { text: "Asesor dedicado hasta el cierre" },
+      { text: "Todos los servicios del plan Avanzado" },
+      {
+        text: "Dirección letrada del contrato de compraventa (SPA), manifestaciones y garantías (R&W) y régimen de indemnidad",
+      },
+      {
+        text: "Coordinación integral con la notaría: preparación y revisión de la escritura y organización de la firma",
+      },
+      { text: "Interlocutor senior único durante toda la operación" },
     ],
-    cta: "Hablar con un asesor",
-    href: "#calculadora",
+    cta: "Concertar una reunión",
+    href: "/contact",
   },
 ];
 
 const BUY_PLANS: Plan[] = [
   {
     name: "Esencial",
-    tagline: "Evalúa un target antes de decidir.",
+    tagline: "Evalúe un target antes de decidir.",
     price: "4.000 – 8.000 €",
-    priceNote: "pago único",
-    fee: "Sin success fee",
+    priceNote: "Honorarios fijos",
+    fee: "Sin honorarios de éxito",
+    tone: "outline",
     items: [
-      { text: "Valoración y contraste del infomemo" },
-      { text: "Informe de red flags pre-LOI" },
+      { text: "Valoración y contraste del cuaderno de venta" },
+      { text: "Informe de contingencias previo a la LOI" },
       { text: "Due diligence completa", off: true },
       { text: "Negociación y SPA", off: true },
     ],
-    cta: "Empezar",
+    cta: "Solicitar propuesta",
     href: "#calculadora",
   },
   {
     name: "Avanzado",
-    tagline: "DD y apoyo en negociación.",
+    tagline: "Due diligence y apoyo en la negociación.",
     price: "25.000 – 60.000 €",
-    priceNote: "según scoping",
-    fee: "Fijo por fases con cap",
+    priceNote: "Según alcance",
+    fee: "Honorarios fijos por fases, con límite",
     featured: true,
+    tone: "solid",
     items: [
-      { text: "Todo lo del plan Esencial" },
+      { text: "Todos los servicios del plan Esencial" },
       { text: "Due diligence (preferente completa)" },
-      { text: "Apoyo en LOI y SPA" },
-      { text: "Dirección hasta closing", off: true },
+      { text: "Apoyo en la LOI y en el SPA" },
+      { text: "Dirección hasta el cierre", off: true },
     ],
-    cta: "Empezar",
+    cta: "Solicitar propuesta",
     href: "#calculadora",
   },
   {
     name: "Pro",
     tagline: "De la búsqueda al cierre.",
     price: "A medida",
-    priceNote: "fijo por fases",
-    fee: "+ success fee 1–2,5% al cierre",
+    priceNote: "Honorarios fijos por fases",
+    fee: "+ honorarios de éxito del 1 % al 2,5 % al cierre",
+    tone: "dark",
     items: [
-      { text: "Todo lo del plan Avanzado" },
-      { text: "Dirección completa hasta closing" },
+      { text: "Todos los servicios del plan Avanzado" },
+      { text: "Dirección completa hasta el cierre" },
       { text: "Estructuración fiscal de la compra" },
-      { text: "Asesor dedicado en toda la operación" },
+      { text: "Interlocutor senior durante toda la operación" },
     ],
-    cta: "Hablar con un asesor",
-    href: "#calculadora",
+    cta: "Concertar una reunión",
+    href: "/contact",
   },
 ];
 
 function PlanCard({ plan }: { plan: Plan }) {
   return (
     <article
-      className={`relative flex flex-col gap-4 rounded-[1.6rem] border bg-white p-7 transition duration-200 hover:-translate-y-1 hover:shadow-[0_24px_48px_-24px_rgba(23,18,31,0.2)] ${
+      className={`relative flex flex-col rounded-[1.6rem] border bg-white p-7 ${
         plan.featured
-          ? "border-[var(--brand-primary)] shadow-[0_24px_56px_-24px_rgba(145,70,255,0.35)]"
+          ? "border-[var(--brand-primary)] shadow-[0_18px_40px_-28px_rgba(145,70,255,0.55)]"
           : "border-[var(--brand-primary)]/10"
       }`}
     >
       {plan.featured && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[var(--brand-primary)] px-4 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white">
-          El más elegido
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[var(--brand-primary)] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white">
+          Recomendado
         </span>
       )}
-      <div>
-        <h3 className="text-xl font-extrabold tracking-tight text-[var(--brand-dark)]">
-          {plan.name}
-        </h3>
-        <p className="mt-1.5 min-h-[2.5rem] text-sm text-[var(--foreground)]/70">
-          {plan.tagline}
-        </p>
-      </div>
-      <div>
-        <p className="text-2xl font-extrabold tracking-tight text-[var(--brand-dark)] sm:text-3xl">
-          {plan.price}
-        </p>
-        <p className="text-sm font-medium text-[var(--foreground)]/55">{plan.priceNote}</p>
-        {plan.fee && (
-          <p className="mt-1 text-xs font-semibold text-[var(--brand-primary)]">{plan.fee}</p>
-        )}
-      </div>
-      <ul className="flex flex-1 flex-col gap-2.5 text-sm">
+      <h3 className="text-xl font-extrabold tracking-tight text-[var(--brand-dark)]">
+        {plan.name}
+      </h3>
+      <p className="mt-2 min-h-[2.75rem] text-sm leading-relaxed text-[var(--foreground)]/65">
+        {plan.tagline}
+      </p>
+      <p className="mt-5 text-[1.65rem] font-extrabold tracking-tight text-[var(--brand-dark)]">
+        {plan.price}
+      </p>
+      <p className="mt-1 text-sm text-[var(--foreground)]/55">{plan.priceNote}</p>
+      {plan.fee && (
+        <p className="mt-1 text-sm font-semibold text-[var(--brand-primary)]">{plan.fee}</p>
+      )}
+      <ul className="mt-5 flex flex-1 flex-col gap-3 text-sm">
         {plan.items.map((item) => (
           <li
             key={item.text}
-            className={`flex items-start gap-2 ${
-              item.off ? "text-[var(--foreground)]/35" : "text-[var(--foreground)]/85"
+            className={`flex items-start gap-2.5 ${
+              item.off ? "text-[var(--foreground)]/40" : "text-[var(--foreground)]/80"
             }`}
           >
-            {item.off ? (
-              <span className="mt-0.5 shrink-0 text-[var(--foreground)]/30">—</span>
-            ) : (
-              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)]">
-                <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
-              </span>
-            )}
-            <span>{item.off ? item.text : item.text}</span>
+            <span
+              className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
+                item.off ? "bg-[var(--foreground)]/15" : "bg-[var(--brand-primary)]"
+              }`}
+            >
+              <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+            </span>
+            <span>{item.text}</span>
           </li>
         ))}
       </ul>
       <Link
         href={plan.href}
-        className={`mt-2 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${
-          plan.featured
+        className={`mt-6 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${
+          plan.tone === "solid"
             ? "bg-[var(--brand-primary)] text-white hover:opacity-95"
-            : plan.name === "Pro"
+            : plan.tone === "dark"
               ? "bg-[var(--brand-dark)] text-white hover:opacity-95"
-              : "border border-[var(--brand-primary)]/25 text-[var(--brand-dark)] hover:border-[var(--brand-dark)]"
+              : "border border-[var(--brand-primary)]/30 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5"
         }`}
       >
         {plan.cta}
@@ -191,22 +205,22 @@ export default function PlansToggle() {
 
   return (
     <div>
-      <div className="mb-10 flex justify-center">
-        <div className="inline-flex gap-1 rounded-full bg-[var(--brand-surface)] p-1.5">
+      <div className="mb-8 flex justify-center">
+        <div className="inline-flex rounded-full bg-[#ece8f2] p-1">
           {(
             [
-              { id: "sell" as const, label: "Para vendedores" },
-              { id: "buy" as const, label: "Para compradores" },
+              { id: "sell" as const, label: "Vendedores" },
+              { id: "buy" as const, label: "Inversores" },
             ] as const
           ).map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setAudience(tab.id)}
-              className={`rounded-full px-6 py-2.5 text-sm font-bold transition ${
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
                 audience === tab.id
                   ? "bg-[var(--brand-dark)] text-white"
-                  : "text-[var(--foreground)]/65 hover:text-[var(--brand-dark)]"
+                  : "text-[var(--foreground)]/70 hover:text-[var(--brand-dark)]"
               }`}
             >
               {tab.label}
@@ -215,11 +229,15 @@ export default function PlansToggle() {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl items-stretch gap-4 md:grid-cols-3">
         {plans.map((plan) => (
           <PlanCard key={`${audience}-${plan.name}`} plan={plan} />
         ))}
       </div>
+      <p className="mx-auto mt-6 max-w-3xl text-center text-xs leading-relaxed text-[var(--foreground)]/55">
+        Honorarios sin IVA. Las condiciones definitivas se recogen en la
+        correspondiente hoja de encargo.
+      </p>
     </div>
   );
 }

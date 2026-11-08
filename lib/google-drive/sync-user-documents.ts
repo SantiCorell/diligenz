@@ -152,7 +152,7 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
         signedAt: m.signedAt,
         clientIp: m.clientIp,
         userAgent: m.userAgent,
-      });
+      }, m.variant);
       const fileName = `mandato-venta-diligenz-${m.signedAt.toISOString().slice(0, 10)}.pdf`;
       const ok = await syncDocumentToUserDrive({
         userId: user.id,

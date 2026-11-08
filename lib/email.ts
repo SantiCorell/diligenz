@@ -12,6 +12,7 @@ type SendEmailOptions = {
   subject: string;
   text: string;
   html?: string;
+  replyTo?: string;
   attachments?: { filename: string; content: Buffer }[];
 };
 
@@ -49,6 +50,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
     await transporter.sendMail({
       from,
       to: opts.to,
+      replyTo: opts.replyTo,
       subject: opts.subject,
       text: opts.text,
       html: opts.html ?? opts.text.replace(/\n/g, "<br>"),

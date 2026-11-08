@@ -5,6 +5,7 @@ import { getDisplayName } from "@/lib/user-display";
 import { getSessionWithUser } from "@/lib/session";
 import { getUserDniPendingReview } from "@/lib/user-documents/dni-status";
 import ProfileStatus from "@/components/dashboard/ProfileStatus";
+import DashboardAgentSlot from "@/components/dashboard/DashboardAgentSlot";
 import {
   countActiveInfoRequests,
   getMaxConcurrentInfoRequests,
@@ -78,21 +79,21 @@ export default async function BuyerDashboardPage() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Link href="/dashboard/mis-empresas" className="page-card page-card-padded group">
+        <Link href="/dashboard/mis-empresas" className="page-card page-card-padded group h-full">
           <h2 className="text-lg font-semibold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">Mis empresas</h2>
           <p className="mt-2 text-sm text-[var(--foreground)]/75">Tus solicitudes de información y el estado de cada una.</p>
           <span className="mt-4 inline-block text-sm font-semibold text-[var(--brand-primary)]">Ver solicitudes ({activeInfo}) →</span>
         </Link>
-        <Link href="/companies" className="page-card page-card-padded group">
+        <Link href="/companies" className="page-card page-card-padded group h-full">
           <h2 className="text-lg font-semibold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">Explorar empresas</h2>
           <p className="mt-2 text-sm text-[var(--foreground)]/75">Catálogo publicado: sectores, cifras orientativas y fichas.</p>
           <span className="mt-4 inline-block text-sm font-semibold text-[var(--brand-primary)]">Ir al marketplace →</span>
         </Link>
-        <Link href="/contact" className="page-card page-card-padded group">
-          <h2 className="text-lg font-semibold text-[var(--brand-dark)] group-hover:text-[var(--brand-primary)]">¿Necesitas ayuda?</h2>
-          <p className="mt-2 text-sm text-[var(--foreground)]/75">Contacto directo y valoraciones orientativas.</p>
-          <span className="mt-4 inline-block text-sm font-semibold text-[var(--brand-primary)]">Contactar →</span>
-        </Link>
+        <DashboardAgentSlot
+          userId={userId}
+          userName={displayName}
+          userEmail={session.user.email}
+        />
       </div>
     </div>
   );

@@ -12,11 +12,9 @@ type SessionRole = "ADMIN" | "BUYER" | "SELLER" | "PROFESSIONAL" | null;
 
 export default function Navbar() {
   const [inicioOpen, setInicioOpen] = useState(false);
-  const [serviciosOpen, setServiciosOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileInicioOpen, setMobileInicioOpen] = useState(false);
-  const [mobileServiciosOpen, setMobileServiciosOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [session, setSession] = useState<{ loggedIn: boolean; role: SessionRole }>({ loggedIn: false, role: null });
@@ -67,7 +65,6 @@ export default function Navbar() {
       document.body.style.overflow = "";
       /* eslint-disable react-hooks/set-state-in-effect -- cerrar submenús al ocultar menú móvil */
       setMobileInicioOpen(false);
-      setMobileServiciosOpen(false);
       /* eslint-enable react-hooks/set-state-in-effect */
     }
     return () => {
@@ -125,31 +122,9 @@ export default function Navbar() {
             <Link href="/companies" className="hover:text-[var(--brand-primary)]">
               Empresas
             </Link>
-            <div
-              className="relative group"
-              onMouseEnter={() => setServiciosOpen(true)}
-              onMouseLeave={() => setServiciosOpen(false)}
-            >
-              <button
-                type="button"
-                className="flex items-center gap-1 hover:text-[var(--brand-primary)]"
-              >
-                Servicios
-                <span className="text-xs">▼</span>
-              </button>
-              {serviciosOpen && (
-                <div className="absolute top-full left-0 pt-2">
-                  <div className="w-52 rounded-xl border border-[var(--brand-primary)]/10 bg-white py-1.5 shadow-xl overflow-hidden">
-                    <Link href="/servicios" className="block px-4 py-2.5 text-[var(--brand-dark)] hover:bg-[var(--brand-surface)]">
-                      Ver servicios
-                    </Link>
-                    <Link href="/servicios#pricing" className="block px-4 py-2.5 text-[var(--brand-dark)] hover:bg-[var(--brand-surface)]">
-                      Precios
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+            <Link href="/servicios" className="hover:text-[var(--brand-primary)]">
+              Servicios
+            </Link>
             <Link href="/sell" className="hover:text-[var(--brand-primary)]">
               Valorar / Vender
             </Link>
@@ -267,28 +242,9 @@ export default function Navbar() {
             Empresas
           </Link>
 
-          {/* Servicios (desplegable) */}
-          <div className="border-b border-[var(--brand-primary)]/10">
-            <button
-              type="button"
-              onClick={() => setMobileServiciosOpen((o) => !o)}
-              className="flex items-center justify-between w-full py-3 font-medium"
-              aria-expanded={mobileServiciosOpen}
-            >
-              Servicios
-              <span className="shrink-0 ml-2">
-                {mobileServiciosOpen ? <ChevronUp className="w-5 h-5 opacity-80" /> : <ChevronDown className="w-5 h-5 opacity-80" />}
-              </span>
-            </button>
-            <div className={`overflow-hidden transition-all duration-200 ${mobileServiciosOpen ? "max-h-32 opacity-100" : "max-h-0 opacity-0"}`}>
-              <Link href="/servicios" className="block py-2 pl-4 rounded-lg hover:bg-[var(--brand-surface)]" onClick={() => setMobileMenuOpen(false)}>
-                Ver servicios
-              </Link>
-              <Link href="/servicios#pricing" className="block py-2 pl-4 rounded-lg hover:bg-[var(--brand-surface)]" onClick={() => setMobileMenuOpen(false)}>
-                Precios
-              </Link>
-            </div>
-          </div>
+          <Link href="/servicios" className="py-3 font-medium border-b border-[var(--brand-primary)]/10 block" onClick={() => setMobileMenuOpen(false)}>
+            Servicios
+          </Link>
 
           {/* Valorar / Vender, Blog, Contacto */}
           <Link href="/sell" className="py-3 font-medium border-b border-[var(--brand-primary)]/10 block" onClick={() => setMobileMenuOpen(false)}>

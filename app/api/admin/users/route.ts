@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma, type UserAccountStatus, type UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { getDefaultAgentId } from "@/lib/agents";
+import { provisionUserDriveFolder } from "@/lib/google-drive/user-drive";
+import { linkServiceRequestsToUser } from "@/lib/link-service-requests";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { getDniVerificationStatus, isDniPendingReview } from "@/lib/user-documents/dni-status";
 
@@ -109,6 +112,10 @@ export async function GET(req: Request) {
       documentsDriveFolderUrl: true,
       maxConcurrentInfoRequests: true,
       maxConcurrentCompanies: true,
+      assignedAgentId: true,
+      servicesAgentId: true,
+      salesMandateVariant: true,
+      assignedAgent: { select: { id: true, name: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -171,7 +178,7 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const { email, password, role = "ADMIN", phone, name: nameRaw } = body;
+  const { email, password, role = "ADMIN", phone, name: nameRaw, assignedAgentId: assignedAgentRaw } = body;
 
   if (!email || typeof email !== "string" || !email.trim()) {
     return NextResponse.json({ error: "El email es obligatorio." }, { status: 400 });
@@ -195,6 +202,22 @@ export async function POST(req: Request) {
   const nameTrim =
     typeof nameRaw === "string" && nameRaw.trim() ? nameRaw.trim().slice(0, 200) : null;
 
+  let assignedAgentId: string | null = null;
+  if (assignedAgentRaw === null) {
+    assignedAgentId = null;
+  } else if (typeof assignedAgentRaw === "string" && assignedAgentRaw.trim()) {
+    const agent = await prisma.agent.findUnique({
+      where: { id: assignedAgentRaw.trim() },
+      select: { id: true },
+    });
+    if (!agent) {
+      return NextResponse.json({ error: "El agente seleccionado no existe." }, { status: 400 });
+    }
+    assignedAgentId = agent.id;
+  } else {
+    assignedAgentId = await getDefaultAgentId();
+  }
+
   const user = await prisma.user.create({
     data: {
       email: normalizedEmail,
@@ -203,9 +226,30 @@ export async function POST(req: Request) {
       phone: phone && typeof phone === "string" ? phone.trim() || null : null,
       name: nameTrim,
       accountStatus: validRole === "ADMIN" ? "ACTIVE" : "PENDING",
+      assignedAgentId,
     },
     select: { id: true, email: true, role: true, createdAt: true, name: true, accountStatus: true },
   });
+
+  try {
+    await linkServiceRequestsToUser(user.id, user.email);
+  } catch (linkError) {
+    console.error(
+      "[admin/users] vincular servicios:",
+      linkError instanceof Error ? linkError.message : "failed"
+    );
+  }
+
+  try {
+    await provisionUserDriveFolder({
+      id: user.id,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+    });
+  } catch (driveError) {
+    console.error("[admin/users] carpeta Drive:", driveError);
+  }
 
   return NextResponse.json({ user }, { status: 201 });
 }
