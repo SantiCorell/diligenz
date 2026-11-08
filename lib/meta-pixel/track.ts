@@ -31,6 +31,19 @@ type PendingFbqCall = {
 
 /** Eventos con consentimiento que llegan antes de que fbq exista. */
 const pendingFbq: PendingFbqCall[] = [];
+let flushTimer: number | undefined;
+
+function scheduleFlush(): void {
+  if (typeof window === "undefined" || flushTimer) return;
+  const started = Date.now();
+  flushTimer = window.setInterval(() => {
+    if (canTrack()) flushMetaPixelQueue();
+    if (pendingFbq.length === 0 || Date.now() - started > 10000) {
+      if (flushTimer) window.clearInterval(flushTimer);
+      flushTimer = undefined;
+    }
+  }, 50);
+}
 
 function deliver(call: PendingFbqCall): void {
   if (!window.fbq) return;
@@ -49,6 +62,10 @@ function deliver(call: PendingFbqCall): void {
 
 export function resetMetaPixelQueue(): void {
   pendingFbq.length = 0;
+  if (flushTimer) {
+    window.clearInterval(flushTimer);
+    flushTimer = undefined;
+  }
 }
 
 export function flushMetaPixelQueue(): void {
@@ -82,6 +99,7 @@ function pushToFbq(
   const call: PendingFbqCall = { method, eventName, params, eventID };
   if (typeof window.fbq !== "function") {
     pendingFbq.push(call);
+    scheduleFlush();
     return;
   }
   deliver(call);
