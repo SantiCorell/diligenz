@@ -12,6 +12,7 @@ import {
   META_PIXEL_ID,
   initMetaPixel,
   isMetaPixelConfigured,
+  resetMetaPixelQueue,
   trackPageView,
 } from "@/lib/meta-pixel";
 
@@ -35,6 +36,7 @@ export default function ConditionalMetaPixel() {
       const ok = hasAnalyticsConsent();
       setEnabled(ok);
       if (!ok && typeof window !== "undefined") {
+        resetMetaPixelQueue();
         window.__metaPixelInitialized = false;
         window.__metaPixelPageViewKey = undefined;
         setScriptReady(false);
@@ -50,9 +52,28 @@ export default function ConditionalMetaPixel() {
   }, []);
 
   useEffect(() => {
-    if (!enabled || !scriptReady) return;
-    initMetaPixel();
-    trackPageView(routeKey(pathname, searchParams));
+    if (!enabled) return;
+    let stopped = false;
+
+    const boot = () => {
+      if (stopped || typeof window.fbq !== "function") return false;
+      initMetaPixel();
+      trackPageView(routeKey(pathname, searchParams));
+      return true;
+    };
+
+    if (boot()) return;
+
+    const timer = window.setInterval(() => {
+      if (boot()) window.clearInterval(timer);
+    }, 100);
+    const giveUp = window.setTimeout(() => window.clearInterval(timer), 10000);
+
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      window.clearTimeout(giveUp);
+    };
   }, [enabled, scriptReady, pathname, searchParams]);
 
   if (!enabled || !isMetaPixelConfigured()) return null;

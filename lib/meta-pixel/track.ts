@@ -10,13 +10,51 @@ import type {
   MetaTrackOptions,
 } from "./types";
 
-function canTrack(): boolean {
+function consentOk(): boolean {
   return (
     typeof window !== "undefined" &&
     isMetaPixelConfigured() &&
-    hasAnalyticsConsent() &&
-    typeof window.fbq === "function"
+    hasAnalyticsConsent()
   );
+}
+
+function canTrack(): boolean {
+  return consentOk() && typeof window.fbq === "function";
+}
+
+type PendingFbqCall = {
+  method: "track" | "trackCustom" | "trackSingle" | "trackSingleCustom";
+  eventName: string;
+  params?: MetaEventParams;
+  eventID?: string;
+};
+
+/** Eventos con consentimiento que llegan antes de que fbq exista. */
+const pendingFbq: PendingFbqCall[] = [];
+
+function deliver(call: PendingFbqCall): void {
+  if (!window.fbq) return;
+  const { method, eventName, params, eventID } = call;
+  const options = eventID ? { eventID } : undefined;
+  if (params && options) {
+    window.fbq(method, eventName, params, options);
+  } else if (params) {
+    window.fbq(method, eventName, params);
+  } else if (options) {
+    window.fbq(method, eventName, {}, options);
+  } else {
+    window.fbq(method, eventName);
+  }
+}
+
+export function resetMetaPixelQueue(): void {
+  pendingFbq.length = 0;
+}
+
+export function flushMetaPixelQueue(): void {
+  if (!canTrack()) return;
+  const batch = pendingFbq.splice(0, pendingFbq.length);
+  for (const call of batch) deliver(call);
 }
 
 /** UUID v4 ligero (suficiente para eventID de Meta). */
@@ -40,17 +78,13 @@ function pushToFbq(
   params?: MetaEventParams,
   eventID?: string
 ): void {
-  if (!canTrack() || !window.fbq) return;
-  const options = eventID ? { eventID } : undefined;
-  if (params && options) {
-    window.fbq(method, eventName, params, options);
-  } else if (params) {
-    window.fbq(method, eventName, params);
-  } else if (options) {
-    window.fbq(method, eventName, {}, options);
-  } else {
-    window.fbq(method, eventName);
+  if (!consentOk()) return;
+  const call: PendingFbqCall = { method, eventName, params, eventID };
+  if (typeof window.fbq !== "function") {
+    pendingFbq.push(call);
+    return;
   }
+  deliver(call);
 }
 
 /**
@@ -58,8 +92,7 @@ function pushToFbq(
  * No dispara PageView: lo hace MetaPixelPageView / trackPageView.
  */
 export function initMetaPixel(): void {
-  if (typeof window === "undefined" || !isMetaPixelConfigured()) return;
-  if (!hasAnalyticsConsent()) return;
+  if (!consentOk()) return;
   if (window.__metaPixelInitialized) return;
   if (typeof window.fbq !== "function") return;
 
@@ -72,11 +105,14 @@ export function initMetaPixel(): void {
  * Útil en App Router: un PageView por navegación cliente.
  */
 export function trackPageView(pathKey?: string): void {
-  if (!canTrack()) return;
+  if (!consentOk()) return;
   const key =
     pathKey ??
     `${window.location.pathname}${window.location.search}`;
-  if (window.__metaPixelPageViewKey === key) return;
+  if (window.__metaPixelPageViewKey === key) {
+    flushMetaPixelQueue();
+    return;
+  }
   window.__metaPixelPageViewKey = key;
 
   const eventID = createMetaEventId();
@@ -87,6 +123,7 @@ export function trackPageView(pathKey?: string): void {
     eventTime: Math.floor(Date.now() / 1000),
     eventSourceUrl: window.location.href,
   });
+  flushMetaPixelQueue();
 }
 
 /**
@@ -97,7 +134,7 @@ export function trackMetaEvent(
   params?: MetaEventParams,
   options?: MetaTrackOptions
 ): string | null {
-  if (!canTrack()) return null;
+  if (!consentOk()) return null;
 
   const eventID = options?.eventID ?? createMetaEventId();
   pushToFbq("track", eventName, params, eventID);
@@ -123,7 +160,7 @@ export function trackMetaCustomEvent(
   params?: MetaEventParams,
   options?: MetaTrackOptions
 ): string | null {
-  if (!canTrack()) return null;
+  if (!consentOk()) return null;
 
   const eventID = options?.eventID ?? createMetaEventId();
   pushToFbq("trackCustom", eventName, params, eventID);

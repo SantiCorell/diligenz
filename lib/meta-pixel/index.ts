@@ -13,6 +13,7 @@ export { META_PIXEL_ID, META_CAPI_ENDPOINT, isMetaPixelConfigured } from "./conf
 export {
   createMetaEventId,
   initMetaPixel,
+  resetMetaPixelQueue,
   trackPageView,
   trackMetaEvent,
   trackMetaCustomEvent,

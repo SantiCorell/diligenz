@@ -21,6 +21,7 @@ import { authFetch } from "@/lib/auth-client";
 import SectorVisual from "@/components/companies/SectorVisual";
 import { getSectorVisual } from "@/lib/sector-visual";
 import { formatEuroAmountFromString, formatEuroRange } from "@/lib/format-financial";
+import { CONSENT_EVENT, hasAnalyticsConsent } from "@/lib/cookie-consent";
 import { trackRequestCompanyInfo, trackViewCompany } from "@/lib/meta-pixel";
 
 type TabId = "informacion" | "descripcion" | "documentos";
@@ -64,11 +65,19 @@ export default function CompanyFicha({
   const hasBuyerDocuments = buyerDocuments.length > 0;
 
   useEffect(() => {
-    trackViewCompany({
-      companyId: company.id,
-      companyName: company.name,
-      sector: company.sector,
-    });
+    let sent = false;
+    const send = () => {
+      if (sent || !hasAnalyticsConsent()) return;
+      sent = true;
+      trackViewCompany({
+        companyId: company.id,
+        companyName: company.name,
+        sector: company.sector,
+      });
+    };
+    send();
+    window.addEventListener(CONSENT_EVENT, send);
+    return () => window.removeEventListener(CONSENT_EVENT, send);
   }, [company.id, company.name, company.sector]);
 
   useEffect(() => {
