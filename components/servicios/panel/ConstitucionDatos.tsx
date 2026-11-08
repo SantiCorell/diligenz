@@ -183,14 +183,17 @@ export default function ConstitucionDatos({ initial, variant = "page", userId = 
             <option value="NO">No, hay que tramitarla</option>
           </select>
         </Task>
-        <Task done={Boolean(values.bankOffice.trim())} title="Oficina bancaria de tu preferencia" hint="Coordinamos la cita para abrir la cuenta de la sociedad">
-          <input
+        <Task done={values.bankOffice === "SI" || values.bankOffice === "NO"} title="¿Quieres que te tramitemos la apertura de la cuenta bancaria?" hint="Indica sí o no. Si es sí, nos encargamos de abrir la cuenta de la sociedad.">
+          <select
             value={values.bankOffice}
             onChange={(event) => set("bankOffice", event.target.value)}
-            readOnly={!canEdit}
-            placeholder="Banco y oficina"
-            className="w-full rounded-xl border border-[#ece6f5] px-3 py-2 text-sm read-only:bg-[#faf8fd]"
-          />
+            disabled={!canEdit}
+            className="rounded-xl border border-[#ece6f5] px-3 py-2 text-sm disabled:bg-[#faf8fd]"
+          >
+            <option value="">Sin responder</option>
+            <option value="SI">Sí</option>
+            <option value="NO">No</option>
+          </select>
         </Task>
         <Task done={values.files.some((file) => file.slot === "capital")} title="Certificado bancario del depósito del capital social" hint="Una vez realizado el ingreso en la cuenta de la sociedad">
           <FileSlot slot="capital" files={values.files} disabled={saving} canEdit={canEdit} onUpload={upload} onRemove={remove} />

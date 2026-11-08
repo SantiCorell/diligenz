@@ -11,7 +11,7 @@ export type IntakeSnapshot = {
   proposedNames: string;
   constitutionDetails: string;
   digitalSignature: "" | "SI" | "NO";
-  bankOffice: string;
+  bankOffice: "" | "SI" | "NO";
   files: IntakeFileView[];
 };
 
@@ -23,7 +23,6 @@ const TEXT_LIMITS = {
   managementRegime: 180,
   proposedNames: 2000,
   constitutionDetails: 4000,
-  bankOffice: 300,
 } as const;
 
 export type IntakeField = keyof typeof TEXT_LIMITS | "digitalSignature";
@@ -71,6 +70,7 @@ export function toIntakeSnapshot(
   const base = emptyIntake(target);
   if (!row) return base;
   const signature = row.digitalSignature === "SI" || row.digitalSignature === "NO" ? row.digitalSignature : "";
+  const bankHelp = row.bankOffice === "SI" || row.bankOffice === "NO" ? row.bankOffice : "";
   return {
     clientServiceId: row.clientServiceId ?? target.clientServiceId ?? null,
     contactRequestId: row.contactRequestId ?? target.contactRequestId ?? null,
@@ -82,7 +82,7 @@ export function toIntakeSnapshot(
     proposedNames: asText(row.proposedNames),
     constitutionDetails: asText(row.constitutionDetails),
     digitalSignature: signature,
-    bankOffice: asText(row.bankOffice),
+    bankOffice: bankHelp,
     files: row.files,
   };
 }
@@ -122,5 +122,10 @@ export function cleanIntakeFields(body: Record<string, unknown>) {
     return { error: "Indica si el administrador tiene firma digital." as const };
   }
   data.digitalSignature = signature === "SI" || signature === "NO" ? signature : null;
+  const bankHelp = body.bankOffice;
+  if (bankHelp !== undefined && bankHelp !== "" && bankHelp !== "SI" && bankHelp !== "NO") {
+    return { error: "Indica si tramitamos la apertura de la cuenta bancaria." as const };
+  }
+  data.bankOffice = bankHelp === "SI" || bankHelp === "NO" ? bankHelp : null;
   return { data };
 }

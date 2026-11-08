@@ -14,7 +14,6 @@ declare global {
     };
   }
 }
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Calendar, Mail, MessageSquare, Phone } from "lucide-react";
 import { authFetch } from "@/lib/auth-client";
@@ -171,19 +170,13 @@ export default function AssignedAgentCard({
               )}
             </div>
             {nextMeeting?.startsAt ? (
-              <Link
-                href="/dashboard/calendar"
-                className="mt-3 text-xs font-semibold text-[#5b34d6] hover:underline"
-              >
+              <p className="mt-3 text-xs font-semibold text-[#5b34d6]">
                 Próxima reunión: {formatMeetingWhen(nextMeeting.startsAt)}
-              </Link>
+              </p>
             ) : nextMeeting ? (
-              <Link
-                href="/dashboard/calendar"
-                className="mt-3 text-xs font-semibold text-[#5b34d6] hover:underline"
-              >
+              <p className="mt-3 text-xs font-semibold text-[#5b34d6]">
                 Tienes una reserva pendiente de hora
-              </Link>
+              </p>
             ) : null}
             <div className="mt-auto flex flex-col gap-2 pt-5">
               {canBook ? (
@@ -518,13 +511,6 @@ function ScheduleMeetingModal({
                       : meeting.title}
                   </p>
                   <div className="flex flex-wrap gap-3">
-                    <Link
-                      href="/dashboard/calendar"
-                      className="rounded-xl bg-[#7c4dff] px-4 py-2.5 text-sm font-semibold text-white"
-                      onClick={onClose}
-                    >
-                      Ver mi calendario
-                    </Link>
                     {meeting.startsAt && (
                       <a
                         href={`/api/me/meetings/${meeting.id}/ics`}

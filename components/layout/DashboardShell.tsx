@@ -9,7 +9,6 @@ import {
   Briefcase,
   Building2,
   Globe,
-  Calendar,
   ClipboardList,
   Heart,
   Home,
@@ -366,15 +365,6 @@ export default function DashboardShell({
           collapsed={!expanded}
           onNavigate={() => setMobileSidebarOpen(false)}
         />
-        <NavItem
-          href="/dashboard/calendar"
-          label="Mi calendario"
-          icon={Calendar}
-          active={pathname.startsWith("/dashboard/calendar")}
-          collapsed={!expanded}
-          onNavigate={() => setMobileSidebarOpen(false)}
-        />
-
         <div className={`panel-nav-divider ${expanded ? "mt-3 mb-2" : "mt-2 mb-1.5"}`} aria-hidden />
         <WebNavItem collapsed={!expanded} onNavigate={() => setMobileSidebarOpen(false)} />
       </nav>
