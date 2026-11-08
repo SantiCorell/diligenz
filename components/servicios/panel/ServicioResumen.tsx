@@ -7,6 +7,7 @@ import AcceptProposalButton from "./AcceptProposalButton";
 import CarpetaDocumentos from "./CarpetaDocumentos";
 import ConstitucionDatos from "./ConstitucionDatos";
 import ServiciosAgentMini from "./ServiciosAgentMini";
+import StepAttachments, { type StepWithFiles } from "./StepAttachments";
 
 const COMPANY_FIELDS = [
   ["Denominación social asignada", "Pendiente"],
@@ -16,7 +17,12 @@ const COMPANY_FIELDS = [
   ["Régimen de administración", "Pendiente"],
 ];
 
-export type ServicioStepView = { title: string; done: boolean };
+export type ServicioStepView = {
+  id?: string;
+  title: string;
+  done: boolean;
+  documents?: { id: string; name: string }[];
+};
 
 export default function ServicioResumen({
   tabs,
@@ -35,6 +41,11 @@ export default function ServicioResumen({
   acceptServiceId,
   showBack = true,
   intake = null,
+  serviceId = null,
+  editable = false,
+  userId = null,
+  backHref = "/dashboard/servicios",
+  backLabel = "← Volver a mi panel",
 }: {
   tabs: { servicio: string; documentos: string; facturacion: string };
   active: "servicio" | "documentos" | "facturacion";
@@ -52,6 +63,11 @@ export default function ServicioResumen({
   acceptServiceId?: string | null;
   showBack?: boolean;
   intake?: IntakeSnapshot | null;
+  serviceId?: string | null;
+  editable?: boolean;
+  userId?: string | null;
+  backHref?: string;
+  backLabel?: string;
 }) {
   const mail = agent?.email ? `mailto:${agent.email}` : "/contact";
   const current = steps[currentIndex] ?? steps[0];
@@ -73,8 +89,8 @@ export default function ServicioResumen({
       </div>
 
       {showBack ? (
-        <Link href="/dashboard/servicios" className="inline-flex text-sm text-[var(--foreground)]/60 hover:text-[var(--brand-dark)]">
-          ← Volver a mi panel
+        <Link href={backHref} className="inline-flex text-sm text-[var(--foreground)]/60 hover:text-[var(--brand-dark)]">
+          {backLabel}
         </Link>
       ) : null}
 
@@ -122,8 +138,16 @@ export default function ServicioResumen({
             </p>
           ) : null}
 
+          {serviceId && steps.every((step) => step.id) ? (
+            <StepAttachments
+              serviceId={serviceId}
+              editable={editable}
+              steps={steps as StepWithFiles[]}
+            />
+          ) : null}
+
           {showSlDetails && intake ? (
-            <ConstitucionDatos initial={intake}>
+            <ConstitucionDatos initial={intake} variant={editable ? "admin" : "page"} userId={userId}>
               <Fees agent={agent} priceLabel={priceLabel} priceCaption={priceCaption} showSlDetails />
             </ConstitucionDatos>
           ) : (

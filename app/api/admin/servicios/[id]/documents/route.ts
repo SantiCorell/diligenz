@@ -16,15 +16,21 @@ export async function POST(req: Request, { params }: Params) {
 
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
+  const stepIdRaw = form?.get("stepId");
+  const stepId = typeof stepIdRaw === "string" && stepIdRaw ? stepIdRaw : null;
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Adjunta un archivo." }, { status: 400 });
+  }
+  if (stepId) {
+    const step = await prisma.clientServiceStep.findFirst({ where: { id: stepId, serviceId: id }, select: { id: true } });
+    if (!step) return NextResponse.json({ error: "Ese paso no pertenece a este servicio." }, { status: 400 });
   }
 
   try {
     const stored = await saveClientServiceFile(id, file);
     const document = await prisma.clientServiceDocument.create({
-      data: { serviceId: id, ...stored },
-      select: { id: true, name: true, size: true, createdAt: true },
+      data: { serviceId: id, stepId, ...stored },
+      select: { id: true, name: true, size: true, createdAt: true, stepId: true },
     });
     return NextResponse.json({ document });
   } catch (error) {

@@ -362,6 +362,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS "ServiceIntake_clientServiceId_key" ON "Servic
 CREATE INDEX IF NOT EXISTS "ServiceIntake_userId_idx" ON "ServiceIntake"("userId");
 CREATE INDEX IF NOT EXISTS "ServiceIntakeFile_intakeId_idx" ON "ServiceIntakeFile"("intakeId");
 
+ALTER TABLE "ClientServiceDocument" ADD COLUMN IF NOT EXISTS "stepId" TEXT;
+CREATE INDEX IF NOT EXISTS "ClientServiceDocument_stepId_idx" ON "ClientServiceDocument"("stepId");
+
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ServiceIntake_userId_fkey') THEN
@@ -380,6 +383,12 @@ BEGIN
     ALTER TABLE "ServiceIntake"
       ADD CONSTRAINT "ServiceIntake_clientServiceId_fkey"
       FOREIGN KEY ("clientServiceId") REFERENCES "ClientService"("id")
+      ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ClientServiceDocument_stepId_fkey') THEN
+    ALTER TABLE "ClientServiceDocument"
+      ADD CONSTRAINT "ClientServiceDocument_stepId_fkey"
+      FOREIGN KEY ("stepId") REFERENCES "ClientServiceStep"("id")
       ON DELETE SET NULL ON UPDATE CASCADE;
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ServiceIntakeFile_intakeId_fkey') THEN

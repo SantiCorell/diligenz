@@ -635,6 +635,7 @@ model ClientServiceStep {
   title     String
   detail    String?
   done      Boolean       @default(false)
+  documents ClientServiceDocument[]
 
   @@index([serviceId, position])
 }
@@ -643,6 +644,8 @@ model ClientServiceDocument {
   id          String        @id @default(cuid())
   serviceId   String
   service     ClientService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  stepId      String?
+  step        ClientServiceStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
   name        String
   storagePath String
   mimeType    String?
@@ -650,6 +653,7 @@ model ClientServiceDocument {
   createdAt   DateTime      @default(now())
 
   @@index([serviceId])
+  @@index([stepId])
 }
 
 /// Sectores personalizados creados por admin (formularios y fichas).
