@@ -43,7 +43,6 @@ export type CompanyMock = {
   revenueGrowthPercent?: number | null;
   /** Ingresos recurrentes anuales (€), si el proyecto los tiene. */
   arr?: number | null;
-  yearsOperating?: number | null;
   /**
    * Nombre real del negocio. Solo admin / propietario en rutas internas.
    * Nunca incluir en serializers públicos o de comprador.
