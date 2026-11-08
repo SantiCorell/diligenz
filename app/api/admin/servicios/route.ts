@@ -3,10 +3,31 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 
+const intakeFiles = {
+  orderBy: { createdAt: "desc" as const },
+  select: { id: true, name: true, slot: true },
+};
+
+const intakeSelect = {
+  clientServiceId: true,
+  contactRequestId: true,
+  companyName: true,
+  shareholders: true,
+  shareCapital: true,
+  registeredOffice: true,
+  managementRegime: true,
+  proposedNames: true,
+  constitutionDetails: true,
+  digitalSignature: true,
+  bankOffice: true,
+  files: intakeFiles,
+};
+
 const serviceInclude = {
   user: { select: { id: true, name: true, email: true } },
   steps: { orderBy: { position: "asc" as const } },
   documents: { orderBy: { createdAt: "desc" as const }, select: { id: true, name: true, size: true, createdAt: true } },
+  serviceIntake: { include: { files: intakeFiles } },
 } satisfies Prisma.ClientServiceInclude;
 
 function cleanSteps(raw: unknown) {
@@ -44,6 +65,7 @@ export async function GET(req: Request) {
         createdAt: true,
         userId: true,
         user: { select: { id: true, name: true, email: true } },
+        serviceIntake: { select: intakeSelect },
       },
     }),
     prisma.clientService.findMany({
@@ -111,6 +133,13 @@ export async function POST(req: Request) {
     },
     include: serviceInclude,
   });
+
+  if (contactRequestId) {
+    await prisma.serviceIntake.updateMany({
+      where: { contactRequestId, clientServiceId: null },
+      data: { clientServiceId: service.id },
+    });
+  }
 
   return NextResponse.json({ service });
 }

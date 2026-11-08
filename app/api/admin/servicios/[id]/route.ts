@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { parseDriveLink } from "@/lib/drive-link";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 
 type Params = { params: Promise<{ id: string }> };
@@ -14,7 +15,14 @@ export async function PATCH(req: Request, { params }: Params) {
   if (!existing) return NextResponse.json({ error: "Servicio no encontrado." }, { status: 404 });
 
   const body = await req.json().catch(() => ({}));
-  const data: { title?: string; summary?: string | null; priceEur?: number; status?: "COMPLETED" | "DISCARDED" } = {};
+  const data: {
+    title?: string;
+    summary?: string | null;
+    priceEur?: number;
+    status?: "COMPLETED" | "DISCARDED";
+    documentsUrl?: string | null;
+    invoicesUrl?: string | null;
+  } = {};
 
   if (typeof body.title === "string") {
     const title = body.title.trim().slice(0, 160);
@@ -32,6 +40,12 @@ export async function PATCH(req: Request, { params }: Params) {
     data.status = body.status;
   } else if (body.status !== undefined) {
     return NextResponse.json({ error: "Ese cambio de estado no está permitido." }, { status: 400 });
+  }
+  for (const key of ["documentsUrl", "invoicesUrl"] as const) {
+    if (body[key] === undefined) continue;
+    const parsed = parseDriveLink(body[key]);
+    if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
+    data[key] = parsed.url;
   }
 
   let steps: { title: string; detail: string | null; done: boolean }[] | null = null;
@@ -70,6 +84,9 @@ export async function PATCH(req: Request, { params }: Params) {
       user: { select: { id: true, name: true, email: true } },
       steps: { orderBy: { position: "asc" } },
       documents: { orderBy: { createdAt: "desc" }, select: { id: true, name: true, size: true, createdAt: true } },
+      serviceIntake: {
+        include: { files: { orderBy: { createdAt: "desc" }, select: { id: true, name: true, slot: true } } },
+      },
     },
   });
   return NextResponse.json({ service });

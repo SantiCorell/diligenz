@@ -256,6 +256,8 @@ CREATE TABLE IF NOT EXISTS "ClientService" (
   "title" TEXT NOT NULL,
   "summary" TEXT,
   "priceEur" INTEGER NOT NULL,
+  "documentsUrl" TEXT,
+  "invoicesUrl" TEXT,
   "status" "ClientServiceStatus" NOT NULL DEFAULT 'PROPOSAL',
   "acceptedAt" TIMESTAMP(3),
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -283,6 +285,9 @@ CREATE TABLE IF NOT EXISTS "ClientServiceDocument" (
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "ClientServiceDocument_pkey" PRIMARY KEY ("id")
 );
+
+ALTER TABLE "ClientService" ADD COLUMN IF NOT EXISTS "documentsUrl" TEXT;
+ALTER TABLE "ClientService" ADD COLUMN IF NOT EXISTS "invoicesUrl" TEXT;
 
 CREATE UNIQUE INDEX IF NOT EXISTS "ClientService_contactRequestId_key" ON "ClientService"("contactRequestId");
 CREATE INDEX IF NOT EXISTS "ClientService_userId_status_idx" ON "ClientService"("userId", "status");
@@ -314,6 +319,73 @@ BEGIN
     ALTER TABLE "ClientServiceDocument"
       ADD CONSTRAINT "ClientServiceDocument_serviceId_fkey"
       FOREIGN KEY ("serviceId") REFERENCES "ClientService"("id")
+      ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
+-- 8. Datos de la constitución que rellenan el cliente y el admin (sin correo).
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS "ServiceIntake" (
+  "id" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "contactRequestId" TEXT,
+  "clientServiceId" TEXT,
+  "companyName" TEXT,
+  "shareholders" TEXT,
+  "shareCapital" TEXT,
+  "registeredOffice" TEXT,
+  "managementRegime" TEXT,
+  "proposedNames" TEXT,
+  "constitutionDetails" TEXT,
+  "digitalSignature" TEXT,
+  "bankOffice" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ServiceIntake_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "ServiceIntakeFile" (
+  "id" TEXT NOT NULL,
+  "intakeId" TEXT NOT NULL,
+  "slot" TEXT NOT NULL,
+  "name" TEXT NOT NULL,
+  "storagePath" TEXT NOT NULL,
+  "mimeType" TEXT,
+  "size" INTEGER,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ServiceIntakeFile_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "ServiceIntake_contactRequestId_key" ON "ServiceIntake"("contactRequestId");
+CREATE UNIQUE INDEX IF NOT EXISTS "ServiceIntake_clientServiceId_key" ON "ServiceIntake"("clientServiceId");
+CREATE INDEX IF NOT EXISTS "ServiceIntake_userId_idx" ON "ServiceIntake"("userId");
+CREATE INDEX IF NOT EXISTS "ServiceIntakeFile_intakeId_idx" ON "ServiceIntakeFile"("intakeId");
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ServiceIntake_userId_fkey') THEN
+    ALTER TABLE "ServiceIntake"
+      ADD CONSTRAINT "ServiceIntake_userId_fkey"
+      FOREIGN KEY ("userId") REFERENCES "User"("id")
+      ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ServiceIntake_contactRequestId_fkey') THEN
+    ALTER TABLE "ServiceIntake"
+      ADD CONSTRAINT "ServiceIntake_contactRequestId_fkey"
+      FOREIGN KEY ("contactRequestId") REFERENCES "ContactRequest"("id")
+      ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ServiceIntake_clientServiceId_fkey') THEN
+    ALTER TABLE "ServiceIntake"
+      ADD CONSTRAINT "ServiceIntake_clientServiceId_fkey"
+      FOREIGN KEY ("clientServiceId") REFERENCES "ClientService"("id")
+      ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ServiceIntakeFile_intakeId_fkey') THEN
+    ALTER TABLE "ServiceIntakeFile"
+      ADD CONSTRAINT "ServiceIntakeFile_intakeId_fkey"
+      FOREIGN KEY ("intakeId") REFERENCES "ServiceIntake"("id")
       ON DELETE CASCADE ON UPDATE CASCADE;
   END IF;
 END $$;

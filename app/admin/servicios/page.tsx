@@ -8,6 +8,24 @@ import {
   formatServicePrice,
   type ServiceTemplate,
 } from "@/lib/client-services";
+import { toIntakeSnapshot, type IntakeFileView } from "@/lib/service-intake";
+import { isConstitucionRequest, isConstitucionService } from "@/lib/servicios-panel";
+import ConstitucionDatos from "@/components/servicios/panel/ConstitucionDatos";
+
+type IntakeRow = {
+  clientServiceId: string | null;
+  contactRequestId: string | null;
+  companyName: string | null;
+  shareholders: string | null;
+  shareCapital: string | null;
+  registeredOffice: string | null;
+  managementRegime: string | null;
+  proposedNames: string | null;
+  constitutionDetails: string | null;
+  digitalSignature: string | null;
+  bankOffice: string | null;
+  files: IntakeFileView[];
+};
 
 type RequestRow = {
   id: string;
@@ -19,6 +37,7 @@ type RequestRow = {
   createdAt: string;
   userId: string | null;
   user: { id: string; name: string | null; email: string } | null;
+  serviceIntake: IntakeRow | null;
 };
 
 type StepRow = { id: string; position: number; title: string; detail: string | null; done: boolean };
@@ -31,6 +50,9 @@ type ServiceRow = {
   status: "PROPOSAL" | "IN_PROGRESS" | "COMPLETED" | "DISCARDED";
   createdAt: string;
   contactRequestId: string | null;
+  documentsUrl: string | null;
+  invoicesUrl: string | null;
+  serviceIntake: IntakeRow | null;
   user: { id: string; name: string | null; email: string };
   steps: StepRow[];
   documents: DocRow[];
@@ -45,6 +67,57 @@ const COLUMNS = [
   { id: "COMPLETED", label: "Finalizadas", accent: "bg-emerald-500" },
   { id: "DISCARDED", label: "Descartadas", accent: "bg-slate-400" },
 ] as const;
+
+function ServiceDriveLinks({
+  service,
+  saving,
+  onSave,
+}: {
+  service: ServiceRow;
+  saving: boolean;
+  onSave: (body: { documentsUrl: string; invoicesUrl: string }) => void;
+}) {
+  const [documentsUrl, setDocumentsUrl] = useState(service.documentsUrl ?? "");
+  const [invoicesUrl, setInvoicesUrl] = useState(service.invoicesUrl ?? "");
+
+  useEffect(() => {
+    setDocumentsUrl(service.documentsUrl ?? "");
+    setInvoicesUrl(service.invoicesUrl ?? "");
+  }, [service.id, service.documentsUrl, service.invoicesUrl]);
+
+  return (
+    <div className="space-y-2 rounded-2xl border border-slate-200 p-3">
+      <p className="text-sm font-medium text-slate-700">Enlaces de Drive</p>
+      <label className="block text-xs text-slate-600">
+        Documentos
+        <input
+          value={documentsUrl}
+          onChange={(event) => setDocumentsUrl(event.target.value)}
+          placeholder="https://drive.google.com/..."
+          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+        />
+      </label>
+      <label className="block text-xs text-slate-600">
+        Facturas
+        <input
+          value={invoicesUrl}
+          onChange={(event) => setInvoicesUrl(event.target.value)}
+          placeholder="https://drive.google.com/..."
+          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+        />
+      </label>
+      <p className="text-xs text-slate-500">El cliente los verá en las pestañas Documentos y Facturación.</p>
+      <button
+        type="button"
+        disabled={saving}
+        onClick={() => onSave({ documentsUrl, invoicesUrl })}
+        className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+      >
+        Guardar enlaces
+      </button>
+    </div>
+  );
+}
 
 function blankDraft(): { userId: string; userLabel: string; contactRequestId: string | null; title: string; summary: string; priceEur: string; steps: DraftStep[] } {
   return { userId: "", userLabel: "", contactRequestId: null, title: "", summary: "", priceEur: "", steps: [{ title: "", detail: "" }] };
@@ -294,6 +367,13 @@ export default function AdminServiciosPage() {
                     A partir de la solicitud de {selectedRequest.name}. {selectedRequest.message ? selectedRequest.message.slice(0, 180) : ""}
                   </p>
                 ) : null}
+                {selectedRequest && isConstitucionRequest(selectedRequest.subject, selectedRequest.message) ? (
+                  <ConstitucionDatos
+                    variant="admin"
+                    userId={selectedRequest.user?.id ?? selectedRequest.userId}
+                    initial={toIntakeSnapshot(selectedRequest.serviceIntake, { contactRequestId: selectedRequest.id })}
+                  />
+                ) : null}
                 <div className="flex flex-wrap gap-2">
                   {SERVICE_TEMPLATES.map((template) => (
                     <button key={template.id} type="button" onClick={() => applyTemplate(template)} className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold">
@@ -402,8 +482,24 @@ export default function AdminServiciosPage() {
                     </li>
                   ))}
                 </ol>
+                {isConstitucionService(selectedService.title, selectedService.summary) ? (
+                  <ConstitucionDatos
+                    key={selectedService.id}
+                    variant="admin"
+                    userId={selectedService.user.id}
+                    initial={toIntakeSnapshot(selectedService.serviceIntake, {
+                      clientServiceId: selectedService.id,
+                      contactRequestId: selectedService.contactRequestId,
+                    })}
+                  />
+                ) : null}
+                <ServiceDriveLinks
+                  service={selectedService}
+                  saving={saving}
+                  onSave={(body) => void patchService(selectedService.id, body)}
+                />
                 <div>
-                  <p className="text-sm font-medium text-slate-700">Documentación</p>
+                  <p className="text-sm font-medium text-slate-700">Archivos subidos</p>
                   <ul className="mt-2 space-y-1 text-sm">
                     {selectedService.documents.map((document) => (
                       <li key={document.id}>

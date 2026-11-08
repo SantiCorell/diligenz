@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionWithUser } from "@/lib/session";
 import { loadServiciosContext } from "@/lib/servicios-panel-data";
+import { loadIntakeSnapshot } from "@/lib/service-intake-load";
 import ConstitucionServicio from "@/components/servicios/panel/ConstitucionServicio";
 
 export default async function ConstitucionServicioPage() {
@@ -32,7 +33,12 @@ export default async function ConstitucionServicioPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <ConstitucionServicio requestId={constitucion.id} agent={agent} driveUrl={driveUrl} />
+      <ConstitucionServicio
+        requestId={constitucion.id}
+        agent={agent}
+        driveUrl={driveUrl}
+        intake={await loadIntakeSnapshot({ contactRequestId: constitucion.id })}
+      />
     </div>
   );
 }

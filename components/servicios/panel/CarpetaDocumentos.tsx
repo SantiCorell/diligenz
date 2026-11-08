@@ -1,10 +1,18 @@
 import { FileText, Plus } from "lucide-react";
 
-export default function CarpetaDocumentos({ driveUrl }: { driveUrl: string | null }) {
+export default function CarpetaDocumentos({
+  driveUrl,
+  title = "Tu carpeta de documentos",
+  emptyText = "Tu gestor abrirá la carpeta en cuanto empiece el trámite. Mientras tanto, el DNI se sube desde Mi perfil.",
+}: {
+  driveUrl: string | null;
+  title?: string;
+  emptyText?: string;
+}) {
   return (
     <section className="rounded-3xl border border-[#ece6f5] bg-white p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-bold text-[var(--brand-dark)]">Tu carpeta de documentos</h2>
+        <h2 className="text-lg font-bold text-[var(--brand-dark)]">{title}</h2>
         {driveUrl ? (
           <a
             href={driveUrl}
@@ -42,7 +50,7 @@ export default function CarpetaDocumentos({ driveUrl }: { driveUrl: string | nul
         </a>
       ) : (
         <p className="mt-4 rounded-2xl bg-[#faf8fd] px-4 py-3 text-sm text-[var(--foreground)]/65">
-          Tu gestor abrirá la carpeta en cuanto empiece el trámite. Mientras tanto, el DNI se sube desde Mi perfil.
+          {emptyText}
         </p>
       )}
     </section>

@@ -82,6 +82,7 @@ model User {
   meetings        AgentMeeting[]
   contactRequests ContactRequest[]
   clientServices  ClientService[]
+  serviceIntakes  ServiceIntake[]
 }
 
 /// DNI / NIE del usuario (anverso y reverso). Admin marca dniVerified tras revisión.
@@ -545,6 +546,7 @@ model ContactRequest {
   userId String?
   user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   clientService ClientService?
+  serviceIntake ServiceIntake?
 
   @@index([userId])
   @@index([email])
@@ -568,15 +570,61 @@ model ClientService {
   summary          String?             @db.Text
   /// Importe de Diligenz sin IVA.
   priceEur         Int
+  /// Carpeta o documento de Drive con la documentación del expediente.
+  documentsUrl     String?
+  /// Carpeta o documento de Drive con las facturas.
+  invoicesUrl      String?
   status           ClientServiceStatus @default(PROPOSAL)
   acceptedAt       DateTime?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   steps            ClientServiceStep[]
   documents        ClientServiceDocument[]
+  serviceIntake    ServiceIntake?
 
   @@index([userId, status])
   @@index([status])
+}
+
+/// Datos que el cliente completa en la constitución. Los ve y los edita también el admin.
+model ServiceIntake {
+  id                  String          @id @default(cuid())
+  userId              String
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactRequestId    String?         @unique
+  contactRequest      ContactRequest? @relation(fields: [contactRequestId], references: [id], onDelete: SetNull)
+  clientServiceId     String?         @unique
+  clientService       ClientService?  @relation(fields: [clientServiceId], references: [id], onDelete: SetNull)
+  companyName         String?
+  shareholders        String?         @db.Text
+  shareCapital        String?
+  registeredOffice    String?
+  managementRegime    String?
+  proposedNames       String?         @db.Text
+  constitutionDetails String?         @db.Text
+  /// SI | NO
+  digitalSignature    String?
+  bankOffice          String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  files               ServiceIntakeFile[]
+
+  @@index([userId])
+}
+
+model ServiceIntakeFile {
+  id          String        @id @default(cuid())
+  intakeId    String
+  intake      ServiceIntake @relation(fields: [intakeId], references: [id], onDelete: Cascade)
+  /// dni | capital
+  slot        String
+  name        String
+  storagePath String
+  mimeType    String?
+  size        Int?
+  createdAt   DateTime      @default(now())
+
+  @@index([intakeId])
 }
 
 model ClientServiceStep {

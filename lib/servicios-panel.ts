@@ -25,6 +25,10 @@ export function isConstitucionRequest(subject: string | null, message: string | 
   return text.includes("constituci");
 }
 
+export function isConstitucionService(title: string, summary?: string | null) {
+  return isConstitucionRequest(title, summary ?? null);
+}
+
 export function servicioExpediente(id: string) {
   return `DIL-SRV-${id.slice(-4).toUpperCase()}`;
 }

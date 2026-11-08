@@ -57,28 +57,26 @@ export default async function MisServiciosPage() {
                   {CLIENT_SERVICE_STATUS_LABELS[service.status]}
                 </span>
               </div>
-              {service.status === "IN_PROGRESS" ? (
-                <div className="mt-4 flex flex-wrap items-center gap-1.5">
-                  {service.steps.map((step, index) => (
-                    <span
-                      key={step.id}
-                      title={step.title}
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold ${
-                        step.done || index === current
-                          ? "bg-[#7c4dff] text-white"
-                          : "bg-[#f3f0f7] text-[var(--foreground)]/40"
-                      }`}
-                    >
-                      {index + 1}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
+              <div className="mt-4 flex flex-wrap items-center gap-1.5">
+                {service.steps.map((step, index) => (
+                  <span
+                    key={step.id}
+                    title={step.title}
+                    className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold ${
+                      step.done || index === current
+                        ? "bg-[#7c4dff] text-white"
+                        : "bg-[#f3f0f7] text-[var(--foreground)]/40"
+                    }`}
+                  >
+                    {index + 1}
+                  </span>
+                ))}
+              </div>
               <Link
                 href={`/dashboard/servicios/${service.id}`}
                 className="mt-4 inline-flex rounded-full bg-[var(--brand-primary)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95"
               >
-                {service.status === "PROPOSAL" ? "Ver propuesta →" : "Ver mi servicio →"}
+                Ver mi servicio →
               </Link>
             </article>
           );
@@ -126,13 +124,13 @@ export default async function MisServiciosPage() {
           <article className="mt-3 rounded-3xl border border-[#ece6f5] bg-white px-6 py-8">
             <h2 className="text-lg font-bold text-[var(--brand-dark)]">Todavía no hay un servicio en marcha</h2>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--foreground)]/65">
-              Cuando solicite la constitución de su sociedad, el expediente, los pasos y los documentos aparecerán aquí.
+              Cuando solicite algún servicio, el expediente, los pasos y los documentos aparecerán aquí.
             </p>
             <Link
-              href="/servicios/constitucion-sl"
+              href="/servicios"
               className="mt-4 inline-flex rounded-full bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-95"
             >
-              Iniciar la constitución
+              Solicita algún servicio
             </Link>
           </article>
         ) : null}
