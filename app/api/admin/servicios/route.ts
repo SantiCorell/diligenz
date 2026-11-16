@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
+import { assignDefaultServicesAgentIfEmpty } from "@/lib/agents";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 
@@ -133,6 +134,15 @@ export async function POST(req: Request) {
     },
     include: serviceInclude,
   });
+
+  try {
+    await assignDefaultServicesAgentIfEmpty(user.id);
+  } catch (agentError) {
+    console.error(
+      "[admin/servicios] gestor por defecto:",
+      agentError instanceof Error ? agentError.message : "failed"
+    );
+  }
 
   if (contactRequestId) {
     await prisma.serviceIntake.updateMany({

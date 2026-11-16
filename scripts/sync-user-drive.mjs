@@ -1,5 +1,5 @@
 /**
- * Sincroniza carpeta Drive + DNI + mandato de un usuario existente.
+ * Copia DNI y mandatos a la carpeta de Drive ya enlazada. No crea carpetas.
  * Uso: npm run drive:sync-user -- santiago.corellvidal@gmail.com
  */
 import { execSync } from "node:child_process";

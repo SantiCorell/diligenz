@@ -5,7 +5,7 @@ import { getUserIdFromRequest } from "@/lib/session";
 export async function GET(req: Request) {
   const userId = await getUserIdFromRequest(req);
   if (!userId) {
-    return NextResponse.json({ interests: [] });
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
   const interests = await prisma.userCompanyInterest.findMany({
     where: { userId },

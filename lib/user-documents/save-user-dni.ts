@@ -1,7 +1,7 @@
 import type { DniDocumentSide, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { buildDriveFileName, syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
-import { findOrCreateSubfolder, uploadFileToFolder } from "@/lib/google-drive/client";
+import { findSubfolder, uploadFileToFolder } from "@/lib/google-drive/client";
 import { parseDriveFolderId } from "@/lib/google-drive/folder-name";
 import { ensureUserDriveFolder } from "@/lib/google-drive/user-drive";
 import { getDniVerificationStatus } from "@/lib/user-documents/dni-status";
@@ -149,9 +149,9 @@ async function copyDniIntoServiceFolder(opts: {
   if (!folderId) return;
 
   try {
-    const identidadId = await findOrCreateSubfolder(folderId, "Identidad");
+    const identidadId = await findSubfolder(folderId, "Identidad");
     await uploadFileToFolder({
-      folderId: identidadId,
+      folderId: identidadId ?? folderId,
       fileName: buildDriveFileName({
         kind: opts.side === "FRONT" ? "dni-front" : "dni-back",
         originalName: opts.originalFileName,

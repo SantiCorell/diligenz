@@ -24,6 +24,7 @@ import {
 } from "@/lib/lead-category";
 import { ccaaLabel } from "@/lib/spain-ccaa";
 import { sectorLabel } from "@/lib/valuation-sectors";
+import { entityTypeLabel } from "@/lib/company-display";
 import { formatCompactEuroRange, formatEuroAmount } from "@/lib/format-financial";
 
 export type SerializedValuationLead = {
@@ -170,7 +171,7 @@ function ValuationLeadDetails({ lead }: { lead: SerializedValuationLead }) {
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--foreground)] opacity-80">
           {lead.companyType && (
             <span>
-              <strong>Tipo:</strong> {lead.companyType}
+              <strong>Tipo de operación:</strong> {entityTypeLabel(lead.companyType)}
             </span>
           )}
           {lead.yearsOperating != null && (

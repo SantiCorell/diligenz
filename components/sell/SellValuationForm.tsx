@@ -23,6 +23,7 @@ import { authFetch } from "@/lib/auth-client";
 import { ebitdaMultipleGuide } from "@/lib/compute-valuation-range";
 import { formatCompactEuroRange } from "@/lib/format-financial";
 import { SPAIN_CCAA_OPTIONS } from "@/lib/spain-ccaa";
+import { OPERATION_TYPE_OPTIONS } from "@/lib/company-display";
 import { VALUATION_SECTOR_OPTIONS, type SectorOption } from "@/lib/valuation-sectors";
 import { trackValuationLead } from "@/lib/meta-pixel";
 
@@ -33,8 +34,7 @@ type ValuationResult = {
 
 const COMPANY_TYPES = [
   { value: "", label: "No especificado" },
-  { value: "EMPRESA", label: "Empresa" },
-  { value: "AUTONOMO", label: "Profesional / Autónomo" },
+  ...OPERATION_TYPE_OPTIONS,
 ];
 
 const STEPS = [
@@ -533,7 +533,7 @@ export default function SellValuationForm({
                   {step === 2 && (
                     <>
                       <div className="grid gap-5 sm:grid-cols-2">
-                        <Field id="companyType" label="Tipo de entidad" hint="Empresa o profesional autónomo.">
+                        <Field id="companyType" label="Tipo de operación" hint="Acciones o participaciones, o la unidad económica.">
                           <select
                             id="companyType"
                             className={`${controlClass} appearance-none pl-4`}

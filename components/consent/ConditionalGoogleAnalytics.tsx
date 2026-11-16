@@ -4,6 +4,7 @@ import Script from "next/script";
 import { useEffect, useState } from "react";
 import {
   CONSENT_EVENT,
+  CONSENT_RESET_EVENT,
   hasAnalyticsConsent,
 } from "@/lib/cookie-consent";
 
@@ -17,7 +18,11 @@ export default function ConditionalGoogleAnalytics() {
     const sync = () => setEnabled(hasAnalyticsConsent());
     sync();
     window.addEventListener(CONSENT_EVENT, sync);
-    return () => window.removeEventListener(CONSENT_EVENT, sync);
+    window.addEventListener(CONSENT_RESET_EVENT, sync);
+    return () => {
+      window.removeEventListener(CONSENT_EVENT, sync);
+      window.removeEventListener(CONSENT_RESET_EVENT, sync);
+    };
   }, []);
 
   if (!enabled || !GA_MEASUREMENT_ID) return null;

@@ -49,7 +49,6 @@ export async function POST(req: Request) {
     sector,
     revenue: numRevenue,
     ebitda: numEbitda,
-    companyType: "EMPRESA",
   });
 
   let company;
@@ -67,7 +66,6 @@ export async function POST(req: Request) {
         reference,
         ownerId,
         status: "DRAFT",
-        companyType: "EMPRESA",
       },
     });
   } catch {

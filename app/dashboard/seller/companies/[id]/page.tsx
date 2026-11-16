@@ -202,7 +202,7 @@ export default async function SellerCompanyEditPage({
           <Field label="Sector">{company.sector}</Field>
           <Field label="CNAE">{company.cnae?.trim() || "—"}</Field>
           <Field label="Ubicación">{ccaaLabel(company.location)}</Field>
-          <Field label="Tipo de entidad">{entityTypeLabel(company.companyType)}</Field>
+          <Field label="Tipo de operación">{entityTypeLabel(company.companyType)}</Field>
           <Field label="Años operando">{company.yearsOperating ?? "—"}</Field>
           <Field label="Web">
             {website ? (

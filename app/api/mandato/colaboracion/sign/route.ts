@@ -9,10 +9,7 @@ import {
 } from "@/lib/mandato/colaboracion-zip";
 import { sendMandatoSignedEmails } from "@/lib/emails/mandato-signed";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
-import {
-  ensureUserDriveFolder,
-  syncUserDriveFolderName,
-} from "@/lib/google-drive/user-drive";
+import { ensureUserDriveFolder } from "@/lib/google-drive/user-drive";
 
 const PROFESSIONAL_ROLES = new Set(["PROFESSIONAL", "ADMIN"]);
 
@@ -103,13 +100,6 @@ export async function POST(req: Request) {
     });
     driveFolderCreated = Boolean(folderId);
 
-    await syncUserDriveFolderName({
-      userId: session.userId,
-      role: session.user.role,
-      personName: payload.representativeName || payload.professionalLegalName,
-      companyName: payload.professionalLegalName,
-    });
-
     const uploadedFlags: boolean[] = [];
     for (const file of [
       {
@@ -135,7 +125,7 @@ export async function POST(req: Request) {
     driveDocumentUploadedAll = uploadedFlags.length > 0 && uploadedFlags.every(Boolean);
 
     if (!driveFolderCreated) {
-      console.warn("[mandato/colaboracion/sign] Drive carpeta no creada (verifica config/env/Drive).");
+      console.warn("[mandato/colaboracion/sign] Sin carpeta de Drive enlazada; los PDF no se han copiado a Drive.");
     }
     if (!driveDocumentUploadedAll) {
       console.warn("[mandato/colaboracion/sign] Drive documentos no subidos (verifica config/env/Drive).");

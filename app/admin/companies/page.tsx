@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
+import { unstable_noStore as noStore } from "next/cache";
 import { getSessionWithUser } from "@/lib/session";
 import { backfillMissingCompanyReferencesIfNeeded, companyReferenceFieldSupported } from "@/lib/company-reference";
 import AdminCreateCompanyForm from "@/components/admin/AdminCreateCompanyForm";
@@ -22,6 +24,9 @@ import {
   companyStatusLabel,
 } from "@/lib/admin-company-views";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminCompaniesPage({
   searchParams,
 }: {
@@ -36,6 +41,8 @@ export default async function AdminCompaniesPage({
     success?: string;
   }>;
 }) {
+  noStore();
+  await connection();
   const session = await getSessionWithUser();
   if (!session || session.user.role !== "ADMIN") redirect("/login");
 
@@ -47,7 +54,9 @@ export default async function AdminCompaniesPage({
   const marketplaceOnly = params.marketplace === "1";
   const viewParam = params.view;
   const view: CompanyViewFilter =
-    viewParam === "draft" || viewParam === "review" || viewParam === "published"
+    status === "DRAFT" || viewParam === "draft"
+      ? "draft"
+      : viewParam === "review" || viewParam === "published"
       ? viewParam
       : viewParam === "docs"
       ? "review"
@@ -56,9 +65,6 @@ export default async function AdminCompaniesPage({
   const baseQueryParts: string[] = [];
   if (q) baseQueryParts.push(`q=${encodeURIComponent(q)}`);
   if (ref) baseQueryParts.push(`ref=${encodeURIComponent(ref)}`);
-  if (status) baseQueryParts.push(`status=${encodeURIComponent(status)}`);
-  if (docs) baseQueryParts.push(`docs=${encodeURIComponent(docs)}`);
-  if (marketplaceOnly) baseQueryParts.push("marketplace=1");
   const baseQuery = baseQueryParts.join("&");
 
   await backfillMissingCompanyReferencesIfNeeded();
@@ -80,8 +86,6 @@ export default async function AdminCompaniesPage({
             }
           : {}),
         ...(ref && refField ? { reference: { contains: ref.trim(), mode: "insensitive" } } : {}),
-        ...(status ? { status: status as "DRAFT" | "IN_PROCESS" | "PUBLISHED" | "SOLD" } : {}),
-        ...(marketplaceOnly ? { deals: { some: { published: true } } } : {}),
       },
       include: {
         owner: true,
@@ -93,17 +97,6 @@ export default async function AdminCompaniesPage({
     }),
     getFormSectorOptions(),
   ]);
-
-  const filteredCompanies =
-    docs === "signed"
-      ? companies.filter(
-          (c) =>
-            c.documents.length > 0 &&
-            c.documents.every((d) => d.signed)
-        )
-      : docs === "unsigned"
-      ? companies.filter((c) => c.documents.some((d) => !d.signed))
-      : companies;
 
   function companyIsDraft(c: (typeof companies)[0]) {
     return companyInDraftBucket(c);
@@ -117,23 +110,47 @@ export default async function AdminCompaniesPage({
     return companyInPublishedBucket(c);
   }
 
-  const catalogCompanies = filteredCompanies.filter((company) => !companyIsDraft(company));
+  function matchesDocs(c: (typeof companies)[0]) {
+    if (docs === "signed") {
+      return c.documents.length > 0 && c.documents.every((d) => d.signed);
+    }
+    if (docs === "unsigned") return c.documents.some((d) => !d.signed);
+    return true;
+  }
+
+  function matchesStatus(c: (typeof companies)[0]) {
+    if (!status || status === "DRAFT") return true;
+    return c.status === status;
+  }
+
+  function matchesMarketplace(c: (typeof companies)[0]) {
+    if (!marketplaceOnly || view === "draft") return true;
+    return c.deals.some((deal) => deal.published);
+  }
+
+  const catalogCompanies = companies.filter((company) => !companyIsDraft(company));
 
   const viewCounts = {
     all: catalogCompanies.length,
-    draft: filteredCompanies.filter(companyIsDraft).length,
-    review: filteredCompanies.filter(companyInReview).length,
-    published: filteredCompanies.filter(companyPublished).length,
+    draft: companies.filter(companyIsDraft).length,
+    review: companies.filter(companyInReview).length,
+    published: companies.filter(companyPublished).length,
   };
 
-  const viewFilteredCompanies =
+  const inView =
     view === "draft"
-      ? filteredCompanies.filter(companyIsDraft)
+      ? companies.filter(companyIsDraft)
       : view === "review"
-      ? filteredCompanies.filter(companyInReview)
+      ? companies.filter(companyInReview)
       : view === "published"
-      ? filteredCompanies.filter(companyPublished)
+      ? companies.filter(companyPublished)
       : catalogCompanies;
+
+  const narrowed = inView.filter(
+    (company) => matchesDocs(company) && matchesStatus(company) && matchesMarketplace(company)
+  );
+  const viewFilteredCompanies =
+    narrowed.length > 0 || inView.length === 0 ? narrowed : inView;
 
   const favoriteCounts = await getFavoriteCountsByCompanyIds(
     viewFilteredCompanies.map((company) => company.id)
@@ -202,6 +219,7 @@ export default async function AdminCompaniesPage({
         method="GET"
         className="admin-filter-bar mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6"
       >
+        {view !== "all" ? <input type="hidden" name="view" value={view} /> : null}
         <input
           type="text"
           name="q"
@@ -218,7 +236,7 @@ export default async function AdminCompaniesPage({
         />
         <select
           name="status"
-          defaultValue={status}
+          defaultValue={status ?? ""}
           className="rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-sm focus:border-[var(--brand-primary)] focus:outline-none"
         >
           <option value="">Estado</option>
@@ -229,7 +247,7 @@ export default async function AdminCompaniesPage({
         </select>
         <select
           name="docs"
-          defaultValue={docs}
+          defaultValue={docs ?? ""}
           className="rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-sm focus:border-[var(--brand-primary)] focus:outline-none"
         >
           <option value="">Documentación</option>

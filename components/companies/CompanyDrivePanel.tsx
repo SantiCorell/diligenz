@@ -11,7 +11,7 @@ export default function CompanyDrivePanel({
   title = "Documentos (Google Drive)",
   description,
   buttonLabel = "Abrir carpeta de documentos →",
-  emptyMessage = "La carpeta se creará automáticamente cuando Google Drive esté configurado en el servidor. Si no aparece, contacta con Diligenz.",
+  emptyMessage = "Todavía no hay carpeta enlazada. Cuando esté el enlace de Google Drive, podrás abrirla desde aquí.",
 }: Props) {
   return (
     <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6">

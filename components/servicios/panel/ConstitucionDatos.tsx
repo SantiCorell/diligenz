@@ -286,7 +286,7 @@ function DniDriveSlot({
           Abrir la carpeta de Drive
         </a>
       ) : (
-        <p className="text-xs text-[var(--foreground)]/55">Al subir el anverso o el reverso se crea la carpeta de Drive y el archivo queda en Identidad.</p>
+        <p className="text-xs text-[var(--foreground)]/55">El DNI se guarda aquí. Si hay una carpeta de Drive enlazada, el archivo se copia también a esa carpeta.</p>
       )}
     </div>
   );

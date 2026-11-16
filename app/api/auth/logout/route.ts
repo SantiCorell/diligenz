@@ -3,12 +3,12 @@ import { signOut } from "@/auth";
 import {
   clearSessionCookieOnResponse,
   destroySessionByToken,
-  getSessionTokenFromRequest,
+  getSessionTokensFromRequest,
 } from "@/lib/session";
 
 async function logout(req: Request) {
-  const token = await getSessionTokenFromRequest(req);
-  await destroySessionByToken(token ?? undefined);
+  const tokens = await getSessionTokensFromRequest(req);
+  await Promise.all(tokens.map((token) => destroySessionByToken(token)));
   try {
     await signOut({ redirect: false });
   } catch {

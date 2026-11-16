@@ -2,9 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUserDniPendingReview } from "@/lib/user-documents/dni-status";
 import { getSessionWithUser } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 import UserDrivePanel from "@/components/dashboard/UserDrivePanel";
 import ProfileEditor from "@/components/dashboard/ProfileEditor";
 import ProfileCheckIndicator from "@/components/dashboard/ProfileCheckIndicator";
+import DeleteAccountSection from "@/components/dashboard/DeleteAccountSection";
 
 export default async function DashboardProfilePage() {
   const session = await getSessionWithUser();
@@ -15,6 +17,10 @@ export default async function DashboardProfilePage() {
     Boolean(user.phone?.trim() && user.name?.trim()) || user.profileVerifiedByAdmin;
 
   const dniPendingReview = await getUserDniPendingReview(user.id, user.dniVerified);
+  const pendingDeletion = await prisma.accountDeletionRequest.findFirst({
+    where: { userId: user.id, status: "PENDING" },
+    select: { id: true },
+  });
   const isBuyer = user.role === "BUYER" || user.role === "ADMIN";
   const isSellerOnly = user.role === "SELLER";
   const isProfessional = user.role === "PROFESSIONAL";
@@ -115,7 +121,7 @@ export default async function DashboardProfilePage() {
             process.env.NEXT_PUBLIC_SELLER_DOCUMENTS_DRIVE_URL?.trim() ||
             ""
           }
-          description="Abre la carpeta que Diligenz haya compartido contigo para subir o consultar archivos. Cada empresa tiene además su propia subcarpeta de documentación."
+          description="Abre la carpeta de Google Drive enlazada en tu ficha para subir o consultar archivos."
         />
       )}
 
@@ -123,7 +129,7 @@ export default async function DashboardProfilePage() {
         <UserDrivePanel
           title="Google Drive (profesional)"
           driveUrl={user.documentsDriveFolderUrl?.trim() || ""}
-          description="Abre tu carpeta compartida con Diligenz. Cada empresa que subas tendrá su propia subcarpeta de documentos."
+          description="Abre la carpeta de Google Drive enlazada en tu ficha."
         />
       )}
 
@@ -135,9 +141,11 @@ export default async function DashboardProfilePage() {
             process.env.NEXT_PUBLIC_BUYER_DOCUMENTS_DRIVE_URL?.trim() ||
             ""
           }
-          description="Abre tu carpeta personal en un entorno seguro. Aquí encontrarás documentación confidencial que el equipo Diligenz comparta contigo (mandato, datas rooms, etc.)."
+          description="Abre la carpeta de Google Drive enlazada en tu ficha. Aquí está la documentación que el equipo Diligenz comparte contigo."
         />
       )}
+
+      <DeleteAccountSection initialPending={Boolean(pendingDeletion)} />
 
       <div className="flex flex-wrap gap-4">
         <Link

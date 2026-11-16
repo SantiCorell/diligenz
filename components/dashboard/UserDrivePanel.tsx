@@ -22,8 +22,7 @@ export default function UserDrivePanel({ title, driveUrl, description }: Props) 
         </>
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--brand-primary)]/25 bg-[var(--brand-bg)]/60 px-4 py-5 text-sm text-[var(--foreground)] opacity-90">
-          Tu enlace personal a Drive se mostrará aquí cuando lo configuremos. En cada empresa
-          tendrás además una carpeta propia para subir documentación.
+          Tu enlace de Drive aparecerá aquí cuando lo hayamos guardado en tu ficha.
         </div>
       )}
     </div>

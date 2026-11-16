@@ -5,7 +5,7 @@ import { generateSignedCompraDocuments } from "@/lib/mandato/generate-signed-com
 import { generateSignedColaboracionDocuments } from "@/lib/mandato/generate-signed-colaboracion-pdfs";
 import { dniAbsolutePath, isCloudOnlyDniPath } from "@/lib/user-documents/dni";
 import { syncDocumentToUserDrive } from "./document-sync";
-import { ensureUserDriveFolder, syncUserDriveFolderName } from "./user-drive";
+import { ensureUserDriveFolder } from "./user-drive";
 import { isGoogleDriveConfigured } from "./client";
 
 export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
@@ -30,15 +30,11 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
     where: { id: userId },
     select: {
       id: true,
-      email: true,
-      name: true,
-      role: true,
       documentsDriveFolderUrl: true,
       dniDocuments: true,
       salesMandate: true,
       purchaseMandate: true,
       collaborationAgreement: true,
-      companies: { select: { name: true }, take: 1, orderBy: { createdAt: "desc" } },
     },
   });
 
@@ -61,37 +57,12 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
     };
   }
 
-  const personName = user.name?.trim() || user.email.split("@")[0];
-  const companyName =
-    user.salesMandate?.companyLegalName ??
-    user.purchaseMandate?.buyerLegalName ??
-    user.collaborationAgreement?.professionalLegalName ??
-    user.companies[0]?.name ??
-    null;
-
-  const folderId = await ensureUserDriveFolder({
-    userId: user.id,
-    role: user.role,
-    personName,
-    companyName,
-    userEmail: user.email,
-  });
+  const folderId = await ensureUserDriveFolder({ userId: user.id });
 
   if (!folderId) {
-    errors.push("No se pudo crear la carpeta en Drive");
+    errors.push("No hay carpeta de Drive enlazada. Añádela en la ficha del usuario.");
     return { ok: false, folderUrl: user.documentsDriveFolderUrl, synced, errors };
   }
-
-  await syncUserDriveFolderName({
-    userId: user.id,
-    role: user.role,
-    personName:
-      user.salesMandate?.representativeName ??
-      user.purchaseMandate?.representativeName ??
-      user.collaborationAgreement?.representativeName ??
-      personName,
-    companyName,
-  });
 
   const updatedUser = await prisma.user.findUnique({
     where: { id: userId },

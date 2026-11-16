@@ -21,6 +21,7 @@ import {
   Users,
 } from "lucide-react";
 import { authFetch, clearStoredToken } from "@/lib/auth-client";
+import CookieSettingsButton from "@/components/consent/CookieSettingsButton";
 import { SELL_DASHBOARD_PATH, SELLER_MIS_EMPRESAS_PATH, PROFESSIONAL_MIS_EMPRESAS_PATH } from "@/lib/companies-dashboard-path";
 import PageAmbient from "@/components/layout/PageAmbient";
 
@@ -441,6 +442,7 @@ export default function DashboardShell({
                 <span className="hidden sm:inline">{userDisplayName}</span>
               </Link>
             ) : null}
+            <CookieSettingsButton className="text-sm font-medium text-[var(--brand-dark)]/70 hover:text-[var(--brand-primary)]" />
             <button
               onClick={logout}
               className="text-sm font-medium text-[var(--brand-dark)]/70 hover:text-[var(--brand-primary)]"

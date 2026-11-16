@@ -7,10 +7,7 @@ import { compraZipFileName, zipCompraDocuments } from "@/lib/mandato/compra-zip"
 import { sendMandatoSignedEmails } from "@/lib/emails/mandato-signed";
 import { promotePendingNdaRequests } from "@/lib/promote-pending-nda";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
-import {
-  ensureUserDriveFolder,
-  syncUserDriveFolderName,
-} from "@/lib/google-drive/user-drive";
+import { ensureUserDriveFolder } from "@/lib/google-drive/user-drive";
 
 const BUYER_ROLES = new Set(["BUYER", "ADMIN"]);
 
@@ -98,13 +95,6 @@ export async function POST(req: Request) {
     });
     driveFolderCreated = Boolean(folderId);
 
-    await syncUserDriveFolderName({
-      userId: session.userId,
-      role: session.user.role,
-      personName: payload.representativeName || payload.buyerLegalName,
-      companyName: payload.buyerLegalName,
-    });
-
     const uploadedFlags: boolean[] = [];
     for (const file of [
       { name: docs.particularesFileName, content: Buffer.from(docs.particularesPdf) },
@@ -124,7 +114,7 @@ export async function POST(req: Request) {
     driveDocumentUploadedAll = uploadedFlags.length > 0 && uploadedFlags.every(Boolean);
 
     if (!driveFolderCreated) {
-      console.warn("[mandato/compra/sign] Drive carpeta no creada (verifica config/env/Drive).");
+      console.warn("[mandato/compra/sign] Sin carpeta de Drive enlazada; los PDF no se han copiado a Drive.");
     }
     if (!driveDocumentUploadedAll) {
       console.warn("[mandato/compra/sign] Drive documentos no subidos (verifica config/env/Drive).");

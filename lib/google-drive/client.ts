@@ -41,28 +41,10 @@ async function getDriveClient() {
   return google.drive({ version: "v3", auth: getDriveAuth() as never });
 }
 
-async function createFolderInParent(parentId: string, folderName: string): Promise<string> {
-  const drive = await getDriveClient();
-  const created = await drive.files.create({
-    requestBody: {
-      name: folderName,
-      mimeType: "application/vnd.google-apps.folder",
-      parents: [parentId],
-    },
-    fields: "id",
-    supportsAllDrives: true,
-  });
-  const id = created.data.id;
-  if (!id) throw new Error("Drive no devolvió id de carpeta");
-  return id;
-}
+const FOLDER_CREATION_DISABLED =
+  "La creación automática de carpetas de Drive está desactivada. Crea la carpeta en Google Drive y enlázala en la ficha.";
 
-export async function createClientFolder(folderName: string): Promise<string> {
-  const parentId = process.env.GOOGLE_DRIVE_CLIENTS_FOLDER_ID!.trim();
-  return createFolderInParent(parentId, folderName);
-}
-
-export async function findOrCreateSubfolder(parentId: string, folderName: string): Promise<string> {
+export async function findSubfolder(parentId: string, folderName: string): Promise<string | null> {
   const drive = await getDriveClient();
   const escaped = folderName.replace(/'/g, "\\'");
   const list = await drive.files.list({
@@ -72,9 +54,18 @@ export async function findOrCreateSubfolder(parentId: string, folderName: string
     includeItemsFromAllDrives: true,
     pageSize: 1,
   });
-  const existing = list.data.files?.[0]?.id;
+  return list.data.files?.[0]?.id ?? null;
+}
+
+export async function createClientFolder(folderName: string): Promise<string> {
+  void folderName;
+  throw new Error(FOLDER_CREATION_DISABLED);
+}
+
+export async function findOrCreateSubfolder(parentId: string, folderName: string): Promise<string> {
+  const existing = await findSubfolder(parentId, folderName);
   if (existing) return existing;
-  return createFolderInParent(parentId, folderName);
+  throw new Error(FOLDER_CREATION_DISABLED);
 }
 
 export async function shareFolderWithUser(

@@ -8,7 +8,7 @@ export default function DashboardVerificationPage() {
       </h1>
       <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90 mb-8 text-center">
         Sube tu documento de identidad para completar tu perfil. Los archivos se almacenan de forma
-        segura y se copian a tu carpeta de cliente en Diligenz.
+        segura y, si tu ficha ya tiene una carpeta de Drive enlazada, se copian también allí.
       </p>
       <DniUploadForm />
     </div>

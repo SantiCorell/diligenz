@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
-import {
-  getSessionTokenFromRequest,
-  getSessionFromToken,
-  renewSession,
-} from "@/lib/session";
+import { getSessionWithUserFromRequest, renewSession } from "@/lib/session";
 
 export async function GET(req: Request) {
-  const token = await getSessionTokenFromRequest(req);
-  const session = await getSessionFromToken(token ?? undefined);
+  const session = await getSessionWithUserFromRequest(req);
   if (!session) {
     return NextResponse.json({ loggedIn: false });
   }

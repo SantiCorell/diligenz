@@ -77,34 +77,63 @@ export async function destroySessionByToken(sessionToken: string | undefined) {
   await prisma.session.deleteMany({ where: { sessionToken } });
 }
 
+function decodeSessionToken(raw: string | null | undefined): string {
+  const value = raw?.trim() ?? "";
+  if (!value) return "";
+  try {
+    return decodeURIComponent(value).trim();
+  } catch {
+    return value;
+  }
+}
+
+function rememberToken(tokens: string[], raw: string | null | undefined) {
+  const value = decodeSessionToken(raw);
+  if (!value || tokens.includes(value)) return;
+  tokens.push(value);
+}
+
 /** Lee el token de sesión desde las cookies de Next (en Server Components) */
 export async function getSessionTokenFromCookies(): Promise<string | null> {
+  const tokens = await getSessionTokensFromCookies();
+  return tokens[0] ?? null;
+}
+
+async function getSessionTokensFromCookies(): Promise<string[]> {
   const store = await cookies();
-  const cookie = store.get(SESSION_COOKIE_NAME);
-  return cookie?.value?.trim() ?? null;
+  const tokens: string[] = [];
+  for (const cookie of store.getAll()) {
+    if (cookie.name === SESSION_COOKIE_NAME) rememberToken(tokens, cookie.value);
+  }
+  return tokens;
 }
 
 /**
  * Lee el token desde la petición: Authorization Bearer, X-Session-Token o cookie.
  * Usar en Route Handlers para soportar token en localStorage (header) o cookie (sync desde cliente).
  */
-export async function getSessionTokenFromRequest(req: Request): Promise<string | null> {
+export async function getSessionTokensFromRequest(req: Request): Promise<string[]> {
+  const tokens: string[] = [];
   const auth = req.headers.get("Authorization");
-  if (auth?.startsWith("Bearer ")) {
-    const t = auth.slice(7).trim();
-    if (t) return t;
-  }
-  const x = req.headers.get("X-Session-Token");
-  if (x?.trim()) return x.trim();
-  const store = await cookies();
-  const c = store.get(SESSION_COOKIE_NAME);
-  return c?.value?.trim() ?? null;
+  if (auth?.startsWith("Bearer ")) rememberToken(tokens, auth.slice(7));
+  rememberToken(tokens, req.headers.get("X-Session-Token"));
+  for (const token of await getSessionTokensFromCookies()) rememberToken(tokens, token);
+  return tokens;
 }
 
-/** Sesión con user desde la petición (Route Handlers). */
+export async function getSessionTokenFromRequest(req: Request): Promise<string | null> {
+  const tokens = await getSessionTokensFromRequest(req);
+  return tokens[0] ?? null;
+}
+
+/** Sesión con user desde la petición (Route Handlers). Si el Bearer está caducado, usa la cookie. */
 export async function getSessionWithUserFromRequest(req: Request) {
-  const token = await getSessionTokenFromRequest(req);
-  return getSessionFromToken(token ?? undefined);
+  const tokens = await getSessionTokensFromRequest(req);
+  for (const token of tokens) {
+    const session = await getSessionFromToken(token);
+    if (session) return session;
+  }
+  return null;
 }
 
 /** userId desde la petición (Route Handlers). */
@@ -121,8 +150,12 @@ export async function getUserIdFromSession(): Promise<string | null> {
 
 /** Sesión con user incluido; null si no hay sesión válida. Para layouts y páginas. Deduplicada por request (layout + page comparten 1 sola consulta a DB). */
 export const getSessionWithUser = cache(async () => {
-  const token = await getSessionTokenFromCookies();
-  return getSessionFromToken(token ?? undefined);
+  const tokens = await getSessionTokensFromCookies();
+  for (const token of tokens) {
+    const session = await getSessionFromToken(token);
+    if (session) return session;
+  }
+  return null;
 });
 
 /** Escribe la cookie de sesión en una respuesta (login, register, renovación) */

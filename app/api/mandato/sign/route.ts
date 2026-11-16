@@ -5,10 +5,7 @@ import { getSessionWithUserFromRequest } from "@/lib/session";
 import { generateSignedMandatePdf } from "@/lib/mandato/generate-signed-pdf";
 import { sendMandatoSignedEmails } from "@/lib/emails/mandato-signed";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
-import {
-  ensureUserDriveFolder,
-  syncUserDriveFolderName,
-} from "@/lib/google-drive/user-drive";
+import { ensureUserDriveFolder } from "@/lib/google-drive/user-drive";
 
 const SELLER_ROLES = new Set(["SELLER", "PROFESSIONAL", "ADMIN"]);
 
@@ -114,13 +111,6 @@ export async function POST(req: Request) {
     });
     driveFolderCreated = Boolean(folderId);
 
-    await syncUserDriveFolderName({
-      userId: session.userId,
-      role: session.user.role,
-      personName: payload.representativeName || payload.companyLegalName,
-      companyName: payload.companyLegalName,
-    });
-
     const uploaded = await syncDocumentToUserDrive({
       userId: session.userId,
       kind: "mandato",
@@ -132,7 +122,7 @@ export async function POST(req: Request) {
     driveDocumentUploaded = Boolean(uploaded);
 
     if (!driveFolderCreated) {
-      console.warn("[mandato/sign] Drive carpeta no creada (verifica config/env/Drive).");
+      console.warn("[mandato/sign] Sin carpeta de Drive enlazada; el PDF no se ha copiado a Drive.");
     }
     if (!driveDocumentUploaded) {
       console.warn("[mandato/sign] Drive documento no subido (verifica config/env/Drive).");

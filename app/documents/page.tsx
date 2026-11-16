@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { getUserIdFromSession } from "@/lib/session";
+import CookieSettingsButton from "@/components/consent/CookieSettingsButton";
 
 export default async function DocumentsPage() {
   const userId = await getUserIdFromSession();
@@ -24,6 +25,7 @@ export default async function DocumentsPage() {
         <p className="mt-2 text-gray-600">
           La publicación de un proyecto requiere la firma previa de la documentación.
         </p>
+        <CookieSettingsButton className="mt-3 text-sm font-medium text-[var(--brand-primary)] underline" />
 
         <div className="mt-8 space-y-6">
           {companies.map((company) => {

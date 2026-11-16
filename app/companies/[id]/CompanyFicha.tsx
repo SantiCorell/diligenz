@@ -134,6 +134,7 @@ export default function CompanyFicha({
   const [requestError, setRequestError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>("informacion");
   const [requestInfo, setRequestInfo] = useState(false);
+  const [requestInfoStatus, setRequestInfoStatus] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<CompanyFileItem[]>([]);
@@ -165,6 +166,7 @@ export default function CompanyFicha({
       .then((r) => r.json())
       .then((d) => {
         setRequestInfo(d.requestInfo ?? false);
+        setRequestInfoStatus(typeof d.requestInfoStatus === "string" ? d.requestInfoStatus : null);
         setIsFavorite(d.favorite ?? false);
       })
       .catch(() => {});
@@ -190,6 +192,7 @@ export default function CompanyFicha({
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setRequestInfo(true);
+        setRequestInfoStatus(null);
         setRequestModalSuccess(true);
         trackRequestCompanyInfo({
           companyId: company.id,
@@ -633,7 +636,7 @@ export default function CompanyFicha({
           </section>
 
           <div className="space-y-2.5">
-            {isLoggedIn && requestInfo ? (
+            {isLoggedIn && requestInfo && requestInfoStatus !== "REJECTED" ? (
               <div className="rounded-xl border border-[#eadfff] bg-[#f7f2ff] px-4 py-3 text-center">
                 <p className="text-sm font-semibold text-[#5b34d6]">Solicitud enviada</p>
                 <p className="mt-1 text-xs leading-relaxed text-slate-600">
@@ -641,14 +644,24 @@ export default function CompanyFicha({
                 </p>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={isLoggedIn ? openRequestModal : askToRegister}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#7c4dff] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#6b3df0]"
-              >
-                <MessageSquare className="h-4 w-4" aria-hidden />
-                ¿Estás interesado?
-              </button>
+              <>
+                {isLoggedIn && requestInfoStatus === "REJECTED" && (
+                  <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-center">
+                    <p className="text-sm font-semibold text-red-800">Solicitud rechazada</p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                      Esta solicitud no ocupa un hueco. Puedes pedir información de otra empresa.
+                    </p>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={isLoggedIn ? openRequestModal : askToRegister}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#7c4dff] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#6b3df0]"
+                >
+                  <MessageSquare className="h-4 w-4" aria-hidden />
+                  ¿Estás interesado?
+                </button>
+              </>
             )}
             {isLoggedIn ? (
               <CompanyFavoriteButton

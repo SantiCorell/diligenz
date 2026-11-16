@@ -19,6 +19,7 @@ import {
   Users,
 } from "lucide-react";
 import { authFetch, clearStoredToken } from "@/lib/auth-client";
+import CookieSettingsButton from "@/components/consent/CookieSettingsButton";
 
 type Props = {
   userDisplayName: string;
@@ -267,6 +268,7 @@ export default function AdminShell({ userDisplayName, children }: Props) {
                 Volver al dashboard
               </Link>
             )}
+            <CookieSettingsButton className="text-sm font-medium text-[var(--brand-dark)]/70 hover:text-[var(--brand-primary)]" />
             <button
               onClick={logout}
               className="text-sm font-medium text-[var(--brand-dark)]/70 hover:text-[var(--brand-primary)]"

@@ -12,6 +12,7 @@ import {
   getMarketplaceSchema,
 } from "@/lib/seo";
 import "./globals.css";
+import AggregatePageView from "@/components/consent/AggregatePageView";
 import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
 import ConditionalGoogleAnalytics from "@/components/consent/ConditionalGoogleAnalytics";
 import ConditionalGoogleTagManager from "@/components/consent/ConditionalGoogleTagManager";
@@ -156,6 +157,7 @@ export default function RootLayout({
         <ConditionalGoogleTagManager />
         <ConditionalGoogleAnalytics />
         <MetaPixelProvider />
+        <AggregatePageView />
         {children}
         <SectorCatalogHydrator />
         <CookieConsentBanner />

@@ -5,7 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter } from "next-auth/adapters";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { provisionUserDriveFolder } from "@/lib/google-drive/user-drive";
+import { defaultAgentIds } from "@/lib/agents";
 import { linkServiceRequestsToUser } from "@/lib/link-service-requests";
 import {
   DRIVE_OAUTH_SETUP_COOKIE,
@@ -18,6 +18,7 @@ function diligenzAdapter(): Adapter {
   return {
     ...base,
     createUser: async (user) => {
+      const agents = await defaultAgentIds();
       const created = await prisma.user.create({
         data: {
           email: user.email!,
@@ -28,6 +29,8 @@ function diligenzAdapter(): Adapter {
           accountStatus: "PENDING",
           provider: "google",
           oauthProfileComplete: false,
+          assignedAgentId: agents.assignedAgentId,
+          servicesAgentId: agents.servicesAgentId,
         },
       });
       try {
@@ -37,16 +40,6 @@ function diligenzAdapter(): Adapter {
           "[auth] vincular servicios:",
           linkError instanceof Error ? linkError.message : "failed"
         );
-      }
-      try {
-        await provisionUserDriveFolder({
-          id: created.id,
-          role: created.role,
-          name: created.name,
-          email: created.email,
-        });
-      } catch (driveError) {
-        console.error("[auth] carpeta Drive:", driveError);
       }
       return {
         id: created.id,

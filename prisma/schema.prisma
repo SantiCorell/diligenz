@@ -83,6 +83,7 @@ model User {
   contactRequests ContactRequest[]
   clientServices  ClientService[]
   serviceIntakes  ServiceIntake[]
+  accountDeletionRequests AccountDeletionRequest[]
 }
 
 /// DNI / NIE del usuario (anverso y reverso). Admin marca dniVerified tras revisión.
@@ -297,7 +298,8 @@ enum RequestStatus {
  * COMPANY
  * =====================
  */
-  /// Tipo de entidad: EMPRESA | AUTONOMO (profesional/autónomo). Histórico: STARTUP, MARKETPLACE.
+  /// Tipo de operación: ACCIONES_PARTICIPACIONES | UNIDAD_ECONOMICA.
+  /// Histórico (tipo de entidad, no se ofrece): EMPRESA | AUTONOMO | STARTUP | MARKETPLACE.
 model Company {
   id          String        @id @default(cuid())
   name        String
@@ -324,8 +326,8 @@ model Company {
   removedById String?
   removedBy   User?         @relation("CompanyRemovedBy", fields: [removedById], references: [id], onDelete: SetNull)
 
-  // Valoración mejorada: tipo de entidad, madurez, crecimiento, startup/marketplace
-  companyType         String?   // "EMPRESA" | "AUTONOMO" | "STARTUP" | "MARKETPLACE" | null
+  // Valoración mejorada: tipo de operación, madurez, crecimiento, startup/marketplace
+  companyType         String?   // ACCIONES_PARTICIPACIONES | UNIDAD_ECONOMICA | histórico EMPRESA | AUTONOMO | STARTUP | MARKETPLACE | null
   yearsOperating      Int?      // Años en operación
   revenueGrowthPercent Float?   // Crecimiento interanual de facturación
   stage               String?   // Para startups: idea, pre_seed, seed, serie_a, etc.
@@ -497,6 +499,27 @@ enum UserAccountStatus {
   IN_REVIEW
   ACTIVE
   REJECTED
+}
+
+enum AccountDeletionStatus {
+  PENDING
+  COMPLETED
+}
+
+/// Petición del propio usuario para darse de baja. Un admin confirma la eliminación.
+model AccountDeletionRequest {
+  id          String                @id @default(cuid())
+  userId      String
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      AccountDeletionStatus @default(PENDING)
+  /// Email del usuario al pedir la baja. El correo al cliente usa el email vigente justo antes de eliminar.
+  notifyEmail String
+  requestedAt DateTime              @default(now())
+  completedAt DateTime?
+  completedById String?
+
+  @@index([userId])
+  @@index([status, requestedAt])
 }
 
 enum CompanyStatus {
@@ -690,7 +713,7 @@ model ValuationLead {
   createdAt   DateTime @default(now())
 
   // Mismos campos que Company para valoración mejorada (todos opcionales para leads existentes)
-  companyType         String?   // "EMPRESA" | "STARTUP" | "MARKETPLACE" | null
+  companyType         String?   // ACCIONES_PARTICIPACIONES | UNIDAD_ECONOMICA | histórico EMPRESA | AUTONOMO | STARTUP | MARKETPLACE | null
   yearsOperating      Int?
   revenueGrowthPercent Float?
   stage               String?
@@ -700,4 +723,23 @@ model ValuationLead {
   hasReceivedFunding  Boolean?
   website             String?  // URL de la página web
   category            String   @default("pendiente") // pendiente | gestionado | rechazado
+}
+
+/**
+ * Totales de visitas, sin dato personal.
+ * Una fila es ruta + día UTC + tipo de navegación + cubo de rendimiento de la carga.
+ * No guarda cookie, IP, user-agent, referrer ni identificador de persona o de sesión.
+ * No se reenvía a Google Tag Manager, Google Analytics ni Meta.
+ */
+model AggregatePageMetric {
+  id        String   @id @default(cuid())
+  path      String
+  day       String
+  nav       String
+  perf      String
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([path, day, nav, perf])
+  @@index([day])
 }

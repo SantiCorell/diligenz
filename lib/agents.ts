@@ -103,6 +103,16 @@ export async function getDefaultAgentCard(): Promise<AgentCardData | null> {
   return { ...row, updatedAt: row.updatedAt.toISOString() };
 }
 
+const SEEDED_DEFAULT_AGENT_ID = "agent_jose_canizares";
+
+function isJoseCanizaresName(name: string): boolean {
+  const folded = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  return folded.includes("jose") && folded.includes("canizares");
+}
+
 export async function getDefaultAgentId(): Promise<string | null> {
   const preferred = await prisma.agent.findFirst({
     where: { isDefault: true, active: true },
@@ -110,12 +120,44 @@ export async function getDefaultAgentId(): Promise<string | null> {
     orderBy: { createdAt: "asc" },
   });
   if (preferred) return preferred.id;
-  const fallback = await prisma.agent.findFirst({
+
+  const active = await prisma.agent.findMany({
     where: { active: true },
-    select: { id: true },
+    select: { id: true, name: true },
     orderBy: { createdAt: "asc" },
   });
-  return fallback?.id ?? null;
+  const jose =
+    active.find((agent) => agent.id === SEEDED_DEFAULT_AGENT_ID) ??
+    active.find((agent) => isJoseCanizaresName(agent.name));
+  if (jose) return jose.id;
+  return active[0]?.id ?? null;
+}
+
+/** Mismo agente por defecto para el marketplace y para servicios. */
+export async function defaultAgentIds(): Promise<{
+  assignedAgentId: string | null;
+  servicesAgentId: string | null;
+}> {
+  try {
+    const id = await getDefaultAgentId();
+    return { assignedAgentId: id, servicesAgentId: id };
+  } catch (error) {
+    console.error(
+      "[agents] agente por defecto:",
+      error instanceof Error ? error.message : "failed"
+    );
+    return { assignedAgentId: null, servicesAgentId: null };
+  }
+}
+
+/** No pisa un gestor que ya esté guardado. */
+export async function assignDefaultServicesAgentIfEmpty(userId: string): Promise<void> {
+  const agentId = await getDefaultAgentId();
+  if (!agentId) return;
+  await prisma.user.updateMany({
+    where: { id: userId, servicesAgentId: null },
+    data: { servicesAgentId: agentId },
+  });
 }
 
 const agentCardSelect = {
@@ -226,42 +268,6 @@ export function extractScheduleTimes(payload: unknown): ScheduleTimes {
   const acc: ScheduleTimes = { startsAt: null, endsAt: null, eventUri: null };
   walkSchedule(payload, acc, 0);
   return acc;
-}
-
-export async function fetchCalendlyEventTimes(eventUri: string): Promise<{
-  startsAt: Date;
-  endsAt: Date;
-  name?: string;
-} | null> {
-  const token = process.env.CALENDLY_API_TOKEN?.trim();
-  if (!token) return null;
-  if (!eventUri.startsWith("https://api.calendly.com/scheduled_events/")) return null;
-  try {
-    const res = await fetch(eventUri, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-      cache: "no-store",
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      resource?: { start_time?: string; end_time?: string; name?: string };
-    };
-    const resource = data.resource;
-    if (!resource?.start_time) return null;
-    const startsAt = new Date(resource.start_time);
-    if (Number.isNaN(startsAt.getTime())) return null;
-    const endsAt = resource.end_time ? new Date(resource.end_time) : new Date(startsAt.getTime() + 30 * 60 * 1000);
-    return {
-      startsAt,
-      endsAt: Number.isNaN(endsAt.getTime()) ? new Date(startsAt.getTime() + 30 * 60 * 1000) : endsAt,
-      name: resource.name,
-    };
-  } catch {
-    return null;
-  }
 }
 
 export function assertMeetingWindow(startsAt: Date, endsAt: Date) {

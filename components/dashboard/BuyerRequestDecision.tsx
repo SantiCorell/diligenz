@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Handshake, X } from "lucide-react";
 import { authFetch } from "@/lib/auth-client";
@@ -9,6 +10,20 @@ export default function BuyerRequestDecision({ interestId }: { interestId: strin
   const router = useRouter();
   const [pending, setPending] = useState<"advance" | "decline" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [advanceConfirmed, setAdvanceConfirmed] = useState(false);
+
+  const reloadAfterAdvance = () => {
+    window.location.reload();
+  };
+
+  useEffect(() => {
+    if (!advanceConfirmed) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") reloadAfterAdvance();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [advanceConfirmed]);
 
   const choose = async (decision: "advance" | "decline") => {
     setPending(decision);
@@ -22,6 +37,10 @@ export default function BuyerRequestDecision({ interestId }: { interestId: strin
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError((data as { error?: string }).error ?? "No se pudo guardar la decisión.");
+        return;
+      }
+      if (decision === "advance") {
+        setAdvanceConfirmed(true);
         return;
       }
       router.refresh();
@@ -66,6 +85,42 @@ export default function BuyerRequestDecision({ interestId }: { interestId: strin
           <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </button>
       </div>
+      {advanceConfirmed && <AdvanceConfirmedModal onConfirm={reloadAfterAdvance} />}
     </div>
+  );
+}
+
+function AdvanceConfirmedModal({ onConfirm }: { onConfirm: () => void }) {
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
+      onClick={onConfirm}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="advance-confirmed-title"
+    >
+      <div
+        className="w-full max-w-md rounded-2xl border border-[var(--brand-primary)]/20 bg-white p-6 shadow-xl sm:p-8"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h3 id="advance-confirmed-title" className="text-xl font-semibold text-[var(--brand-dark)]">
+          Has solicitado información
+        </h3>
+        <p className="mt-3 text-sm leading-relaxed text-[var(--foreground)]/85">
+          En breve nos pondremos en contacto contigo.
+        </p>
+        <button
+          type="button"
+          onClick={onConfirm}
+          autoFocus
+          className="mt-6 w-full rounded-xl bg-[var(--brand-primary)] py-3 text-sm font-semibold text-white hover:opacity-95"
+        >
+          Entendido
+        </button>
+      </div>
+    </div>,
+    document.body,
   );
 }

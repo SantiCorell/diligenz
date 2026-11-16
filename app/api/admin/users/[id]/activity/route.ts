@@ -40,8 +40,9 @@ export async function GET(req: Request, { params }: Params) {
       getUserOwnerCompanySummaries(userId),
     ]);
 
+    const valuedCompanies = companies.filter((c) => c.valuationLabel);
     const pageCompanies = companies.slice(0, limit);
-    const valuedCompanies = pageCompanies.filter((c) => c.valuationLabel);
+    const pageValued = valuedCompanies.slice(0, limit);
 
     return NextResponse.json({
       view: "owner",
@@ -58,7 +59,7 @@ export async function GET(req: Request, { params }: Params) {
         createdAt: company.createdAt.toISOString(),
         valuedAt: company.valuedAt?.toISOString() ?? null,
       })),
-      valuedCompanies: valuedCompanies.map((company) => ({
+      valuedCompanies: pageValued.map((company) => ({
         id: `${company.companyId}-valued`,
         companyId: company.companyId,
         realName: company.realName,

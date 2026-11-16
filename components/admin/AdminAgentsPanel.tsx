@@ -162,9 +162,6 @@ export default function AdminAgentsPanel() {
           <p className="max-w-3xl text-sm leading-relaxed text-slate-600">
             Crea los gestores que se pueden asignar a compradores, vendedores y profesionales. Si el agente tiene un enlace de Calendly (u otra agenda), el usuario podrá reservar desde su panel y la reunión quedará en su calendario.
           </p>
-          <p className="text-xs text-slate-500">
-            Con la variable <span className="font-mono">CALENDLY_API_TOKEN</span> la hora se guarda sola al reservar. Sin ella, el usuario confirma la hora al terminar.
-          </p>
 
           <div className="flex flex-wrap items-center gap-3">
             <button

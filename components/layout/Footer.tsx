@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { authFetch } from "@/lib/auth-client";
-import { clearConsentAndPrompt } from "@/lib/cookie-consent";
+import CookieSettingsButton from "@/components/consent/CookieSettingsButton";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -117,13 +117,7 @@ export default function Footer() {
             <li><Link href="/politica-privacidad" className="hover:underline">Política de privacidad</Link></li>
             <li><Link href="/politica-cookies" className="hover:underline">Política de cookies</Link></li>
             <li>
-              <button
-                type="button"
-                onClick={() => clearConsentAndPrompt()}
-                className="hover:underline text-left"
-              >
-                Configuración de cookies
-              </button>
+              <CookieSettingsButton className="hover:underline text-left" />
             </li>
           </FooterAccordion>
         </div>
@@ -132,15 +126,18 @@ export default function Footer() {
         <p className="text-xs opacity-75">
           © Diligenz. Todos los derechos reservados.
         </p>
-        <a
-          href="https://metrio.es"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs opacity-70 hover:opacity-100 transition-opacity"
-          title="Web creada por Metrio"
-        >
-          Web creada por metrio.es
-        </a>
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <CookieSettingsButton className="text-xs font-medium underline opacity-90 hover:opacity-100" />
+          <a
+            href="https://metrio.es"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs opacity-70 hover:opacity-100 transition-opacity"
+            title="Web creada por Metrio"
+          >
+            Web creada por metrio.es
+          </a>
+        </div>
       </div>
     </footer>
   );

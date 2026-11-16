@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { assignDefaultServicesAgentIfEmpty } from "@/lib/agents";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 import {
@@ -102,6 +103,17 @@ export async function POST(req: Request) {
         userId: existingUser?.id ?? null,
       },
     });
+
+    if (validSource === "servicios" && existingUser) {
+      try {
+        await assignDefaultServicesAgentIfEmpty(existingUser.id);
+      } catch (agentError) {
+        console.error(
+          "[contact] gestor de servicios:",
+          agentError instanceof Error ? agentError.message : "failed"
+        );
+      }
+    }
 
     return NextResponse.json(
       { ok: true },

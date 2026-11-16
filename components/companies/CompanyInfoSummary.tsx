@@ -79,7 +79,7 @@ export default function CompanyInfoSummary({ company }: Props) {
           <strong>Empleados:</strong> {company.employees ?? "—"}
         </p>
         <p>
-          <strong>Tipo de entidad:</strong> {entityTypeLabel(company.companyType)}
+          <strong>Tipo de operación:</strong> {entityTypeLabel(company.companyType)}
         </p>
         <p>
           <strong>Años operando:</strong> {company.yearsOperating ?? "—"}

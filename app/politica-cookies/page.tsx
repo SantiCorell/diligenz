@@ -23,7 +23,7 @@ export default function PoliticaCookiesPage() {
               Política de cookies
             </h1>
             <p className="mt-2 text-sm text-[var(--foreground)] opacity-75">
-              Última actualización: abril de 2026 · Titular: Diligenz
+              Última actualización: noviembre de 2026 · Titular: Diligenz
             </p>
 
             <div className="mt-8 space-y-8 text-sm sm:text-base text-[var(--foreground)] opacity-90 leading-relaxed">
@@ -142,38 +142,118 @@ export default function PoliticaCookiesPage() {
                     </tbody>
                   </table>
                 </div>
-              </section>
-
-              <section>
-                <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-3">
-                  4. Cómo damos cumplimiento al consentimiento
-                </h2>
-                <p>
-                  Al entrar en el sitio aparece una <strong>barra fija en la parte inferior</strong>{" "}
-                  hasta que eliges <strong>&quot;Solo necesarias&quot;</strong> o{" "}
-                  <strong>&quot;Aceptar todas&quot;</strong>. Hasta entonces no activamos herramientas
-                  de medición opcionales (p. ej. Google Tag Manager, Google Analytics, Meta Pixel,
-                  Speed Insights). Puedes revisar o cambiar tu
-                  decisión desde el pie de página: <strong>Configuración de cookies</strong>, que
-                  vuelve a mostrar la barra.
+                <p className="mt-4">
+                  Las cookies <strong>estrictamente necesarias</strong> no piden consentimiento
+                  previo (art. 22.2 de la LSSI): hacen falta para el servicio que solicitas. En
+                  Diligenz son la sesión de acceso (<span className="font-mono text-xs">session</span>{" "}
+                  y, si el inicio con un proveedor externo está activo, las de autenticación) y el
+                  recuerdo de tu propia elección (
+                  <span className="font-mono text-xs">diligenz_cookie_consent_v1</span> en
+                  localStorage). Esa memoria evita volver a preguntarte en cada página y evita
+                  activar la analítica si la has rechazado. No se usan para seguir tu recorrido ni
+                  para publicidad.
+                </p>
+                <p className="mt-3">
+                  La medición agregada del apartado 4 no figura en la tabla: no instala cookies ni
+                  guarda nada en tu dispositivo.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-3">
-                  5. Transferencias y terceros
+                  4. Medición agregada sin cookies y sin consentimiento
                 </h2>
                 <p>
-                  Si utilizamos proveedores situados fuera del EEE aplicamos las garantías previstas
-                  en el RGPD (decisiones de adecuación, cláusulas tipo u otras medidas). Los datos
-                  tratados vía cookies analíticas son, en lo posible, de naturaleza agregada o
-                  minimizada.
+                  Para saber qué páginas se piden y si la carga es rápida o lenta, el sitio envía un
+                  aviso técnico propio a Diligenz en cada vista de página. No espera a tu elección
+                  del banner. <strong>No usa Google Tag Manager</strong> ni ninguna etiqueta de
+                  Google o Meta.
+                </p>
+                <p className="mt-3">
+                  Qué se cuenta, solo como totales: la ruta solicitada (sin parámetros de la URL),
+                  el día, un tipo de navegación (carga, recarga, atrás o adelante, precarga o cambio
+                  interno de página) y un cubo de rendimiento de esa carga (rápida, normal, lenta o
+                  desconocido). Cada aviso suma uno a ese total. No guardamos el recorrido de una
+                  persona (de una página a la siguiente) ni el tiempo que pasa en cada página.
+                </p>
+                <p className="mt-3">
+                  Qué no se guarda: ninguna cookie de medición, ningún identificador de visitante o
+                  de sesión, ninguna dirección IP, ningún user-agent y ningún referrer. No se escribe
+                  en localStorage ni en <span className="font-mono text-xs">dataLayer</span>, y el
+                  aviso no se reenvía a Google Tag Manager, Google Analytics ni Meta.
+                </p>
+                <p className="mt-3">
+                  Finalidad: conocer la demanda y mejorar el sitio. Base: el contador no es un dato
+                  personal, porque no identifica ni permite identificar a una persona, y no es una
+                  cookie ni un acceso equivalente al terminal. Por eso no exige consentimiento según
+                  el art. 22.2 de la LSSI ni el RGPD. Si eliges «Solo necesarias», esta medición
+                  agregada sigue activa y las herramientas de Google y Meta no se cargan.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-3">
-                  6. Cómo gestionar cookies en tu navegador
+                  5. Analítica y marketing que sí exigen consentimiento
+                </h2>
+                <p>
+                  Google Tag Manager (contenedor GTM-W3SZ2DJH), Google Analytics, Meta Pixel y Vercel
+                  Speed Insights <strong>solo se cargan si aceptas la analítica</strong> («Aceptar
+                  todas» o «Aceptar analítica» en el recordatorio). Sirven para estadísticas de uso
+                  más detalladas y, en el caso de Meta, para medir campañas. Pueden usar cookies o
+                  identificadores.
+                </p>
+                <p className="mt-3">
+                  Base legal: consentimiento (art. 6.1.a del RGPD y art. 22.2 de la LSSI). Elegir
+                  «Solo necesarias» no autoriza estas herramientas. No hay medición con Google ni
+                  con Meta cuando rechazas la analítica, y los totales del apartado 4 no se envían a
+                  Google Tag Manager.
+                </p>
+                <p className="mt-3">
+                  Cómo retirarlo: en el pie de página, <strong>Configuración de cookies</strong>{" "}
+                  (visible sin abrir el bloque Legal). En el panel, en administración, en
+                  documentos y en la página de acceso está el mismo enlace. Vuelve la
+                  barra. Si eliges «Solo necesarias», la preferencia queda guardada y, en la
+                  siguiente carga de la página, Google Tag Manager, Google Analytics, Meta Pixel y
+                  Speed Insights no se vuelven a cargar. También puedes borrar los datos del sitio
+                  en el navegador.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-3">
+                  6. Cómo pedimos la elección
+                </h2>
+                <p>
+                  Al entrar aparece una <strong>barra fija en la parte inferior</strong> que no
+                  bloquea la navegación, hasta que eliges <strong>«Solo necesarias»</strong> o{" "}
+                  <strong>«Aceptar todas»</strong>. Las dos opciones están a un clic y no hay muro
+                  de cookies. Hasta que eliges no se cargan Google Tag Manager, Google Analytics,
+                  Meta Pixel ni Speed Insights.
+                </p>
+                <p className="mt-3">
+                  Si pasa un minuto y todavía no has elegido, puede mostrarse un aviso pequeño, una
+                  sola vez en esa carga. Puedes aceptarlo, quedarte solo con las necesarias o
+                  cerrarlo con «Ahora no». Cerrarlo no cuenta como aceptar ni como rechazar: la
+                  barra sigue hasta que elijas. Si ya habías elegido, ese aviso no sale y no se
+                  repite cada minuto.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-3">
+                  7. Transferencias y terceros
+                </h2>
+                <p>
+                  La medición agregada del apartado 4 se queda en Diligenz: no se cede a Google ni a
+                  Meta. Google Tag Manager, Google Analytics, Meta Pixel y Speed Insights solo tratan
+                  datos si has aceptado la analítica. Si un proveedor está fuera del EEE, se aplican
+                  las garantías del RGPD (decisiones de adecuación, cláusulas tipo u otras medidas).
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-3">
+                  8. Cómo gestionar cookies en tu navegador
                 </h2>
                 <p>
                   Puedes bloquear o eliminar cookies desde la configuración de Chrome, Firefox,
@@ -184,7 +264,7 @@ export default function PoliticaCookiesPage() {
 
               <section>
                 <h2 className="text-lg font-semibold text-[var(--brand-primary)] mb-3">
-                  7. Más información y contacto
+                  9. Más información y contacto
                 </h2>
                 <p>
                   Consulta nuestra{" "}

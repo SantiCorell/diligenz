@@ -13,21 +13,19 @@ import { isFeaturedActive, FEATURED_DURATION_MS } from "@/lib/company-ranking";
 import AdminFeatureCompanyButton from "@/components/admin/AdminFeatureCompanyButton";
 import AdminStatusChip from "@/components/admin/AdminStatusChip";
 import { publicListingName } from "@/lib/company-display-names";
-import { getCompanyDocumentsDriveUrl, displaySalePrice, formatCompanyMoney } from "@/lib/company-display";
+import {
+  entityTypeLabel,
+  formatCompanyMoney,
+  getCompanyDocumentsDriveUrl,
+  displaySalePrice,
+  isOperationType,
+  OPERATION_TYPE_OPTIONS,
+} from "@/lib/company-display";
 import { formatCompactEuroRange } from "@/lib/format-financial";
-import { ensureCompanyDriveFolder } from "@/lib/google-drive/company-drive";
 import { ensureCompanyReference } from "@/lib/company-reference";
 import { resolveBuyerDocuments } from "@/lib/buyer-documents";
 import { companyStatusLabel } from "@/lib/admin-company-views";
 import type { DocumentType } from "@prisma/client";
-
-function entityTypeLabel(t: string | null | undefined) {
-  if (t === "EMPRESA") return "Empresa";
-  if (t === "AUTONOMO") return "Profesional / Autónomo";
-  if (t === "STARTUP") return "Startup (histórico)";
-  if (t === "MARKETPLACE") return "Marketplace (histórico)";
-  return "—";
-}
 
 function docSigned(docs: { type: DocumentType; signed: boolean }[], type: DocumentType) {
   return docs.find((d) => d.type === type)?.signed ?? false;
@@ -67,15 +65,7 @@ export default async function AdminCompanyDetail({
 
   const companyReference = await ensureCompanyReference(company.id);
 
-  let companyDriveUrl = getCompanyDocumentsDriveUrl(company.documentLinks);
-  if (!companyDriveUrl) {
-    companyDriveUrl =
-      (await ensureCompanyDriveFolder({
-        companyId: company.id,
-        ownerId: company.ownerId,
-        companyName: company.name,
-      })) ?? null;
-  }
+  const companyDriveUrl = getCompanyDocumentsDriveUrl(company.documentLinks);
 
   const ownerDriveUrl = company.owner.documentsDriveFolderUrl?.trim() ?? "";
 
@@ -256,7 +246,12 @@ export default async function AdminCompanyDetail({
         )}
         {sp.success === "drive" && (
           <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-            Enlace al documento de empresa guardado.
+            Enlace de la carpeta de Drive guardado.
+          </p>
+        )}
+        {sp.error === "drive_url" && (
+          <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            El enlace debe ser una URL http(s) de Google Drive o Documentos.
           </p>
         )}
         {sp.success === "valuation" && (
@@ -449,24 +444,28 @@ export default async function AdminCompanyDetail({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Tipo de entidad</label>
+            <label className="block text-sm font-semibold text-[var(--brand-primary)]">Tipo de operación</label>
             <select
               name="companyType"
-              defaultValue={
-                company.companyType === "AUTONOMO"
-                  ? "AUTONOMO"
-                  : "EMPRESA"
-              }
-              className="mt-2 w-full max-w-xs rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+              defaultValue={isOperationType(company.companyType) ? company.companyType : ""}
+              className="mt-2 w-full max-w-xl rounded-xl border-2 border-[var(--brand-primary)]/20 px-4 py-2.5 text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
             >
-              <option value="EMPRESA">Empresa</option>
-              <option value="AUTONOMO">Profesional / Autónomo</option>
+              {!isOperationType(company.companyType) && (
+                <option value="">
+                  {company.companyType ? "Mantener el registro anterior" : "Sin especificar"}
+                </option>
+              )}
+              {OPERATION_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
-            {(company.companyType === "STARTUP" || company.companyType === "MARKETPLACE") && (
+            {!isOperationType(company.companyType) && company.companyType ? (
               <p className="mt-1 text-xs text-amber-700">
-                Registro anterior: {entityTypeLabel(company.companyType)}. Al guardar pasará a la opción seleccionada arriba.
+                Registro anterior: {entityTypeLabel(company.companyType)}. Se conserva hasta que elijas un tipo de operación.
               </p>
-            )}
+            ) : null}
           </div>
           <div>
             <label className="block text-sm font-semibold text-[var(--brand-primary)]">Años operando</label>

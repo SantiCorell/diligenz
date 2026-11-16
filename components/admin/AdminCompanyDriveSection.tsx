@@ -27,6 +27,32 @@ export default function AdminCompanyDriveSection({
           proyecto). Los compradores <strong>no</strong> ven esta carpeta: solo los enlaces que
           indiques abajo.
         </p>
+        <form action="/api/admin/company/update" method="POST" className="mt-4 space-y-3">
+          <input type="hidden" name="companyId" value={companyId} />
+          <input type="hidden" name="partial" value="drive" />
+          <label className="block text-sm">
+            <span className="font-semibold text-[var(--brand-primary)]">
+              Enlace de la carpeta del negocio
+            </span>
+            <input
+              type="url"
+              name="driveFolderUrl"
+              defaultValue={companyDriveUrl ?? ""}
+              placeholder="https://drive.google.com/drive/folders/…"
+              className="mt-1 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+            />
+          </label>
+          <p className="text-xs text-[var(--foreground)] opacity-75">
+            Crea la carpeta en Google Drive y pega aquí el enlace. Si lo dejas vacío y guardas, se
+            quita el enlace de esta ficha. La carpeta en Drive no se borra.
+          </p>
+          <button
+            type="submit"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-md hover:opacity-95 transition"
+          >
+            Guardar enlace
+          </button>
+        </form>
         <div className="mt-4 flex flex-wrap gap-3">
           {companyDriveUrl ? (
             <a
@@ -39,8 +65,7 @@ export default function AdminCompanyDriveSection({
             </a>
           ) : (
             <p className="text-sm text-[var(--foreground)] opacity-75">
-              La carpeta del negocio se creará cuando Google Drive esté configurado. Si no aparece,
-              contacta con Diligenz.
+              Todavía no hay carpeta enlazada. Pega la URL cuando la hayas creado.
             </p>
           )}
           {ownerDriveUrl ? (
@@ -50,7 +75,7 @@ export default function AdminCompanyDriveSection({
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold border-2 border-[var(--brand-primary)]/25 text-[var(--brand-primary)] hover:bg-[var(--brand-bg-lavender)]/50 transition"
             >
-              Carpeta CLIENTES del titular →
+              Carpeta Drive del titular →
             </a>
           ) : null}
         </div>

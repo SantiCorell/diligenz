@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ensureCompanyDriveFolder } from "@/lib/google-drive/company-drive";
 import { getUserIdFromRequest } from "@/lib/session";
 import { generateDealTitle } from "@/lib/dealCode";
 import { computeValuationRange } from "@/lib/compute-valuation-range";
@@ -10,6 +9,7 @@ import {
   getProfessionalCompanyQuota,
   professionalCompanyLimitMessage,
 } from "@/lib/professional-company-limit";
+import { LEGACY_ENTITY_TYPES, OPERATION_TYPES } from "@/lib/company-display";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -106,13 +106,9 @@ export async function POST(req: Request) {
     const numBreakevenYear = breakevenExpectedYear != null && breakevenExpectedYear !== "" ? Number(breakevenExpectedYear) : null;
     const companyTypeRaw =
       companyType && String(companyType).trim() ? String(companyType).trim().toUpperCase() : null;
+    const allowedCompanyTypes = new Set<string>([...OPERATION_TYPES, ...LEGACY_ENTITY_TYPES]);
     const companyTypeStr =
-      companyTypeRaw === "EMPRESA" ||
-      companyTypeRaw === "AUTONOMO" ||
-      companyTypeRaw === "STARTUP" ||
-      companyTypeRaw === "MARKETPLACE"
-        ? companyTypeRaw
-        : null;
+      companyTypeRaw && allowedCompanyTypes.has(companyTypeRaw) ? companyTypeRaw : null;
     const stageStr = stage && String(stage).trim() ? String(stage).trim() : null;
     const hasFunding = hasReceivedFunding === true || hasReceivedFunding === "true";
     const websiteStr = website != null && String(website).trim() !== "" ? String(website).trim() : null;
@@ -226,15 +222,6 @@ export async function POST(req: Request) {
           companyId: company.id,
         },
       });
-      try {
-        await ensureCompanyDriveFolder({
-          companyId: company.id,
-          ownerId: userId,
-          companyName: name,
-        });
-      } catch (driveErr) {
-        console.error("[valuation] company drive folder:", driveErr);
-      }
     }
 
     return NextResponse.json({ minValue, maxValue });

@@ -5,6 +5,33 @@ import { getSessionWithUserFromRequest } from "@/lib/session";
 import { isCompanyRemoved } from "@/lib/is-company-removed";
 import { parseCompanyReferenceInput } from "@/lib/company-reference";
 import { parseBuyerDocumentsJson } from "@/lib/buyer-documents";
+import { LEGACY_ENTITY_TYPES, OPERATION_TYPES } from "@/lib/company-display";
+
+const DRIVE_URL_MAX = 2048;
+
+function isGoogleDriveDocsHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return (
+    h === "drive.google.com" ||
+    h.endsWith(".drive.google.com") ||
+    h === "docs.google.com" ||
+    h.endsWith(".docs.google.com")
+  );
+}
+
+function linksExceptDrive(raw: unknown): { label: string; url: string }[] {
+  if (!Array.isArray(raw)) return [];
+  const kept: { label: string; url: string }[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const label = "label" in item ? String((item as { label?: unknown }).label ?? "").trim() : "";
+    const url = "url" in item ? String((item as { url?: unknown }).url ?? "").trim() : "";
+    if (!label || !url) continue;
+    if (url.includes("drive.google.com") || url.includes("docs.google.com")) continue;
+    kept.push({ label, url });
+  }
+  return kept;
+}
 
 function parseDocumentLinks(raw: string | null): { label: string; url: string }[] | null {
   if (!raw || !raw.trim()) return null;
@@ -20,7 +47,7 @@ function parseDocumentLinks(raw: string | null): { label: string; url: string }[
   return links.length ? links : null;
 }
 
-const COMPANY_TYPES = ["EMPRESA", "AUTONOMO", "STARTUP", "MARKETPLACE"] as const;
+const STORED_COMPANY_TYPES = new Set<string>([...OPERATION_TYPES, ...LEGACY_ENTITY_TYPES]);
 
 export async function POST(req: Request) {
   const session = await getSessionWithUserFromRequest(req);
@@ -65,6 +92,51 @@ export async function POST(req: Request) {
   }
 
   if (partial === "drive") {
+    if (formData.has("driveFolderUrl")) {
+      const trimmed = formData.get("driveFolderUrl")?.toString().trim() ?? "";
+      const current = await prisma.company.findUnique({
+        where: { id: companyId },
+        select: { documentLinks: true },
+      });
+      const kept = linksExceptDrive(current?.documentLinks);
+      if (!trimmed) {
+        await prisma.company.update({
+          where: { id: companyId },
+          data: { documentLinks: kept.length ? kept : Prisma.JsonNull },
+        });
+        return NextResponse.redirect(
+          new URL(`/admin/companies/${companyId}?success=drive`, url.origin)
+        );
+      }
+      let parsed: URL;
+      try {
+        parsed = new URL(trimmed);
+      } catch {
+        return NextResponse.redirect(
+          new URL(`/admin/companies/${companyId}?error=drive_url`, url.origin)
+        );
+      }
+      if (
+        (parsed.protocol !== "http:" && parsed.protocol !== "https:") ||
+        !isGoogleDriveDocsHost(parsed.hostname)
+      ) {
+        return NextResponse.redirect(
+          new URL(`/admin/companies/${companyId}?error=drive_url`, url.origin)
+        );
+      }
+      const next = [
+        ...kept,
+        { label: "Documento de empresa", url: trimmed.slice(0, DRIVE_URL_MAX) },
+      ];
+      await prisma.company.update({
+        where: { id: companyId },
+        data: { documentLinks: next },
+      });
+      return NextResponse.redirect(
+        new URL(`/admin/companies/${companyId}?success=drive`, url.origin)
+      );
+    }
+
     await prisma.company.update({
       where: { id: companyId },
       data: {
@@ -107,10 +179,17 @@ export async function POST(req: Request) {
     employees != null && !Number.isNaN(employees) && employees >= 0
       ? employees
       : null;
-  const companyTypeTrim = (companyTypeRaw ?? "").trim();
-  const companyTypeValue = COMPANY_TYPES.includes(companyTypeTrim as (typeof COMPANY_TYPES)[number])
-    ? companyTypeTrim
-    : null;
+  const companyTypeTrim = (companyTypeRaw ?? "").trim().toUpperCase();
+  let companyTypeValue: string | null;
+  if (STORED_COMPANY_TYPES.has(companyTypeTrim)) {
+    companyTypeValue = companyTypeTrim;
+  } else {
+    const existingType = await prisma.company.findUnique({
+      where: { id: companyId },
+      select: { companyType: true },
+    });
+    companyTypeValue = existingType?.companyType ?? null;
+  }
   const yearsOperatingValue =
     yearsOperatingRaw != null && yearsOperatingRaw.trim() !== ""
       ? (() => {

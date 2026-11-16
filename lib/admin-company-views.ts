@@ -20,14 +20,18 @@ export function companyHasPendingDocs(c: CompanyForView): boolean {
   return docs.some((d) => !d.signed);
 }
 
-/** Estado operativo DRAFT (borrador), sin estar ya en la web. */
+/**
+ * Valoración = estado DRAFT.
+ * Un deal publicado no la saca de esta casilla: si no, el contador
+ * pasa a 0 en cuanto el deal se lee como visible y la empresa desaparece.
+ */
 export function companyInDraftBucket(c: CompanyForView): boolean {
-  if (companyIsPublishedOnWeb(c)) return false;
   return c.status === "DRAFT";
 }
 
 /** En revisión interna o publicada en web con documentación pendiente. */
 export function companyInReviewBucket(c: CompanyForView): boolean {
+  if (c.status === "DRAFT") return false;
   if (c.status === "IN_PROCESS") return true;
   if (companyIsPublishedOnWeb(c) && companyHasPendingDocs(c)) return true;
   return false;
@@ -35,6 +39,7 @@ export function companyInReviewBucket(c: CompanyForView): boolean {
 
 /** Publicada en web con documentación al día. */
 export function companyInPublishedBucket(c: CompanyForView): boolean {
+  if (c.status === "DRAFT") return false;
   return companyIsPublishedOnWeb(c) && !companyInReviewBucket(c);
 }
 

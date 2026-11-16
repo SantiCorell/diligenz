@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
-import { extractScheduleTimes, fetchCalendlyEventTimes } from "@/lib/agents";
+import { extractScheduleTimes } from "@/lib/agents";
 
 export async function GET(req: Request) {
   const session = await getSessionWithUserFromRequest(req);
@@ -54,18 +54,9 @@ export async function POST(req: Request) {
 
   const body = (await req.json().catch(() => ({}))) as { payload?: unknown };
   const extracted = extractScheduleTimes(body.payload);
-  let startsAt = extracted.startsAt;
+  const startsAt = extracted.startsAt;
   let endsAt = extracted.endsAt;
-  let title = `Reunión con ${agent.name}`;
-
-  if (extracted.eventUri) {
-    const remote = await fetchCalendlyEventTimes(extracted.eventUri);
-    if (remote) {
-      startsAt = remote.startsAt;
-      endsAt = remote.endsAt;
-      if (remote.name) title = remote.name;
-    }
-  }
+  const title = `Reunión con ${agent.name}`;
 
   if (startsAt && !endsAt) {
     endsAt = new Date(startsAt.getTime() + 30 * 60 * 1000);
@@ -87,16 +78,23 @@ export async function POST(req: Request) {
       if (existing.userId !== session.userId) {
         return NextResponse.json({ error: "Esa reserva ya está asignada." }, { status: 409 });
       }
+      const saved =
+        !existing.startsAt && startsAt
+          ? await prisma.agentMeeting.update({
+              where: { id: existing.id },
+              data: { startsAt, endsAt },
+              select: { id: true, title: true, startsAt: true, endsAt: true, status: true },
+            })
+          : existing;
       return NextResponse.json({
         meeting: {
-          id: existing.id,
-          title: existing.title,
-          startsAt: existing.startsAt?.toISOString() ?? null,
-          endsAt: existing.endsAt?.toISOString() ?? null,
-          status: existing.status,
+          id: saved.id,
+          title: saved.title,
+          startsAt: saved.startsAt?.toISOString() ?? null,
+          endsAt: saved.endsAt?.toISOString() ?? null,
+          status: saved.status,
           agentName: agent.name,
         },
-        needsTime: !existing.startsAt,
       });
     }
   }
@@ -123,7 +121,6 @@ export async function POST(req: Request) {
         status: meeting.status,
         agentName: agent.name,
       },
-      needsTime: !meeting.startsAt,
     },
     { status: 201 }
   );

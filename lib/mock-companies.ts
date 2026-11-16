@@ -26,7 +26,7 @@ export type CompanyMock = {
   buyerTeaserUrl?: string | null;
   /** Si true y hay buyerDocuments: comprador MANAGED puede ver los enlaces */
   attachmentsApproved?: boolean;
-  /** Tipo: EMPRESA | AUTONOMO; histórico STARTUP/MARKETPLACE */
+  /** Tipo de operación: ACCIONES_PARTICIPACIONES | UNIDAD_ECONOMICA; histórico EMPRESA | AUTONOMO | STARTUP | MARKETPLACE */
   companyType?: string | null;
   yearsOperating?: number | null;
   hasReceivedFunding?: boolean | null;

@@ -99,8 +99,7 @@ export default function DniUploadForm() {
         <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
           <p className="font-semibold">Pendiente de verificar</p>
           <p className="mt-1 opacity-90">
-            Hemos recibido el anverso y el reverso. Las fotos están en tu carpeta de Google Drive
-            (subcarpeta <strong>Identidad</strong>). El equipo las revisará y marcará la verificación
+            Hemos recibido el anverso y el reverso. El equipo las revisará y marcará la verificación
             en tu perfil.
           </p>
         </div>
@@ -154,8 +153,7 @@ export default function DniUploadForm() {
 
       {state?.driveFolderUrl && (
         <p className="text-xs text-[var(--foreground)] opacity-75">
-          Tus fotos del DNI se guardan en Google Drive → carpeta{" "}
-          <strong>Identidad</strong>.{" "}
+          Tus fotos del DNI están en la carpeta de Google Drive enlazada.{" "}
           <a
             href={state.driveFolderUrl}
             target="_blank"
@@ -212,7 +210,7 @@ function UploadCard({
             {info.name}
           </p>
           {info.syncedToDrive ? (
-            <p className="text-emerald-700 mt-1">✓ Copiado a Google Drive (Identidad)</p>
+            <p className="text-emerald-700 mt-1">✓ Copiado a Google Drive</p>
           ) : (
             <p className="text-amber-700 mt-1">Guardado · pendiente de copia a Drive</p>
           )}

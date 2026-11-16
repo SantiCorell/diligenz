@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Fragment } from "react";
+import { useState, useEffect, useCallback, useRef, Fragment } from "react";
 import Link from "next/link";
 import type { RequestStatus, UserAccountStatus, UserRole } from "@prisma/client";
 import { authFetch } from "@/lib/auth-client";
@@ -45,10 +45,56 @@ type UserRow = {
   servicesAgentId?: string | null;
   assignedAgent?: { id: string; name: string } | null;
   salesMandateVariant?: "EXCLUSIVE" | "NON_EXCLUSIVE";
+  deletionRequestPending?: boolean;
+  deletionRequestedAt?: string | null;
 };
 
 function mandateVariantLabel(variant: UserRow["salesMandateVariant"]) {
   return variant === "NON_EXCLUSIVE" ? "sin exclusividad" : "con exclusividad";
+}
+
+function formatDeletionRequestedAt(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function DeletionPendingBadge() {
+  return (
+    <span className="inline-flex items-center rounded-lg bg-red-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-red-900">
+      Eliminación pendiente
+    </span>
+  );
+}
+
+function UserDeletionRequestBanner({
+  user,
+  onConfirm,
+}: {
+  user: UserRow;
+  onConfirm: (row: UserRow) => void;
+}) {
+  if (!user.deletionRequestPending) return null;
+  const when = formatDeletionRequestedAt(user.deletionRequestedAt);
+  const label = user.name?.trim() || user.email;
+  return (
+    <div className="border-b border-red-200 bg-red-50 px-4 py-4 sm:px-6">
+      <p className="text-sm font-semibold text-red-950">Solicitud de eliminación pendiente</p>
+      <p className="mt-1 max-w-2xl text-sm leading-relaxed text-red-950/90">
+        {label} ha pedido eliminar su cuenta{when ? ` el ${when}` : ""}. La cuenta sigue activa
+        hasta que confirmes la baja. Al confirmar se cierra la sesión y se envía el correo al
+        cliente.
+      </p>
+      <button
+        type="button"
+        onClick={() => onConfirm(user)}
+        className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800"
+      >
+        Confirmar eliminación
+      </button>
+    </div>
+  );
 }
 
 function profileCompleteEffective(u: UserRow) {
@@ -681,27 +727,52 @@ function UserActivityPanel({ user }: { user: UserRow }) {
   const [companies, setCompanies] = useState<OwnerCompanyRow[]>([]);
   const [valuedCompanies, setValuedCompanies] = useState<ValuedCompanyRow[]>([]);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const requestSeq = useRef(0);
 
   const loadActivity = useCallback(async () => {
+    const seq = ++requestSeq.current;
     setLoading(true);
-    try {
+    setLoadError(null);
+    const read = async () => {
       const res = await authFetch(`/api/admin/users/${user.id}/activity?limit=40`);
-      const data = await res.json();
+      const data = (await res.json().catch(() => null)) as { view?: string } | null;
+      return { res, data };
+    };
+    try {
+      let { res, data } = await read();
+      if (seq !== requestSeq.current) return;
+      if (!res.ok || !data || typeof data.view !== "string") {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        if (seq !== requestSeq.current) return;
+        ({ res, data } = await read());
+      }
+      if (seq !== requestSeq.current) return;
+      if (!res.ok || !data || typeof data.view !== "string") {
+        setLoadError("No se ha podido cargar el historial. Vuelve a abrir la ficha.");
+        return;
+      }
       if (data.view === "owner") {
+        const owner = data as {
+          stats?: OwnerActivityStats;
+          companies?: OwnerCompanyRow[];
+          valuedCompanies?: ValuedCompanyRow[];
+        };
         setView("owner");
-        if (data.stats) setStats(data.stats as OwnerActivityStats);
-        setCompanies((data.companies ?? []) as OwnerCompanyRow[]);
-        setValuedCompanies((data.valuedCompanies ?? []) as ValuedCompanyRow[]);
+        if (owner.stats) setStats(owner.stats);
+        setCompanies(owner.companies ?? []);
+        setValuedCompanies(owner.valuedCompanies ?? []);
         setEvents([]);
       } else {
+        const buyer = data as { stats?: ActivityStats; events?: ActivityEventRow[] };
         setView("buyer");
-        if (data.stats) setStats(data.stats as ActivityStats);
-        setEvents((data.events ?? []) as ActivityEventRow[]);
+        if (buyer.stats) setStats(buyer.stats);
+        setEvents(buyer.events ?? []);
         setCompanies([]);
         setValuedCompanies([]);
       }
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
   }, [user.id]);
 
@@ -736,6 +807,8 @@ function UserActivityPanel({ user }: { user: UserRow }) {
 
       {loading ? (
         <p className="text-sm text-slate-500">Cargando historial…</p>
+      ) : loadError && companies.length === 0 && valuedCompanies.length === 0 && events.length === 0 ? (
+        <p className="text-sm text-slate-500">{loadError}</p>
       ) : view === "owner" ? (
         <>
           {stats && "totalCompanies" in stats && (
@@ -948,7 +1021,6 @@ function UserDriveFolderPanel({
 }) {
   const [url, setUrl] = useState(user.documentsDriveFolderUrl ?? "");
   const [saving, setSaving] = useState(false);
-  const [creating, setCreating] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -984,29 +1056,6 @@ function UserDriveFolderPanel({
     setSaving(false);
   }, [user.id, url, onSaved]);
 
-  const createFolder = useCallback(async () => {
-    setMsg(null);
-    setCreating(true);
-    try {
-      const res = await authFetch(`/api/admin/users/${user.id}/drive`, { method: "POST" });
-      const data = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        documentsDriveFolderUrl?: string | null;
-      };
-      if (!res.ok) {
-        setMsg({ type: "error", text: data.error ?? "No se ha podido crear la carpeta." });
-        setCreating(false);
-        return;
-      }
-      if (data.documentsDriveFolderUrl) setUrl(data.documentsDriveFolderUrl);
-      setMsg({ type: "ok", text: "Carpeta de Drive creada." });
-      onSaved();
-    } catch {
-      setMsg({ type: "error", text: "Error de conexión." });
-    }
-    setCreating(false);
-  }, [user.id, onSaved]);
-
   const hasLink = Boolean(user.documentsDriveFolderUrl?.trim());
 
   return (
@@ -1015,25 +1064,15 @@ function UserDriveFolderPanel({
         Carpeta Google Drive (documentos del usuario)
       </p>
       <p className="text-xs text-slate-600 mb-3 max-w-2xl leading-relaxed">
-        Enlace a la carpeta donde están los documentos de este usuario. Debe ser una URL de{" "}
+        Pega el enlace de la carpeta que hayas creado en Google Drive. Debe ser una URL de{" "}
         <span className="font-medium">drive.google.com</span> o{" "}
-        <span className="font-medium">docs.google.com</span>. Si lo dejas vacío y guardas, se borra el
-        enlace.
+        <span className="font-medium">docs.google.com</span>. Si lo dejas vacío y guardas, se quita el
+        enlace de esta ficha. La carpeta en Drive no se borra.
       </p>
       {!hasLink && (
-        <div className="mb-3 flex flex-wrap items-center gap-3">
-          <p className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2">
-            Falta carpeta de Drive.
-          </p>
-          <button
-            type="button"
-            onClick={() => void createFolder()}
-            disabled={creating}
-            className="rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-50"
-          >
-            {creating ? "Creando…" : "Crear carpeta"}
-          </button>
-        </div>
+        <p className="mb-3 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2 inline-block">
+          Falta enlace de carpeta de Drive.
+        </p>
       )}
       <div className="flex flex-col sm:flex-row sm:items-end gap-3 max-w-3xl">
         <label className="flex-1 min-w-0">
@@ -1236,11 +1275,13 @@ function AdminUserMobileCard({
               Falta Drive
             </span>
           )}
+          {u.deletionRequestPending && <DeletionPendingBadge />}
         </div>
       </div>
 
       {isExpanded && (
         <div className="border-t border-slate-200/80">
+          <UserDeletionRequestBanner user={u} onConfirm={onDelete} />
           <div className="p-4 sm:p-5 border-b border-slate-100">
             <UserAgentAssignPanel
               userId={u.id}
@@ -1285,6 +1326,7 @@ export default function AdminUsersPage() {
   const [fDniPending, setFDniPending] = useState(false);
   const [fNda, setFNda] = useState(false);
   const [fDocLinks, setFDocLinks] = useState(false);
+  const [fDeletionPending, setFDeletionPending] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -1292,14 +1334,15 @@ export default function AdminUsersPage() {
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<UserRole>("ADMIN");
   const [agentChoices, setAgentChoices] = useState<{ id: string; name: string; active: boolean; isDefault: boolean }[]>([]);
-  const [agentsLoaded, setAgentsLoaded] = useState(false);
   const [assignedAgentId, setAssignedAgentId] = useState("");
   const [agentTouched, setAgentTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [createUserOpen, setCreateUserOpen] = useState(false);
+  const usersRequest = useRef(0);
 
   const loadUsers = useCallback(async () => {
+    const seq = ++usersRequest.current;
     setLoading(true);
     const p = new URLSearchParams();
     const qt = q.trim();
@@ -1310,12 +1353,24 @@ export default function AdminUsersPage() {
     if (fDniPending) p.set("dniPending", "1");
     if (fNda) p.set("ndaSigned", "1");
     if (fDocLinks) p.set("documentLinks", "1");
+    if (fDeletionPending) p.set("deletionPending", "1");
 
     try {
-      const res = await authFetch(`/api/admin/users?${p.toString()}`);
-      const data = await res.json();
-      if (res.ok) {
-        const list = (data.users ?? []) as UserRow[];
+      const fetchUsers = async () => {
+        const res = await authFetch(`/api/admin/users?${p.toString()}`);
+        const data = (await res.json().catch(() => null)) as { users?: UserRow[] } | null;
+        return { res, data };
+      };
+      let { res, data } = await fetchUsers();
+      if (seq !== usersRequest.current) return;
+      if (!res.ok || !Array.isArray(data?.users)) {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        if (seq !== usersRequest.current) return;
+        ({ res, data } = await fetchUsers());
+      }
+      if (seq !== usersRequest.current || !res.ok || !Array.isArray(data?.users)) return;
+      {
+        const list = data.users;
         setUsers(
           list.map((raw) => {
             const u = raw as UserRow;
@@ -1334,6 +1389,8 @@ export default function AdminUsersPage() {
               dniDriveSynced: Boolean(u.dniDriveSynced),
               dniVerificationStatus: u.dniVerificationStatus ?? "none",
               dniPendingReview: Boolean(u.dniPendingReview),
+              deletionRequestPending: Boolean(u.deletionRequestPending),
+              deletionRequestedAt: u.deletionRequestedAt ?? null,
               assignedAgentId: u.assignedAgentId ?? null,
               assignedAgent: u.assignedAgent ?? null,
             };
@@ -1341,9 +1398,9 @@ export default function AdminUsersPage() {
         );
       }
     } finally {
-      setLoading(false);
+      if (seq === usersRequest.current) setLoading(false);
     }
-  }, [q, roleFilter, statusFilter, fDni, fDniPending, fNda, fDocLinks]);
+  }, [q, roleFilter, statusFilter, fDni, fDniPending, fNda, fDocLinks, fDeletionPending]);
 
   useEffect(() => {
     if (!createUserOpen) return;
@@ -1355,7 +1412,6 @@ export default function AdminUsersPage() {
       };
       if (cancelled || !res.ok) return;
       setAgentChoices(data.agents ?? []);
-      setAgentsLoaded(true);
     })();
     return () => {
       cancelled = true;
@@ -1390,7 +1446,11 @@ export default function AdminUsersPage() {
           phone: phone || undefined,
           role,
           name: createUserName.trim() || undefined,
-          ...(agentsLoaded ? { assignedAgentId: selectedAgentId || null } : {}),
+          ...(agentTouched
+            ? { assignedAgentId: selectedAgentId || null }
+            : selectedAgentId
+              ? { assignedAgentId: selectedAgentId }
+              : {}),
         }),
       });
       const data = await res.json();
@@ -1456,22 +1516,35 @@ export default function AdminUsersPage() {
   };
 
   const deleteUser = async (u: UserRow) => {
+    const label = u.name?.trim() || u.email;
+    const pending = Boolean(u.deletionRequestPending);
     if (
       !confirm(
-        `¿Eliminar definitivamente a ${u.name?.trim() || u.email}?\n\n` +
-          "Se cerrará su sesión y el email quedará libre para dar de alta otro usuario."
+        pending
+          ? `¿Confirmar la eliminación de la cuenta de ${label}?\n\n` +
+              "Ha solicitado la baja. Se cerrará su sesión y el email quedará libre. El correo al cliente solo se da por enviado si el envío funciona."
+          : `¿Eliminar definitivamente a ${label}?\n\n` +
+              "Se cerrará su sesión y el email quedará libre. El correo al cliente solo se da por enviado si el envío funciona."
       )
     ) {
       return;
     }
     const res = await authFetch(`/api/admin/users/${u.id}`, { method: "DELETE" });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      alert((data as { error?: string }).error || "No se pudo eliminar.");
+    const data = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      deleted?: boolean;
+      emailSent?: boolean;
+      notifiedEmail?: string;
+    };
+    if (data.deleted) {
+      setExpandedUserId(null);
+      loadUsers();
+    }
+    if (!res.ok || data.emailSent !== true) {
+      alert(data.error || "No se pudo eliminar la cuenta.");
       return;
     }
-    setExpandedUserId(null);
-    loadUsers();
+    alert(`Cuenta eliminada. Se ha enviado el correo a ${data.notifiedEmail || label}.`);
   };
 
   const admins = users.filter((u) => u.role === "ADMIN");
@@ -1628,6 +1701,15 @@ export default function AdminUsersPage() {
                 className="h-5 w-5 rounded border-slate-300 text-[var(--brand-primary)] shrink-0"
               />
               Con enlace documentos (empresa o carpeta usuario)
+            </label>
+            <label className="inline-flex items-center gap-3 text-sm text-slate-800 cursor-pointer min-h-11 py-1 sm:py-0 -mx-1 px-1 rounded-lg sm:rounded-none sm:mx-0 sm:px-0 active:bg-slate-50 sm:active:bg-transparent">
+              <input
+                type="checkbox"
+                checked={fDeletionPending}
+                onChange={(e) => setFDeletionPending(e.target.checked)}
+                className="h-5 w-5 rounded border-slate-300 text-[var(--brand-primary)] shrink-0"
+              />
+              Solicitud de eliminación pendiente
             </label>
           </div>
         </div>
@@ -1886,7 +1968,11 @@ export default function AdminUsersPage() {
                           }}
                           aria-expanded={expandedUserId === u.id}
                           className={`cursor-pointer transition-colors hover:bg-slate-50/80 ${
-                            expandedUserId === u.id ? "bg-violet-50/50" : ""
+                            expandedUserId === u.id
+                              ? "bg-violet-50/50"
+                              : u.deletionRequestPending
+                                ? "bg-red-50/50"
+                                : ""
                           }`}
                         >
                           <td
@@ -1910,6 +1996,11 @@ export default function AdminUsersPage() {
                                     ? ` · Mandato ${mandateVariantLabel(u.salesMandateVariant)}`
                                     : ""}
                                 </span>
+                                {u.deletionRequestPending && (
+                                  <span className="mt-1 block">
+                                    <DeletionPendingBadge />
+                                  </span>
+                                )}
                               </span>
                             </span>
                           </td>
@@ -2020,6 +2111,7 @@ export default function AdminUsersPage() {
                         {expandedUserId === u.id && (
                           <tr className="bg-slate-50/50">
                             <td colSpan={8} className="p-0">
+                              <UserDeletionRequestBanner user={u} onConfirm={deleteUser} />
                               <div className="p-4 sm:px-6 border-b border-slate-100">
                                 <UserAgentAssignPanel
                                   userId={u.id}

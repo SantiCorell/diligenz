@@ -168,7 +168,7 @@ export async function backfillMissingCompanyReferencesIfNeeded(): Promise<number
   try {
     const missing = await prisma.company.count({ where: { reference: null } });
     if (missing === 0) return 0;
-    return backfillMissingCompanyReferences();
+    return await backfillMissingCompanyReferences();
   } catch (err) {
     if (isMissingReferenceField(err)) {
       console.warn(
@@ -176,6 +176,7 @@ export async function backfillMissingCompanyReferencesIfNeeded(): Promise<number
       );
       return 0;
     }
-    throw err;
+    console.error("[company-reference] backfill omitido:", err);
+    return 0;
   }
 }

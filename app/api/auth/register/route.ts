@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import type { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 import { createSession } from "@/lib/session";
 import { getClientIP, isValidEmail, isValidPhone } from "@/lib/security";
-import { provisionUserDriveFolder } from "@/lib/google-drive/user-drive";
+import { defaultAgentIds } from "@/lib/agents";
 import { linkServiceRequestsToUser } from "@/lib/link-service-requests";
 import { sendWelcomeEmail } from "@/lib/emails/welcome";
 import type { WelcomeRole } from "@/lib/emails/welcome";
@@ -126,6 +125,7 @@ export async function POST(req: Request) {
 
     // Hash password (10 rounds: buen equilibrio seguridad/rendimiento; 12 era más lento en registro)
     const passwordHash = await bcrypt.hash(password, 10);
+    const agents = await defaultAgentIds();
 
     // Create user
     let user: { id: string; role: string };
@@ -138,6 +138,8 @@ export async function POST(req: Request) {
           name: fullName,
           role,
           accountStatus: "PENDING",
+          assignedAgentId: agents.assignedAgentId,
+          servicesAgentId: agents.servicesAgentId,
         },
         select: { id: true, role: true },
       });
@@ -179,17 +181,6 @@ export async function POST(req: Request) {
         "[register] vincular servicios:",
         linkError instanceof Error ? linkError.message : "failed"
       );
-    }
-
-    try {
-      await provisionUserDriveFolder({
-        id: user.id,
-        role: user.role as UserRole,
-        name: fullName,
-        email: normalizedEmail,
-      });
-    } catch (driveError) {
-      console.error("[register] carpeta Drive:", driveError);
     }
 
     const token = await createSession(user.id);

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import CookieSettingsButton from "@/components/consent/CookieSettingsButton";
 
 export default function AccesoPage() {
   const router = useRouter();
@@ -84,6 +85,7 @@ export default function AccesoPage() {
             </button>
           </form>
         </div>
+        <CookieSettingsButton className="mt-6 text-sm font-medium text-[var(--brand-primary)] underline" />
       </div>
     </div>
   );

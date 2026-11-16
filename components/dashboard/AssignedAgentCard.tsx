@@ -333,9 +333,8 @@ function ScheduleMeetingModal({
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const handledRef = useRef(false);
+  const selectedSlotRef = useRef<{ start_time?: string; end_time?: string } | null>(null);
   const [meeting, setMeeting] = useState<SavedMeeting | null>(null);
-  const [needsTime, setNeedsTime] = useState(false);
-  const [when, setWhen] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -382,15 +381,48 @@ function ScheduleMeetingModal({
 
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== "https://calendly.com") return;
-      const data = event.data as { event?: string; payload?: { height?: string | number } };
+      const data = event.data as {
+        event?: string;
+        payload?: {
+          height?: string | number;
+          start_time?: string;
+          end_time?: string;
+          startTime?: string;
+          endTime?: string;
+          event?: { start_time?: string; end_time?: string; startTime?: string; endTime?: string };
+        };
+      };
       if (data?.event === "calendly.page_height" && containerRef.current) {
         const height = Number.parseInt(String(data.payload?.height ?? ""), 10);
         if (Number.isFinite(height)) {
           containerRef.current.style.height = `${Math.min(Math.max(height, 640), 900)}px`;
         }
       }
+      if (data?.event === "calendly.date_and_time_selected") {
+        const slotEvent = data.payload?.event;
+        const startTime =
+          slotEvent?.start_time ?? slotEvent?.startTime ?? data.payload?.start_time ?? data.payload?.startTime;
+        const endTime =
+          slotEvent?.end_time ?? slotEvent?.endTime ?? data.payload?.end_time ?? data.payload?.endTime;
+        if (startTime || endTime) {
+          selectedSlotRef.current = { start_time: startTime, end_time: endTime };
+        }
+        return;
+      }
       if (data?.event !== "calendly.event_scheduled" || handledRef.current) return;
       handledRef.current = true;
+      const slot = selectedSlotRef.current;
+      const source =
+        data.payload && typeof data.payload === "object"
+          ? data.payload
+          : event.data && typeof event.data === "object"
+            ? event.data
+            : {};
+      const payload = {
+        ...source,
+        ...(slot?.start_time ? { start_time: slot.start_time } : {}),
+        ...(slot?.end_time ? { end_time: slot.end_time } : {}),
+      };
       void (async () => {
         setError(null);
         setSaving(true);
@@ -398,11 +430,10 @@ function ScheduleMeetingModal({
           const res = await authFetch("/api/me/meetings", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ payload: data.payload ?? event.data }),
+            body: JSON.stringify({ payload }),
           });
           const json = (await res.json().catch(() => ({}))) as {
             error?: string;
-            needsTime?: boolean;
             meeting?: SavedMeeting;
           };
           if (!res.ok || !json.meeting) {
@@ -412,7 +443,6 @@ function ScheduleMeetingModal({
             return;
           }
           setMeeting(json.meeting);
-          setNeedsTime(Boolean(json.needsTime));
           setSaving(false);
           router.refresh();
         } catch {
@@ -430,34 +460,6 @@ function ScheduleMeetingModal({
       if (parent) parent.innerHTML = "";
     };
   }, [bookingUrl, router, userEmail, userName]);
-
-  const confirmTime = async () => {
-    if (!meeting || !when) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const startsAt = new Date(when);
-      const endsAt = new Date(startsAt.getTime() + 30 * 60 * 1000);
-      const res = await authFetch(`/api/me/meetings/${meeting.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() }),
-      });
-      const json = (await res.json().catch(() => ({}))) as { error?: string; meeting?: SavedMeeting };
-      if (!res.ok || !json.meeting) {
-        setError(json.error || "No se pudo guardar la hora.");
-        setSaving(false);
-        return;
-      }
-      setMeeting(json.meeting);
-      setNeedsTime(false);
-      setSaving(false);
-      router.refresh();
-    } catch {
-      setError("No se pudo guardar la hora.");
-      setSaving(false);
-    }
-  };
 
   const dialog = (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/45 p-0 sm:items-center sm:p-6">
@@ -483,45 +485,23 @@ function ScheduleMeetingModal({
           {meeting ? (
             <div className="space-y-4 px-5 py-6">
               <p className="text-base font-semibold text-slate-900">Reserva registrada</p>
-              {needsTime ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-slate-600">
-                    Indica la hora que acabas de reservar para verla en tu calendario de Diligenz.
-                  </p>
-                  <input
-                    type="datetime-local"
-                    value={when}
-                    onChange={(event) => setWhen(event.target.value)}
-                    className="w-full max-w-xs rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
-                  />
-                  <button
-                    type="button"
-                    disabled={!when || saving}
-                    onClick={() => void confirmTime()}
-                    className="rounded-xl bg-[#7c4dff] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                  >
-                    {saving ? "Guardando…" : "Guardar en mi calendario"}
-                  </button>
+              <div className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  {meeting.startsAt
+                    ? `${meeting.title} · ${formatMeetingWhen(meeting.startsAt)}`
+                    : meeting.title}
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {meeting.startsAt && (
+                    <a
+                      href={`/api/me/meetings/${meeting.id}/ics`}
+                      className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700"
+                    >
+                      Añadir a mi calendario
+                    </a>
+                  )}
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-slate-600">
-                    {meeting.startsAt
-                      ? `${meeting.title} · ${formatMeetingWhen(meeting.startsAt)}`
-                      : meeting.title}
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    {meeting.startsAt && (
-                      <a
-                        href={`/api/me/meetings/${meeting.id}/ics`}
-                        className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700"
-                      >
-                        Añadir a mi calendario
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
+              </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
             </div>
           ) : (

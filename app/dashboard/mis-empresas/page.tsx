@@ -11,6 +11,7 @@ import { getSessionWithUser } from "@/lib/session";
 import { promotePendingNdaRequests } from "@/lib/promote-pending-nda";
 import { resolveBuyerDocuments } from "@/lib/buyer-documents";
 import { buyerCanAccessCompanyDocuments } from "@/lib/company-drive-access";
+import { isActiveRequestStatus } from "@/lib/info-request-pipeline";
 import BuyerCompanySlots, {
   type BuyerCompanySlot,
 } from "@/components/dashboard/BuyerCompanySlots";
@@ -115,7 +116,7 @@ export default async function MisEmpresasPage() {
       </div>
 
       <div className="flex flex-wrap gap-2 justify-center pb-4">
-        {!unlimited && slots.length < maxSlots && (
+        {!unlimited && slots.filter((slot) => isActiveRequestStatus(slot.status)).length < maxSlots && (
           <Link
             href="/companies"
             className="rounded-lg px-4 py-2 text-xs font-semibold bg-[var(--brand-primary)] text-white shadow-sm hover:opacity-95 transition"

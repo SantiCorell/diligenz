@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { SalesMandateVariant, UserAccountStatus, UserRole } from "@prisma/client";
+import { deleteUserAccount } from "@/lib/account-deletion";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { promotePendingNdaRequests } from "@/lib/promote-pending-nda";
 
@@ -263,47 +264,9 @@ export async function DELETE(req: Request, { params }: Params) {
   }
 
   const { id: userId } = await params;
-  if (!userId) {
-    return NextResponse.json({ error: "Usuario no indicado" }, { status: 400 });
-  }
-
-  if (userId === session.userId) {
-    return NextResponse.json({ error: "No puedes eliminar tu propia cuenta." }, { status: 400 });
-  }
-
-  const target = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, role: true, deletedAt: true },
+  const result = await deleteUserAccount({
+    userId,
+    actorUserId: session.userId,
   });
-
-  if (!target || target.deletedAt) {
-    return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
-  }
-
-  if (target.role === "ADMIN") {
-    const admins = await prisma.user.count({
-      where: { role: "ADMIN", deletedAt: null },
-    });
-    if (admins <= 1) {
-      return NextResponse.json(
-        { error: "No se puede eliminar el último administrador." },
-        { status: 400 }
-      );
-    }
-  }
-
-  const freedEmail = `removed_${userId.replace(/[^a-z0-9]/gi, "")}_${Date.now()}@user-removed.invalid`;
-
-  await prisma.$transaction([
-    prisma.session.deleteMany({ where: { userId } }),
-    prisma.user.update({
-      where: { id: userId },
-      data: {
-        deletedAt: new Date(),
-        email: freedEmail,
-      },
-    }),
-  ]);
-
-  return NextResponse.json({ ok: true });
+  return NextResponse.json(result.body, { status: result.httpStatus });
 }

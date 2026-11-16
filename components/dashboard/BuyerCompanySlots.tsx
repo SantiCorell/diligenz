@@ -43,17 +43,24 @@ type Props = {
   isUnlimited?: boolean;
 };
 
+function formatSlotDate(date: Date) {
+  return new Date(date).toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export default function BuyerCompanySlots({ filled, maxSlots, isUnlimited }: Props) {
-  const activeCount = filled.filter((slot) => isActiveRequestStatus(slot.status)).length;
-  const emptyCount = isUnlimited ? (filled.length === 0 ? 1 : 0) : Math.max(0, maxSlots - activeCount);
+  const rejected = filled
+    .filter((slot) => normalizeRequestStatus(slot.status) === "REJECTED")
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const occupying = filled.filter((slot) => normalizeRequestStatus(slot.status) !== "REJECTED");
+  const activeCount = occupying.filter((slot) => isActiveRequestStatus(slot.status)).length;
+  const emptyCount = isUnlimited ? (occupying.length === 0 ? 1 : 0) : Math.max(0, maxSlots - activeCount);
   const atLimit = !isUnlimited && activeCount >= maxSlots;
-  const ordered = [...filled].sort((a, b) => {
-    const rank = (status: RequestStatus) => {
-      const stage = normalizeRequestStatus(status);
-      if (stage === "REJECTED") return 2;
-      if (stage === "CLOSED") return 1;
-      return 0;
-    };
+  const ordered = [...occupying].sort((a, b) => {
+    const rank = (status: RequestStatus) => (normalizeRequestStatus(status) === "CLOSED" ? 1 : 0);
     return rank(a.status) - rank(b.status);
   });
 
@@ -74,8 +81,8 @@ export default function BuyerCompanySlots({ filled, maxSlots, isUnlimited }: Pro
             Has alcanzado el límite de {maxSlots} empresas activas
           </p>
           <p className="mt-1 leading-relaxed">
-            No puedes solicitar más información hasta que alguna solicitud se cierre. Si necesitas
-            más oportunidades,{" "}
+            No puedes solicitar más información hasta que alguna solicitud se cierre o se rechace.
+            Si necesitas más oportunidades,{" "}
             <Link href="/contact" className="font-semibold text-[var(--brand-primary)] hover:underline">
               ponte en contacto
             </Link>{" "}
@@ -84,22 +91,54 @@ export default function BuyerCompanySlots({ filled, maxSlots, isUnlimited }: Pro
         </div>
       )}
 
-      {!isUnlimited && filled.length === 0 && (
+      {!isUnlimited && occupying.length === 0 && (
         <p className="text-center text-sm text-[var(--foreground)]/70">
           Tienes {maxSlots} espacios disponibles. Pulsa en + para explorar empresas y solicitar
           información.
         </p>
       )}
+
+      {rejected.length > 0 && <RejectedRequestsList slots={rejected} />}
     </div>
   );
 }
 
+function RejectedRequestsList({ slots }: { slots: BuyerCompanySlot[] }) {
+  return (
+    <section className="border-t border-[var(--brand-primary)]/10 pt-4" aria-label="Solicitudes rechazadas">
+      <h2 className="text-sm font-semibold text-[var(--brand-dark)]">Solicitudes rechazadas</h2>
+      <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--foreground)]/70 sm:text-sm">
+        Estas solicitudes no ocupan un hueco. Si te rechazan una, puedes pedir información de otra empresa.
+      </p>
+      <ul className="mt-3 space-y-2">
+        {slots.map((slot) => {
+          const moment = buyerMomentCopy(slot.status);
+          return (
+            <li
+              key={slot.interestId}
+              className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-red-100 bg-red-50/50 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="font-semibold text-[var(--brand-dark)]">{slot.name}</p>
+                <p className="mt-1 text-sm font-medium text-slate-700">{moment.title}</p>
+                <p className="mt-0.5 text-sm leading-relaxed text-slate-600">{moment.body}</p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold sm:text-xs ${STATUS_CLASS.REJECTED}`}>
+                  {requestStatusLabel("REJECTED")}
+                </span>
+                <span className="text-[11px] text-[var(--foreground)]/55">{formatSlotDate(slot.createdAt)}</span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function FilledSlot({ slot }: { slot: BuyerCompanySlot }) {
-  const dateLabel = new Date(slot.createdAt).toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const dateLabel = formatSlotDate(slot.createdAt);
   const stage = normalizeRequestStatus(slot.status);
   const moment = buyerMomentCopy(stage);
 
@@ -114,7 +153,7 @@ function FilledSlot({ slot }: { slot: BuyerCompanySlot }) {
     </div>
   );
 
-  const quiet = stage === "REJECTED" || stage === "CLOSED";
+  const quiet = stage === "CLOSED";
   const nextStep = (
     <SlotNextStep
       stage={stage}
@@ -127,7 +166,7 @@ function FilledSlot({ slot }: { slot: BuyerCompanySlot }) {
 
   if (quiet || !slot.company || !slot.published) {
     return (
-      <div className={`flex h-full flex-col ${stage === "REJECTED" ? "opacity-55" : ""}`}>
+      <div className="flex h-full flex-col">
         {statusBar}
         <article className="flex h-full flex-col rounded-[1.5rem] border border-[var(--brand-dark)]/[0.08] bg-white p-5">
           <h3 className="text-lg font-extrabold tracking-tight text-[var(--brand-dark)]">{slot.name}</h3>
@@ -176,14 +215,6 @@ function SlotNextStep({
             Ver empresas similares →
           </Link>
         )}
-      </div>
-    );
-  }
-  if (stage === "REJECTED") {
-    return (
-      <div className="mt-4 text-sm text-slate-600">
-        <p className="font-semibold text-slate-700">{moment.title}</p>
-        <p className="mt-1">{moment.body}</p>
       </div>
     );
   }

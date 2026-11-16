@@ -60,7 +60,7 @@ const BOXES: {
   {
     id: "draft",
     label: "Valoraciones",
-    description: "Valoraciones aún sin publicar en la web",
+    description: "Empresas en estado valoración",
     icon: PencilLine,
     activeClass: "border-violet-400 bg-violet-50 ring-2 ring-violet-200",
     idleClass: "border-slate-200 bg-white hover:border-violet-300 hover:bg-violet-50/40",
