@@ -3,7 +3,21 @@ import {
   buyerDocumentsMeaningful,
   type BuyerDocument,
 } from "@/lib/buyer-documents";
-import { buyerHasTeaserAccess } from "@/lib/info-request-pipeline";
+import { buyerHasTeaserAccess, normalizeRequestStatus } from "@/lib/info-request-pipeline";
+
+/**
+ * La carpeta de Drive se abre si el admin lo permitió, la empresa tiene enlace
+ * y el comprador ya avanzó (o la solicitud se cerró después).
+ */
+export function buyerCanOpenCompanyDriveFolder(opts: {
+  requestStatus: string | null | undefined;
+  canSeeDriveFolder: boolean;
+  driveFolderUrl?: string | null;
+}): boolean {
+  if (!opts.canSeeDriveFolder || !opts.driveFolderUrl?.trim()) return false;
+  const stage = normalizeRequestStatus(opts.requestStatus);
+  return stage === "CONVERSATIONS" || stage === "CLOSED";
+}
 
 /** Compradores con teaser concedido pueden ver la documentación de la empresa. */
 export function buyerCanSeeCompanyDriveFolder(

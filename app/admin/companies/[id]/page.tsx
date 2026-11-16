@@ -25,6 +25,7 @@ import { formatCompactEuroRange } from "@/lib/format-financial";
 import { ensureCompanyReference } from "@/lib/company-reference";
 import { resolveBuyerDocuments } from "@/lib/buyer-documents";
 import { companyStatusLabel } from "@/lib/admin-company-views";
+import { requestStatusLabel } from "@/lib/info-request-pipeline";
 import type { DocumentType } from "@prisma/client";
 
 function docSigned(docs: { type: DocumentType; signed: boolean }[], type: DocumentType) {
@@ -63,7 +64,19 @@ export default async function AdminCompanyDetail({
 
   if (!company) redirect("/admin/companies");
 
-  const companyReference = await ensureCompanyReference(company.id);
+  const [companyReference, driveInterests] = await Promise.all([
+    ensureCompanyReference(company.id),
+    prisma.userCompanyInterest.findMany({
+      where: { companyId: company.id, type: "REQUEST_INFO" },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        status: true,
+        canSeeDriveFolder: true,
+        user: { select: { name: true, email: true } },
+      },
+    }),
+  ]);
 
   const companyDriveUrl = getCompanyDocumentsDriveUrl(company.documentLinks);
 
@@ -654,6 +667,12 @@ export default async function AdminCompanyDetail({
           company.buyerDocuments,
           company.buyerTeaserUrl
         )}
+        driveAccessRequests={driveInterests.map((interest) => ({
+          id: interest.id,
+          buyerLabel: interest.user.name?.trim() || interest.user.email,
+          statusLabel: requestStatusLabel(interest.status),
+          enabled: interest.canSeeDriveFolder,
+        }))}
       />
 
       {/* DOCUMENTACIÓN LEGAL */}

@@ -247,6 +247,8 @@ model UserCompanyInterest {
   status          RequestStatus? @default(PENDING_NDA) // solo para REQUEST_INFO
   /// Nota privada del gestor. El comprador no la ve.
   internalNote    String?  @db.Text
+  /// Si es true y la empresa tiene carpeta, el comprador la ve al avanzar.
+  canSeeDriveFolder Boolean @default(false)
   statusUpdatedAt DateTime @default(now())
   createdAt       DateTime @default(now())
 

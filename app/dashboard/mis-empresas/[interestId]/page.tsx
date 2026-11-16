@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getSessionWithUser } from "@/lib/session";
 import { resolveCompanyForBuyerInterest } from "@/lib/buyer-company-resolve";
 import { resolveBuyerDocuments } from "@/lib/buyer-documents";
-import { buyerCanAccessCompanyDocuments } from "@/lib/company-drive-access";
+import { buyerCanAccessCompanyDocuments, buyerCanOpenCompanyDriveFolder } from "@/lib/company-drive-access";
+import { getCompanyDocumentsDriveUrl } from "@/lib/company-display";
 import { buyerMomentCopy, normalizeRequestStatus } from "@/lib/info-request-pipeline";
 import BuyerRequestDecision from "@/components/dashboard/BuyerRequestDecision";
 
@@ -31,6 +32,7 @@ export default async function BuyerRequestDetailPage({ params }: Props) {
         attachmentsApproved: true,
         buyerDocuments: true,
         buyerTeaserUrl: true,
+        documentLinks: true,
         reference: true,
       },
     }),
@@ -45,6 +47,12 @@ export default async function BuyerRequestDetailPage({ params }: Props) {
     attachmentsApproved: companyRow?.attachmentsApproved ?? false,
     buyerDocuments: companyRow?.buyerDocuments,
     buyerTeaserUrl: companyRow?.buyerTeaserUrl,
+  });
+  const driveFolderUrl = getCompanyDocumentsDriveUrl(companyRow?.documentLinks);
+  const canSeeDriveFolder = buyerCanOpenCompanyDriveFolder({
+    requestStatus: interest.status,
+    canSeeDriveFolder: interest.canSeeDriveFolder,
+    driveFolderUrl,
   });
   const grantedAt = interest.statusUpdatedAt ?? interest.createdAt;
 
@@ -92,6 +100,23 @@ export default async function BuyerRequestDetailPage({ params }: Props) {
               </li>
             ))}
           </ul>
+        )}
+
+        {canSeeDriveFolder && driveFolderUrl && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-[var(--brand-dark)]">Carpeta de documentación</p>
+              <p className="text-xs text-[var(--foreground)]/60">Toda la documentación de la empresa. Uso personal, no compartir.</p>
+            </div>
+            <a
+              href={driveFolderUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-[var(--brand-primary)]/30 px-4 py-2 text-sm font-semibold text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5"
+            >
+              Abrir carpeta
+            </a>
+          </div>
         )}
 
         {stage === "TEASER" && !canSeeTeaser && (

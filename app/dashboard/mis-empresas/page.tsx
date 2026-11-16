@@ -10,7 +10,8 @@ import {
 import { getSessionWithUser } from "@/lib/session";
 import { promotePendingNdaRequests } from "@/lib/promote-pending-nda";
 import { resolveBuyerDocuments } from "@/lib/buyer-documents";
-import { buyerCanAccessCompanyDocuments } from "@/lib/company-drive-access";
+import { buyerCanAccessCompanyDocuments, buyerCanOpenCompanyDriveFolder } from "@/lib/company-drive-access";
+import { getCompanyDocumentsDriveUrl } from "@/lib/company-display";
 import { isActiveRequestStatus } from "@/lib/info-request-pipeline";
 import BuyerCompanySlots, {
   type BuyerCompanySlot,
@@ -59,6 +60,7 @@ export default async function MisEmpresasPage() {
             attachmentsApproved: true,
             buyerDocuments: true,
             buyerTeaserUrl: true,
+            documentLinks: true,
           },
         })
       : Promise.resolve([]),
@@ -84,6 +86,14 @@ export default async function MisEmpresasPage() {
           url: doc.url,
         }))
       : [];
+    const driveFolderUrl = getCompanyDocumentsDriveUrl(docsRow?.documentLinks);
+    const visibleDriveFolderUrl = buyerCanOpenCompanyDriveFolder({
+      requestStatus: row.status,
+      canSeeDriveFolder: row.canSeeDriveFolder,
+      driveFolderUrl,
+    })
+      ? driveFolderUrl
+      : null;
     return {
       companyId: row.companyId,
       interestId: row.id,
@@ -93,6 +103,7 @@ export default async function MisEmpresasPage() {
       company: resolved.company,
       createdAt: row.createdAt,
       teaserDocuments,
+      driveFolderUrl: visibleDriveFolderUrl,
     };
   });
 

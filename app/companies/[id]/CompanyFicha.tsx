@@ -6,8 +6,6 @@ import {
   FileText,
   ExternalLink,
   MapPin,
-  Upload,
-  Download,
   File,
   Lock,
   Check,
@@ -32,16 +30,6 @@ import { trackRequestCompanyInfo, trackViewCompany } from "@/lib/meta-pixel";
 
 type TabId = "informacion" | "descripcion" | "documentos";
 
-type CompanyFileItem = {
-  id: string;
-  name: string;
-  size: number | null;
-  mimeType: string | null;
-  kind: string;
-  sortOrder?: number;
-  createdAt: string;
-};
-
 type Props = {
   company: CompanyMock;
   isLoggedIn: boolean;
@@ -51,6 +39,7 @@ type Props = {
   viewerName?: string;
   viewerEmail?: string;
   documentCount?: number;
+  driveFolderUrl?: string | null;
 };
 
 function missingFigure(value: string | null | undefined): boolean {
@@ -127,6 +116,7 @@ export default function CompanyFicha({
   viewerName = "",
   viewerEmail = "",
   documentCount = 0,
+  driveFolderUrl = null,
 }: Props) {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [requestModalOpen, setRequestModalOpen] = useState(false);
@@ -137,9 +127,6 @@ export default function CompanyFicha({
   const [requestInfoStatus, setRequestInfoStatus] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [files, setFiles] = useState<CompanyFileItem[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const canSeeDocuments = isOwner || isAdmin;
   const hasDriveLinks = Boolean(company.documentLinks?.length);
   const buyerDocuments = company.buyerDocuments ?? [];
   const hasBuyerDocuments = buyerDocuments.length > 0;
@@ -171,14 +158,6 @@ export default function CompanyFicha({
       })
       .catch(() => {});
   }, [company.id, isLoggedIn]);
-
-  useEffect(() => {
-    if (!isLoggedIn || !canSeeDocuments) return;
-    authFetch(`/api/companies/${company.id}/files`)
-      .then((r) => r.json())
-      .then((d) => (d.files ? setFiles(d.files) : []))
-      .catch(() => {});
-  }, [company.id, isLoggedIn, canSeeDocuments]);
 
   const handleRequestInfo = async () => {
     setLoading(true);
@@ -221,28 +200,6 @@ export default function CompanyFicha({
     setRequestModalOpen(false);
     setRequestModalSuccess(false);
     setRequestError(null);
-  };
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await authFetch(`/api/companies/${company.id}/files`, {
-        method: "POST",
-        body: form,
-      });
-      if (res.ok) {
-        const res2 = await authFetch(`/api/companies/${company.id}/files`);
-        const data2 = await res2.json();
-        if (data2.files) setFiles(data2.files);
-      }
-    } finally {
-      setUploading(false);
-      e.target.value = "";
-    }
   };
 
   const documentTabLabel =
@@ -478,18 +435,18 @@ export default function CompanyFicha({
                 </button>
               </div>
             ) : (
-              <div className="mt-6 space-y-6">
-                {hasBuyerDocuments && (
-                  <div className="space-y-3">
+              <div className="mt-6 space-y-3">
+                {hasBuyerDocuments || driveFolderUrl ? (
+                  <>
                     <div>
                       <h3 className="text-sm font-semibold text-[var(--brand-primary)] flex items-center gap-2">
                         <ExternalLink className="w-4 h-4" />
                         Documentación disponible
                       </h3>
                       <p className="mt-1 text-xs text-[var(--foreground)] opacity-70">
-                        {isAdmin
-                          ? "Vista previa de lo que verá el comprador cuando su solicitud esté en gestión."
-                          : "Tu solicitud de información está validada. Puedes acceder a estos documentos."}
+                        {driveFolderUrl
+                          ? "Teaser y carpeta con la documentación de la empresa."
+                          : "Teaser de la empresa."}
                       </p>
                     </div>
                     <ul className="space-y-2">
@@ -498,8 +455,11 @@ export default function CompanyFicha({
                           key={`${doc.url}-${index}`}
                           className="flex items-center justify-between gap-4 rounded-xl border border-[var(--brand-primary)]/10 bg-[var(--brand-bg-lavender)]/40 px-4 py-3"
                         >
-                          <span className="text-sm font-medium text-[var(--foreground)]">
-                            {doc.label}
+                          <span className="min-w-0">
+                            <span className="block text-sm font-medium text-[var(--foreground)]">Teaser</span>
+                            <span className="block truncate text-xs text-[var(--foreground)] opacity-70">
+                              {doc.label || "Documento confidencial"}
+                            </span>
                           </span>
                           <a
                             href={doc.url}
@@ -507,76 +467,41 @@ export default function CompanyFicha({
                             rel="noopener noreferrer"
                             className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[var(--brand-primary)]/15 px-3 py-2 text-sm font-medium text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/25"
                           >
-                            Abrir
+                            Ver teaser
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                         </li>
                       ))}
-                    </ul>
-                  </div>
-                )}
-
-                {canSeeDocuments ? (
-                  <div className={hasBuyerDocuments ? "pt-6 border-t border-[var(--brand-primary)]/10 space-y-4" : "space-y-4"}>
-                    <div>
-                      <h3 className="text-sm font-semibold text-[var(--brand-primary)]">
-                        Archivos internos del proyecto
-                      </h3>
-                      <p className="mt-1 text-xs text-[var(--foreground)] opacity-70">
-                        Solo visible para el vendedor y el equipo Diligenz.
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <label className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-primary)]/15 px-4 py-2.5 text-sm font-medium text-[var(--brand-primary)] cursor-pointer hover:bg-[var(--brand-primary)]/20">
-                        <Upload className="w-4 h-4" />
-                        {uploading ? "Subiendo…" : "Subir documento"}
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-                          onChange={handleUpload}
-                          disabled={uploading}
-                        />
-                      </label>
-                      <span className="text-xs text-[var(--foreground)] opacity-70">
-                        PDF, Word, Excel o imágenes. Máx. 15 MB.
-                      </span>
-                    </div>
-                    {files.length === 0 ? (
-                      <p className="text-sm text-[var(--foreground)] opacity-70">
-                        Aún no hay documentos subidos. Sube memorias, cuentas anuales u otros
-                        archivos para que el equipo pueda revisarlos.
-                      </p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {files.map((f) => (
-                          <li
-                            key={f.id}
-                            className="flex items-center justify-between gap-4 rounded-xl border border-[var(--brand-primary)]/10 bg-[var(--brand-bg-lavender)]/40 px-4 py-3"
-                          >
-                            <span className="text-sm font-medium text-[var(--foreground)] truncate">
-                              {f.name}
+                      {driveFolderUrl ? (
+                        <li className="flex items-center justify-between gap-4 rounded-xl border border-[var(--brand-primary)]/10 bg-[var(--brand-bg-lavender)]/40 px-4 py-3">
+                          <span className="min-w-0">
+                            <span className="block text-sm font-medium text-[var(--foreground)]">
+                              Carpeta de documentación
                             </span>
-                            <a
-                              href={`/api/companies/${company.id}/files/${f.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="shrink-0 rounded-lg bg-[var(--brand-primary)]/15 p-2 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/25"
-                              title="Descargar"
-                            >
-                              <Download className="w-4 h-4" />
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ) : !hasBuyerDocuments ? (
+                            <span className="block text-xs text-[var(--foreground)] opacity-70">
+                              Toda la documentación de la empresa. Uso personal, no compartir.
+                            </span>
+                          </span>
+                          <a
+                            href={driveFolderUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[var(--brand-primary)]/15 px-3 py-2 text-sm font-medium text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/25"
+                          >
+                            Abrir carpeta
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </li>
+                      ) : null}
+                    </ul>
+                  </>
+                ) : (
                   <p className="text-[var(--foreground)] opacity-80">
-                    Solicita información sobre esta empresa. Cuando tu gestor te conceda el teaser,
-                    el documento resumen aparecerá aquí.
+                    {isOwner || isAdmin
+                      ? "Aún no hay un teaser ni una carpeta de Drive publicados."
+                      : "Solicita información sobre esta empresa. Cuando tu gestor te conceda el teaser, el documento resumen aparecerá aquí."}
                   </p>
-                ) : null}
+                )}
               </div>
             )}
           </section>

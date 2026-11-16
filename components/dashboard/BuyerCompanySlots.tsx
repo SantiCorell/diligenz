@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download, Headset, Lock, MessageSquare, Phone, Plus } from "lucide-react";
+import { Download, ExternalLink, Headset, Lock, MessageSquare, Phone, Plus } from "lucide-react";
 import type { RequestStatus } from "@prisma/client";
 import type { CompanyMock } from "@/lib/mock-companies";
 import CompanyCard from "@/components/companies/CompanyCard";
@@ -26,6 +26,7 @@ export type BuyerCompanySlot = {
   company: CompanyMock | null;
   createdAt: Date;
   teaserDocuments: BuyerSlotDocument[];
+  driveFolderUrl?: string | null;
 };
 
 const STATUS_CLASS: Record<PipelineStatus, string> = {
@@ -161,6 +162,7 @@ function FilledSlot({ slot }: { slot: BuyerCompanySlot }) {
       interestId={slot.interestId}
       sector={slot.company?.sector}
       documents={slot.teaserDocuments}
+      driveFolderUrl={slot.driveFolderUrl}
     />
   );
 
@@ -199,16 +201,19 @@ function SlotNextStep({
   interestId,
   sector,
   documents,
+  driveFolderUrl,
 }: {
   stage: PipelineStatus;
   moment: { title: string; body: string };
   interestId: string;
   sector?: string;
   documents: BuyerSlotDocument[];
+  driveFolderUrl?: string | null;
 }) {
   if (stage === "CLOSED") {
     return (
-      <div className="mt-4 text-sm text-slate-600">
+      <div className="mt-4 space-y-3 text-sm text-slate-600">
+        {driveFolderUrl ? <DriveFolderFile url={driveFolderUrl} /> : null}
         <p>{moment.body}</p>
         {sector && (
           <Link href={`/companies?sector=${encodeURIComponent(sector)}`} className="mt-3 inline-block font-semibold text-[var(--brand-primary)] hover:underline">
@@ -267,6 +272,7 @@ function SlotNextStep({
     return (
       <div className="mt-4 space-y-3">
         {documents.length > 0 && <TeaserFiles documents={documents} />}
+        {driveFolderUrl ? <DriveFolderFile url={driveFolderUrl} /> : null}
         <div className="flex items-start gap-3 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-950">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-violet-800">
             <Phone className="h-4 w-4" aria-hidden />
@@ -321,6 +327,33 @@ function TeaserFiles({ documents }: { documents: BuyerSlotDocument[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+function DriveFolderFile({ url }: { url: string }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-violet-800">
+          <ExternalLink className="h-4 w-4" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[var(--brand-dark)]">Carpeta de documentación</p>
+          <p className="text-xs text-[var(--brand-dark)]/65">
+            Toda la documentación de la empresa · uso personal, no compartir
+          </p>
+        </div>
+      </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[var(--brand-primary)] px-4 py-2 text-xs font-semibold text-white hover:opacity-90"
+      >
+        <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+        Abrir carpeta
+      </a>
+    </div>
   );
 }
 

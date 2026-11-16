@@ -173,9 +173,6 @@ export async function OwnerCompaniesList({ userId, dashboardPath }: Props) {
               )}
 
               <div className="pointer-events-auto mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold text-[var(--brand-primary)]">
-                <Link href={`${detailHref}#valoracion`} className="hover:underline">
-                  Gestionar valoración y precio
-                </Link>
                 <a
                   href={`/companies/${company.id}`}
                   target="_blank"

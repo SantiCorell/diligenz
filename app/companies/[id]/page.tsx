@@ -12,8 +12,9 @@ import type { CompanyMock, DocumentLink } from "@/lib/mock-companies";
 import { SITE_URL, SITE_NAME, getBreadcrumbSchema } from "@/lib/seo";
 import { publicListingName } from "@/lib/company-display-names";
 import { ensureCompanyReference } from "@/lib/company-reference";
-import { buyerCanAccessCompanyDocuments } from "@/lib/company-drive-access";
+import { buyerCanAccessCompanyDocuments, buyerCanOpenCompanyDriveFolder } from "@/lib/company-drive-access";
 import { resolveBuyerDocuments } from "@/lib/buyer-documents";
+import { getCompanyDocumentsDriveUrl } from "@/lib/company-display";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -129,10 +130,12 @@ export default async function CompanyDetailPage({ params }: Props) {
   let isOwner = false;
   let isAdmin = false;
   let buyerDocumentAccess = false;
+  let buyerDriveAccess = false;
   let agent: AgentCardData | null = null;
   if (userId) {
     agent = (await getDashboardAgent(userId)).agent;
   }
+  const companyDriveUrl = getCompanyDocumentsDriveUrl(company.documentLinks);
   if (userId && !isMockCompanyId(id)) {
     const [companyRow, user, infoRequest] = await Promise.all([
       prisma.company.findUnique({
@@ -142,7 +145,7 @@ export default async function CompanyDetailPage({ params }: Props) {
       prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
       prisma.userCompanyInterest.findFirst({
         where: { userId, companyId: id, type: "REQUEST_INFO" },
-        select: { status: true },
+        select: { status: true, canSeeDriveFolder: true },
       }),
     ]);
     isOwner = companyRow?.ownerId === userId;
@@ -153,10 +156,17 @@ export default async function CompanyDetailPage({ params }: Props) {
       buyerDocuments: companyRow?.buyerDocuments,
       buyerTeaserUrl: companyRow?.buyerTeaserUrl,
     });
+    buyerDriveAccess = buyerCanOpenCompanyDriveFolder({
+      requestStatus: infoRequest?.status,
+      canSeeDriveFolder: infoRequest?.canSeeDriveFolder ?? false,
+      driveFolderUrl: companyDriveUrl,
+    });
   }
 
   const resolvedBuyerDocs = company.buyerDocuments ?? [];
-  const showBuyerDocumentsPreview = isAdmin && resolvedBuyerDocs.length > 0;
+  const showBuyerDocumentsPreview = (isAdmin || isOwner) && resolvedBuyerDocs.length > 0;
+  const driveFolderUrl =
+    companyDriveUrl && (isOwner || isAdmin || buyerDriveAccess) ? companyDriveUrl : null;
 
   const breadcrumbSchema = getBreadcrumbSchema([
     { name: "Inicio", url: SITE_URL },
@@ -201,7 +211,13 @@ export default async function CompanyDetailPage({ params }: Props) {
             agent={agent}
             viewerName={session?.user.name?.trim() || ""}
             viewerEmail={session?.user.email ?? ""}
-            documentCount={resolvedBuyerDocs.length}
+            documentCount={
+              isLoggedIn
+                ? (buyerDocumentAccess || showBuyerDocumentsPreview ? resolvedBuyerDocs.length : 0) +
+                  (driveFolderUrl ? 1 : 0)
+                : 0
+            }
+            driveFolderUrl={driveFolderUrl}
           />
         </div>
       </div>

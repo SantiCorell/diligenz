@@ -1,0 +1,1 @@
+ALTER TABLE "UserCompanyInterest" ADD COLUMN IF NOT EXISTS "canSeeDriveFolder" BOOLEAN NOT NULL DEFAULT false;

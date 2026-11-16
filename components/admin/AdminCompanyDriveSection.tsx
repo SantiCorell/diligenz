@@ -1,4 +1,8 @@
 import AdminBuyerDocumentsForm from "@/components/admin/AdminBuyerDocumentsForm";
+import {
+  DriveFolderAccessList,
+  type DriveAccessRequest,
+} from "@/components/admin/DriveFolderAccessToggle";
 import type { BuyerDocument } from "@/lib/buyer-documents";
 
 type Props = {
@@ -7,6 +11,7 @@ type Props = {
   companyDriveUrl: string | null;
   ownerDriveUrl: string;
   buyerDocuments: BuyerDocument[];
+  driveAccessRequests: DriveAccessRequest[];
 };
 
 export default function AdminCompanyDriveSection({
@@ -15,6 +20,7 @@ export default function AdminCompanyDriveSection({
   companyDriveUrl,
   ownerDriveUrl,
   buyerDocuments,
+  driveAccessRequests,
 }: Props) {
   return (
     <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 space-y-6">
@@ -24,8 +30,8 @@ export default function AdminCompanyDriveSection({
         </h2>
         <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
           Acceso interno al Drive de <strong>{ownerLabel}</strong> (mandato, DNI y archivos del
-          proyecto). Los compradores <strong>no</strong> ven esta carpeta: solo los enlaces que
-          indiques abajo.
+          proyecto). La carpeta del negocio solo la abre un comprador si activas «Puede ver la
+          carpeta de Drive» en su solicitud y pulsa «Quiero avanzar».
         </p>
         <form action="/api/admin/company/update" method="POST" className="mt-4 space-y-3">
           <input type="hidden" name="companyId" value={companyId} />
@@ -79,6 +85,16 @@ export default function AdminCompanyDriveSection({
             </a>
           ) : null}
         </div>
+      </div>
+
+      <div className="border-t border-[var(--brand-primary)]/10 pt-6">
+        <h3 className="text-sm font-semibold text-[var(--brand-primary)]">
+          Quién puede ver la carpeta
+        </h3>
+        <p className="mt-1 mb-4 text-xs text-[var(--foreground)] opacity-75">
+          El permiso es por solicitud. Sin esta casilla, el comprador no ve el enlace aunque la carpeta exista.
+        </p>
+        <DriveFolderAccessList requests={driveAccessRequests} />
       </div>
 
       <AdminBuyerDocumentsForm

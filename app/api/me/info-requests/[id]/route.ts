@@ -5,6 +5,7 @@ import { logUserActivity } from "@/lib/user-activity";
 import { normalizeRequestStatus } from "@/lib/info-request-pipeline";
 import { sendInfoRequestAdvanceEmails } from "@/lib/emails/info-request-advance";
 import { resolveCompanyDisplayName } from "@/lib/emails/resolve-company-name";
+import { getCompanyDocumentsDriveUrl } from "@/lib/company-display";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -47,7 +48,14 @@ export async function POST(req: Request, { params }: Params) {
     metadata: { from: "TEASER", to: nextStatus, byBuyer: true },
   });
 
+  let driveFolderGranted = false;
   if (decision === "advance") {
+    const company = await prisma.company.findUnique({
+      where: { id: interest.companyId },
+      select: { documentLinks: true },
+    });
+    const driveUrl = getCompanyDocumentsDriveUrl(company?.documentLinks);
+    driveFolderGranted = Boolean(interest.canSeeDriveFolder && driveUrl);
     try {
       const companyName = await resolveCompanyDisplayName(interest.companyId);
       await sendInfoRequestAdvanceEmails({
@@ -61,5 +69,9 @@ export async function POST(req: Request, { params }: Params) {
     }
   }
 
-  return NextResponse.json({ ok: true, status: nextStatus });
+  return NextResponse.json({
+    ok: true,
+    status: nextStatus,
+    ...(decision === "advance" ? { driveFolderGranted } : {}),
+  });
 }

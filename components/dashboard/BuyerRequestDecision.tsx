@@ -11,6 +11,7 @@ export default function BuyerRequestDecision({ interestId }: { interestId: strin
   const [pending, setPending] = useState<"advance" | "decline" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [advanceConfirmed, setAdvanceConfirmed] = useState(false);
+  const [driveFolderGranted, setDriveFolderGranted] = useState(false);
 
   const reloadAfterAdvance = () => {
     window.location.reload();
@@ -40,6 +41,7 @@ export default function BuyerRequestDecision({ interestId }: { interestId: strin
         return;
       }
       if (decision === "advance") {
+        setDriveFolderGranted(Boolean((data as { driveFolderGranted?: boolean }).driveFolderGranted));
         setAdvanceConfirmed(true);
         return;
       }
@@ -85,12 +87,20 @@ export default function BuyerRequestDecision({ interestId }: { interestId: strin
           <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </button>
       </div>
-      {advanceConfirmed && <AdvanceConfirmedModal onConfirm={reloadAfterAdvance} />}
+      {advanceConfirmed && (
+        <AdvanceConfirmedModal driveFolderGranted={driveFolderGranted} onConfirm={reloadAfterAdvance} />
+      )}
     </div>
   );
 }
 
-function AdvanceConfirmedModal({ onConfirm }: { onConfirm: () => void }) {
+function AdvanceConfirmedModal({
+  driveFolderGranted,
+  onConfirm,
+}: {
+  driveFolderGranted: boolean;
+  onConfirm: () => void;
+}) {
   if (typeof document === "undefined") return null;
 
   return createPortal(
@@ -106,10 +116,12 @@ function AdvanceConfirmedModal({ onConfirm }: { onConfirm: () => void }) {
         onClick={(event) => event.stopPropagation()}
       >
         <h3 id="advance-confirmed-title" className="text-xl font-semibold text-[var(--brand-dark)]">
-          Has solicitado información
+          Has solicitado avanzar
         </h3>
         <p className="mt-3 text-sm leading-relaxed text-[var(--foreground)]/85">
-          En breve nos pondremos en contacto contigo.
+          {driveFolderGranted
+            ? "Te habilitamos la carpeta con toda la documentación de la empresa. Revísala y en breve tu gestor se pondrá en contacto contigo."
+            : "En breve tu gestor se pondrá en contacto contigo."}
         </p>
         <button
           type="button"
