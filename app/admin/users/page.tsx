@@ -34,7 +34,7 @@ type UserRow = {
   hasCompanyDocumentLinks: boolean;
   hasUserDriveFolder: boolean;
   documentsDriveFolderUrl: string | null;
-  documentationUploadUrl: string | null;
+  dniLinkUrl: string | null;
   maxConcurrentInfoRequests?: number;
   maxConcurrentCompanies?: number;
   dniHasFront?: boolean;
@@ -920,15 +920,114 @@ function UserDriveFolderPanel({
   user: UserRow;
   onSaved: () => void;
 }) {
-  const [dniUrl, setDniUrl] = useState(user.documentsDriveFolderUrl ?? "");
-  const [uploadUrl, setUploadUrl] = useState(user.documentationUploadUrl ?? "");
+  const [url, setUrl] = useState(user.documentsDriveFolderUrl ?? "");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sincronizar al cambiar usuario */
-    setDniUrl(user.documentsDriveFolderUrl ?? "");
-    setUploadUrl(user.documentationUploadUrl ?? "");
+    setUrl(user.documentsDriveFolderUrl ?? "");
+    setMsg(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [user]);
+
+  const save = useCallback(async () => {
+    setMsg(null);
+    setSaving(true);
+    try {
+      const trimmed = url.trim();
+      const res = await authFetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentsDriveFolderUrl: trimmed.length ? trimmed : null,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMsg({ type: "error", text: (data as { error?: string }).error ?? "Error al guardar" });
+        setSaving(false);
+        return;
+      }
+      setMsg({ type: "ok", text: "Enlace guardado." });
+      onSaved();
+    } catch {
+      setMsg({ type: "error", text: "Error de conexión." });
+    }
+    setSaving(false);
+  }, [user.id, url, onSaved]);
+
+  const hasLink = Boolean(user.documentsDriveFolderUrl?.trim());
+
+  return (
+    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
+        Carpeta Google Drive (documentos del usuario)
+      </p>
+      <p className="text-xs text-slate-600 mb-3 max-w-2xl leading-relaxed">
+        Pega el enlace de la carpeta que hayas creado en Google Drive. Debe ser una URL de{" "}
+        <span className="font-medium">drive.google.com</span> o{" "}
+        <span className="font-medium">docs.google.com</span>. Si lo dejas vacío y guardas, se quita el
+        enlace de esta ficha. La carpeta en Drive no se borra.
+      </p>
+      {!hasLink && (
+        <p className="mb-3 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2 inline-block">
+          Falta enlace de carpeta de Drive.
+        </p>
+      )}
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 max-w-3xl">
+        <label className="flex-1 min-w-0">
+          <span className="sr-only">URL carpeta Drive</span>
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://drive.google.com/drive/folders/…"
+            className="w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving}
+          className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold bg-slate-800 text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
+        >
+          {saving ? "Guardando…" : "Guardar enlace Drive"}
+        </button>
+      </div>
+      {hasLink && user.documentsDriveFolderUrl && (
+        <p className="mt-2 text-xs">
+          <a
+            href={user.documentsDriveFolderUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--brand-dark)] font-medium underline-offset-2 hover:underline break-all"
+          >
+            Abrir carpeta en nueva pestaña
+          </a>
+        </p>
+      )}
+      {msg && (
+        <p className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}>{msg.text}</p>
+      )}
+    </div>
+  );
+}
+
+function UserDniLinkPanel({
+  user,
+  onSaved,
+}: {
+  user: UserRow;
+  onSaved: () => void;
+}) {
+  const [url, setUrl] = useState(user.dniLinkUrl ?? "");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- sincronizar al cambiar usuario */
+    setUrl(user.dniLinkUrl ?? "");
     setMsg(null);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [user]);
@@ -941,8 +1040,7 @@ function UserDriveFolderPanel({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          documentsDriveFolderUrl: dniUrl.trim() || null,
-          documentationUploadUrl: uploadUrl.trim() || null,
+          dniLinkUrl: url.trim() || null,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -951,79 +1049,55 @@ function UserDriveFolderPanel({
         setSaving(false);
         return;
       }
-      setMsg({ type: "ok", text: "Enlaces guardados." });
+      setMsg({ type: "ok", text: "Enlace del DNI guardado." });
       onSaved();
     } catch {
       setMsg({ type: "error", text: "Error de conexión." });
     }
     setSaving(false);
-  }, [user.id, dniUrl, uploadUrl, onSaved]);
+  }, [user.id, url, onSaved]);
 
   return (
     <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
-      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">Enlaces del cliente</p>
-      <div className="mt-3 grid max-w-3xl gap-4">
-        <label className="block text-sm">
-          <span className="font-semibold text-slate-800">Enlace DNI</span>
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">Enlace DNI</p>
+      <p className="mb-3 max-w-2xl text-xs leading-relaxed text-slate-600">
+        Pega el enlace donde el cliente sube el anverso y el reverso. Empieza vacío y no usa la carpeta
+        Drive del cliente.
+      </p>
+      <div className="flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="min-w-0 flex-1">
+          <span className="sr-only">Enlace DNI</span>
           <input
             type="url"
-            value={dniUrl}
-            onChange={(e) => setDniUrl(e.target.value)}
-            placeholder="https://drive.google.com/drive/folders/…"
-            className="mt-1 w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
-          />
-          <span className="mt-1 block text-xs text-slate-500">
-            Carpeta de Drive del cliente. Tiene que ser drive.google.com o docs.google.com.
-          </span>
-        </label>
-        <label className="block text-sm">
-          <span className="font-semibold text-slate-800">Enlace para subir documentación</span>
-          <input
-            type="url"
-            value={uploadUrl}
-            onChange={(e) => setUploadUrl(e.target.value)}
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
             placeholder="https://…"
-            className="mt-1 w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
+            className="w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
           />
-          <span className="mt-1 block text-xs text-slate-500">
-            Este enlace le sale al cliente para subir su documentación.
-          </span>
         </label>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving}
+          className="shrink-0 rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:opacity-50"
+        >
+          {saving ? "Guardando…" : "Guardar enlace DNI"}
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={save}
-        disabled={saving}
-        className="mt-4 rounded-lg px-4 py-2.5 text-sm font-semibold bg-slate-800 text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
-      >
-        {saving ? "Guardando…" : "Guardar enlaces"}
-      </button>
-      <div className="mt-3 flex flex-col gap-1 text-xs">
-        {user.documentsDriveFolderUrl ? (
+      {user.dniLinkUrl ? (
+        <p className="mt-2 text-xs">
           <a
-            href={user.documentsDriveFolderUrl}
+            href={user.dniLinkUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-[var(--brand-dark)] underline-offset-2 hover:underline break-all"
           >
-            Abrir carpeta Drive del cliente
+            Abrir enlace del DNI
           </a>
-        ) : null}
-        {user.documentationUploadUrl ? (
-          <a
-            href={user.documentationUploadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-[var(--brand-dark)] underline-offset-2 hover:underline break-all"
-          >
-            Abrir enlace de documentación
-          </a>
-        ) : null}
-      </div>
-      {msg && (
-        <p className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}>
-          {msg.text}
         </p>
+      ) : null}
+      {msg && (
+        <p className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}>{msg.text}</p>
       )}
     </div>
   );
@@ -1215,6 +1289,7 @@ function AdminUserMobileCard({
           <UserVerificationPanel user={u} onSaved={onVerificationSaved} />
           <UserSalesMandatePanel user={u} onSaved={onVerificationSaved} />
           <UserDriveFolderPanel user={u} onSaved={onVerificationSaved} />
+          <UserDniLinkPanel user={u} onSaved={onVerificationSaved} />
           <UserInfoRequestLimitPanel user={u} onSaved={onVerificationSaved} />
           <UserActivityPanel user={u} />
           <UserProfessionalCompanyLimitPanel user={u} onSaved={onVerificationSaved} />
@@ -1295,7 +1370,7 @@ export default function AdminUsersPage() {
               hasCompanyDocumentLinks: Boolean(u.hasCompanyDocumentLinks),
               hasUserDriveFolder: Boolean(u.hasUserDriveFolder ?? u.documentsDriveFolderUrl?.trim()),
               documentsDriveFolderUrl: u.documentsDriveFolderUrl ?? null,
-              documentationUploadUrl: u.documentationUploadUrl ?? null,
+              dniLinkUrl: u.dniLinkUrl ?? null,
               dniHasFront: Boolean(u.dniHasFront),
               dniHasBack: Boolean(u.dniHasBack),
               dniDriveSynced: Boolean(u.dniDriveSynced),
@@ -2047,6 +2122,7 @@ export default function AdminUsersPage() {
                               <UserVerificationPanel user={u} onSaved={loadUsers} />
                               <UserSalesMandatePanel user={u} onSaved={loadUsers} />
                               <UserDriveFolderPanel user={u} onSaved={loadUsers} />
+                              <UserDniLinkPanel user={u} onSaved={loadUsers} />
                               <UserInfoRequestLimitPanel user={u} onSaved={loadUsers} />
                               <UserActivityPanel user={u} />
                               <UserProfessionalCompanyLimitPanel user={u} onSaved={loadUsers} />

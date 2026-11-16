@@ -39,7 +39,7 @@ type PatchBody = {
   accountStatus?: unknown;
   role?: unknown;
   documentsDriveFolderUrl?: unknown;
-  documentationUploadUrl?: unknown;
+  dniLinkUrl?: unknown;
   maxConcurrentInfoRequests?: unknown;
   maxConcurrentCompanies?: unknown;
   assignedAgentId?: unknown;
@@ -72,7 +72,7 @@ export async function PATCH(req: Request, { params }: Params) {
     accountStatus?: UserAccountStatus;
     role?: UserRole;
     documentsDriveFolderUrl?: string | null;
-    documentationUploadUrl?: string | null;
+    dniLinkUrl?: string | null;
     maxConcurrentInfoRequests?: number;
     maxConcurrentCompanies?: number;
     assignedAgentId?: string | null;
@@ -205,32 +205,32 @@ export async function PATCH(req: Request, { params }: Params) {
     }
   }
 
-  if (body.documentationUploadUrl !== undefined) {
-    const raw = body.documentationUploadUrl;
+  if (body.dniLinkUrl !== undefined) {
+    const raw = body.dniLinkUrl;
     if (raw === null) {
-      data.documentationUploadUrl = null;
+      data.dniLinkUrl = null;
     } else if (typeof raw === "string") {
       const t = raw.trim();
       if (!t) {
-        data.documentationUploadUrl = null;
+        data.dniLinkUrl = null;
       } else {
         let parsed: URL;
         try {
           parsed = new URL(t);
         } catch {
-          return NextResponse.json({ error: "El enlace para subir documentación no es válido." }, { status: 400 });
+          return NextResponse.json({ error: "El enlace del DNI no es válido." }, { status: 400 });
         }
         if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
           return NextResponse.json(
-            { error: "El enlace para subir documentación debe usar http o https." },
+            { error: "El enlace del DNI debe usar http o https." },
             { status: 400 }
           );
         }
-        data.documentationUploadUrl = t.length > DRIVE_URL_MAX ? t.slice(0, DRIVE_URL_MAX) : t;
+        data.dniLinkUrl = t.length > DRIVE_URL_MAX ? t.slice(0, DRIVE_URL_MAX) : t;
       }
     } else {
       return NextResponse.json(
-        { error: "documentationUploadUrl debe ser texto, cadena vacía o null." },
+        { error: "dniLinkUrl debe ser texto, cadena vacía o null." },
         { status: 400 }
       );
     }
@@ -274,7 +274,7 @@ export async function PATCH(req: Request, { params }: Params) {
         accountStatus: true,
         role: true,
         documentsDriveFolderUrl: true,
-        documentationUploadUrl: true,
+        dniLinkUrl: true,
         maxConcurrentInfoRequests: true,
         maxConcurrentCompanies: true,
         assignedAgentId: true,

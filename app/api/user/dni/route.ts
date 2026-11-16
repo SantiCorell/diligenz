@@ -39,6 +39,7 @@ export async function GET(req: Request) {
       ? { uploaded: true, name: back.name, uploadedAt: back.createdAt, syncedToDrive: Boolean(back.driveSyncedAt) }
       : null,
     driveFolderUrl: session.user.documentsDriveFolderUrl ?? null,
+    dniLinkUrl: session.user.dniLinkUrl ?? null,
   });
 }
 

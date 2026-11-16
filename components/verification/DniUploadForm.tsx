@@ -37,7 +37,7 @@ export default function DniUploadForm() {
       }
       const data = await res.json();
       setVerified(Boolean(data.dniVerified));
-      setDriveUrl(typeof data.driveFolderUrl === "string" ? data.driveFolderUrl.trim() : "");
+      setDriveUrl(typeof data.dniLinkUrl === "string" ? data.dniLinkUrl.trim() : "");
     } catch {
       setError("Error de conexión.");
     } finally {
