@@ -9,6 +9,7 @@ type Row = { label: string; url: string };
 type Props = {
   companyId: string;
   initialDocuments: BuyerDocument[];
+  companyDriveUrl: string | null;
 };
 
 function emptyRow(): Row {
@@ -23,6 +24,7 @@ function rowsFromDocs(docs: BuyerDocument[]): Row[] {
 export default function AdminBuyerDocumentsForm({
   companyId,
   initialDocuments,
+  companyDriveUrl,
 }: Props) {
   const [rows, setRows] = useState<Row[]>(() => rowsFromDocs(initialDocuments));
 
@@ -76,8 +78,8 @@ export default function AdminBuyerDocumentsForm({
           Acceso para compradores
         </p>
         <p className="mt-1 text-xs text-[var(--foreground)] opacity-75">
-          Añade uno o varios documentos o enlaces. El nombre será el que vea el comprador en la
-          pestaña <strong>Documentos</strong> cuando su solicitud esté en gestión.
+          El documento 1 es el teaser. La carpeta del negocio se muestra cuando el comprador ya
+          tiene el teaser y pulsa «Quiero avanzar».
         </p>
       </div>
 
@@ -149,6 +151,23 @@ export default function AdminBuyerDocumentsForm({
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="rounded-xl border border-[var(--brand-primary)]/15 bg-white p-4 space-y-2">
+        <label className="block text-xs font-semibold uppercase tracking-wide text-[var(--brand-primary)]/80">
+          Carpeta Drive del negocio
+        </label>
+        <input
+          type="url"
+          name="driveFolderUrl"
+          defaultValue={companyDriveUrl ?? ""}
+          placeholder="https://drive.google.com/drive/folders/…"
+          className="w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
+        />
+        <p className="text-xs text-[var(--foreground)] opacity-70">
+          Pega el enlace de la carpeta. Si lo dejas vacío y guardas, se quita de la ficha. La
+          carpeta en Drive no se borra.
+        </p>
       </div>
 
       <button

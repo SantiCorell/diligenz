@@ -4,6 +4,7 @@ import type { BuyerDocument } from "@/lib/buyer-documents";
 type InterestSummary = {
   seenTeaser: number;
   favorites: number;
+  favoritePeople: { label: string; email: string }[];
   advanced: number;
 };
 
@@ -32,50 +33,9 @@ export default function AdminCompanyDriveSection({
         </h2>
         <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
           Acceso interno al Drive de <strong>{ownerLabel}</strong> (mandato, DNI y archivos del
-          proyecto). Los compradores no ven esta carpeta hasta que tienen el teaser y pulsan
-          «Quiero avanzar». Si hay enlace, entonces les aparece.
+          proyecto). Los compradores no ven esta carpeta.
         </p>
-        <form action="/api/admin/company/update" method="POST" className="mt-4 space-y-3">
-          <input type="hidden" name="companyId" value={companyId} />
-          <input type="hidden" name="partial" value="drive" />
-          <label className="block text-sm">
-            <span className="font-semibold text-[var(--brand-primary)]">
-              Enlace de la carpeta del negocio
-            </span>
-            <input
-              type="url"
-              name="driveFolderUrl"
-              defaultValue={companyDriveUrl ?? ""}
-              placeholder="https://drive.google.com/drive/folders/…"
-              className="mt-1 w-full rounded-xl border-2 border-[var(--brand-primary)]/20 px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--brand-primary)] focus:outline-none"
-            />
-          </label>
-          <p className="text-xs text-[var(--foreground)] opacity-75">
-            Crea la carpeta en Google Drive y pega aquí el enlace. Si lo dejas vacío y guardas, se
-            quita el enlace de esta ficha. La carpeta en Drive no se borra.
-          </p>
-          <button
-            type="submit"
-            className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-md hover:opacity-95 transition"
-          >
-            Guardar enlace
-          </button>
-        </form>
         <div className="mt-4 flex flex-wrap gap-3">
-          {companyDriveUrl ? (
-            <a
-              href={companyDriveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 transition"
-            >
-              Carpeta del negocio →
-            </a>
-          ) : (
-            <p className="text-sm text-[var(--foreground)] opacity-75">
-              Todavía no hay carpeta enlazada. Pega la URL cuando la hayas creado.
-            </p>
-          )}
           {ownerDriveUrl ? (
             <a
               href={ownerDriveUrl}
@@ -98,11 +58,22 @@ export default function AdminCompanyDriveSection({
               {interestSummary.seenTeaser}
             </dd>
           </div>
-          <div className="rounded-xl bg-[var(--brand-bg-lavender)]/40 px-4 py-3">
+          <div className="rounded-xl bg-[var(--brand-bg-lavender)]/40 px-4 py-3 sm:col-span-1">
             <dt className="text-xs text-[var(--foreground)] opacity-70">En favoritos</dt>
             <dd className="mt-1 text-2xl font-semibold text-[var(--brand-primary)]">
               {interestSummary.favorites}
             </dd>
+            {interestSummary.favoritePeople.length > 0 ? (
+              <ul className="mt-2 space-y-1">
+                {interestSummary.favoritePeople.map((person) => (
+                  <li key={person.email} className="truncate text-xs text-[var(--foreground)]">
+                    {person.label}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-xs text-[var(--foreground)] opacity-60">Nadie todavía.</p>
+            )}
           </div>
           <div className="rounded-xl bg-[var(--brand-bg-lavender)]/40 px-4 py-3">
             <dt className="text-xs text-[var(--foreground)] opacity-70">Han pulsado Quiero avanzar</dt>
@@ -116,6 +87,7 @@ export default function AdminCompanyDriveSection({
       <AdminBuyerDocumentsForm
         companyId={companyId}
         initialDocuments={buyerDocuments}
+        companyDriveUrl={companyDriveUrl}
       />
     </section>
   );

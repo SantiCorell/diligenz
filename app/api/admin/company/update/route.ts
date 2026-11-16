@@ -33,6 +33,46 @@ function linksExceptDrive(raw: unknown): { label: string; url: string }[] {
   return kept;
 }
 
+async function saveBusinessDriveFolder(
+  companyId: string,
+  trimmed: string,
+  origin: string
+): Promise<NextResponse | null> {
+  const current = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { documentLinks: true },
+  });
+  const kept = linksExceptDrive(current?.documentLinks);
+  if (!trimmed) {
+    await prisma.company.update({
+      where: { id: companyId },
+      data: { documentLinks: kept.length ? kept : Prisma.JsonNull },
+    });
+    return null;
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return NextResponse.redirect(new URL(`/admin/companies/${companyId}?error=drive_url`, origin));
+  }
+  if (
+    (parsed.protocol !== "http:" && parsed.protocol !== "https:") ||
+    !isGoogleDriveDocsHost(parsed.hostname)
+  ) {
+    return NextResponse.redirect(new URL(`/admin/companies/${companyId}?error=drive_url`, origin));
+  }
+  const next = [
+    ...kept,
+    { label: "Documento de empresa", url: trimmed.slice(0, DRIVE_URL_MAX) },
+  ];
+  await prisma.company.update({
+    where: { id: companyId },
+    data: { documentLinks: next },
+  });
+  return null;
+}
+
 function parseDocumentLinks(raw: string | null): { label: string; url: string }[] | null {
   if (!raw || !raw.trim()) return null;
   const lines = raw.trim().split(/\r?\n/).filter(Boolean);
@@ -75,6 +115,14 @@ export async function POST(req: Request) {
   const documentLinks = parseDocumentLinks(documentLinksRaw ?? null);
 
   if (partial === "visibility") {
+    if (formData.has("driveFolderUrl")) {
+      const driveError = await saveBusinessDriveFolder(
+        companyId,
+        formData.get("driveFolderUrl")?.toString().trim() ?? "",
+        url.origin
+      );
+      if (driveError) return driveError;
+    }
     const buyerDocumentsRaw = formData.get("buyerDocuments")?.toString();
     const buyerDocuments = parseBuyerDocumentsJson(buyerDocumentsRaw);
     const firstUrl = buyerDocuments[0]?.url ?? null;
@@ -93,45 +141,12 @@ export async function POST(req: Request) {
 
   if (partial === "drive") {
     if (formData.has("driveFolderUrl")) {
-      const trimmed = formData.get("driveFolderUrl")?.toString().trim() ?? "";
-      const current = await prisma.company.findUnique({
-        where: { id: companyId },
-        select: { documentLinks: true },
-      });
-      const kept = linksExceptDrive(current?.documentLinks);
-      if (!trimmed) {
-        await prisma.company.update({
-          where: { id: companyId },
-          data: { documentLinks: kept.length ? kept : Prisma.JsonNull },
-        });
-        return NextResponse.redirect(
-          new URL(`/admin/companies/${companyId}?success=drive`, url.origin)
-        );
-      }
-      let parsed: URL;
-      try {
-        parsed = new URL(trimmed);
-      } catch {
-        return NextResponse.redirect(
-          new URL(`/admin/companies/${companyId}?error=drive_url`, url.origin)
-        );
-      }
-      if (
-        (parsed.protocol !== "http:" && parsed.protocol !== "https:") ||
-        !isGoogleDriveDocsHost(parsed.hostname)
-      ) {
-        return NextResponse.redirect(
-          new URL(`/admin/companies/${companyId}?error=drive_url`, url.origin)
-        );
-      }
-      const next = [
-        ...kept,
-        { label: "Documento de empresa", url: trimmed.slice(0, DRIVE_URL_MAX) },
-      ];
-      await prisma.company.update({
-        where: { id: companyId },
-        data: { documentLinks: next },
-      });
+      const driveError = await saveBusinessDriveFolder(
+        companyId,
+        formData.get("driveFolderUrl")?.toString().trim() ?? "",
+        url.origin
+      );
+      if (driveError) return driveError;
       return NextResponse.redirect(
         new URL(`/admin/companies/${companyId}?success=drive`, url.origin)
       );

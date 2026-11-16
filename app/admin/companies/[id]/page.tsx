@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getSessionWithUser } from "@/lib/session";
 import UserOwnerSearch from "@/components/admin/UserOwnerSearch";
 import AdminCompanyDriveSection from "@/components/admin/AdminCompanyDriveSection";
-import AdminCompanyFavoritesSection from "@/components/admin/AdminCompanyFavoritesSection";
+import { getCompanyFavoritesDetailed } from "@/lib/company-favorites";
 import SectorSelect from "@/components/forms/SectorSelect";
 import CcaaSelect from "@/components/forms/CcaaSelect";
 import { getFormSectorOptions } from "@/lib/sector-catalog";
@@ -64,19 +64,21 @@ export default async function AdminCompanyDetail({
 
   if (!company) redirect("/admin/companies");
 
-  const [companyReference, requestRows, favoriteCount] = await Promise.all([
+  const [companyReference, requestRows, favoriteRows] = await Promise.all([
     ensureCompanyReference(company.id),
     prisma.userCompanyInterest.findMany({
       where: { companyId: company.id, type: "REQUEST_INFO" },
       select: { status: true },
     }),
-    prisma.userCompanyInterest.count({
-      where: { companyId: company.id, type: "FAVORITE" },
-    }),
+    getCompanyFavoritesDetailed(company.id),
   ]);
   const interestSummary = {
     seenTeaser: requestRows.filter((row) => buyerHasTeaserAccess(row.status)).length,
-    favorites: favoriteCount,
+    favorites: favoriteRows.length,
+    favoritePeople: favoriteRows.map((row) => ({
+      label: row.name?.trim() || row.email,
+      email: row.email,
+    })),
     advanced: requestRows.filter((row) => {
       const stage = normalizeRequestStatus(row.status);
       return stage === "CONVERSATIONS" || stage === "CLOSED";
@@ -652,17 +654,6 @@ export default async function AdminCompanyDetail({
         </form>
       </section>
 
-      {company.sellerDocumentsNote?.trim() && (
-        <section className="rounded-2xl bg-amber-50/90 border border-amber-200/80 shadow-md p-6">
-          <h2 className="admin-section-title">
-            Comentario del vendedor (documentación)
-          </h2>
-          <p className="mt-3 text-sm text-[var(--foreground)] whitespace-pre-wrap leading-relaxed">
-            {company.sellerDocumentsNote}
-          </p>
-        </section>
-      )}
-
       <AdminCompanyDriveSection
         companyId={company.id}
         ownerLabel={company.owner.name?.trim() || company.owner.email}
@@ -757,7 +748,6 @@ export default async function AdminCompanyDetail({
         )}
       </section>
 
-      <AdminCompanyFavoritesSection companyId={company.id} />
     </main>
   );
 }

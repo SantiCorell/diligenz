@@ -331,34 +331,6 @@ export default async function SellerCompanyEditPage({
         )}
       </Section>
 
-      <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7c4dff]">
-          Comentarios sobre documentación
-        </h2>
-        <p className="mt-2 text-sm text-slate-500">
-          Tu gestor asignado puede ver estos comentarios. Máx. 8000 caracteres.
-        </p>
-        <form
-          action={`/api/companies/${company.id}/seller-documents-note`}
-          method="POST"
-          className="mt-4 space-y-3"
-        >
-          <textarea
-            name="note"
-            rows={4}
-            maxLength={8000}
-            defaultValue={company.sellerDocumentsNote ?? ""}
-            placeholder="Ej.: Falta el balance del último ejercicio, o el teaser no refleja el nombre comercial…"
-            className="min-h-[96px] w-full resize-y rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-[var(--brand-primary)] focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="rounded-full bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:opacity-95"
-          >
-            Guardar comentario
-          </button>
-        </form>
-      </section>
     </main>
   );
 }

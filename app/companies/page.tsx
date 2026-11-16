@@ -125,7 +125,7 @@ export default async function CompaniesPage({ searchParams }: Props) {
               Empresas en{" "}
               <span className="page-title-highlight">venta</span>
               {activeSectorLabel && (
-                <span className="text-[var(--foreground)]/55 font-semibold">
+                <span className="font-semibold text-slate-600">
                   {" "}
                   · {activeSectorLabel}
                 </span>
