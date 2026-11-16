@@ -6,9 +6,8 @@ export default function DashboardVerificationPage() {
       <h1 className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)] mb-2 text-center">
         Verificación de DNI / NIE
       </h1>
-      <p className="text-sm sm:text-base text-[var(--foreground)] opacity-90 mb-8 text-center">
-        Sube tu documento de identidad para completar tu perfil. Los archivos se almacenan de forma
-        segura y, si tu ficha ya tiene una carpeta de Drive enlazada, se copian también allí.
+      <p className="text-sm sm:text-base text-[var(--foreground)] mb-8 text-center">
+        Abre el enlace, entra en la carpeta y sube el anverso y el reverso de tu DNI o NIE.
       </p>
       <DniUploadForm />
     </div>

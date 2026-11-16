@@ -3,40 +3,41 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { authFetch } from "@/lib/auth-client";
-import type { DniVerificationStatus } from "@/lib/user-documents/dni-status";
-import { dniStatusLabel } from "@/lib/user-documents/dni-status";
 
-type SideState = {
-  uploaded: boolean;
-  name: string;
-  syncedToDrive: boolean;
-} | null;
-
-type DniState = {
-  dniVerified: boolean;
-  verificationStatus: DniVerificationStatus;
-  pendingReview: boolean;
-  front: SideState;
-  back: SideState;
-  driveFolderUrl: string | null;
-};
+const STEPS = [
+  {
+    title: "Abre el enlace",
+    text: "Pulsa el botón. Se abre la carpeta donde debes dejar el documento.",
+  },
+  {
+    title: "Sube el anverso",
+    text: "La cara con tu foto y tus datos, en imagen o PDF.",
+  },
+  {
+    title: "Sube el reverso",
+    text: "La otra cara del DNI o del NIE, en la misma carpeta.",
+  },
+] as const;
 
 export default function DniUploadForm() {
-  const [state, setState] = useState<DniState | null>(null);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState<"front" | "back" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [verified, setVerified] = useState(false);
+  const [driveUrl, setDriveUrl] = useState("");
+  const [step, setStep] = useState(0);
+  const [motionOk, setMotionOk] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await authFetch("/api/user/dni");
       if (!res.ok) {
-        setError("No se pudo cargar el estado del DNI.");
+        setError("No se pudo cargar tu enlace de verificación.");
         return;
       }
-      setState(await res.json());
+      const data = await res.json();
+      setVerified(Boolean(data.dniVerified));
+      setDriveUrl(typeof data.driveFolderUrl === "string" ? data.driveFolderUrl.trim() : "");
     } catch {
       setError("Error de conexión.");
     } finally {
@@ -48,137 +49,56 @@ export default function DniUploadForm() {
     load();
   }, [load]);
 
-  const upload = async (side: "front" | "back", file: File) => {
-    setError(null);
-    setMsg(null);
-    setUploading(side);
-    try {
-      const fd = new FormData();
-      fd.set("side", side);
-      fd.set("file", file);
-      const res = await authFetch("/api/user/dni", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "No se pudo subir el archivo.");
-        return;
-      }
-      if (data.pendingReview) {
-        setMsg(
-          data.syncedToDrive
-            ? "Documentos completos. Estado: pendiente de verificar. El equipo revisará tu DNI en Google Drive."
-            : "Documentos completos. Pendiente de verificar por el equipo Diligenz."
-        );
-      } else {
-        setMsg(
-          data.syncedToDrive
-            ? "Foto guardada y copiada a Google Drive. Sube también el otro lado del documento."
-            : "Foto guardada. Sube también el otro lado del documento."
-        );
-      }
-      await load();
-    } catch {
-      setError("Error de conexión al subir.");
-    } finally {
-      setUploading(null);
-    }
-  };
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setMotionOk(!media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    if (!motionOk || verified) return;
+    const id = window.setInterval(() => setStep((current) => (current + 1) % STEPS.length), 2800);
+    return () => window.clearInterval(id);
+  }, [motionOk, verified]);
 
   if (loading) {
-    return <p className="text-sm text-[var(--foreground)] opacity-80">Cargando…</p>;
+    return <p className="text-sm text-[var(--foreground)]">Cargando…</p>;
   }
-
-  const status = state?.verificationStatus ?? "none";
 
   return (
     <div className="space-y-6 text-left">
-      {status === "verified" ? (
+      {verified ? (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          Tu DNI ha sido <strong>verificado</strong> por el equipo Diligenz.
-        </div>
-      ) : status === "pending" ? (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          <p className="font-semibold">Pendiente de verificar</p>
-          <p className="mt-1 opacity-90">
-            Hemos recibido el anverso y el reverso. El equipo las revisará y marcará la verificación
-            en tu perfil.
-          </p>
-        </div>
-      ) : status === "incomplete" ? (
-        <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950">
-          Has subido una parte del DNI. Falta el{" "}
-          <strong>{state?.front ? "reverso" : "anverso"}</strong> para pasar a revisión.
+          Tu DNI ya está <strong>verificado</strong>.
         </div>
       ) : (
-        <div className="rounded-xl border border-[var(--brand-primary)]/15 bg-[var(--brand-bg)]/60 px-4 py-3 text-sm text-[var(--foreground)]">
-          Sube el <strong>anverso</strong> y el <strong>reverso</strong> de tu DNI o NIE. Al completar
-          ambos, el estado pasará a <strong>pendiente de verificar</strong>.
-        </div>
+        <DniGuide step={step} motionOk={motionOk} onStep={setStep} />
       )}
 
-      <div className="flex items-center justify-center gap-2 text-sm">
-        <span className="text-[var(--foreground)] opacity-70">Estado:</span>
-        <span
-          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-            status === "verified"
-              ? "bg-emerald-100 text-emerald-900"
-              : status === "pending"
-                ? "bg-amber-100 text-amber-900"
-                : status === "incomplete"
-                  ? "bg-sky-100 text-sky-900"
-                  : "bg-slate-100 text-slate-700"
-          }`}
+      {driveUrl ? (
+        <a
+          href={driveUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-center rounded-xl bg-[var(--brand-primary)] px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:opacity-95"
         >
-          {dniStatusLabel(status)}
-        </span>
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        <UploadCard
-          label="Anverso (frontal)"
-          side="front"
-          info={state?.front ?? null}
-          uploading={uploading === "front"}
-          verified={status === "verified"}
-          onFile={(f) => upload("front", f)}
-        />
-        <UploadCard
-          label="Reverso (trasera)"
-          side="back"
-          info={state?.back ?? null}
-          uploading={uploading === "back"}
-          verified={status === "verified"}
-          onFile={(f) => upload("back", f)}
-        />
-      </div>
-
-      {state?.driveFolderUrl && (
-        <p className="text-xs text-[var(--foreground)] opacity-75">
-          Tus fotos del DNI están en la carpeta de Google Drive enlazada.{" "}
-          <a
-            href={state.driveFolderUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[var(--brand-primary)] font-medium underline"
-          >
-            Abrir mi carpeta
-          </a>
-        </p>
+          Abrir enlace y subir el DNI
+        </a>
+      ) : (
+        <div className="rounded-xl border border-dashed border-[var(--brand-primary)]/25 bg-[var(--brand-bg)]/60 px-4 py-5 text-sm text-[var(--foreground)]">
+          El enlace aparecerá aquí cuando el equipo lo haya guardado en tu ficha.
+        </div>
       )}
 
       {error && (
-        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-      {msg && (
-        <div className="rounded-xl bg-[var(--brand-bg-mint)]/40 border border-[var(--brand-primary)]/15 px-4 py-3 text-sm text-[var(--brand-dark)]">
-          {msg}
-        </div>
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
       <Link
         href="/dashboard"
-        className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold border-2 border-[var(--brand-primary)]/30 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5"
+        className="inline-flex items-center justify-center rounded-xl border-2 border-[var(--brand-primary)]/30 px-6 py-3 text-sm font-semibold text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5"
       >
         Volver al panel
       </Link>
@@ -186,63 +106,133 @@ export default function DniUploadForm() {
   );
 }
 
-function UploadCard({
-  label,
-  side,
-  info,
-  uploading,
-  verified,
-  onFile,
+function DniGuide({
+  step,
+  motionOk,
+  onStep,
 }: {
-  label: string;
-  side: "front" | "back";
-  info: SideState;
-  uploading: boolean;
-  verified: boolean;
-  onFile: (file: File) => void;
+  step: number;
+  motionOk: boolean;
+  onStep: (step: number) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--brand-primary)]/15 bg-white p-5 shadow-sm">
-      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-2">{label}</p>
-      {info?.uploaded ? (
-        <div className="mb-3 text-xs text-[var(--foreground)] opacity-85">
-          <p className="font-medium truncate" title={info.name}>
-            {info.name}
-          </p>
-          {info.syncedToDrive ? (
-            <p className="text-emerald-700 mt-1">✓ Copiado a Google Drive</p>
-          ) : (
-            <p className="text-amber-700 mt-1">Guardado · pendiente de copia a Drive</p>
-          )}
-          <a
-            href={`/api/user/dni/file?side=${side}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block mt-2 text-[var(--brand-primary)] underline"
-          >
-            Ver archivo
-          </a>
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+      <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_220px]">
+        <ol className="divide-y divide-slate-200/80">
+          {STEPS.map((item, index) => {
+            const active = step === index;
+            return (
+              <li key={item.title}>
+                <button
+                  type="button"
+                  onClick={() => onStep(index)}
+                  className={`flex w-full gap-4 px-5 py-4 text-left transition ${
+                    active ? "bg-white" : "hover:bg-white/70"
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition ${
+                      active
+                        ? "bg-[var(--brand-primary)] text-white"
+                        : "bg-white text-slate-500 ring-1 ring-slate-200"
+                    }`}
+                  >
+                    {index + 1}
+                  </span>
+                  <span>
+                    <span className={`block text-sm font-semibold ${active ? "text-slate-900" : "text-slate-600"}`}>
+                      {item.title}
+                    </span>
+                    <span className="mt-1 block text-sm leading-relaxed text-slate-500">{item.text}</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+        <div className="flex items-center justify-center border-t border-slate-200 bg-white px-6 py-8 md:border-t-0 md:border-l">
+          <GuideStage step={step} motionOk={motionOk} />
         </div>
-      ) : (
-        <p className="text-xs text-[var(--foreground)] opacity-70 mb-3">Pendiente de subir</p>
-      )}
-      {!verified && (
-        <label className="block">
-          <span className="sr-only">Subir {label}</span>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,application/pdf"
-            disabled={uploading}
-            className="block w-full text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--brand-primary)] file:px-3 file:py-2 file:text-white file:font-semibold disabled:opacity-50"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onFile(f);
-              e.target.value = "";
-            }}
-          />
-        </label>
-      )}
-      {uploading && <p className="mt-2 text-xs opacity-70">Subiendo…</p>}
+      </div>
+    </div>
+  );
+}
+
+function GuideStage({ step, motionOk }: { step: number; motionOk: boolean }) {
+  return (
+    <div className="relative h-44 w-36">
+      <div
+        className={`absolute inset-0 transition-opacity duration-500 ${step === 0 ? "opacity-100" : "pointer-events-none opacity-0"}`}
+      >
+        <div className="flex h-full flex-col items-center justify-center">
+          <div className="relative">
+            <div className="rounded-lg bg-[var(--brand-primary)] px-3 py-2 text-[11px] font-semibold text-white shadow-md">
+              Abrir enlace
+            </div>
+            {motionOk && (
+              <svg
+                viewBox="0 0 24 24"
+                className="dni-cursor absolute -bottom-3 -right-3 h-5 w-5 text-slate-800"
+                aria-hidden
+              >
+                <path fill="currentColor" d="M5 3l12 9-5.2 1.2L14 20l-2.2.8-2.3-6.2L5 17.2V3z" />
+              </svg>
+            )}
+          </div>
+          <p className="mt-5 text-[11px] font-medium tracking-wide text-slate-400">Carpeta del DNI</p>
+        </div>
+      </div>
+
+      <IdCard face="front" visible={step === 1} motionOk={motionOk} />
+      <IdCard face="back" visible={step === 2} motionOk={motionOk} />
+    </div>
+  );
+}
+
+function IdCard({
+  face,
+  visible,
+  motionOk,
+}: {
+  face: "front" | "back";
+  visible: boolean;
+  motionOk: boolean;
+}) {
+  const front = face === "front";
+  return (
+    <div
+      className={`absolute inset-0 transition-opacity duration-500 ${visible ? "opacity-100" : "pointer-events-none opacity-0"}`}
+    >
+      <div className="relative h-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            {front ? "Anverso" : "Reverso"}
+          </span>
+          <span className="h-1.5 w-6 rounded-full bg-[var(--brand-primary)]/70" />
+        </div>
+        <div className="space-y-2 px-3 py-3">
+          {front ? (
+            <div className="flex gap-2">
+              <div className="h-10 w-8 rounded-md bg-slate-100" />
+              <div className="flex-1 space-y-1.5 pt-1">
+                <div className="h-1.5 w-full rounded-full bg-slate-200" />
+                <div className="h-1.5 w-4/5 rounded-full bg-slate-100" />
+                <div className="h-1.5 w-3/5 rounded-full bg-slate-100" />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1.5 pt-1">
+              <div className="h-8 rounded-md bg-slate-100" />
+              <div className="h-1.5 w-full rounded-full bg-slate-200" />
+              <div className="h-1.5 w-5/6 rounded-full bg-slate-100" />
+              <div className="h-1.5 w-2/3 rounded-full bg-slate-100" />
+            </div>
+          )}
+        </div>
+        {motionOk && visible && (
+          <div className="dni-scan pointer-events-none absolute inset-x-3 top-10 h-px bg-[var(--brand-primary)] shadow-[0_0_12px_rgba(145,70,255,0.65)]" />
+        )}
+      </div>
     </div>
   );
 }

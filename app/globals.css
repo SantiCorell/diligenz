@@ -1185,10 +1185,62 @@ body {
     0 8px 16px rgb(0 0 0 / 0.04);
 }
 
+@keyframes dni-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  88% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(148px);
+    opacity: 0;
+  }
+}
+
+@keyframes dni-cursor {
+  0% {
+    transform: translate(28px, 18px);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  62% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  78% {
+    transform: translate(0, 2px);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+
+.dni-scan {
+  animation: dni-scan 2.6s ease-in-out infinite;
+}
+
+.dni-cursor {
+  animation: dni-cursor 2.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .company-card-shell,
   .company-card-hover-wrap:hover .company-card-shell {
     transition: none;
     transform: none;
+  }
+
+  .dni-scan,
+  .dni-cursor {
+    animation: none;
   }
 }
