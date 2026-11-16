@@ -70,7 +70,7 @@ export default function PrimarySectorFilter({
         <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-[var(--brand-dark)] sm:text-3xl">
           ¿Qué tipo de empresa buscas?
         </h2>
-        <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--brand-dark)]/60 sm:text-base">
+        <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600 sm:text-base">
           Elige un sector. Los resultados se actualizan al instante ·{" "}
           <span className="font-semibold text-[var(--brand-primary)]">{totalCount}</span>{" "}
           {totalCount === 1 ? "empresa" : "empresas"} en catálogo
@@ -96,7 +96,7 @@ export default function PrimarySectorFilter({
               {card.title}
             </h3>
 
-            <ul className="flex flex-1 flex-col gap-1.5 text-sm text-[var(--brand-dark)]/65">
+            <ul className="flex flex-1 flex-col gap-1.5 text-sm text-slate-600">
               {card.bullets.map((item) => (
                 <li key={item} className="flex gap-2">
                   <span className="font-extrabold text-[var(--brand-primary)]" aria-hidden>

@@ -23,7 +23,7 @@ type Props = {
 function MetricCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <span className="block text-[11px] font-medium leading-tight text-[var(--brand-dark)]/55 sm:text-xs">
+      <span className="block text-[11px] font-medium leading-tight text-slate-600 sm:text-xs">
         {label}
       </span>
       <b className="mt-0.5 block truncate text-sm font-extrabold tracking-tight text-[var(--brand-dark)] sm:text-[15px]">
@@ -105,12 +105,12 @@ export default function CompanyCard({
           <span className="rounded-full bg-[var(--brand-primary)]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--brand-primary)] sm:text-xs">
             {sectorVisual.shortLabel}
           </span>
-          <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-[var(--brand-surface)] px-3 py-1 text-[11px] font-semibold text-[var(--brand-dark)]/70 sm:text-xs">
+          <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-[var(--brand-surface)] px-3 py-1 text-[11px] font-semibold text-slate-700 sm:text-xs">
             <MapPin className="h-3 w-3 shrink-0 text-red-500/80" aria-hidden />
             <span className="truncate">{ccaaLabel(company.location)}</span>
           </span>
           {refLabel ? (
-            <span className="ml-auto rounded-full border border-[var(--brand-dark)]/12 px-2.5 py-1 font-mono text-[11px] font-bold tracking-wide text-[var(--brand-dark)]/65 sm:text-xs">
+            <span className="ml-auto rounded-full border border-slate-200 px-2.5 py-1 font-mono text-[11px] font-bold tracking-wide text-slate-700 sm:text-xs">
               {refLabel}
             </span>
           ) : null}
@@ -136,7 +136,7 @@ export default function CompanyCard({
             {company.name}
           </h3>
           <p
-            className={`mt-2 leading-relaxed text-[var(--brand-dark)]/60 ${
+            className={`mt-2 leading-relaxed text-slate-600 ${
               compact ? "line-clamp-2 text-sm" : "line-clamp-2 text-sm sm:text-[15px]"
             }`}
           >
@@ -160,7 +160,7 @@ export default function CompanyCard({
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-0.5">
           {salePrice ? (
             <span className="inline-flex flex-col rounded-full bg-[var(--brand-accent)] px-4 py-2 leading-tight">
-              <small className="text-[10px] font-semibold text-[var(--brand-dark)]/65">
+              <small className="text-[10px] font-semibold text-slate-700">
                 Precio de venta
               </small>
               <span className="text-sm font-extrabold text-[var(--brand-dark)] sm:text-[15px]">
@@ -169,7 +169,7 @@ export default function CompanyCard({
             </span>
           ) : (
             <span className="inline-flex flex-col rounded-full bg-[var(--brand-accent)] px-4 py-2 leading-tight">
-              <small className="text-[10px] font-semibold text-[var(--brand-dark)]/65">
+              <small className="text-[10px] font-semibold text-slate-700">
                 Consultar
               </small>
               <span className="text-sm font-extrabold text-[var(--brand-dark)] sm:text-[15px]">

@@ -7,7 +7,7 @@
 /* ===================== */
 :root {
   --background: #ffffff;
-  --foreground: #666668;
+  --foreground: #334155;
   --brand-primary: #9146ff;
   --brand-bg: #ffffff;
   --surface-card: #ffffff;
@@ -16,7 +16,7 @@
   --brand-bg-lavender: #d6d2f0;
   --brand-bg-mint: #dbeda8;
   --brand-accent: #dbeda8;
-  --brand-dark: #4d4d50;
+  --brand-dark: #0f172a;
   --gradient-start: #9146ff;
   --gradient-end: #dbeda8;
   --brand-shadow: 145 70 255;

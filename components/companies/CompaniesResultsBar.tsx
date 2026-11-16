@@ -41,7 +41,7 @@ export default function CompaniesResultsBar({
         </div>
         <div className="min-w-0">
           <p className="text-base sm:text-lg font-bold text-[var(--brand-dark)]">{headline}</p>
-          <p className="mt-0.5 text-sm text-[var(--foreground)]/60">
+          <p className="mt-0.5 text-sm text-slate-600">
             {total > 0 ? (
               <>
                 Mostrando {from}–{to} de {total}
