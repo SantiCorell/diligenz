@@ -23,6 +23,7 @@ export default function DniUploadForm() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
+  const [mandateSigned, setMandateSigned] = useState(false);
   const [driveUrl, setDriveUrl] = useState("");
   const [step, setStep] = useState(0);
   const [motionOk, setMotionOk] = useState(true);
@@ -37,6 +38,7 @@ export default function DniUploadForm() {
       }
       const data = await res.json();
       setVerified(Boolean(data.dniVerified));
+      setMandateSigned(Boolean(data.ndaSigned));
       setDriveUrl(typeof data.dniLinkUrl === "string" ? data.dniLinkUrl.trim() : "");
     } catch {
       setError("Error de conexión.");
@@ -88,7 +90,9 @@ export default function DniUploadForm() {
         </a>
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--brand-primary)]/25 bg-[var(--brand-bg)]/60 px-4 py-5 text-sm text-[var(--foreground)]">
-          El enlace aparecerá aquí cuando el equipo lo haya guardado en tu ficha.
+          {mandateSigned
+            ? "Verificando el mandato. El enlace aparecerá pronto."
+            : "El enlace aparecerá una vez hayas firmado el mandato."}
         </div>
       )}
 

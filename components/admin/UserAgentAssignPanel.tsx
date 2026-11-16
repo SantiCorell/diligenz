@@ -88,14 +88,14 @@ export default function UserAgentAssignPanel({
   };
 
   return (
-    <div className="space-y-5">
-      <div>
-        <p className="mb-3 text-sm font-semibold text-[var(--brand-primary)]">Agente asignado</p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div className="grid grid-cols-2 gap-3">
+      <div className="min-w-0">
+        <p className="mb-1.5 text-xs font-semibold text-[var(--brand-primary)]">Agente asignado</p>
+        <div className="flex items-center gap-2">
           <select
             value={value}
             onChange={(event) => setValue(event.target.value)}
-            className="min-h-11 w-full max-w-md rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+            className="min-h-9 w-full min-w-0 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs"
             aria-label="Agente asignado"
           >
             <option value="">Sin agente</option>
@@ -110,30 +110,27 @@ export default function UserAgentAssignPanel({
             type="button"
             disabled={saving}
             onClick={() => void save()}
-            className="min-h-11 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="shrink-0 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
           >
-            {saving ? "Guardando…" : "Guardar agente"}
+            {saving ? "…" : "Guardar"}
           </button>
-          {message && (
-            <span className={message.type === "ok" ? "text-sm text-emerald-700" : "text-sm text-red-600"}>
-              {message.text}
-            </span>
-          )}
         </div>
+        {message && (
+          <p className={`mt-1 text-[11px] ${message.type === "ok" ? "text-emerald-700" : "text-red-600"}`}>
+            {message.text}
+          </p>
+        )}
       </div>
-      <div>
-        <p className="mb-1 text-sm font-semibold text-[var(--brand-primary)]">Gestor de servicios</p>
-        <p className="mb-3 text-xs text-slate-500">
-          Aparece en el panel de servicios. Se guarda aparte del agente del perfil.
-        </p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="min-w-0">
+        <p className="mb-1.5 text-xs font-semibold text-[var(--brand-primary)]">Gestor de servicios</p>
+        <div className="flex items-center gap-2">
           <select
             value={servicesValue}
             onChange={(event) => setServicesValue(event.target.value)}
-            className="min-h-11 w-full max-w-md rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+            className="min-h-9 w-full min-w-0 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs"
             aria-label="Gestor de servicios"
           >
-            <option value="">Sin gestor de servicios</option>
+            <option value="">Sin gestor</option>
             {agents.map((agent) => (
               <option key={agent.id} value={agent.id}>
                 {agent.name}
@@ -145,16 +142,16 @@ export default function UserAgentAssignPanel({
             type="button"
             disabled={savingServices}
             onClick={() => void saveServices()}
-            className="min-h-11 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="shrink-0 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
           >
-            {savingServices ? "Guardando…" : "Guardar gestor"}
+            {savingServices ? "…" : "Guardar"}
           </button>
-          {servicesMessage && (
-            <span className={servicesMessage.type === "ok" ? "text-sm text-emerald-700" : "text-sm text-red-600"}>
-              {servicesMessage.text}
-            </span>
-          )}
         </div>
+        {servicesMessage && (
+          <p className={`mt-1 text-[11px] ${servicesMessage.type === "ok" ? "text-emerald-700" : "text-red-600"}`}>
+            {servicesMessage.text}
+          </p>
+        )}
       </div>
     </div>
   );

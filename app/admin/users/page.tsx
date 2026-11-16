@@ -221,52 +221,46 @@ function UserVerificationPanel({
   ]);
 
   return (
-    <div className="border-t border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white px-4 py-5 sm:px-6">
-      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-3">Validación del perfil</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-        <label className="flex items-center gap-2 cursor-pointer text-slate-700">
-          <input
-            type="checkbox"
-            checked={ndaSigned}
-            onChange={(e) => setNdaSigned(e.target.checked)}
-            className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
-          />
-          <span>NDA firmado</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer text-slate-700">
-          <input
-            type="checkbox"
-            checked={dniVerified}
-            onChange={(e) => setDniVerified(e.target.checked)}
-            className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
-          />
-          <span>DNI verificado</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer text-slate-700">
-          <input
-            type="checkbox"
-            checked={profileVerifiedByAdmin}
-            onChange={(e) => setProfileVerifiedByAdmin(e.target.checked)}
-            className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
-          />
-          <span>Perfil completo</span>
-        </label>
-      </div>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={save}
-          disabled={saving}
-          className="rounded-lg px-4 py-2 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
-        >
-          {saving ? "Guardando…" : "Guardar checks"}
-        </button>
-        {msg && (
-          <span className={msg.type === "ok" ? "text-sm text-emerald-700" : "text-sm text-red-600"}>
-            {msg.text}
-          </span>
-        )}
-      </div>
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white px-4 py-3 sm:px-6">
+      <p className="text-xs font-semibold text-[var(--brand-primary)]">Validación del perfil</p>
+      <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-700">
+        <input
+          type="checkbox"
+          checked={ndaSigned}
+          onChange={(e) => setNdaSigned(e.target.checked)}
+          className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
+        />
+        <span>NDA firmado</span>
+      </label>
+      <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-700">
+        <input
+          type="checkbox"
+          checked={dniVerified}
+          onChange={(e) => setDniVerified(e.target.checked)}
+          className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
+        />
+        <span>DNI verificado</span>
+      </label>
+      <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-700">
+        <input
+          type="checkbox"
+          checked={profileVerifiedByAdmin}
+          onChange={(e) => setProfileVerifiedByAdmin(e.target.checked)}
+          className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
+        />
+        <span>Perfil completo</span>
+      </label>
+      <button
+        type="button"
+        onClick={save}
+        disabled={saving}
+        className="rounded-lg bg-[var(--brand-primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:opacity-95 disabled:opacity-50"
+      >
+        {saving ? "Guardando…" : "Guardar"}
+      </button>
+      {msg && (
+        <span className={msg.type === "ok" ? "text-xs text-emerald-700" : "text-xs text-red-600"}>{msg.text}</span>
+      )}
     </div>
   );
 }
@@ -486,42 +480,27 @@ function UserInfoRequestLimitPanel({
   };
 
   return (
-    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
-      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
-        Empresas visibles (solicitudes activas)
-      </p>
-      <p className="text-xs text-slate-600 mb-3 max-w-2xl leading-relaxed">
-        Número máximo de empresas a las que puede solicitar información a la vez (solicitudes en
-        revisión o en gestión). Por defecto 4. Aumenta este valor si el inversor necesita más
-        oportunidades.
-      </p>
-      <div className="flex flex-col sm:flex-row sm:items-end gap-3 max-w-md">
-        <label className="flex-1 min-w-0">
-          <span className="block text-xs font-medium text-slate-600 mb-1">Máximo simultáneo</span>
-          <input
-            type="number"
-            min={1}
-            max={50}
-            value={limit}
-            onChange={(e) => setLimit(e.target.value)}
-            className="w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
-          />
-        </label>
-        <button
-          type="button"
-          onClick={save}
-          disabled={saving}
-          className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold bg-slate-800 text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
-        >
-          {saving ? "Guardando…" : "Guardar límite"}
-        </button>
-      </div>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-200/80 bg-white px-4 py-3 sm:px-6">
+      <p className="text-xs font-semibold text-[var(--brand-primary)]">Empresas visibles</p>
+      <input
+        type="number"
+        min={1}
+        max={50}
+        value={limit}
+        onChange={(e) => setLimit(e.target.value)}
+        aria-label="Empresas visibles"
+        className="h-8 w-16 rounded-lg border border-slate-200 px-2 text-xs text-slate-900 focus:border-[var(--brand-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/15"
+      />
+      <button
+        type="button"
+        onClick={save}
+        disabled={saving}
+        className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:opacity-95 disabled:opacity-50"
+      >
+        {saving ? "Guardando…" : "Guardar"}
+      </button>
       {msg && (
-        <p
-          className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}
-        >
-          {msg.text}
-        </p>
+        <span className={msg.type === "ok" ? "text-xs text-emerald-700" : "text-xs text-red-600"}>{msg.text}</span>
       )}
     </div>
   );

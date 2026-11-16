@@ -40,6 +40,7 @@ export async function GET(req: Request) {
       : null,
     driveFolderUrl: session.user.documentsDriveFolderUrl ?? null,
     dniLinkUrl: session.user.dniLinkUrl ?? null,
+    ndaSigned: session.user.ndaSigned,
   });
 }
 
