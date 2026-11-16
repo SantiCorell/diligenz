@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import AdminContactEmailPanel from "@/components/admin/AdminContactEmailPanel";
 import {
@@ -225,18 +225,37 @@ export default function AdminUnregisteredContactsList() {
   const [q, setQ] = useState("");
   const [contacts, setContacts] = useState<UnregisteredGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [expandedEmail, setExpandedEmail] = useState<string | null>(null);
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
+    const seq = ++requestSeq.current;
     setLoading(true);
-    try {
+    const run = async () => {
       const p = new URLSearchParams();
       if (q.trim()) p.set("q", q.trim());
       const res = await authFetch(`/api/admin/users/unregistered?${p.toString()}`);
-      const data = await res.json();
-      if (res.ok) setContacts(data.contacts ?? []);
+      const data = (await res.json().catch(() => null)) as { contacts?: UnregisteredGroup[] } | null;
+      return { res, data };
+    };
+    try {
+      let { res, data } = await run();
+      if (seq !== requestSeq.current) return;
+      if (!res.ok || !Array.isArray(data?.contacts)) {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        if (seq !== requestSeq.current) return;
+        ({ res, data } = await run());
+      }
+      if (seq !== requestSeq.current) return;
+      if (!res.ok || !Array.isArray(data?.contacts)) {
+        setLoadError("No se han podido cargar los contactos. Vuelve a abrir la pestaña.");
+        return;
+      }
+      setLoadError(null);
+      setContacts(data.contacts);
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
   }, [q]);
 
@@ -266,6 +285,10 @@ export default function AdminUnregisteredContactsList() {
 
       {loading ? (
         <p className="text-sm text-slate-500 animate-pulse px-1">Cargando contactos…</p>
+      ) : loadError && contacts.length === 0 ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
+          {loadError}
+        </div>
       ) : contacts.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
           No hay contactos sin cuenta con estos criterios.
