@@ -55,7 +55,7 @@ export async function POST(req: Request, { params }: Params) {
       select: { documentLinks: true },
     });
     const driveUrl = getCompanyDocumentsDriveUrl(company?.documentLinks);
-    driveFolderGranted = Boolean(interest.canSeeDriveFolder && driveUrl);
+    driveFolderGranted = Boolean(driveUrl);
     try {
       const companyName = await resolveCompanyDisplayName(interest.companyId);
       await sendInfoRequestAdvanceEmails({

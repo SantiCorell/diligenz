@@ -145,7 +145,7 @@ export default async function CompanyDetailPage({ params }: Props) {
       prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
       prisma.userCompanyInterest.findFirst({
         where: { userId, companyId: id, type: "REQUEST_INFO" },
-        select: { status: true, canSeeDriveFolder: true },
+        select: { status: true },
       }),
     ]);
     isOwner = companyRow?.ownerId === userId;
@@ -158,7 +158,6 @@ export default async function CompanyDetailPage({ params }: Props) {
     });
     buyerDriveAccess = buyerCanOpenCompanyDriveFolder({
       requestStatus: infoRequest?.status,
-      canSeeDriveFolder: infoRequest?.canSeeDriveFolder ?? false,
       driveFolderUrl: companyDriveUrl,
     });
   }

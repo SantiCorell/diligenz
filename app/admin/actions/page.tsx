@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { authFetch } from "@/lib/auth-client";
-import { DriveFolderAccessToggle } from "@/components/admin/DriveFolderAccessToggle";
 import {
   PIPELINE_STATUSES,
   PIPELINE_STATUS_LABELS,
@@ -32,7 +31,6 @@ type ActionRow = {
   companyReference: string | null;
   status: PipelineStatus;
   internalNote: string;
-  canSeeDriveFolder: boolean;
   createdAt: string;
   statusUpdatedAt: string;
   history: HistoryEvent[];
@@ -359,19 +357,6 @@ export default function AdminActionsPage() {
                 <p className="text-[11px] font-bold uppercase tracking-wide text-violet-700">Así lo ve el comprador ahora mismo</p>
                 <p className="mt-2 font-semibold">“{moment.title}”</p>
                 <p className="mt-1 text-violet-950/80">{moment.body}</p>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 px-4 py-3">
-                <DriveFolderAccessToggle
-                  interestId={selected.id}
-                  enabled={selected.canSeeDriveFolder}
-                  disabled={saving}
-                  onUpdated={(enabled) =>
-                    setActions((rows) =>
-                      rows.map((row) => (row.id === selected.id ? { ...row, canSeeDriveFolder: enabled } : row))
-                    )
-                  }
-                />
               </div>
 
               <div>

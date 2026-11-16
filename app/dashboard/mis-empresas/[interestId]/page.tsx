@@ -51,7 +51,6 @@ export default async function BuyerRequestDetailPage({ params }: Props) {
   const driveFolderUrl = getCompanyDocumentsDriveUrl(companyRow?.documentLinks);
   const canSeeDriveFolder = buyerCanOpenCompanyDriveFolder({
     requestStatus: interest.status,
-    canSeeDriveFolder: interest.canSeeDriveFolder,
     driveFolderUrl,
   });
   const grantedAt = interest.statusUpdatedAt ?? interest.createdAt;

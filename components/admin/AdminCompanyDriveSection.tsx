@@ -1,9 +1,11 @@
 import AdminBuyerDocumentsForm from "@/components/admin/AdminBuyerDocumentsForm";
-import {
-  DriveFolderAccessList,
-  type DriveAccessRequest,
-} from "@/components/admin/DriveFolderAccessToggle";
 import type { BuyerDocument } from "@/lib/buyer-documents";
+
+type InterestSummary = {
+  seenTeaser: number;
+  favorites: number;
+  advanced: number;
+};
 
 type Props = {
   companyId: string;
@@ -11,7 +13,7 @@ type Props = {
   companyDriveUrl: string | null;
   ownerDriveUrl: string;
   buyerDocuments: BuyerDocument[];
-  driveAccessRequests: DriveAccessRequest[];
+  interestSummary: InterestSummary;
 };
 
 export default function AdminCompanyDriveSection({
@@ -20,7 +22,7 @@ export default function AdminCompanyDriveSection({
   companyDriveUrl,
   ownerDriveUrl,
   buyerDocuments,
-  driveAccessRequests,
+  interestSummary,
 }: Props) {
   return (
     <section className="rounded-2xl bg-white border border-[var(--brand-primary)]/10 shadow-md p-6 space-y-6">
@@ -30,8 +32,8 @@ export default function AdminCompanyDriveSection({
         </h2>
         <p className="mt-2 text-sm text-[var(--foreground)] opacity-90">
           Acceso interno al Drive de <strong>{ownerLabel}</strong> (mandato, DNI y archivos del
-          proyecto). La carpeta del negocio solo la abre un comprador si activas «Puede ver la
-          carpeta de Drive» en su solicitud y pulsa «Quiero avanzar».
+          proyecto). Los compradores no ven esta carpeta hasta que tienen el teaser y pulsan
+          «Quiero avanzar». Si hay enlace, entonces les aparece.
         </p>
         <form action="/api/admin/company/update" method="POST" className="mt-4 space-y-3">
           <input type="hidden" name="companyId" value={companyId} />
@@ -88,13 +90,27 @@ export default function AdminCompanyDriveSection({
       </div>
 
       <div className="border-t border-[var(--brand-primary)]/10 pt-6">
-        <h3 className="text-sm font-semibold text-[var(--brand-primary)]">
-          Quién puede ver la carpeta
-        </h3>
-        <p className="mt-1 mb-4 text-xs text-[var(--foreground)] opacity-75">
-          El permiso es por solicitud. Sin esta casilla, el comprador no ve el enlace aunque la carpeta exista.
-        </p>
-        <DriveFolderAccessList requests={driveAccessRequests} />
+        <h3 className="text-sm font-semibold text-[var(--brand-primary)]">Resumen de interés</h3>
+        <dl className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl bg-[var(--brand-bg-lavender)]/40 px-4 py-3">
+            <dt className="text-xs text-[var(--foreground)] opacity-70">Han visto el teaser</dt>
+            <dd className="mt-1 text-2xl font-semibold text-[var(--brand-primary)]">
+              {interestSummary.seenTeaser}
+            </dd>
+          </div>
+          <div className="rounded-xl bg-[var(--brand-bg-lavender)]/40 px-4 py-3">
+            <dt className="text-xs text-[var(--foreground)] opacity-70">En favoritos</dt>
+            <dd className="mt-1 text-2xl font-semibold text-[var(--brand-primary)]">
+              {interestSummary.favorites}
+            </dd>
+          </div>
+          <div className="rounded-xl bg-[var(--brand-bg-lavender)]/40 px-4 py-3">
+            <dt className="text-xs text-[var(--foreground)] opacity-70">Han pulsado Quiero avanzar</dt>
+            <dd className="mt-1 text-2xl font-semibold text-[var(--brand-primary)]">
+              {interestSummary.advanced}
+            </dd>
+          </div>
+        </dl>
       </div>
 
       <AdminBuyerDocumentsForm

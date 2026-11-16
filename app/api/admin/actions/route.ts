@@ -92,7 +92,6 @@ export async function GET(req: Request) {
       status: normalizeRequestStatus(interest.status),
       rawStatus: interest.status,
       internalNote: interest.internalNote ?? "",
-      canSeeDriveFolder: interest.canSeeDriveFolder,
       createdAt: interest.createdAt,
       statusUpdatedAt: interest.statusUpdatedAt,
       history: history.map((event) => ({

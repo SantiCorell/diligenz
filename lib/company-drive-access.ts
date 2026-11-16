@@ -6,15 +6,15 @@ import {
 import { buyerHasTeaserAccess, normalizeRequestStatus } from "@/lib/info-request-pipeline";
 
 /**
- * La carpeta de Drive se abre si el admin lo permitió, la empresa tiene enlace
- * y el comprador ya avanzó (o la solicitud se cerró después).
+ * La carpeta se abre si el comprador ya tenía el teaser, pulsó «Quiero avanzar»
+ * y la empresa tiene enlace. No hay un permiso aparte.
  */
 export function buyerCanOpenCompanyDriveFolder(opts: {
   requestStatus: string | null | undefined;
-  canSeeDriveFolder: boolean;
   driveFolderUrl?: string | null;
 }): boolean {
-  if (!opts.canSeeDriveFolder || !opts.driveFolderUrl?.trim()) return false;
+  if (!opts.driveFolderUrl?.trim()) return false;
+  if (!buyerHasTeaserAccess(opts.requestStatus)) return false;
   const stage = normalizeRequestStatus(opts.requestStatus);
   return stage === "CONVERSATIONS" || stage === "CLOSED";
 }

@@ -22,9 +22,8 @@ export async function PATCH(req: Request, { params }: Params) {
   const body = await req.json().catch(() => ({}));
   const hasStatus = typeof body.status === "string";
   const hasNote = typeof body.internalNote === "string";
-  const hasDriveAccess = typeof body.canSeeDriveFolder === "boolean";
 
-  if (!hasStatus && !hasNote && !hasDriveAccess) {
+  if (!hasStatus && !hasNote) {
     return NextResponse.json({ error: "Nada que guardar" }, { status: 400 });
   }
   if (hasStatus && !ALLOWED.has(body.status)) {
@@ -46,7 +45,6 @@ export async function PATCH(req: Request, { params }: Params) {
     data: {
       ...(hasStatus ? { status: nextStatus, statusUpdatedAt: new Date() } : {}),
       ...(hasNote ? { internalNote: body.internalNote.trim() || null } : {}),
-      ...(hasDriveAccess ? { canSeeDriveFolder: body.canSeeDriveFolder } : {}),
     },
   });
 

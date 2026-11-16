@@ -89,7 +89,6 @@ export default async function MisEmpresasPage() {
     const driveFolderUrl = getCompanyDocumentsDriveUrl(docsRow?.documentLinks);
     const visibleDriveFolderUrl = buyerCanOpenCompanyDriveFolder({
       requestStatus: row.status,
-      canSeeDriveFolder: row.canSeeDriveFolder,
       driveFolderUrl,
     })
       ? driveFolderUrl
