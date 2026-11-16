@@ -87,6 +87,14 @@ export default function AdminShell({ userDisplayName, children }: Props) {
             onNavigate={() => setMobileSidebarOpen(false)}
           />
           <AdminNavLink
+            href="/admin/users"
+            label="Usuarios"
+            icon={Users}
+            collapsed={!expanded}
+            active={pathname.startsWith("/admin/users")}
+            onNavigate={() => setMobileSidebarOpen(false)}
+          />
+          <AdminNavLink
             href="/admin/companies"
             label="Empresas"
             icon={Building2}
@@ -116,14 +124,6 @@ export default function AdminShell({ userDisplayName, children }: Props) {
             icon={Inbox}
             collapsed={!expanded}
             active={pathname.startsWith("/admin/leads")}
-            onNavigate={() => setMobileSidebarOpen(false)}
-          />
-          <AdminNavLink
-            href="/admin/users"
-            label="Usuarios"
-            icon={Users}
-            collapsed={!expanded}
-            active={pathname.startsWith("/admin/users")}
             onNavigate={() => setMobileSidebarOpen(false)}
           />
           {expanded && (

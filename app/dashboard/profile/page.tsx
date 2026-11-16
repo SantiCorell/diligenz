@@ -113,37 +113,10 @@ export default async function DashboardProfilePage() {
         </div>
       )}
 
-      {isSellerOnly && (
-        <UserDrivePanel
-          title="Google Drive (vendedor)"
-          driveUrl={
-            user.documentsDriveFolderUrl?.trim() ||
-            process.env.NEXT_PUBLIC_SELLER_DOCUMENTS_DRIVE_URL?.trim() ||
-            ""
-          }
-          description="Abre la carpeta de Google Drive enlazada en tu ficha para subir o consultar archivos."
-        />
-      )}
-
-      {isProfessional && (
-        <UserDrivePanel
-          title="Google Drive (profesional)"
-          driveUrl={user.documentsDriveFolderUrl?.trim() || ""}
-          description="Abre la carpeta de Google Drive enlazada en tu ficha."
-        />
-      )}
-
-      {isBuyer && (
-        <UserDrivePanel
-          title="Google Drive (comprador)"
-          driveUrl={
-            user.documentsDriveFolderUrl?.trim() ||
-            process.env.NEXT_PUBLIC_BUYER_DOCUMENTS_DRIVE_URL?.trim() ||
-            ""
-          }
-          description="Abre la carpeta de Google Drive enlazada en tu ficha. Aquí está la documentación que el equipo Diligenz comparte contigo."
-        />
-      )}
+      <UserDrivePanel
+        driveUrl={user.documentsDriveFolderUrl?.trim() || ""}
+        uploadUrl={user.documentationUploadUrl?.trim() || ""}
+      />
 
       <DeleteAccountSection initialPending={Boolean(pendingDeletion)} />
 

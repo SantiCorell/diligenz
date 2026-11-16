@@ -34,6 +34,7 @@ type UserRow = {
   hasCompanyDocumentLinks: boolean;
   hasUserDriveFolder: boolean;
   documentsDriveFolderUrl: string | null;
+  documentationUploadUrl: string | null;
   maxConcurrentInfoRequests?: number;
   maxConcurrentCompanies?: number;
   dniHasFront?: boolean;
@@ -161,106 +162,6 @@ function UserNotionToggle({
   );
 }
 
-function AdminDniPreview({
-  userId,
-  side,
-  label,
-}: {
-  userId: string;
-  side: "front" | "back";
-  label: string;
-}) {
-  const [src, setSrc] = useState<string | null>(null);
-  const [mime, setMime] = useState("");
-  const [missing, setMissing] = useState(false);
-
-  useEffect(() => {
-    let objectUrl: string | null = null;
-    let cancelled = false;
-    void (async () => {
-      const res = await authFetch(`/api/admin/users/${userId}/dni/file?side=${side}`);
-      if (!res.ok) {
-        if (!cancelled) setMissing(true);
-        return;
-      }
-      const blob = await res.blob();
-      if (cancelled) return;
-      objectUrl = URL.createObjectURL(blob);
-      setMime(blob.type || "application/octet-stream");
-      setSrc(objectUrl);
-    })();
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [userId, side]);
-
-  if (missing) {
-    return <p className="text-xs text-slate-500">{label}: no disponible</p>;
-  }
-  if (!src) {
-    return <p className="text-xs text-slate-500">Cargando {label.toLowerCase()}…</p>;
-  }
-  if (mime.startsWith("image/")) {
-    return (
-      <figure>
-        <figcaption className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          {label}
-        </figcaption>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={label}
-          className="max-h-72 w-full rounded-xl border border-slate-200 bg-slate-50 object-contain"
-        />
-      </figure>
-    );
-  }
-  return (
-    <a href={src} download className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">
-      Descargar {label}
-    </a>
-  );
-}
-
-function UserDniReviewPanel({ user }: { user: UserRow }) {
-  const hasUpload = Boolean(user.dniHasFront || user.dniHasBack);
-  return (
-    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
-      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">Revisión DNI / NIE</p>
-      <p className="mb-3 max-w-2xl text-xs leading-relaxed text-slate-500">
-        Las fotos solo se cargan en esta sesión de administrador. Márcalo como verificado en el
-        apartado de verificación cuando coincida con el titular.
-      </p>
-      {hasUpload ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {user.dniHasFront ? (
-            <AdminDniPreview userId={user.id} side="front" label="Anverso" />
-          ) : (
-            <p className="text-xs text-amber-800">Falta el anverso.</p>
-          )}
-          {user.dniHasBack ? (
-            <AdminDniPreview userId={user.id} side="back" label="Reverso" />
-          ) : (
-            <p className="text-xs text-amber-800">Falta el reverso.</p>
-          )}
-        </div>
-      ) : (
-        <p className="text-sm text-slate-600">Este usuario todavía no ha subido el DNI.</p>
-      )}
-      {user.documentsDriveFolderUrl ? (
-        <a
-          href={user.documentsDriveFolderUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-flex items-center justify-center rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
-        >
-          Abrir carpeta Drive
-        </a>
-      ) : null}
-    </div>
-  );
-}
 
 function UserVerificationPanel({
   user,
@@ -1019,13 +920,15 @@ function UserDriveFolderPanel({
   user: UserRow;
   onSaved: () => void;
 }) {
-  const [url, setUrl] = useState(user.documentsDriveFolderUrl ?? "");
+  const [dniUrl, setDniUrl] = useState(user.documentsDriveFolderUrl ?? "");
+  const [uploadUrl, setUploadUrl] = useState(user.documentationUploadUrl ?? "");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sincronizar al cambiar usuario */
-    setUrl(user.documentsDriveFolderUrl ?? "");
+    setDniUrl(user.documentsDriveFolderUrl ?? "");
+    setUploadUrl(user.documentationUploadUrl ?? "");
     setMsg(null);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [user]);
@@ -1034,12 +937,12 @@ function UserDriveFolderPanel({
     setMsg(null);
     setSaving(true);
     try {
-      const trimmed = url.trim();
       const res = await authFetch(`/api/admin/users/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          documentsDriveFolderUrl: trimmed.length ? trimmed : null,
+          documentsDriveFolderUrl: dniUrl.trim() || null,
+          documentationUploadUrl: uploadUrl.trim() || null,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1048,68 +951,77 @@ function UserDriveFolderPanel({
         setSaving(false);
         return;
       }
-      setMsg({ type: "ok", text: "Enlace guardado." });
+      setMsg({ type: "ok", text: "Enlaces guardados." });
       onSaved();
     } catch {
       setMsg({ type: "error", text: "Error de conexión." });
     }
     setSaving(false);
-  }, [user.id, url, onSaved]);
-
-  const hasLink = Boolean(user.documentsDriveFolderUrl?.trim());
+  }, [user.id, dniUrl, uploadUrl, onSaved]);
 
   return (
     <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
-      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
-        Carpeta Google Drive (documentos del usuario)
-      </p>
-      <p className="text-xs text-slate-600 mb-3 max-w-2xl leading-relaxed">
-        Pega el enlace de la carpeta que hayas creado en Google Drive. Debe ser una URL de{" "}
-        <span className="font-medium">drive.google.com</span> o{" "}
-        <span className="font-medium">docs.google.com</span>. Si lo dejas vacío y guardas, se quita el
-        enlace de esta ficha. La carpeta en Drive no se borra.
-      </p>
-      {!hasLink && (
-        <p className="mb-3 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2 inline-block">
-          Falta enlace de carpeta de Drive.
-        </p>
-      )}
-      <div className="flex flex-col sm:flex-row sm:items-end gap-3 max-w-3xl">
-        <label className="flex-1 min-w-0">
-          <span className="sr-only">URL carpeta Drive</span>
+      <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">Enlaces del cliente</p>
+      <div className="mt-3 grid max-w-3xl gap-4">
+        <label className="block text-sm">
+          <span className="font-semibold text-slate-800">Enlace DNI</span>
           <input
             type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            value={dniUrl}
+            onChange={(e) => setDniUrl(e.target.value)}
             placeholder="https://drive.google.com/drive/folders/…"
-            className="w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
+            className="mt-1 w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
           />
+          <span className="mt-1 block text-xs text-slate-500">
+            Carpeta de Drive del cliente. Tiene que ser drive.google.com o docs.google.com.
+          </span>
         </label>
-        <button
-          type="button"
-          onClick={save}
-          disabled={saving}
-          className="shrink-0 rounded-lg px-4 py-2.5 text-sm font-semibold bg-slate-800 text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
-        >
-          {saving ? "Guardando…" : "Guardar enlace Drive"}
-        </button>
+        <label className="block text-sm">
+          <span className="font-semibold text-slate-800">Enlace para subir documentación</span>
+          <input
+            type="url"
+            value={uploadUrl}
+            onChange={(e) => setUploadUrl(e.target.value)}
+            placeholder="https://…"
+            className="mt-1 w-full min-h-11 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/15 focus:outline-none"
+          />
+          <span className="mt-1 block text-xs text-slate-500">
+            Este enlace le sale al cliente para subir su documentación.
+          </span>
+        </label>
       </div>
-      {hasLink && user.documentsDriveFolderUrl && (
-        <p className="mt-2 text-xs">
+      <button
+        type="button"
+        onClick={save}
+        disabled={saving}
+        className="mt-4 rounded-lg px-4 py-2.5 text-sm font-semibold bg-slate-800 text-white shadow-sm hover:opacity-95 disabled:opacity-50 transition"
+      >
+        {saving ? "Guardando…" : "Guardar enlaces"}
+      </button>
+      <div className="mt-3 flex flex-col gap-1 text-xs">
+        {user.documentsDriveFolderUrl ? (
           <a
             href={user.documentsDriveFolderUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[var(--brand-dark)] font-medium underline-offset-2 hover:underline break-all"
+            className="font-medium text-[var(--brand-dark)] underline-offset-2 hover:underline break-all"
           >
-            Abrir carpeta en nueva pestaña
+            Abrir carpeta Drive del cliente
           </a>
-        </p>
-      )}
+        ) : null}
+        {user.documentationUploadUrl ? (
+          <a
+            href={user.documentationUploadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[var(--brand-dark)] underline-offset-2 hover:underline break-all"
+          >
+            Abrir enlace de documentación
+          </a>
+        ) : null}
+      </div>
       {msg && (
-        <p
-          className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}
-        >
+        <p className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}>
           {msg.text}
         </p>
       )}
@@ -1300,7 +1212,6 @@ function AdminUserMobileCard({
               }
             />
           </div>
-          <UserDniReviewPanel user={u} />
           <UserVerificationPanel user={u} onSaved={onVerificationSaved} />
           <UserSalesMandatePanel user={u} onSaved={onVerificationSaved} />
           <UserDriveFolderPanel user={u} onSaved={onVerificationSaved} />
@@ -1384,6 +1295,7 @@ export default function AdminUsersPage() {
               hasCompanyDocumentLinks: Boolean(u.hasCompanyDocumentLinks),
               hasUserDriveFolder: Boolean(u.hasUserDriveFolder ?? u.documentsDriveFolderUrl?.trim()),
               documentsDriveFolderUrl: u.documentsDriveFolderUrl ?? null,
+              documentationUploadUrl: u.documentationUploadUrl ?? null,
               dniHasFront: Boolean(u.dniHasFront),
               dniHasBack: Boolean(u.dniHasBack),
               dniDriveSynced: Boolean(u.dniDriveSynced),
@@ -2132,7 +2044,6 @@ export default function AdminUsersPage() {
                                   }
                                 />
                               </div>
-                              <UserDniReviewPanel user={u} />
                               <UserVerificationPanel user={u} onSaved={loadUsers} />
                               <UserSalesMandatePanel user={u} onSaved={loadUsers} />
                               <UserDriveFolderPanel user={u} onSaved={loadUsers} />

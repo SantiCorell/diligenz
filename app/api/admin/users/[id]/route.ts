@@ -39,6 +39,7 @@ type PatchBody = {
   accountStatus?: unknown;
   role?: unknown;
   documentsDriveFolderUrl?: unknown;
+  documentationUploadUrl?: unknown;
   maxConcurrentInfoRequests?: unknown;
   maxConcurrentCompanies?: unknown;
   assignedAgentId?: unknown;
@@ -71,6 +72,7 @@ export async function PATCH(req: Request, { params }: Params) {
     accountStatus?: UserAccountStatus;
     role?: UserRole;
     documentsDriveFolderUrl?: string | null;
+    documentationUploadUrl?: string | null;
     maxConcurrentInfoRequests?: number;
     maxConcurrentCompanies?: number;
     assignedAgentId?: string | null;
@@ -203,6 +205,37 @@ export async function PATCH(req: Request, { params }: Params) {
     }
   }
 
+  if (body.documentationUploadUrl !== undefined) {
+    const raw = body.documentationUploadUrl;
+    if (raw === null) {
+      data.documentationUploadUrl = null;
+    } else if (typeof raw === "string") {
+      const t = raw.trim();
+      if (!t) {
+        data.documentationUploadUrl = null;
+      } else {
+        let parsed: URL;
+        try {
+          parsed = new URL(t);
+        } catch {
+          return NextResponse.json({ error: "El enlace para subir documentación no es válido." }, { status: 400 });
+        }
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          return NextResponse.json(
+            { error: "El enlace para subir documentación debe usar http o https." },
+            { status: 400 }
+          );
+        }
+        data.documentationUploadUrl = t.length > DRIVE_URL_MAX ? t.slice(0, DRIVE_URL_MAX) : t;
+      }
+    } else {
+      return NextResponse.json(
+        { error: "documentationUploadUrl debe ser texto, cadena vacía o null." },
+        { status: 400 }
+      );
+    }
+  }
+
   if (Object.keys(data).length === 0) {
     return NextResponse.json(
       {
@@ -241,6 +274,7 @@ export async function PATCH(req: Request, { params }: Params) {
         accountStatus: true,
         role: true,
         documentsDriveFolderUrl: true,
+        documentationUploadUrl: true,
         maxConcurrentInfoRequests: true,
         maxConcurrentCompanies: true,
         assignedAgentId: true,

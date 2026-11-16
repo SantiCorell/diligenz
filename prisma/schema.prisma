@@ -33,8 +33,10 @@ model User {
   /// Validado / dado de alta en Notion (check admin; por defecto no).
   notionValidated Boolean @default(false)
 
-  /// Carpeta de Google Drive con documentos del usuario (solo admin lo gestiona en panel).
+  /// Carpeta de Google Drive con el DNI del usuario (solo admin lo guarda).
   documentsDriveFolderUrl String?
+  /// Enlace que ve el cliente para subir su documentación.
+  documentationUploadUrl String?
 
   blocked       Boolean  @default(false)
   blockedUntil  DateTime?

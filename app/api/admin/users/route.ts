@@ -114,6 +114,7 @@ export async function GET(req: Request) {
       profileVerifiedByAdmin: true,
       notionValidated: true,
       documentsDriveFolderUrl: true,
+      documentationUploadUrl: true,
       maxConcurrentInfoRequests: true,
       maxConcurrentCompanies: true,
       assignedAgentId: true,
