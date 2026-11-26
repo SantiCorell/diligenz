@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { getSessionWithUser } from "@/lib/session";
 import { loadAdminData, type RankBlock } from "@/lib/admin-data";
+import { GroupedBars } from "@/components/admin/GroupedBars";
 import {
   BreakdownCard,
   DailyUsers,
-  GroupedBars,
   KpiCard,
   PageList,
   Section,
