@@ -58,10 +58,10 @@ type DraftStep = { title: string; detail: string };
 type ServiceView = "all" | "solicitudes" | ServiceRow["status"];
 
 const VIEWS: { id: ServiceView; label: string; description: string }[] = [
-  { id: "all", label: "Todos", description: "Servicios ya creados" },
   { id: "solicitudes", label: "Solicitudes", description: "Aún sin propuesta" },
   { id: "PROPOSAL", label: "Propuestas", description: "Pendientes de aceptar" },
   { id: "IN_PROGRESS", label: "En marcha", description: "El cliente ya aceptó" },
+  { id: "all", label: "Todos", description: "Servicios ya creados" },
   { id: "COMPLETED", label: "Finalizadas", description: "Operación cerrada" },
   { id: "DISCARDED", label: "Descartadas", description: "Se pueden reabrir" },
 ];
