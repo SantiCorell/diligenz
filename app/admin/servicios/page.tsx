@@ -321,7 +321,7 @@ export default function AdminServiciosPage() {
                         href={`/admin/servicios/${service.id}`}
                         className="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:opacity-95"
                       >
-                        Editar
+                        Gestionar
                       </Link>
                     </div>
                   </div>
