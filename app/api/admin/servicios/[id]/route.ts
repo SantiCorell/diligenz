@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { servicePriceAmount, servicePriceDecimal } from "@/lib/client-services";
 import { parseDriveLink } from "@/lib/drive-link";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 
@@ -21,7 +22,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const data: {
     title?: string;
     summary?: string | null;
-    priceEur?: number;
+    priceEur?: string;
     status?: "PROPOSAL" | "IN_PROGRESS" | "COMPLETED" | "DISCARDED";
     documentsUrl?: string | null;
     invoicesUrl?: string | null;
@@ -34,10 +35,11 @@ export async function PATCH(req: Request, { params }: Params) {
   }
   if (typeof body.summary === "string") data.summary = body.summary.trim().slice(0, 4000) || null;
   if (body.priceEur !== undefined) {
-    if (typeof body.priceEur !== "number" || !Number.isInteger(body.priceEur) || body.priceEur < 0 || body.priceEur > 1_000_000) {
+    const priceEur = servicePriceDecimal(body.priceEur);
+    if (!priceEur) {
       return NextResponse.json({ error: "El precio tiene que ser un importe en euros, sin IVA." }, { status: 400 });
     }
-    data.priceEur = body.priceEur;
+    data.priceEur = priceEur;
   }
   if (body.status === "COMPLETED" || body.status === "DISCARDED") {
     data.status = body.status;
@@ -58,7 +60,7 @@ export async function PATCH(req: Request, { params }: Params) {
     data[key] = parsed.url;
   }
 
-  let steps: { id: string | null; title: string; detail: string | null; done: boolean }[] | null = null;
+  let steps: { id: string | null; title: string; detail: string | null; done: boolean; clientComment?: string | null }[] | null = null;
   if (body.steps !== undefined) {
     if (!Array.isArray(body.steps) || body.steps.length < 1 || body.steps.length > 20) {
       return NextResponse.json({ error: "Añade entre 1 y 20 pasos." }, { status: 400 });
@@ -68,11 +70,23 @@ export async function PATCH(req: Request, { params }: Params) {
       if (!step || typeof step !== "object" || typeof step.title !== "string" || step.title.trim().length < 2) {
         return NextResponse.json({ error: "Cada paso necesita un título." }, { status: 400 });
       }
+      const hasComment = "clientComment" in step;
+      let clientComment: string | null | undefined;
+      if (!hasComment) {
+        clientComment = undefined;
+      } else if (step.clientComment === null) {
+        clientComment = null;
+      } else if (typeof step.clientComment === "string") {
+        clientComment = step.clientComment.trim().slice(0, 2000) || null;
+      } else {
+        return NextResponse.json({ error: "El comentario del paso no es válido." }, { status: 400 });
+      }
       steps.push({
         id: typeof step.id === "string" && step.id ? step.id : null,
         title: step.title.trim().slice(0, 120),
         detail: typeof step.detail === "string" && step.detail.trim() ? step.detail.trim().slice(0, 500) : null,
         done: step.done === true,
+        ...(hasComment ? { clientComment } : {}),
       });
     }
   }
@@ -89,18 +103,35 @@ export async function PATCH(req: Request, { params }: Params) {
         if (step.id && known.has(step.id)) {
           await tx.clientServiceStep.update({
             where: { id: step.id },
-            data: { position, title: step.title, detail: step.detail, done: step.done },
+            data: {
+              position,
+              title: step.title,
+              detail: step.detail,
+              done: step.done,
+              ...(step.clientComment !== undefined ? { clientComment: step.clientComment } : {}),
+            },
           });
           kept.push(step.id);
         } else {
           const created = await tx.clientServiceStep.create({
-            data: { serviceId: id, position, title: step.title, detail: step.detail, done: step.done },
+            data: {
+              serviceId: id,
+              position,
+              title: step.title,
+              detail: step.detail,
+              done: step.done,
+              clientComment: step.clientComment ?? null,
+            },
             select: { id: true },
           });
           kept.push(created.id);
         }
       }
-      await tx.clientServiceStep.deleteMany({ where: { serviceId: id, id: { notIn: kept } } });
+      const removed = current.map((step) => step.id).filter((stepId) => !kept.includes(stepId));
+      if (removed.length) {
+        await tx.clientServiceDocument.updateMany({ where: { stepId: { in: removed } }, data: { stepId: null } });
+        await tx.clientServiceStep.deleteMany({ where: { id: { in: removed } } });
+      }
     }
   });
 
@@ -115,5 +146,5 @@ export async function PATCH(req: Request, { params }: Params) {
       },
     },
   });
-  return NextResponse.json({ service });
+  return NextResponse.json({ service: service ? { ...service, priceEur: servicePriceAmount(service.priceEur) } : null });
 }

@@ -613,8 +613,8 @@ model ClientService {
   contactRequest   ContactRequest?     @relation(fields: [contactRequestId], references: [id], onDelete: SetNull)
   title            String
   summary          String?             @db.Text
-  /// Importe de Diligenz sin IVA.
-  priceEur         Int
+  /// Importe de Diligenz sin IVA, con céntimos.
+  priceEur         Decimal              @db.Decimal(12, 2)
   /// Carpeta o documento de Drive con la documentación del expediente.
   documentsUrl     String?
   /// Carpeta o documento de Drive con las facturas.
@@ -680,6 +680,8 @@ model ClientServiceStep {
   title     String
   detail    String?
   done      Boolean       @default(false)
+  /// Comentario que escribe el admin y ve el cliente en la ficha. Vacío = null.
+  clientComment String?   @db.Text
   documents ClientServiceDocument[]
 
   @@index([serviceId, position])

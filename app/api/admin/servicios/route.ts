@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { assignDefaultServicesAgentIfEmpty } from "@/lib/agents";
+import { servicePriceAmount, servicePriceDecimal } from "@/lib/client-services";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 
@@ -76,7 +77,10 @@ export async function GET(req: Request) {
     }),
   ]);
 
-  return NextResponse.json({ requests, services });
+  return NextResponse.json({
+    requests,
+    services: services.map((service) => ({ ...service, priceEur: servicePriceAmount(service.priceEur) })),
+  });
 }
 
 export async function POST(req: Request) {
@@ -89,14 +93,14 @@ export async function POST(req: Request) {
   const userId = typeof body.userId === "string" ? body.userId : "";
   const title = typeof body.title === "string" ? body.title.trim().slice(0, 160) : "";
   const summary = typeof body.summary === "string" ? body.summary.trim().slice(0, 4000) : "";
-  const priceEur = body.priceEur;
+  const priceEur = servicePriceDecimal(body.priceEur);
   const steps = cleanSteps(body.steps);
   const contactRequestId = typeof body.contactRequestId === "string" && body.contactRequestId ? body.contactRequestId : null;
 
   if (!userId || title.length < 2) {
     return NextResponse.json({ error: "Indica el cliente y el nombre del servicio." }, { status: 400 });
   }
-  if (typeof priceEur !== "number" || !Number.isInteger(priceEur) || priceEur < 0 || priceEur > 1_000_000) {
+  if (!priceEur) {
     return NextResponse.json({ error: "El precio tiene que ser un importe en euros, sin IVA." }, { status: 400 });
   }
   if (!steps) {
@@ -151,5 +155,5 @@ export async function POST(req: Request) {
     });
   }
 
-  return NextResponse.json({ service });
+  return NextResponse.json({ service: { ...service, priceEur: servicePriceAmount(service.priceEur) } });
 }

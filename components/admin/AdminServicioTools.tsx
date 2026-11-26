@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authFetch } from "@/lib/auth-client";
+import { formatServicePriceInput, parseServicePrice } from "@/lib/client-services";
 
 export default function AdminServicioTools({
   serviceId,
@@ -26,7 +27,7 @@ export default function AdminServicioTools({
   clientName: string;
 }) {
   const router = useRouter();
-  const [price, setPrice] = useState(String(priceEur));
+  const [price, setPrice] = useState(formatServicePriceInput(priceEur));
   const [name, setName] = useState(title);
   const [note, setNote] = useState(summary ?? "");
   const [docs, setDocs] = useState(documentsUrl ?? "");
@@ -68,7 +69,14 @@ export default function AdminServicioTools({
         </label>
         <label className="text-sm">
           <span className="font-semibold text-slate-700">Precio sin IVA (€)</span>
-          <input value={price} onChange={(event) => setPrice(event.target.value)} inputMode="numeric" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2" />
+          <input
+            type="text"
+            inputMode="decimal"
+            step="0.01"
+            value={price}
+            onChange={(event) => setPrice(event.target.value.replace(/[^\d.,]/g, "").slice(0, 16))}
+            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2"
+          />
         </label>
         <label className="text-sm sm:col-span-2">
           <span className="font-semibold text-slate-700">Nota de honorarios</span>
@@ -88,7 +96,11 @@ export default function AdminServicioTools({
           type="button"
           disabled={saving}
           onClick={() => {
-            const amount = Number(price);
+            const amount = parseServicePrice(price);
+            if (amount == null) {
+              setError("El precio tiene que ser un importe en euros, sin IVA.");
+              return;
+            }
             void patch(
               { title: name, summary: note, priceEur: amount, documentsUrl: docs, invoicesUrl: invoices },
               "Cambios guardados."

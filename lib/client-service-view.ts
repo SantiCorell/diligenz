@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { currentStepIndex, formatServicePrice } from "@/lib/client-services";
+import { currentStepIndex, formatServicePrice, servicePriceAmount } from "@/lib/client-services";
 import { loadServiciosContext } from "@/lib/servicios-panel-data";
 import { isConstitucionService, servicioExpediente } from "@/lib/servicios-panel";
 import { loadIntakeSnapshot } from "@/lib/service-intake-load";
@@ -28,6 +28,7 @@ export async function loadClientServiceView(userId: string, email: string, servi
     id: step.id,
     title: step.title,
     done: step.done,
+    clientComment: step.clientComment,
     documents: step.documents,
   }));
   const badge =
@@ -75,7 +76,7 @@ export async function loadAdminServiceView(serviceId: string) {
   return {
     ...view,
     acceptServiceId: null,
-    priceEur: service.priceEur,
+    priceEur: servicePriceAmount(service.priceEur),
     status: service.status,
     accepted: service.acceptedAt != null,
     summary: service.summary,

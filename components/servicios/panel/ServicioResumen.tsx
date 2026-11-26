@@ -21,6 +21,7 @@ export type ServicioStepView = {
   id?: string;
   title: string;
   done: boolean;
+  clientComment?: string | null;
   documents?: { id: string; name: string }[];
 };
 
@@ -118,14 +119,16 @@ export default function ServicioResumen({
                 <li key={`${step.title}-${index}`} className="min-w-0 text-center">
                   <span
                     className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                      done || isCurrent
+                      done
                         ? "bg-[#7c4dff] text-white"
-                        : "bg-[#f3f0f7] text-[var(--foreground)]/45"
-                    } ${isCurrent ? "ring-4 ring-[#efe7ff]" : ""}`}
+                        : isCurrent
+                          ? "bg-[#f8e7b0] text-[#8a6a12] ring-4 ring-[#f8efc8]"
+                          : "bg-[#f3f0f7] text-[var(--foreground)]/45"
+                    }`}
                   >
                     {done ? <Check className="h-3.5 w-3.5" aria-hidden /> : index + 1}
                   </span>
-                  <span className={`mt-2 block text-[10px] leading-tight ${isCurrent ? "font-semibold text-[var(--brand-dark)]" : "text-[var(--foreground)]/50"}`}>
+                  <span className={`mt-2 block text-[10px] leading-tight ${isCurrent ? "font-semibold text-[#8a6a12]" : "text-[var(--foreground)]/50"}`}>
                     {step.title}
                   </span>
                 </li>
@@ -133,9 +136,38 @@ export default function ServicioResumen({
             })}
           </ol>
           {current ? (
-            <p className="-mt-2 text-sm text-[var(--foreground)]/60">
+            <p className={`-mt-2 text-sm ${current.done ? "text-[var(--foreground)]/60" : "font-semibold text-[#8a6a12]"}`}>
               Paso {Math.min(currentIndex, steps.length - 1) + 1} de {steps.length} · {current.title}
             </p>
+          ) : null}
+
+          {!editable && steps.length > 0 ? (
+            <section className="rounded-3xl border border-[#ece6f5] bg-white p-5 sm:p-6">
+              <h2 className="text-lg font-bold text-[var(--brand-dark)]">Pasos</h2>
+              <ol className="mt-4 divide-y divide-[#f3eef8]">
+                {steps.map((step, index) => {
+                  const comment = step.clientComment?.trim() ?? "";
+                  return (
+                    <li key={step.id ?? `${step.title}-${index}`} className="py-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-[var(--brand-dark)]">
+                          {index + 1}. {step.title}
+                        </p>
+                        {step.done ? (
+                          <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-[#7c4dff] px-3 py-1 text-xs font-semibold text-white">
+                            <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
+                            Hecho
+                          </span>
+                        ) : null}
+                      </div>
+                      {comment ? (
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[var(--foreground)]/75">{comment}</p>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
           ) : null}
 
           {serviceId && steps.every((step) => step.id) ? (

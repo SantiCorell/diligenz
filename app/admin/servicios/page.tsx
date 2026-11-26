@@ -8,6 +8,7 @@ import {
   CLIENT_SERVICE_STATUS_LABELS,
   SERVICE_TEMPLATES,
   formatServicePrice,
+  parseServicePrice,
   type ServiceTemplate,
 } from "@/lib/client-services";
 import { toIntakeSnapshot, type IntakeFileView } from "@/lib/service-intake";
@@ -54,7 +55,15 @@ type ServiceRow = {
   user: { id: string; name: string | null; email: string };
 };
 
-type DraftStep = { title: string; detail: string };
+type DraftStep = { key: string; title: string; detail: string };
+
+function draftStep(title = "", detail = ""): DraftStep {
+  return {
+    key: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    title,
+    detail,
+  };
+}
 type ServiceView = "all" | "solicitudes" | ServiceRow["status"];
 
 const VIEWS: { id: ServiceView; label: string; description: string }[] = [
@@ -74,7 +83,7 @@ const STATUS_TONE = {
 } as const;
 
 function blankDraft(): { userId: string; userLabel: string; contactRequestId: string | null; title: string; summary: string; priceEur: string; steps: DraftStep[] } {
-  return { userId: "", userLabel: "", contactRequestId: null, title: "", summary: "", priceEur: "", steps: [{ title: "", detail: "" }] };
+  return { userId: "", userLabel: "", contactRequestId: null, title: "", summary: "", priceEur: "", steps: [draftStep()] };
 }
 
 export default function AdminServiciosPage() {
@@ -162,7 +171,7 @@ export default function AdminServiciosPage() {
       title: template.title,
       summary: template.summary,
       priceEur: template.priceEur ? String(template.priceEur) : "",
-      steps: template.steps.map((step) => ({ title: step.title, detail: step.detail ?? "" })),
+      steps: template.steps.map((step) => draftStep(step.title, step.detail ?? "")),
     }));
   };
 
@@ -185,14 +194,35 @@ export default function AdminServiciosPage() {
         title: template.title,
         summary: template.summary,
         priceEur: String(template.priceEur),
-        steps: template.steps.map((step) => ({ title: step.title, detail: "" })),
+        steps: template.steps.map((step) => draftStep(step.title)),
       }));
     }
+  };
+
+  const removeStep = (index: number) => {
+    setDraft((current) => {
+      const steps = current.steps.filter((_, stepIndex) => stepIndex !== index);
+      return { ...current, steps: steps.length > 0 ? steps : [draftStep()] };
+    });
   };
 
   const createProposal = async () => {
     setSaving(true);
     setError(null);
+    const priceEur = parseServicePrice(draft.priceEur);
+    const steps = draft.steps
+      .map((step) => ({ title: step.title.trim(), detail: step.detail.trim() }))
+      .filter((step) => step.title.length > 0);
+    if (priceEur == null) {
+      setSaving(false);
+      setError("El precio tiene que ser un importe en euros, sin IVA.");
+      return;
+    }
+    if (steps.length < 1 || steps.length > 20 || steps.some((step) => step.title.length < 2)) {
+      setSaving(false);
+      setError("Añade entre 1 y 20 pasos, cada uno con un título.");
+      return;
+    }
     const res = await authFetch("/api/admin/servicios", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -201,8 +231,8 @@ export default function AdminServiciosPage() {
         contactRequestId: draft.contactRequestId,
         title: draft.title,
         summary: draft.summary,
-        priceEur: Number(draft.priceEur),
-        steps: draft.steps.map((step) => ({ title: step.title, detail: step.detail })),
+        priceEur,
+        steps,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -398,31 +428,51 @@ export default function AdminServiciosPage() {
               </label>
               <label className="block text-sm">
                 <span className="font-medium text-slate-700">Precio sin IVA (€)</span>
-                <input value={draft.priceEur} onChange={(event) => setDraft({ ...draft, priceEur: event.target.value.replace(/[^\d]/g, "") })} inputMode="numeric" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2" />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  step="0.01"
+                  value={draft.priceEur}
+                  onChange={(event) => {
+                    const priceEur = event.target.value.replace(/[^\d.,]/g, "").slice(0, 16);
+                    setDraft((current) => ({ ...current, priceEur }));
+                  }}
+                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2"
+                />
                 <span className="mt-1 block text-xs text-slate-500">El cliente verá este importe más IVA.</span>
               </label>
               <div>
                 <p className="text-sm font-medium text-slate-700">Pasos</p>
                 <ol className="mt-2 space-y-2">
                   {draft.steps.map((step, index) => (
-                    <li key={index} className="flex gap-2">
-                      <span className="mt-2 w-5 text-xs font-bold text-slate-400">{index + 1}</span>
+                    <li key={step.key} className="flex items-center gap-2">
+                      <span className="w-6 shrink-0 text-xs font-bold tabular-nums text-slate-400">{index + 1}</span>
                       <input
                         value={step.title}
                         onChange={(event) => {
-                          const steps = [...draft.steps];
-                          steps[index] = { ...step, title: event.target.value };
-                          setDraft({ ...draft, steps });
+                          const title = event.target.value;
+                          setDraft((current) => ({
+                            ...current,
+                            steps: current.steps.map((item, stepIndex) => (stepIndex === index ? { ...item, title } : item)),
+                          }));
                         }}
-                        className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                        className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm"
                         placeholder={`Paso ${index + 1}`}
                       />
+                      <button
+                        type="button"
+                        onClick={() => removeStep(index)}
+                        className="shrink-0 rounded-xl px-2 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                        aria-label={`Quitar paso ${index + 1}`}
+                      >
+                        Quitar
+                      </button>
                     </li>
                   ))}
                 </ol>
                 <button
                   type="button"
-                  onClick={() => setDraft({ ...draft, steps: [...draft.steps, { title: "", detail: "" }] })}
+                  onClick={() => setDraft((current) => ({ ...current, steps: [...current.steps, draftStep()] }))}
                   className="mt-2 text-sm font-semibold text-[var(--brand-primary)]"
                 >
                   Añadir paso

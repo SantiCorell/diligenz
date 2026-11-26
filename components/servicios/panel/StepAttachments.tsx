@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 import { authFetch } from "@/lib/auth-client";
 
 export type StepAttachment = { id: string; name: string };
@@ -11,8 +12,14 @@ export type StepWithFiles = {
   title: string;
   detail?: string | null;
   done: boolean;
+  clientComment?: string | null;
   documents: StepAttachment[];
 };
+
+function commentOrNull(value: string | null | undefined) {
+  const trimmed = value?.trim().slice(0, 2000) ?? "";
+  return trimmed || null;
+}
 
 export default function StepAttachments({
   serviceId,
@@ -27,19 +34,22 @@ export default function StepAttachments({
   const [rows, setRows] = useState(steps.map((step) => ({ ...step, documents: step.documents ?? [] })));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const savedComments = useRef(new Map(steps.map((step) => [step.id, commentOrNull(step.clientComment)])));
 
   const saveSteps = async (next: StepWithFiles[]) => {
+    const normalized = next.map((step) => ({ ...step, clientComment: commentOrNull(step.clientComment) }));
     setSaving(true);
     setError(null);
     const res = await authFetch(`/api/admin/servicios/${serviceId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        steps: next.map((step) => ({
+        steps: normalized.map((step) => ({
           id: step.id,
           title: step.title,
           detail: step.detail ?? "",
           done: step.done,
+          clientComment: step.clientComment,
         })),
       }),
     });
@@ -49,7 +59,8 @@ export default function StepAttachments({
       setError(data.error || "No se han podido guardar los pasos.");
       return;
     }
-    setRows(next);
+    setRows(normalized);
+    for (const step of normalized) savedComments.current.set(step.id, step.clientComment ?? null);
     router.refresh();
   };
 
@@ -91,6 +102,15 @@ export default function StepAttachments({
     );
   };
 
+  const removeStep = (stepId: string) => {
+    const next = rows.filter((step) => step.id !== stepId);
+    if (next.length < 1) {
+      setError("Tiene que quedar al menos un paso.");
+      return;
+    }
+    void saveSteps(next);
+  };
+
   if (!editable && rows.every((step) => step.documents.length === 0)) return null;
 
   return (
@@ -109,9 +129,25 @@ export default function StepAttachments({
                 {index + 1}. {step.title}
               </p>
               {editable ? (
-                <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => removeStep(step.id)}
+                  className="text-xs font-semibold text-red-600 hover:underline disabled:opacity-50"
+                >
+                  Quitar paso
+                </button>
+                <label
+                  className={`inline-flex min-h-8 cursor-pointer select-none items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors focus-within:ring-2 focus-within:ring-[#7c4dff]/35 focus-within:ring-offset-1 ${
+                    step.done
+                      ? "border-[#7c4dff] bg-[#7c4dff] text-white"
+                      : "border-[#e6dfef] bg-white text-[var(--foreground)]/50 hover:border-[#d9d0e6] hover:bg-[#faf8fc]"
+                  } ${saving ? "cursor-wait opacity-60" : ""}`}
+                >
                   <input
                     type="checkbox"
+                    className="sr-only"
                     checked={step.done}
                     disabled={saving}
                     onChange={(event) => {
@@ -119,10 +155,19 @@ export default function StepAttachments({
                       void saveSteps(next);
                     }}
                   />
+                  {step.done ? (
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
+                  ) : (
+                    <span className="h-3.5 w-3.5 rounded-full border border-current" aria-hidden />
+                  )}
                   Hecho
                 </label>
+                </div>
               ) : step.done ? (
-                <span className="text-xs font-semibold text-[#7c4dff]">Hecho</span>
+                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-[#7c4dff] px-3 py-1 text-xs font-semibold text-white">
+                  <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
+                  Hecho
+                </span>
               ) : null}
             </div>
             <ul className="mt-2 space-y-1">
@@ -152,6 +197,37 @@ export default function StepAttachments({
                 }}
                 className="mt-2 block w-full text-sm"
               />
+            ) : null}
+            {editable ? (
+              <label className="mt-3 block">
+                <span className="text-xs font-semibold text-slate-600">Comentario para el cliente</span>
+                <span className="mt-0.5 block text-[11px] font-normal text-[var(--foreground)]/50">
+                  El cliente lo verá bajo este paso. Si lo dejas vacío, no se muestra.
+                </span>
+                <textarea
+                  value={step.clientComment ?? ""}
+                  rows={2}
+                  maxLength={2000}
+                  disabled={saving}
+                  placeholder="Escribe una nota para el cliente"
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setRows((current) => current.map((item) => (item.id === step.id ? { ...item, clientComment: value } : item)));
+                  }}
+                  onBlur={(event) => {
+                    const clientComment = commentOrNull(event.target.value);
+                    if (savedComments.current.get(step.id) === clientComment) {
+                      if ((step.clientComment ?? null) !== clientComment) {
+                        setRows((current) => current.map((item) => (item.id === step.id ? { ...item, clientComment } : item)));
+                      }
+                      return;
+                    }
+                    const next = rows.map((item) => (item.id === step.id ? { ...item, clientComment } : item));
+                    void saveSteps(next);
+                  }}
+                  className="mt-1 w-full resize-y rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-[var(--brand-dark)] placeholder:text-slate-400"
+                />
+              </label>
             ) : null}
           </li>
         ) : null)}
