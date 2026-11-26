@@ -1,6 +1,6 @@
 import { readFile } from "fs/promises";
 import { prisma } from "@/lib/prisma";
-import { generateSignedMandatePdf } from "@/lib/mandato/generate-signed-pdf";
+import { generateSignedVentaDocuments } from "@/lib/mandato/generate-signed-pdf";
 import { generateSignedCompraDocuments } from "@/lib/mandato/generate-signed-compra-pdf";
 import { generateSignedColaboracionDocuments } from "@/lib/mandato/generate-signed-colaboracion-pdfs";
 import { dniAbsolutePath, isCloudOnlyDniPath } from "@/lib/user-documents/dni";
@@ -102,7 +102,7 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
   if (user.salesMandate) {
     try {
       const m = user.salesMandate;
-      const pdfBytes = await generateSignedMandatePdf({
+      const docs = await generateSignedVentaDocuments({
         representativeName: m.representativeName,
         representativeDni: m.representativeDni,
         companyLegalName: m.companyLegalName,
@@ -124,17 +124,21 @@ export async function syncAllUserDocumentsToDrive(userId: string): Promise<{
         clientIp: m.clientIp,
         userAgent: m.userAgent,
       }, m.variant);
-      const fileName = `mandato-venta-diligenz-${m.signedAt.toISOString().slice(0, 10)}.pdf`;
-      const ok = await syncDocumentToUserDrive({
-        userId: user.id,
-        kind: "mandato",
-        originalFileName: fileName,
-        mimeType: "application/pdf",
-        content: Buffer.from(pdfBytes),
-        companyName: m.companyLegalName,
-      });
-      if (ok) synced.push("mandato-venta");
-      else errors.push("Mandato venta: no se subió");
+      for (const file of [
+        { name: docs.particularesFileName, content: Buffer.from(docs.particularesPdf) },
+        { name: docs.generalesFileName, content: Buffer.from(docs.generalesPdf) },
+      ]) {
+        const ok = await syncDocumentToUserDrive({
+          userId: user.id,
+          kind: "mandato",
+          originalFileName: file.name,
+          mimeType: "application/pdf",
+          content: file.content,
+          companyName: m.companyLegalName,
+        });
+        if (ok) synced.push(file.name);
+        else errors.push(`${file.name}: no se subió`);
+      }
     } catch (e) {
       errors.push(`Mandato venta: ${e instanceof Error ? e.message : "error"}`);
     }

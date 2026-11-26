@@ -20,3 +20,10 @@ export type MandatoSignPayload = {
   clientIp?: string | null;
   userAgent?: string | null;
 };
+
+export type SignedVentaDocuments = {
+  particularesPdf: Uint8Array;
+  generalesPdf: Uint8Array;
+  particularesFileName: string;
+  generalesFileName: string;
+};

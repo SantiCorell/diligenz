@@ -56,7 +56,9 @@ Las presentes Condiciones Generales regulan el marco jurídico aplicable a todo 
 
 9. Ley aplicable. Legislación española; jurisdicción de los Juzgados y Tribunales de Valencia.
 
-Documento íntegro disponible en: /legal/condiciones-generales-mandato-venta-2026.pdf`;
+Documento íntegro disponible en: /legal/condiciones-generales-mandato-venta-2026.pdf
+
+Al firmar recibirás dos documentos firmados: Condiciones Particulares y Condiciones Generales.`;
 
 export const MANDATO_ACCEPTANCE_TEXT =
   "He leído y acepto íntegramente las cláusulas del presente Mandato de Venta (Condiciones Particulares y Condiciones Generales de DILIGENZ), las condiciones del servicio y la política de privacidad. Autorizo expresamente a DILIGENZ a actuar como intermediario en la venta de mi empresa y a contactar con inversores de su red bajo NDA previo y estricta confidencialidad.";
@@ -104,7 +106,9 @@ Las Condiciones Generales y las Condiciones Particulares forman un único contra
 
 Documentos íntegros:
 /legal/condiciones-generales-mandato-venta-sin-exclusividad-2026.pdf
-/legal/mandato-venta-sin-exclusividad-condiciones-particulares-2026.pdf`;
+/legal/mandato-venta-sin-exclusividad-condiciones-particulares-2026.pdf
+
+Al firmar recibirás dos documentos firmados: Condiciones Particulares y Condiciones Generales.`;
 
 const NON_EXCLUSIVE_ACCEPTANCE =
   "He leído y acepto íntegramente el Mandato de Venta sin exclusividad (Condiciones Particulares y Condiciones Generales de DILIGENZ), las condiciones del servicio y la política de privacidad. Autorizo a DILIGENZ a actuar como intermediario sin exclusividad general. Acepto que, cuando DILIGENZ presente formalmente a un comprador, ese comprador queda sujeto a 12 meses de exclusividad y que, si cierro la venta con un comprador presentado por DILIGENZ, deberé abonar los honorarios de éxito.";

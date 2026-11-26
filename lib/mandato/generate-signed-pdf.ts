@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { PDFDocument, StandardFonts, rgb, type PDFPage, type PDFFont } from "pdf-lib";
+import { PDFDocument, PDFName, StandardFonts, rgb, type PDFPage, type PDFFont } from "pdf-lib";
 import type { SalesMandateVariantId } from "./clauses";
-import type { MandatoSignPayload } from "./mandato-types";
+import type { MandatoSignPayload, SignedVentaDocuments } from "./mandato-types";
 
-export type { MandatoSignPayload } from "./mandato-types";
+export type { MandatoSignPayload, SignedVentaDocuments } from "./mandato-types";
 
 const TEMPLATE_PATH = path.join(
   process.cwd(),
@@ -15,6 +15,30 @@ const NON_EXCLUSIVE_TEMPLATE_PATH = path.join(
   process.cwd(),
   "public/legal/mandato-venta-sin-exclusividad-condiciones-particulares-2026.pdf"
 );
+
+const GENERALES_TEMPLATE_PATH = path.join(
+  process.cwd(),
+  "public/legal/condiciones-generales-mandato-venta-2026.pdf"
+);
+
+const NON_EXCLUSIVE_GENERALES_TEMPLATE_PATH = path.join(
+  process.cwd(),
+  "public/legal/condiciones-generales-mandato-venta-sin-exclusividad-2026.pdf"
+);
+
+/** Signature block on the last page of each Condiciones Generales de venta PDF. */
+const GENERALES_STAMP = {
+  EXCLUSIVE: {
+    signature: { x: 340, y: 250, width: 160, maxHeight: 72 },
+    name: { x: 378, y: 214 },
+    nif: { x: 370, y: 204, size: 8 },
+  },
+  NON_EXCLUSIVE: {
+    signature: { x: 340, y: 366, width: 150, maxHeight: 48 },
+    name: { x: 376, y: 339 },
+    nif: { x: 368, y: 329, size: 8 },
+  },
+} as const;
 
 const MONTHS_ES = [
   "enero",
@@ -218,4 +242,112 @@ async function generateSignedNonExclusiveMandatePdf(
   fillField(p3, font, sellerCif, 375, 455.4, 155, 8);
 
   return pdf.save();
+}
+
+function coverSignatureLine(
+  page: PDFPage,
+  font: PDFFont,
+  text: string,
+  x: number,
+  y: number,
+  width: number,
+  size: number
+) {
+  const safe = pdfSafeText(text);
+  if (!safe.trim()) return;
+  page.drawRectangle({
+    x,
+    y: y - 1.5,
+    width,
+    height: size + 2,
+    color: rgb(1, 1, 1),
+    borderWidth: 0,
+  });
+  page.drawText(safe, { x, y, size, font, color: rgb(0.1, 0.1, 0.1) });
+}
+
+function stripAcroForm(pdf: PDFDocument) {
+  for (const page of pdf.getPages()) {
+    if (page.node.has(PDFName.of("Annots"))) {
+      page.node.delete(PDFName.of("Annots"));
+    }
+  }
+  if (pdf.catalog.has(PDFName.of("AcroForm"))) {
+    pdf.catalog.delete(PDFName.of("AcroForm"));
+  }
+}
+
+async function embedSignature(
+  pdf: PDFDocument,
+  page: PDFPage,
+  signaturePngBase64: string,
+  x: number,
+  y: number,
+  width: number,
+  maxHeight: number
+) {
+  const pngBytes = Uint8Array.from(Buffer.from(stripDataUrl(signaturePngBase64), "base64"));
+  const sigImage = await pdf.embedPng(pngBytes);
+  let sigW = width;
+  let sigH = (sigImage.height / sigImage.width) * sigW;
+  if (sigH > maxHeight) {
+    sigH = maxHeight;
+    sigW = (sigImage.width / sigImage.height) * sigH;
+  }
+  page.drawImage(sigImage, { x, y, width: sigW, height: sigH });
+}
+
+export async function generateSignedVentaGeneralesPdf(
+  data: MandatoSignPayload,
+  variant: SalesMandateVariantId = "EXCLUSIVE"
+): Promise<Uint8Array> {
+  const templatePath =
+    variant === "NON_EXCLUSIVE" ? NON_EXCLUSIVE_GENERALES_TEMPLATE_PATH : GENERALES_TEMPLATE_PATH;
+  if (!fs.existsSync(templatePath)) {
+    throw new Error("Plantilla de Condiciones Generales de venta no encontrada.");
+  }
+
+  const pdf = await PDFDocument.load(fs.readFileSync(templatePath));
+  stripAcroForm(pdf);
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const signPage = pdf.getPages()[pdf.getPageCount() - 1];
+  const stamp = GENERALES_STAMP[variant];
+  const signatoryName = data.representativeName?.trim() || data.companyLegalName;
+
+  await embedSignature(
+    pdf,
+    signPage,
+    data.signaturePngBase64,
+    stamp.signature.x,
+    stamp.signature.y,
+    stamp.signature.width,
+    stamp.signature.maxHeight
+  );
+  coverSignatureLine(signPage, font, signatoryName, stamp.name.x, stamp.name.y, 130, 9);
+  coverSignatureLine(signPage, font, data.companyCif, stamp.nif.x, stamp.nif.y, 120, stamp.nif.size);
+
+  return pdf.save();
+}
+
+export async function generateSignedVentaDocuments(
+  data: MandatoSignPayload,
+  variant: SalesMandateVariantId = "EXCLUSIVE"
+): Promise<SignedVentaDocuments> {
+  const date = data.signedAt.toISOString().slice(0, 10);
+  const nonExclusive = variant === "NON_EXCLUSIVE";
+  const [particularesPdf, generalesPdf] = await Promise.all([
+    generateSignedMandatePdf(data, variant),
+    generateSignedVentaGeneralesPdf(data, variant),
+  ]);
+
+  return {
+    particularesPdf,
+    generalesPdf,
+    particularesFileName: nonExclusive
+      ? `mandato-venta-sin-exclusividad-particulares-diligenz-${date}.pdf`
+      : `mandato-venta-particulares-diligenz-${date}.pdf`,
+    generalesFileName: nonExclusive
+      ? `condiciones-generales-mandato-venta-sin-exclusividad-diligenz-${date}.pdf`
+      : `condiciones-generales-mandato-venta-diligenz-${date}.pdf`,
+  };
 }

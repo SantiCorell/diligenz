@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
-import { generateSignedMandatePdf } from "@/lib/mandato/generate-signed-pdf";
+import { generateSignedVentaDocuments } from "@/lib/mandato/generate-signed-pdf";
+import { ventaZipFileName, zipVentaDocuments } from "@/lib/mandato/venta-zip";
 
 export async function GET(req: Request) {
   const session = await getSessionWithUserFromRequest(req);
@@ -16,7 +17,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "No hay mandato firmado." }, { status: 404 });
   }
 
-  const pdfBytes = await generateSignedMandatePdf({
+  const docs = await generateSignedVentaDocuments({
     representativeName: mandate.representativeName,
     representativeDni: mandate.representativeDni,
     companyLegalName: mandate.companyLegalName,
@@ -39,10 +40,13 @@ export async function GET(req: Request) {
     userAgent: mandate.userAgent,
   }, mandate.variant);
 
-  return new NextResponse(new Uint8Array(Buffer.from(pdfBytes)), {
+  const zipBytes = await zipVentaDocuments(docs);
+  const zipFileName = ventaZipFileName(mandate.signedAt, mandate.variant);
+
+  return new NextResponse(new Uint8Array(zipBytes), {
     headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="mandato-venta-diligenz.pdf"`,
+      "Content-Type": "application/zip",
+      "Content-Disposition": `attachment; filename="${zipFileName}"`,
     },
   });
 }

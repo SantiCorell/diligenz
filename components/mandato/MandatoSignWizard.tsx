@@ -144,7 +144,9 @@ export default function MandatoSignWizard({
 
       const blob = await res.blob();
       const date = new Date().toISOString().slice(0, 10);
-      downloadBlob(blob, `mandato-venta-diligenz-${date}.pdf`);
+      const zipBase =
+        variant === "NON_EXCLUSIVE" ? "mandato-venta-sin-exclusividad" : "mandato-venta";
+      downloadBlob(blob, `${zipBase}-diligenz-${date}.zip`);
       setDone(true);
       setLoading(false);
     } catch {
@@ -162,15 +164,29 @@ export default function MandatoSignWizard({
         <p className="mt-3 text-sm text-[var(--foreground)] opacity-90">
           Tu mandato de venta ha quedado registrado
           {signedAt ? ` el ${new Date(signedAt).toLocaleDateString("es-ES")}` : ""}.
-          Hemos enviado una copia a <strong>{signedEmail ?? contactEmail ?? prefill.email}</strong> si el correo está configurado en el servidor.
+          Has recibido un ZIP con las <strong>Condiciones Particulares</strong> y las{" "}
+          <strong>Condiciones Generales</strong> firmadas. También las enviamos a{" "}
+          <strong>{signedEmail ?? contactEmail ?? prefill.email}</strong> si el correo está
+          configurado en el servidor.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button
             type="button"
-            onClick={() => authFetch("/api/mandato/download").then((r) => r.blob()).then((b) => downloadBlob(b, "mandato-venta-diligenz.pdf"))}
+            onClick={() =>
+              authFetch("/api/mandato/download")
+                .then((r) => r.blob())
+                .then((b) =>
+                  downloadBlob(
+                    b,
+                    variant === "NON_EXCLUSIVE"
+                      ? "mandato-venta-sin-exclusividad-diligenz.zip"
+                      : "mandato-venta-diligenz.zip"
+                  )
+                )
+            }
             className="rounded-xl px-5 py-3 text-sm font-semibold border-2 border-[var(--brand-primary)]/40 text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5"
           >
-            Descargar de nuevo
+            Descargar ZIP de nuevo
           </button>
           <Link
             href={panelHref}
@@ -194,6 +210,10 @@ export default function MandatoSignWizard({
         </h1>
         <p className="mt-1 text-xs sm:text-sm text-[var(--foreground)] opacity-80">
           {copy.meta.subtitle}
+        </p>
+        <p className="mt-2 text-xs text-[var(--foreground)] opacity-75 sm:text-sm">
+          Al firmar recibirás automáticamente los dos documentos firmados: Condiciones Particulares y
+          Condiciones Generales.
         </p>
       </div>
 
@@ -329,7 +349,8 @@ export default function MandatoSignWizard({
               <Item k="Email" v={contactEmail} />
             </dl>
             <p className="text-xs opacity-75">
-              Al pulsar «Firmar mandato» se generará el PDF firmado, se descargará automáticamente y se enviará a tu correo.
+              Al pulsar «Firmar mandato» se generarán los dos PDF firmados, se empaquetarán en un ZIP
+              para descarga automática y se enviarán a tu correo.
             </p>
           </div>
         )}
@@ -363,7 +384,7 @@ export default function MandatoSignWizard({
               disabled={loading}
               className="rounded-xl px-6 py-3 text-sm font-semibold bg-[var(--brand-primary)] text-white shadow-lg hover:opacity-95 ml-auto disabled:opacity-50"
             >
-              {loading ? "Firmando…" : "Firmar mandato y descargar"}
+              {loading ? "Firmando…" : "Firmar mandato y descargar ZIP"}
             </button>
           )}
         </div>

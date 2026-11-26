@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClientIP } from "@/lib/security";
 import { getSessionWithUserFromRequest } from "@/lib/session";
-import { generateSignedMandatePdf } from "@/lib/mandato/generate-signed-pdf";
+import { generateSignedVentaDocuments } from "@/lib/mandato/generate-signed-pdf";
+import { ventaZipFileName, zipVentaDocuments } from "@/lib/mandato/venta-zip";
 import { sendMandatoSignedEmails } from "@/lib/emails/mandato-signed";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
 import { ensureUserDriveFolder } from "@/lib/google-drive/user-drive";
@@ -96,11 +97,12 @@ export async function POST(req: Request) {
     userAgent,
   };
 
-  const pdfBytes = await generateSignedMandatePdf(payload, variant);
-  const pdfFileName = `mandato-venta-diligenz-${signedAt.toISOString().slice(0, 10)}.pdf`;
+  const docs = await generateSignedVentaDocuments(payload, variant);
+  const zipBytes = await zipVentaDocuments(docs);
+  const zipFileName = ventaZipFileName(signedAt, variant);
 
   let driveFolderCreated = false;
-  let driveDocumentUploaded = false;
+  let driveDocumentUploadedAll = false;
 
   try {
     const folderId = await ensureUserDriveFolder({
@@ -112,27 +114,34 @@ export async function POST(req: Request) {
     });
     driveFolderCreated = Boolean(folderId);
 
-    const uploaded = await syncDocumentToUserDrive({
-      userId: session.userId,
-      kind: "mandato",
-      originalFileName: pdfFileName,
-      mimeType: "application/pdf",
-      content: Buffer.from(pdfBytes),
-      companyName: payload.companyLegalName,
-    });
-    driveDocumentUploaded = Boolean(uploaded);
+    const uploadedFlags: boolean[] = [];
+    for (const file of [
+      { name: docs.particularesFileName, content: Buffer.from(docs.particularesPdf) },
+      { name: docs.generalesFileName, content: Buffer.from(docs.generalesPdf) },
+    ]) {
+      const uploaded = await syncDocumentToUserDrive({
+        userId: session.userId,
+        kind: "mandato",
+        originalFileName: file.name,
+        mimeType: "application/pdf",
+        content: file.content,
+        companyName: payload.companyLegalName,
+      });
+      uploadedFlags.push(Boolean(uploaded));
+    }
+    driveDocumentUploadedAll = uploadedFlags.length > 0 && uploadedFlags.every(Boolean);
 
     if (!driveFolderCreated) {
-      console.warn("[mandato/sign] Sin carpeta de Drive enlazada; el PDF no se ha copiado a Drive.");
+      console.warn("[mandato/sign] Sin carpeta de Drive enlazada; los PDF no se han copiado a Drive.");
     }
-    if (!driveDocumentUploaded) {
-      console.warn("[mandato/sign] Drive documento no subido (verifica config/env/Drive).");
+    if (!driveDocumentUploadedAll) {
+      console.warn("[mandato/sign] Drive documentos no subidos (verifica config/env/Drive).");
     }
   } catch (driveError) {
     console.error("[mandato/sign] google drive error:", driveError);
   }
 
-  const driveOk = driveFolderCreated && driveDocumentUploaded;
+  const driveOk = driveFolderCreated && driveDocumentUploadedAll;
 
   await prisma.$transaction([
     prisma.salesMandate.create({
@@ -199,10 +208,9 @@ Representante: ${representativeLine}
 Email contacto: ${payload.contactEmail}
 Teléfono: ${payload.contactPhone ?? "—"}`,
       attachments: [
-        {
-          filename: pdfFileName,
-          content: Buffer.from(pdfBytes),
-        },
+        { filename: docs.particularesFileName, content: Buffer.from(docs.particularesPdf) },
+        { filename: docs.generalesFileName, content: Buffer.from(docs.generalesPdf) },
+        { filename: zipFileName, content: zipBytes },
       ],
     });
 
@@ -215,11 +223,11 @@ Teléfono: ${payload.contactPhone ?? "—"}`,
     );
   }
 
-  return new NextResponse(new Uint8Array(Buffer.from(pdfBytes)), {
+  return new NextResponse(new Uint8Array(zipBytes), {
     status: 200,
     headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="mandato-venta-diligenz.pdf"`,
+      "Content-Type": "application/zip",
+      "Content-Disposition": `attachment; filename="${zipFileName}"`,
       "X-Drive-Synced": driveOk ? "1" : "0",
       "X-Email-User-Sent": userEmailSent ? "1" : "0",
       "X-Email-Internal-Sent": internalEmailSent ? "1" : "0",
