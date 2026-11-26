@@ -37,25 +37,23 @@ export async function recordUserPageDuration(
   durationMs: unknown
 ): Promise<boolean> {
   if (typeof id !== "string" || !/^c[a-z0-9]{8,32}$/.test(id)) return false;
-  if (typeof durationMs !== "number") return false;
+  if (typeof durationMs !== "number" || !Number.isFinite(durationMs)) return false;
 
-  const next = clampPageDuration(durationMs);
+  const view = await prisma.userPageView.findFirst({
+    where: { id, userId },
+    select: { startedAt: true, durationMs: true },
+  });
+  if (!view) return false;
+
+  // No se acepta más tiempo del que ha pasado desde que se abrió la página.
+  const elapsed = Date.now() - view.startedAt.getTime() + 5_000;
+  const next = clampPageDuration(Math.min(durationMs, Math.max(elapsed, 0)));
   if (next == null) return true;
+  if (view.durationMs != null && view.durationMs >= next) return true;
 
-  const updated = await prisma.userPageView.updateMany({
-    where: {
-      id,
-      userId,
-      OR: [{ durationMs: null }, { durationMs: { lt: next } }],
-    },
+  await prisma.userPageView.update({
+    where: { id },
     data: { durationMs: next },
   });
-
-  if (updated.count > 0) return true;
-
-  const owns = await prisma.userPageView.findFirst({
-    where: { id, userId },
-    select: { id: true },
-  });
-  return owns != null;
+  return true;
 }
