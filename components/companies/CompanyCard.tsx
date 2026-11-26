@@ -96,7 +96,7 @@ export default function CompanyCard({
   return (
     <div className="company-card-hover-wrap h-full">
       <article
-        className={`company-card-shell flex h-full flex-col rounded-[1.5rem] border border-[var(--brand-dark)]/[0.09] bg-white ${
+        className={`company-card-shell group relative flex h-full flex-col rounded-[1.5rem] border border-[var(--brand-dark)]/[0.09] bg-white ${
           compact ? "gap-3 p-4 sm:p-5" : "gap-3.5 p-5 sm:gap-4 sm:p-6"
         }`}
       >
@@ -115,7 +115,7 @@ export default function CompanyCard({
             </span>
           ) : null}
           {isLoggedIn ? (
-            <span className={refLabel ? "" : "ml-auto"}>
+            <span className={`relative z-10 ${refLabel ? "" : "ml-auto"}`}>
               <CompanyFavoriteButton
                 companyId={company.id}
                 initialFavorite={isFavorite}
@@ -178,19 +178,25 @@ export default function CompanyCard({
             </span>
           )}
 
-          <Link
-            href={`/companies/${company.id}`}
-            className={`group inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--brand-primary)] font-semibold text-white transition hover:opacity-95 ${
+          <span
+            aria-hidden
+            className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--brand-primary)] font-semibold text-white transition group-hover:opacity-95 ${
               compact ? "px-4 py-2.5 text-sm" : "px-5 py-2.5 text-sm sm:px-6 sm:py-3"
             }`}
           >
             {ctaLabel}
-            <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
-              →
+            <span className="transition-transform group-hover:translate-x-0.5">→</span>
+          </span>
+          <Link
+            href={`/companies/${company.id}`}
+            className="absolute inset-0 z-[1] rounded-[1.5rem] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]"
+          >
+            <span className="sr-only">
+              {ctaLabel}: {company.name}
             </span>
           </Link>
         </div>
-        {footer}
+        {footer ? <div className="relative z-10">{footer}</div> : null}
       </article>
     </div>
   );
