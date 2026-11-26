@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import { getSessionWithUser } from "@/lib/session";
 import { loadAdminData, type RankBlock } from "@/lib/admin-data";
+import { loadTrafficChart } from "@/lib/admin-traffic-chart";
 import { GroupedBars } from "@/components/admin/GroupedBars";
+import { TrafficPeriodChart } from "@/components/admin/TrafficPeriodChart";
 import {
   BreakdownCard,
-  DailyUsers,
   KpiCard,
   PageList,
   Section,
@@ -20,7 +21,7 @@ export default async function AdminDataPage() {
   const session = await getSessionWithUser();
   if (!session || session.user.role !== "ADMIN") redirect("/login");
 
-  const data = await loadAdminData();
+  const [data, trafficChart] = await Promise.all([loadAdminData(), loadTrafficChart()]);
   const { summary, registrations, pipeline, demographics, traffic } = data;
 
   const blocks: { title: string; hint: string; block: NonNullable<RankBlock> }[] = [];
@@ -179,7 +180,7 @@ export default async function AdminDataPage() {
       <Section
         kicker="Tráfico"
         title="Usuarios distintos por día"
-        intro="Una persona con sesión cuenta una vez al día, aunque abra varias páginas. Últimos 14 días."
+        intro="Una persona con sesión cuenta una vez en cada barra, aunque abra varias páginas. Por defecto se ven los últimos 12 meses; puedes pasar a una semana o a un día. Las visitas anónimas van aparte y no se suman."
       >
         <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <KpiCard
@@ -198,15 +199,7 @@ export default async function AdminDataPage() {
             subtitle="Páginas abiertas con sesión, últimos 30 días"
           />
         </div>
-        <div className="rounded-2xl border border-black/[0.04] bg-white p-5 shadow-[0_1px_2px_rgba(16,16,20,0.04)]">
-          {traffic.identifiedReady ? (
-            <DailyUsers days={traffic.days} />
-          ) : (
-            <p className="text-sm text-[var(--foreground)]/60">
-              Falta aplicar la migración de vistas de usuario en esta base de datos. Hasta entonces este bloque se queda vacío.
-            </p>
-          )}
-        </div>
+        <TrafficPeriodChart data={trafficChart} />
       </Section>
 
       <Section
