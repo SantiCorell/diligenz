@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getDisplayName } from "@/lib/user-display";
 import { getSessionWithUser } from "@/lib/session";
 import { getUserDniPendingReview } from "@/lib/user-documents/dni-status";
+import { isUserProfileComplete } from "@/lib/user-profile-complete";
 import ProfileStatus from "@/components/dashboard/ProfileStatus";
 import DashboardAgentSlot from "@/components/dashboard/DashboardAgentSlot";
 import {
@@ -35,9 +36,7 @@ export default async function BuyerDashboardPage() {
   ]);
 
   const displayName = session.user.name?.trim() || getDisplayName(session.user.email);
-  const profileComplete =
-    Boolean(session.user.phone?.trim() && session.user.name?.trim()) ||
-    session.user.profileVerifiedByAdmin;
+  const profileComplete = isUserProfileComplete(session.user);
   const stepsLeft = [session.user.ndaSigned, session.user.dniVerified, profileComplete].filter((ok) => !ok).length;
 
   return (
@@ -47,7 +46,6 @@ export default async function BuyerDashboardPage() {
         dniVerified={session.user.dniVerified}
         dniPendingReview={dniPendingReview}
         profileComplete={profileComplete}
-        profileVerifiedByAdmin={session.user.profileVerifiedByAdmin}
         userName={session.user.name}
         userPhone={session.user.phone}
         role={session.user.role === "ADMIN" ? "BUYER" : session.user.role}

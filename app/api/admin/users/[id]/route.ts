@@ -4,6 +4,7 @@ import type { SalesMandateVariant, UserAccountStatus, UserRole } from "@prisma/c
 import { deleteUserAccount } from "@/lib/account-deletion";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { promotePendingNdaRequests } from "@/lib/promote-pending-nda";
+import { isUserProfileComplete } from "@/lib/user-profile-complete";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -83,9 +84,7 @@ export async function PATCH(req: Request, { params }: Params) {
   if (typeof body.emailVerified === "boolean") data.emailVerified = body.emailVerified;
   if (typeof body.ndaSigned === "boolean") data.ndaSigned = body.ndaSigned;
   if (typeof body.dniVerified === "boolean") data.dniVerified = body.dniVerified;
-  if (typeof body.profileVerifiedByAdmin === "boolean") {
-    data.profileVerifiedByAdmin = body.profileVerifiedByAdmin;
-  }
+  // profileVerifiedByAdmin no se acepta del cliente: se deriva abajo.
   if (typeof body.notionValidated === "boolean") {
     data.notionValidated = body.notionValidated;
   }
@@ -240,7 +239,7 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json(
       {
         error:
-          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, profileVerifiedByAdmin, notionValidated, accountStatus, role, documentsDriveFolderUrl, maxConcurrentInfoRequests, maxConcurrentCompanies, assignedAgentId, servicesAgentId, salesMandateVariant",
+          "Envía al menos un campo: emailVerified, ndaSigned, dniVerified, notionValidated, accountStatus, role, documentsDriveFolderUrl, dniLinkUrl, maxConcurrentInfoRequests, maxConcurrentCompanies, assignedAgentId, servicesAgentId, salesMandateVariant",
       },
       { status: 400 }
     );
@@ -248,7 +247,13 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const alive = await prisma.user.findFirst({
     where: { id: userId, deletedAt: null },
-    select: { id: true, accountStatus: true },
+    select: {
+      id: true,
+      accountStatus: true,
+      ndaSigned: true,
+      documentsDriveFolderUrl: true,
+      dniLinkUrl: true,
+    },
   });
   if (!alive) {
     return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
@@ -257,6 +262,15 @@ export async function PATCH(req: Request, { params }: Params) {
   if (data.accountStatus === "ACTIVE" && alive.accountStatus === "PENDING") {
     data.notionValidated = true;
   }
+
+  data.profileVerifiedByAdmin = isUserProfileComplete({
+    ndaSigned: data.ndaSigned ?? alive.ndaSigned,
+    documentsDriveFolderUrl:
+      data.documentsDriveFolderUrl !== undefined
+        ? data.documentsDriveFolderUrl
+        : alive.documentsDriveFolderUrl,
+    dniLinkUrl: data.dniLinkUrl !== undefined ? data.dniLinkUrl : alive.dniLinkUrl,
+  });
 
   try {
     const user = await prisma.user.update({

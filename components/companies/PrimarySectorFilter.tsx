@@ -77,14 +77,14 @@ export default function PrimarySectorFilter({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto scroll-px-4 px-4 pb-3 pt-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:-mx-6 sm:scroll-px-6 sm:px-6 md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:scroll-px-0 md:px-0 md:pb-0 md:pt-0 lg:grid-cols-3 xl:grid-cols-6">
         {cards.map((card) => (
           <button
             key={card.value || "all"}
             type="button"
             onClick={() => onSectorChange(card.value)}
             aria-pressed={card.active}
-            className={`group flex flex-col gap-3 rounded-[1.35rem] bg-white p-5 text-left shadow-sm outline-none transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_40px_-22px_rgba(145,70,255,0.35)] focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)] focus-visible:ring-offset-2 ${
+            className={`group flex w-[72%] max-w-[19rem] shrink-0 snap-start flex-col gap-3 rounded-[1.35rem] bg-white p-5 text-left shadow-sm outline-none transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_40px_-22px_rgba(145,70,255,0.35)] focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)] focus-visible:ring-offset-2 md:w-auto md:max-w-none md:shrink md:snap-align-none ${
               card.active
                 ? "ring-2 ring-[var(--brand-primary)]/35 shadow-[0_12px_32px_-16px_rgba(145,70,255,0.4)]"
                 : ""

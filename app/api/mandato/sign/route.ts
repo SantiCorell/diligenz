@@ -6,6 +6,7 @@ import { generateSignedMandatePdf } from "@/lib/mandato/generate-signed-pdf";
 import { sendMandatoSignedEmails } from "@/lib/emails/mandato-signed";
 import { syncDocumentToUserDrive } from "@/lib/google-drive/document-sync";
 import { ensureUserDriveFolder } from "@/lib/google-drive/user-drive";
+import { isUserProfileComplete } from "@/lib/user-profile-complete";
 
 const SELLER_ROLES = new Set(["SELLER", "PROFESSIONAL", "ADMIN"]);
 
@@ -163,7 +164,14 @@ export async function POST(req: Request) {
     }),
     prisma.user.update({
       where: { id: session.userId },
-      data: { ndaSigned: true },
+      data: {
+        ndaSigned: true,
+        profileVerifiedByAdmin: isUserProfileComplete({
+          ndaSigned: true,
+          documentsDriveFolderUrl: session.user.documentsDriveFolderUrl,
+          dniLinkUrl: session.user.dniLinkUrl,
+        }),
+      },
     }),
   ]);
 

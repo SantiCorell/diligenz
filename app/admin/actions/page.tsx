@@ -19,6 +19,14 @@ type HistoryEvent = {
   createdAt: string;
 };
 
+type ReminderEvent = {
+  id: string;
+  kind: string;
+  createdAt: string;
+  sentByName: string | null;
+  sentByEmail: string;
+};
+
 type ActionRow = {
   id: string;
   userEmail: string;
@@ -34,6 +42,7 @@ type ActionRow = {
   createdAt: string;
   statusUpdatedAt: string;
   history: HistoryEvent[];
+  reminders: ReminderEvent[];
 };
 
 const COLUMN_ACCENT: Record<PipelineStatus, string> = {
@@ -50,6 +59,24 @@ function initials(name: string | null, email: string): string {
   const parts = source.split(/\s+/).filter(Boolean);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return source.slice(0, 2).toUpperCase();
+}
+
+function formatReminderWhen(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("es-ES", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function reminderKindLabel(kind: string): string {
+  if (kind === "nda") return "NDA";
+  if (kind === "contact") return "contacto";
+  return kind;
 }
 
 function formatCreatedDate(iso: string): string {
@@ -81,12 +108,12 @@ export default function AdminActionsPage() {
   const [reminderNote, setReminderNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchActions = async () => {
-    setLoading(true);
+  const fetchActions = async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     const res = await authFetch("/api/admin/actions");
     const data = await res.json();
     if (res.ok) setActions(data.actions ?? []);
-    setLoading(false);
+    if (!opts?.silent) setLoading(false);
   };
 
   useEffect(() => {
@@ -168,6 +195,7 @@ export default function AdminActionsPage() {
       return;
     }
     setReminderNote(`Recordatorio enviado a ${selected.userEmail}.`);
+    await fetchActions({ silent: true });
   };
 
   const moment = selected ? buyerMomentCopy(selected.status) : null;
@@ -339,20 +367,6 @@ export default function AdminActionsPage() {
                 </p>
               </div>
 
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Recorrido de la solicitud</p>
-                <ol className="mt-3 space-y-2">
-                  {(selected.history.length > 0 ? selected.history : [{ id: "now", type: "INFO_REQUEST_CREATED", metadata: { to: selected.status }, createdAt: selected.createdAt }]).map((event) => (
-                    <li key={event.id} className="text-sm text-slate-700">
-                      <span className="font-medium">{eventLabel(event)}</span>
-                      <span className="ml-2 text-xs text-slate-400">
-                        {new Date(event.createdAt).toLocaleString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
               <div className="rounded-2xl bg-violet-50 px-4 py-3 text-sm text-violet-950">
                 <p className="text-[11px] font-bold uppercase tracking-wide text-violet-700">Así lo ve el comprador ahora mismo</p>
                 <p className="mt-2 font-semibold">“{moment.title}”</p>
@@ -375,18 +389,41 @@ export default function AdminActionsPage() {
                 </button>
               </div>
 
-              {reminder && (
+              {(reminder || (selected.reminders?.length ?? 0) > 0) && (
                 <div className="rounded-2xl border border-slate-200 px-4 py-3">
-                  <button
-                    type="button"
-                    disabled={reminding || saving}
-                    onClick={() => void sendReminder()}
-                    className="w-full rounded-full bg-[var(--brand-primary)] px-4 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60"
-                  >
-                    {reminding ? "Enviando…" : reminder.label}
-                  </button>
-                  <p className="mt-2 text-xs text-slate-500">{reminder.hint}</p>
-                  {reminderNote && <p className="mt-2 text-xs font-semibold text-emerald-700">{reminderNote}</p>}
+                  {reminder && (
+                    <>
+                      <button
+                        type="button"
+                        disabled={reminding || saving}
+                        onClick={() => void sendReminder()}
+                        className="w-full rounded-full bg-[var(--brand-primary)] px-4 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60"
+                      >
+                        {reminding ? "Enviando…" : reminder.label}
+                      </button>
+                      <p className="mt-2 text-xs text-slate-500">{reminder.hint}</p>
+                      {reminderNote && <p className="mt-2 text-xs font-semibold text-emerald-700">{reminderNote}</p>}
+                    </>
+                  )}
+                  {(selected.reminders?.length ?? 0) > 0 && (
+                    <div className={reminder ? "mt-3 border-t border-slate-100 pt-2" : ""}>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        {(selected.reminders ?? []).length === 1
+                          ? "1 recordatorio enviado"
+                          : `${(selected.reminders ?? []).length} recordatorios enviados`}
+                      </p>
+                      <ul className="mt-1 max-h-28 space-y-0.5 overflow-y-auto">
+                        {(selected.reminders ?? []).map((item) => (
+                          <li key={item.id} className="text-xs leading-5 text-slate-600">
+                            <span className="font-medium text-slate-800">{formatReminderWhen(item.createdAt)}</span>
+                            <span className="text-slate-400"> · </span>
+                            {item.sentByName?.trim() || item.sentByEmail}
+                            <span className="text-slate-400"> · {reminderKindLabel(item.kind)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -423,6 +460,20 @@ export default function AdminActionsPage() {
                 </p>
               </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Recorrido de la solicitud</p>
+                <ol className="mt-3 space-y-2">
+                  {(selected.history.length > 0 ? selected.history : [{ id: "now", type: "INFO_REQUEST_CREATED", metadata: { to: selected.status }, createdAt: selected.createdAt }]).map((event) => (
+                    <li key={event.id} className="text-sm text-slate-700">
+                      <span className="font-medium">{eventLabel(event)}</span>
+                      <span className="ml-2 text-xs text-slate-400">
+                        {new Date(event.createdAt).toLocaleString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
             </div>
           </aside>
         </>

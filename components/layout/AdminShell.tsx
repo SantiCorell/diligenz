@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  BarChart3,
   Briefcase,
   Building2,
   Globe,
@@ -124,6 +125,14 @@ export default function AdminShell({ userDisplayName, children }: Props) {
             icon={Inbox}
             collapsed={!expanded}
             active={pathname.startsWith("/admin/leads")}
+            onNavigate={() => setMobileSidebarOpen(false)}
+          />
+          <AdminNavLink
+            href="/admin/data"
+            label="Data"
+            icon={BarChart3}
+            collapsed={!expanded}
+            active={pathname.startsWith("/admin/data")}
             onNavigate={() => setMobileSidebarOpen(false)}
           />
           {expanded && (

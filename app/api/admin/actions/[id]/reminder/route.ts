@@ -100,9 +100,27 @@ export async function POST(req: Request, { params }: Params) {
     );
   }
 
+  const reminder = await prisma.infoRequestReminder.create({
+    data: {
+      interestId: interest.id,
+      sentById: session.user.id,
+      kind,
+    },
+    include: {
+      sentBy: { select: { name: true, email: true } },
+    },
+  });
+
   return NextResponse.json({
     ok: true,
     kind,
     to: interest.user.email,
+    reminder: {
+      id: reminder.id,
+      kind: reminder.kind,
+      createdAt: reminder.createdAt,
+      sentByName: reminder.sentBy.name,
+      sentByEmail: reminder.sentBy.email,
+    },
   });
 }

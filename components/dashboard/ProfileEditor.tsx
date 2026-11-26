@@ -8,14 +8,12 @@ type Props = {
   email: string;
   initialName: string | null;
   initialPhone: string | null;
-  profileVerifiedByAdmin: boolean;
 };
 
 export default function ProfileEditor({
   email,
   initialName,
   initialPhone,
-  profileVerifiedByAdmin,
 }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName ?? "");
@@ -26,7 +24,7 @@ export default function ProfileEditor({
   const missing: string[] = [];
   if (!name.trim()) missing.push("nombre");
   if (!phone.trim()) missing.push("teléfono");
-  const showIncomplete = missing.length > 0 && !profileVerifiedByAdmin;
+  const showIncomplete = missing.length > 0;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

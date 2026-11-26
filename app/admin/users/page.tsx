@@ -12,6 +12,7 @@ import {
   accountStatusOptions,
 } from "@/lib/user-admin-ui";
 import { type DniVerificationStatus } from "@/lib/user-documents/dni-status";
+import { isUserProfileComplete } from "@/lib/user-profile-complete";
 import { Search, SlidersHorizontal, UserPlus, Trash2, ChevronDown } from "lucide-react";
 import AdminUnregisteredContactsList from "@/components/admin/AdminUnregisteredContactsList";
 import AdminContactEmailPanel from "@/components/admin/AdminContactEmailPanel";
@@ -99,7 +100,7 @@ function UserDeletionRequestBanner({
 }
 
 function profileCompleteEffective(u: UserRow) {
-  return Boolean(u.phone?.trim()) || u.profileVerifiedByAdmin;
+  return isUserProfileComplete(u);
 }
 
 function UserNotionToggle({
@@ -171,21 +172,21 @@ function UserVerificationPanel({
   onSaved: () => void;
 }) {
   const [ndaSigned, setNdaSigned] = useState(user.ndaSigned);
-  const [dniVerified, setDniVerified] = useState(user.dniVerified);
-  const [profileVerifiedByAdmin, setProfileVerifiedByAdmin] = useState(
-    user.profileVerifiedByAdmin
-  );
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sincronizar formulario al cambiar usuario en admin */
     setNdaSigned(user.ndaSigned);
-    setDniVerified(user.dniVerified);
-    setProfileVerifiedByAdmin(user.profileVerifiedByAdmin);
     setMsg(null);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [user]);
+
+  const profileComplete = isUserProfileComplete({
+    ndaSigned,
+    documentsDriveFolderUrl: user.documentsDriveFolderUrl,
+    dniLinkUrl: user.dniLinkUrl,
+  });
 
   const save = useCallback(async () => {
     setMsg(null);
@@ -196,8 +197,6 @@ function UserVerificationPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ndaSigned,
-          dniVerified,
-          profileVerifiedByAdmin,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -212,13 +211,7 @@ function UserVerificationPanel({
       setMsg({ type: "error", text: "Error de conexión." });
     }
     setSaving(false);
-  }, [
-    user.id,
-    ndaSigned,
-    dniVerified,
-    profileVerifiedByAdmin,
-    onSaved,
-  ]);
+  }, [user.id, ndaSigned, onSaved]);
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white px-4 py-3 sm:px-6">
@@ -232,24 +225,27 @@ function UserVerificationPanel({
         />
         <span>NDA firmado</span>
       </label>
-      <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-700">
+      <span
+        className="flex items-center gap-1.5 text-xs text-slate-700"
+        title="Se marca solo cuando el usuario está registrado, el NDA está firmado y hay enlace de Drive y de DNI guardados. DNI verificado no cuenta."
+      >
         <input
           type="checkbox"
-          checked={dniVerified}
-          onChange={(e) => setDniVerified(e.target.checked)}
-          className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
-        />
-        <span>DNI verificado</span>
-      </label>
-      <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-700">
-        <input
-          type="checkbox"
-          checked={profileVerifiedByAdmin}
-          onChange={(e) => setProfileVerifiedByAdmin(e.target.checked)}
-          className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
+          checked={profileComplete}
+          readOnly
+          tabIndex={-1}
+          aria-readonly="true"
+          aria-label={
+            profileComplete
+              ? "Perfil completo, calculado automáticamente"
+              : "Perfil incompleto, calculado automáticamente"
+          }
+          onChange={() => {}}
+          className="pointer-events-none rounded border-slate-300 text-[var(--brand-primary)] focus:ring-0"
         />
         <span>Perfil completo</span>
-      </label>
+        <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">automático</span>
+      </span>
       <button
         type="button"
         onClick={save}
@@ -939,7 +935,7 @@ function UserDriveFolderPanel({
   const hasLink = Boolean(user.documentsDriveFolderUrl?.trim());
 
   return (
-    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
+    <div className="bg-white px-4 py-5 sm:px-6">
       <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">
         Carpeta Google Drive (documentos del usuario)
       </p>
@@ -1001,12 +997,15 @@ function UserDniLinkPanel({
   onSaved: () => void;
 }) {
   const [url, setUrl] = useState(user.dniLinkUrl ?? "");
+  const [dniVerified, setDniVerified] = useState(user.dniVerified);
   const [saving, setSaving] = useState(false);
+  const [savingCheck, setSavingCheck] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sincronizar al cambiar usuario */
     setUrl(user.dniLinkUrl ?? "");
+    setDniVerified(user.dniVerified);
     setMsg(null);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [user]);
@@ -1036,15 +1035,48 @@ function UserDniLinkPanel({
     setSaving(false);
   }, [user.id, url, onSaved]);
 
+  const saveVerified = useCallback(
+    async (next: boolean) => {
+      const previous = dniVerified;
+      setDniVerified(next);
+      setMsg(null);
+      setSavingCheck(true);
+      try {
+        const res = await authFetch(`/api/admin/users/${user.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dniVerified: next }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setDniVerified(previous);
+          setMsg({
+            type: "error",
+            text: (data as { error?: string }).error ?? "No se pudo guardar DNI verificado",
+          });
+          setSavingCheck(false);
+          return;
+        }
+        setMsg({ type: "ok", text: next ? "DNI marcado como verificado." : "DNI pendiente de verificar." });
+        onSaved();
+      } catch {
+        setDniVerified(previous);
+        setMsg({ type: "error", text: "Error de conexión." });
+      }
+      setSavingCheck(false);
+    },
+    [dniVerified, user.id, onSaved]
+  );
+
   return (
-    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6">
+    <div className="border-t border-slate-200/80 bg-white px-4 py-5 sm:px-6 xl:border-l xl:border-t-0">
       <p className="text-sm font-semibold text-[var(--brand-primary)] mb-1">Enlace DNI</p>
-      <p className="mb-3 max-w-2xl text-xs leading-relaxed text-slate-600">
+      <p className="mb-3 text-xs leading-relaxed text-slate-600">
         Pega el enlace donde el cliente sube el anverso y el reverso. Empieza vacío y no usa la carpeta
         Drive del cliente.
       </p>
-      <div className="flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-end">
-        <label className="min-w-0 flex-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <label className="min-w-0 flex-1 basis-full sm:basis-48">
           <span className="sr-only">Enlace DNI</span>
           <input
             type="url"
@@ -1062,6 +1094,16 @@ function UserDniLinkPanel({
         >
           {saving ? "Guardando…" : "Guardar enlace DNI"}
         </button>
+        <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={dniVerified}
+            disabled={savingCheck}
+            onChange={(e) => void saveVerified(e.target.checked)}
+            className="rounded border-slate-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/30"
+          />
+          <span>DNI verificado</span>
+        </label>
       </div>
       {user.dniLinkUrl ? (
         <p className="mt-2 text-xs">
@@ -1078,6 +1120,21 @@ function UserDniLinkPanel({
       {msg && (
         <p className={`mt-2 text-sm ${msg.type === "ok" ? "text-emerald-700" : "text-red-600"}`}>{msg.text}</p>
       )}
+    </div>
+  );
+}
+
+function UserDocumentLinksRow({
+  user,
+  onSaved,
+}: {
+  user: UserRow;
+  onSaved: () => void;
+}) {
+  return (
+    <div className="grid grid-cols-1 border-t border-slate-200/80 xl:grid-cols-2">
+      <UserDriveFolderPanel user={user} onSaved={onSaved} />
+      <UserDniLinkPanel user={user} onSaved={onSaved} />
     </div>
   );
 }
@@ -1267,8 +1324,7 @@ function AdminUserMobileCard({
           </div>
           <UserVerificationPanel user={u} onSaved={onVerificationSaved} />
           <UserSalesMandatePanel user={u} onSaved={onVerificationSaved} />
-          <UserDriveFolderPanel user={u} onSaved={onVerificationSaved} />
-          <UserDniLinkPanel user={u} onSaved={onVerificationSaved} />
+          <UserDocumentLinksRow user={u} onSaved={onVerificationSaved} />
           <UserInfoRequestLimitPanel user={u} onSaved={onVerificationSaved} />
           <UserActivityPanel user={u} />
           <UserProfessionalCompanyLimitPanel user={u} onSaved={onVerificationSaved} />
@@ -2100,8 +2156,7 @@ export default function AdminUsersPage() {
                               </div>
                               <UserVerificationPanel user={u} onSaved={loadUsers} />
                               <UserSalesMandatePanel user={u} onSaved={loadUsers} />
-                              <UserDriveFolderPanel user={u} onSaved={loadUsers} />
-                              <UserDniLinkPanel user={u} onSaved={loadUsers} />
+                              <UserDocumentLinksRow user={u} onSaved={loadUsers} />
                               <UserInfoRequestLimitPanel user={u} onSaved={loadUsers} />
                               <UserActivityPanel user={u} />
                               <UserProfessionalCompanyLimitPanel user={u} onSaved={loadUsers} />

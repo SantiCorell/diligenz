@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionWithUserFromRequest } from "@/lib/session";
 import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { buildAgentMessageEmail } from "@/lib/emails/agent-message";
+import { isUserProfileComplete } from "@/lib/user-profile-complete";
 
 const MIN_LENGTH = 2;
 const MAX_LENGTH = 2000;
@@ -32,7 +33,8 @@ export async function POST(req: Request) {
       role: true,
       ndaSigned: true,
       dniVerified: true,
-      profileVerifiedByAdmin: true,
+      documentsDriveFolderUrl: true,
+      dniLinkUrl: true,
       assignedAgent: { select: { name: true, email: true, active: true } },
     },
   });
@@ -62,7 +64,7 @@ export async function POST(req: Request) {
       role: user.role,
       ndaSigned: user.ndaSigned,
       dniVerified: user.dniVerified,
-      profileComplete: Boolean(user.phone?.trim() && user.name?.trim()) || user.profileVerifiedByAdmin,
+      profileComplete: isUserProfileComplete(user),
     },
   });
 

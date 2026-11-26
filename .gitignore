@@ -48,7 +48,7 @@ next-env.d.ts
 
 # Documentos subidos por usuarios (solo admin y dueño pueden ver)
 /uploads
-data/
+/data/
 
 # Base de datos local (solo desarrollo)
 prisma/dev.db

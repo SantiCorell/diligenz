@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUserDniPendingReview } from "@/lib/user-documents/dni-status";
+import { isUserProfileComplete } from "@/lib/user-profile-complete";
 import { getSessionWithUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import UserDrivePanel from "@/components/dashboard/UserDrivePanel";
@@ -13,8 +14,7 @@ export default async function DashboardProfilePage() {
   if (!session) redirect("/login");
 
   const user = session.user;
-  const profileComplete =
-    Boolean(user.phone?.trim() && user.name?.trim()) || user.profileVerifiedByAdmin;
+  const profileComplete = isUserProfileComplete(user);
 
   const dniPendingReview = await getUserDniPendingReview(user.id, user.dniVerified);
   const pendingDeletion = await prisma.accountDeletionRequest.findFirst({
@@ -59,7 +59,7 @@ export default async function DashboardProfilePage() {
           />
           <CheckRow
             ok={profileComplete}
-            label="Perfil completo (nombre y teléfono)"
+            label="Perfil completo"
             href="/dashboard/profile"
           />
         </ul>
@@ -74,7 +74,6 @@ export default async function DashboardProfilePage() {
           email={user.email}
           initialName={user.name}
           initialPhone={user.phone}
-          profileVerifiedByAdmin={user.profileVerifiedByAdmin}
         />
         <div className="pt-2 border-t border-[var(--brand-primary)]/10">
           <p className="text-xs text-[var(--foreground)] opacity-65">

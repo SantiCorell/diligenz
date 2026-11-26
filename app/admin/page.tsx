@@ -104,9 +104,9 @@ export default async function AdminDashboard({
           tone="green"
         />
         <KpiCard
-          title="Solicitudes"
+          title="Acciones"
           value={actionsCount}
-          subtitle="Solicitudes de información acumuladas"
+          subtitle="Acciones de información acumuladas"
           badge={openRequests > 0 ? `${openRequests} pendientes` : undefined}
           href="/admin/actions"
           icon={ClipboardList}
@@ -160,8 +160,8 @@ export default async function AdminDashboard({
             </form>
             <Link href="/companies" className={quietPill}>Ver listado público</Link>
           </ActionGroup>
-          <ActionGroup label="Solicitudes y leads">
-            <Link href="/admin/actions" className={primaryPill}>Ver solicitudes de información</Link>
+          <ActionGroup label="Acciones y leads">
+            <Link href="/admin/actions" className={primaryPill}>Ver acciones de información</Link>
             <Link href="/admin/leads" className={quietPill}>Ver leads (valoraciones y contacto)</Link>
           </ActionGroup>
           <ActionGroup label="Usuarios">

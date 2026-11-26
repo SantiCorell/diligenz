@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getDisplayName } from "@/lib/user-display";
 import { getUserDniPendingReview } from "@/lib/user-documents/dni-status";
+import { isUserProfileComplete } from "@/lib/user-profile-complete";
 import { getSessionWithUser } from "@/lib/session";
 import DashboardShell from "@/components/layout/DashboardShell";
 import HideOnServicios from "@/components/dashboard/HideOnServicios";
@@ -16,9 +17,7 @@ export default async function DashboardLayout({
 
   const user = session.user;
 
-  const profileComplete =
-    Boolean(user.phone?.trim() && user.name?.trim()) ||
-    user.profileVerifiedByAdmin;
+  const profileComplete = isUserProfileComplete(user);
   const dniPendingReview = await getUserDniPendingReview(user.id, user.dniVerified);
   const userDisplayName =
     user.name?.trim() || getDisplayName(user.email);
@@ -34,7 +33,6 @@ export default async function DashboardLayout({
             dniVerified={user.dniVerified}
             dniPendingReview={dniPendingReview}
             profileComplete={profileComplete}
-            profileVerifiedByAdmin={user.profileVerifiedByAdmin}
             userName={user.name}
             userPhone={user.phone}
             role={user.role}

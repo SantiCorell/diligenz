@@ -36,6 +36,15 @@ export async function GET(req: Request) {
           dniVerified: true,
         },
       },
+      reminders: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          kind: true,
+          createdAt: true,
+          sentBy: { select: { name: true, email: true } },
+        },
+      },
     },
     orderBy: { statusUpdatedAt: "desc" },
   });
@@ -99,6 +108,13 @@ export async function GET(req: Request) {
         type: event.type,
         metadata: event.metadata,
         createdAt: event.createdAt,
+      })),
+      reminders: interest.reminders.map((reminder) => ({
+        id: reminder.id,
+        kind: reminder.kind,
+        createdAt: reminder.createdAt,
+        sentByName: reminder.sentBy.name,
+        sentByEmail: reminder.sentBy.email,
       })),
     };
   });

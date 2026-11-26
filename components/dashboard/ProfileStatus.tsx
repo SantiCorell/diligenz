@@ -7,7 +7,6 @@ type Props = {
   /** Anverso y reverso subidos, aún sin validar por admin */
   dniPendingReview?: boolean;
   profileComplete: boolean;
-  profileVerifiedByAdmin?: boolean;
   userName?: string | null;
   userPhone?: string | null;
   role?: "BUYER" | "SELLER" | "ADMIN" | "PROFESSIONAL";
@@ -21,7 +20,6 @@ export default function ProfileStatus({
   dniVerified,
   dniPendingReview = false,
   profileComplete,
-  profileVerifiedByAdmin = false,
   userName,
   userPhone,
   role,
@@ -33,7 +31,6 @@ export default function ProfileStatus({
   if (!userPhone?.trim()) missingProfile.push("teléfono");
   const showProfileWarning =
     missingProfile.length > 0 &&
-    !profileVerifiedByAdmin &&
     (role === "BUYER" ||
       role === "SELLER" ||
       role === "PROFESSIONAL" ||
@@ -61,7 +58,7 @@ export default function ProfileStatus({
       action: "/dashboard/verification",
     },
     {
-      label: "Perfil completo (nombre y teléfono)",
+      label: "Perfil completo",
       ok: profileComplete,
       action: "/dashboard/profile",
     },

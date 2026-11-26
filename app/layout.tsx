@@ -13,6 +13,7 @@ import {
 } from "@/lib/seo";
 import "./globals.css";
 import AggregatePageView from "@/components/consent/AggregatePageView";
+import IdentifiedPageView from "@/components/consent/IdentifiedPageView";
 import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
 import ConditionalGoogleAnalytics from "@/components/consent/ConditionalGoogleAnalytics";
 import ConditionalGoogleTagManager from "@/components/consent/ConditionalGoogleTagManager";
@@ -158,6 +159,7 @@ export default function RootLayout({
         <ConditionalGoogleAnalytics />
         <MetaPixelProvider />
         <AggregatePageView />
+        <IdentifiedPageView />
         {children}
         <SectorCatalogHydrator />
         <CookieConsentBanner />

@@ -28,7 +28,8 @@ model User {
 
   ndaSigned     Boolean  @default(false)
   dniVerified   Boolean  @default(false)
-  /// Si true, el dashboard cuenta "Perfil completo" aunque falte teléfono (validación admin).
+  /// Perfil completo: usuario registrado, NDA firmado y enlaces de Drive y DNI guardados.
+  /// No depende de DNI verificado. Se recalcula al guardar esos datos.
   profileVerifiedByAdmin Boolean @default(false)
   /// Validado / dado de alta en Notion (check admin; por defecto no).
   notionValidated Boolean @default(false)
@@ -70,6 +71,7 @@ model User {
   collaborationAgreement CollaborationAgreement?
   dniDocuments       UserDniDocument[]
   activityEvents     UserActivityEvent[]
+  infoRequestRemindersSent InfoRequestReminder[] @relation("InfoRequestReminderSender")
 
   /// Mandato de venta que ve el vendedor para firmar. Por defecto, con exclusividad.
   salesMandateVariant SalesMandateVariant @default(EXCLUSIVE)
@@ -86,6 +88,7 @@ model User {
   clientServices  ClientService[]
   serviceIntakes  ServiceIntake[]
   accountDeletionRequests AccountDeletionRequest[]
+  pageViews       UserPageView[]
 }
 
 /// DNI / NIE del usuario (anverso y reverso). Admin marca dniVerified tras revisión.
@@ -256,8 +259,23 @@ model UserCompanyInterest {
 
   userId String
   user   User   @relation(fields: [userId], references: [id])
+  reminders InfoRequestReminder[]
 
   @@unique([userId, companyId, type])
+}
+
+/// Cada envío de recordatorio de una solicitud (NDA o contacto), con quién lo mandó.
+model InfoRequestReminder {
+  id         String   @id @default(cuid())
+  interestId String
+  interest   UserCompanyInterest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+  sentById   String
+  sentBy     User     @relation("InfoRequestReminderSender", fields: [sentById], references: [id], onDelete: Restrict)
+  /// "nda" o "contact"
+  kind       String
+  createdAt  DateTime @default(now())
+
+  @@index([interestId, createdAt(sort: Desc)])
 }
 
 /// Historial append-only de acciones del usuario (visible para admins).
@@ -746,4 +764,21 @@ model AggregatePageMetric {
 
   @@unique([path, day, nav, perf])
   @@index([day])
+}
+
+/// Vista de página de un usuario con sesión. No guarda IP, user-agent ni cookie de analítica.
+/// No se reenvía a Google Tag Manager, Google Analytics ni Meta.
+/// durationMs es el tiempo con la pestaña visible: null por debajo de 2 s, tope 30 min.
+model UserPageView {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  path       String
+  startedAt  DateTime @default(now())
+  durationMs Int?
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId, startedAt])
+  @@index([startedAt])
+  @@index([path, startedAt])
 }
